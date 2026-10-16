@@ -81,8 +81,8 @@ def _work_review_result(entry, *, context, method, node, run_id, row, ordinal,
         raise ApplicationError('WORK_REVIEW_CORRELATION_UNAVAILABLE') from None
 
 
-def _loop_round(program, row, step_id):
-    """Return the persisted round for a step in a declared counted-loop body.
+def _loop_for_step(program, step_id):
+    """Return the unique declared counted loop containing ``step_id``.
 
     A loop declares its counted back-edge, not an index interval. Membership
     therefore comes from the frozen workflow graph: a node belongs to a loop
@@ -136,12 +136,29 @@ def _loop_round(program, row, step_id):
                                  & reachable(loop.from_step, reverse)))
     if len(loops) > 1:
         raise ApplicationError('WORK_LOOP_AMBIGUOUS')
-    if not loops:
-        return 1
+    return loops[0] if loops else None
+
+
+def observed_loop_round(program, row, step_id):
+    """Return ``(loop_id, persisted_round)`` or ``None`` outside every loop.
+
+    This read-only projection uses the original Work row's persisted ``rounds``
+    map. It never derives or advances a counter. Callers that choose
+    round-scoped inputs must distinguish a non-loop step from loop round one.
+    """
+    loop = _loop_for_step(program, step_id)
+    if loop is None:
+        return None
     rounds = row['inputs'].get('rounds')
-    if type(rounds) is not dict or type(rounds.get(loops[0].loop_id)) is not int:
+    if type(rounds) is not dict or type(rounds.get(loop.loop_id)) is not int:
         raise ApplicationError('WORK_LOOP_STATE_INVALID')
-    return rounds[loops[0].loop_id]
+    return loop.loop_id, rounds[loop.loop_id]
+
+
+def _loop_round(program, row, step_id):
+    """Return persisted round, preserving the original non-loop value of one."""
+    observed = observed_loop_round(program, row, step_id)
+    return 1 if observed is None else observed[1]
 
 
 def _copy(value):
@@ -359,22 +376,6 @@ class MethodRunOrchestrator(ApprovalUseCases):
         from .native_step import record_dispatch_step
         return record_dispatch_step(self,parameters,context,read_set=read_set)
 
-    @staticmethod
-    def claim_current_wait(tx, run_id, *, expected_row_digest, expected_next_step_ordinal,
-                           now, next_cursor=None, next_inputs=None,
-                           next_status="RUNNING", next_wait_reason=None):
-        """CAS the current MethodRun against the original run and step log."""
-        row = tx.run_row(run_id)
-        if (run_wait_row_digest(row) != expected_row_digest
-                or tx.next_step_ordinal(run_id) != expected_next_step_ordinal):
-            raise ApplicationError('RUN_WAIT_CHANGED')
-        if not row['status'].startswith('WAITING_FOR_'):
-            raise ApplicationError('RUN_NOT_WAITING')
-        if next_inputs is not None:
-            tx.replace_run_inputs(run_id=run_id, expected_inputs=row['inputs'], inputs=next_inputs)
-        tx.update_run(run_id=run_id, status=next_status, cursor=next_cursor,
-                      wait_reason=next_wait_reason, now=now)
-
     def read(self,parameters,context):
         from ..contracts.commands import CommandContext
         if type(context) is not CommandContext:
@@ -402,6 +403,7 @@ class MethodRunOrchestrator(ApprovalUseCases):
         _check_rounds(program,row['inputs'])
         run=MethodRun.from_persisted(parameters['run_id'],row,steps,program.workflow.outputs)
         return {**row,'method_ref':asdict(row['method_ref']),
+            'row_digest':asdict(run_wait_row_digest(row)),
             'next_step_ordinal':ordinal,'steps':run.steps_view(),'outputs':run.outputs_view(),
             'method_binding':run.method_binding_view(),'method_run':run.to_dict()}
 
@@ -545,6 +547,11 @@ class MethodRunOrchestrator(ApprovalUseCases):
                     if (run_wait_row_digest(current)!=expected or current!=row
                             or uow.workflow.next_step_ordinal(value['run_id'])!=value['expected_next_step_ordinal']):
                         raise ApplicationError('RUN_WAIT_CHANGED')
+                    # Round is derived from this same persisted row and frozen
+                    # workflow graph. Keep the value placed on the receipt tied
+                    # to the original write cut, including loop re-entry.
+                    if _loop_round(program,current,node.id) != round_number:
+                        raise ApplicationError('WORK_LOOP_STATE_INVALID')
                     if uow.workflow.read(current['method_ref']) != {k:v for k,v in current['inputs'].items() if k not in ('slots','rounds')}:
                         raise ApplicationError('WORK_BINDING_INVALID')
                     entry=uow.commands.get(CommandKey(context.scope.realm_id,context.principal_id,value['operation_request_id']))
@@ -602,122 +609,4 @@ class MethodRunOrchestrator(ApprovalUseCases):
                             'request_digest':asdict(entry.request_digest),'state':entry.state,
                             'result':entry.result_bytes.decode('utf-8'),
                             **({'work_review':work_review} if work_review is not None else {})})
-                return self._run(op,context,reads,digest,mutate)
-
-    def bind_inputs(self,parameters,context,*,read_set=None):
-        """Bind an explicitly submitted method-input revision to the original run.
-
-        No head adoption, cursor advance, execution, reviewer role, or approval
-        follows from this input selection. Exact source reads and the original
-        row/ordinal CAS remain live through the write transaction.
-        """
-        op='engineering.work.bind_inputs'
-        value,reads,digest=self._input(op,parameters,context,read_set)
-        from ...domain.artifacts.ref_codec import decode_artifact_ref
-        from ...domain.common.mechanisms.codec import decode_digest
-        try:
-            validate_id(value['run_id'])
-            input_ref=decode_artifact_ref(value['input_ref'])
-            expected=decode_digest(value['expected_row_digest'])
-        except (ReferenceError,TypeError,ValueError,KeyError):
-            raise ApplicationError('INVALID_INPUT') from None
-        replay=self._replay(op,context,digest)
-        if replay is not None:
-            return replay
-        binding=self.bindings
-        if binding is None or not callable(getattr(binding.source,'guard_inputs',None)):
-            raise ApplicationError('WORK_INPUT_SOURCE_UNAVAILABLE')
-        with self.factory.begin(context.scope,'read') as uow:
-            row=uow.workflow.run_row(value['run_id'])
-            ordinal=uow.workflow.next_step_ordinal(value['run_id'])
-        if (run_wait_row_digest(row) != expected
-                or ordinal != value['expected_next_step_ordinal']):
-            raise ApplicationError('RUN_WAIT_CHANGED')
-        if row['status'] != 'WAITING_FOR_CONDITION':
-            raise ApplicationError('RUN_NOT_WAITING')
-        method=MethodRunBindings._inputs(context,row)
-        with binding.methods.guard_method(context,method) as snapshot:
-            program=MethodRunBindings._bound_program(snapshot,method,row)
-            view={'run_id':value['run_id'],'row':_copy({**row,'method_ref':asdict(row['method_ref'])}),
-                  'row_digest':expected,'next_step_ordinal':ordinal}
-            cursor=row.get('cursor')
-            if type(cursor) is not int or not 0 <= cursor < len(program.workflow.steps):
-                raise ApplicationError('WORK_CURSOR_INVALID')
-            current_node=program.workflow.steps[cursor]
-            round_number=_loop_round(program,row,current_node.id)
-            with binding.source.guard_inputs(context,snapshot,view,input_ref) as seed:
-                if (type(seed) is not WorkSeed or seed.read_set.scope != context.scope
-                        or len(seed.slots) != 1 or not set(seed.slots) <= set(program.workflow.context_slots or ())):
-                    raise ApplicationError('WORK_INPUT_INVALID')
-                inputs={**row['inputs'],'slots':{**row['inputs']['slots'],**_copy(seed.slots)}}
-                def mutate(uow):
-                    current=uow.workflow.run_row(value['run_id'])
-                    if (run_wait_row_digest(current) != expected
-                            or uow.workflow.next_step_ordinal(value['run_id']) != ordinal):
-                        raise ApplicationError('RUN_WAIT_CHANGED')
-                    uow.engineering.check_read_set(seed.read_set)
-                    uow.workflow.replace_run_inputs(run_id=value['run_id'],
-                        expected_inputs=current['inputs'],inputs=inputs)
-                    after=uow.workflow.run_row(value['run_id'])
-                    from ...domain.common.mechanisms.hashing import record_digest
-                    after_digest=run_wait_row_digest(after)
-                    selection_digest=record_digest('engineering-work-input-selection',{
-                        'run_id':value['run_id'],'input_ref':asdict(input_ref),
-                        'method_ref':asdict(method),'node_id':current_node.id,
-                        'round':round_number,'ordinal':ordinal,
-                        'before':asdict(expected),'after':asdict(after_digest)})
-                    return {'run_id':value['run_id'],'status':current['status'],
-                            'cursor':current['cursor'],'input_slots':sorted(seed.slots),'dispatched':False,
-                            'input_ref':asdict(input_ref),'method_ref':asdict(method),
-                            'node':current_node.id,'round':round_number,'ordinal':ordinal,
-                            'before_after_digest':asdict(selection_digest)}
-                return self._run(op,context,reads,digest,mutate)
-
-    def start(self,parameters,context,*,read_set=None):
-        op='engineering.work.start'
-        value,reads,digest=self._input(op,parameters,context,read_set)
-        try:
-            validate_id(value['run_id'])
-        except (ReferenceError,TypeError,ValueError):
-            raise ApplicationError('INVALID_INPUT') from None
-        replay=self._replay(op,context,digest)
-        if replay is not None:
-            return replay
-        binding=self.bindings
-        if binding is None or binding.source is None or binding.registry_loader is None:
-            raise ApplicationError('WORK_WAIT_AUTHORITY_UNAVAILABLE')
-        with binding.methods.guard_selected(context) as snapshot:
-            program=binding._program(snapshot)
-            nodes=[(i,n) for i,n in enumerate(program.workflow.steps) if n.id==program.workflow.entry]
-            if len(nodes)!=1 or type(nodes[0][1]) is not WaitNode or nodes[0][1].event != WAIT_EVENT:
-                raise ApplicationError('WORK_ENTRY_UNAVAILABLE')
-            cursor,node=nodes[0]
-            from ...domain.artifacts.method_binding import MethodRef
-            from ...domain.common.models.values import Digest
-            ref=snapshot.ref
-            method=MethodRef(ref.method_id,ref.release_version,ref.schema_version,Digest('sha256',ref.snapshot_digest))
-            with binding.source.guard_start(context,snapshot, run_id=value['run_id'],
-                                            selection=value.get('selection')) as seed:
-                if (type(seed) is not WorkSeed or seed.read_set.scope != context.scope
-                        or not set(seed.slots) <= set(program.workflow.context_slots or ())):
-                    raise ApplicationError('WORK_INPUT_INVALID')
-                marker={'work_contract':WORK_CONTRACT,'scope':asdict(context.scope),
-                    'method_ref':asdict(method),'compiled_plan_digest':program_plan_digest(program)}
-                inputs={**marker,'slots':_copy(seed.slots)}
-                if program.workflow.loops:
-                    inputs['rounds']={loop.loop_id:1 for loop in program.workflow.loops}
-                registry=registry_ref(binding.registry_loader())
-                def mutate(uow):
-                    # Reuse the original transaction/CAS owner before any Work
-                    # write. Source observations cannot replace these checks.
-                    uow.engineering.check_read_set(seed.read_set)
-                    if registry != registry_ref(binding.registry_loader()):
-                        raise ApplicationError('METHOD_CAPABILITY_CHANGED')
-                    material=uow.workflow.write_material(kind='method',stable_id='compiled-work:'+value['run_id'],
-                        revision=1,body=marker,generated=False)
-                    now=utc_now()
-                    uow.workflow.insert_run(run_id=value['run_id'],method_ref=material,registry_ref=registry,inputs=inputs,now=now)
-                    uow.workflow.update_run(run_id=value['run_id'],status='WAITING_FOR_CONDITION',cursor=cursor,wait_reason=node.id,now=now)
-                    return {'run_id':value['run_id'],'status':'WAITING_FOR_CONDITION','cursor':cursor,
-                        'method_ref':asdict(method),'dispatched':False}
                 return self._run(op,context,reads,digest,mutate)

@@ -1,0 +1,92 @@
+{
+  "contract": "engineering-source-review/2",
+  "action_id": "incremental.review-change",
+  "criterion_id": "explicit-change-review",
+  "reviewer_roles": ["reviewer"],
+  "criteria_resource_id": "change-review-criteria",
+  "prompt_resource_id": "change-review-prompt",
+  "caller_input_schema_resource_id": "caller-review-input-schema",
+  "result_schema_resource_id": "review-result-schema",
+  "check": {
+    "capability_id": "ordessa.decision.evaluate",
+    "interface_version": "1.0.0"
+  },
+  "evaluation_scope": "baseline_candidate_pair",
+  "aggregation": {
+    "policy": "all_required",
+    "missing_input": "reject_before_invocation",
+    "any_not_passed": "not_passed",
+    "otherwise_any_unknown": "unknown",
+    "pass_requires": "all_required_checks_passed_with_required_materials"
+  },
+  "required_checks": [
+    {
+      "check_id": "source-version-preservation",
+      "statement": "The candidate preserves and distinguishes the baseline and candidate source-version identities needed to interpret the change.",
+      "question_text": "Do the supplied claim and cited excerpts establish that the candidate preserves and distinguishes the baseline and candidate source-version identities needed to interpret this change?",
+      "evaluation_scope": "baseline_candidate_pair"
+    },
+    {
+      "check_id": "scoped-read-boundary",
+      "statement": "The change keeps source reads within the declared invocation scope and its supplied source identities.",
+      "question_text": "Do the supplied claim and cited excerpts establish that the change keeps source reads within the declared invocation scope and supplied source identities?",
+      "evaluation_scope": "baseline_candidate_pair"
+    },
+    {
+      "check_id": "evidence-support",
+      "statement": "The supplied evidence semantically supports the caller-provided change claim against the baseline and candidate captures.",
+      "question_text": "Do the cited excerpts semantically support the caller-provided change claim when comparing the baseline and candidate captures?",
+      "evaluation_scope": "baseline_candidate_pair"
+    },
+    {
+      "check_id": "unique-record-authority",
+      "statement": "The change leaves one identifiable authoritative owner for the relevant persisted record or state.",
+      "question_text": "Do the supplied claim and cited excerpts establish one identifiable authoritative owner for the relevant persisted record or state across this change?",
+      "evaluation_scope": "baseline_candidate_pair"
+    },
+    {
+      "check_id": "public-call-chain",
+      "statement": "The changed behavior is connected through the intended public call chain to its consumer.",
+      "question_text": "Do the supplied claim and cited excerpts establish that the changed behavior is connected through the intended public call chain to its consumer?",
+      "evaluation_scope": "baseline_candidate_pair"
+    },
+    {
+      "check_id": "changed-source-refusal",
+      "statement": "Unavailable or changed source input is refused without an implicit fallback to another source or authority.",
+      "question_text": "Do the supplied claim and cited excerpts establish that unavailable or changed source input is refused without an implicit fallback?",
+      "evaluation_scope": "baseline_candidate_pair"
+    },
+    {
+      "check_id": "acceptance-coverage",
+      "statement": "The declared acceptance criteria cover the relevant changed behavior and its required outcomes.",
+      "question_text": "Do the supplied claim and cited excerpts establish that the declared acceptance criteria cover the relevant changed behavior and required outcomes?",
+      "evaluation_scope": "baseline_candidate_pair"
+    },
+    {
+      "check_id": "declared-limitations",
+      "statement": "The stated implementation and validation limits accurately bound what is and is not established.",
+      "question_text": "Do the supplied claim and cited excerpts establish that the stated implementation and validation limits accurately bound what is and is not established?",
+      "evaluation_scope": "baseline_candidate_pair"
+    }
+  ],
+  "options": {
+    "passed": {
+      "description": "The supplied claim and cited material support this required pair-level check.",
+      "status": "satisfied"
+    },
+    "not_passed": {
+      "description": "The supplied material identifies a material contradiction or gap for this required pair-level check.",
+      "status": "violated"
+    },
+    "unknown": {
+      "description": "The supplied material is insufficient to decide this required pair-level check.",
+      "status": "unknown"
+    }
+  },
+  "dispositions": {
+    "satisfied": "pass",
+    "violated": "block",
+    "insufficient": "insufficient",
+    "unknown": "insufficient"
+  }
+}

@@ -18,10 +18,12 @@ from ordessa_engineering.domain.packages.refs import ImplementationPackageRef
 from ordessa_engineering.domain.packages.codec import decode_package, encode_package
 from .blob_bytes import read_bytes, BlobBytesError
 from .implementation_schema import IMPLEMENTATION_SCHEMA_VERSION
+from .dispatch_schema import WORK_DISPATCH_SCHEMA_VERSION
 from .submission_schema import SUBMISSION_SCHEMA_VERSION, SUBMISSION_DDL, IMPLEMENTATION_APPLY_DDL
 from .dispatch_schema import DISPATCH_SCHEMA_VERSION, DISPATCH_DDL
 from .acceptance_schema import ACCEPTANCE_SCHEMA_VERSION
 from .reviewer_assignment_schema import REVIEWER_ASSIGNMENT_SCHEMA_VERSION
+from .external_record_schema import EXTERNAL_RECORD_SCHEMA_VERSION
 
 _BASELINE_BYTES = ("CASE WHEN typeof(canonical_bytes)='blob' AND "
                    "length(canonical_bytes) BETWEEN 1 AND 2097152 "
@@ -59,7 +61,7 @@ class SQLiteImplementationRepository:
             raise ApplicationError('SCOPE_MISMATCH')
         row = self.access.execute(
             'SELECT schema_version FROM library_meta WHERE singleton=1').fetchone()
-        if row is None or row[0] not in (IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+        if row is None or row[0] not in (IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
             raise ApplicationError('IMPLEMENTATION_SCHEMA_REQUIRED')
         if write:
             self.access.require_write()

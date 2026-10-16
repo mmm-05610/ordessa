@@ -58,6 +58,8 @@ class ChangeIntentAdmission:
                     roots = tuple(m.proposed_ref for m in proposal.mutations)
                     roots += tuple(m.base_ref for m in proposal.mutations if m.base_ref is not None)
                     roots += tuple(c.owner_revision_ref for c in proposal.claim_refs)
+                    from ..proposal_closure import proposal_review_revision_refs
+                    roots += proposal_review_revision_refs(proposal)
                     revisions = uow.proposals.resolve_revision_graph(roots, budget)
                     owners = tuple(uow.engineering.get_artifact(m.artifact_id) for m in proposal.mutations)
                     # Bridge uses the original proposal validator, which must
@@ -103,6 +105,8 @@ def resolve_change_intent(uow, intent):
         raise ApplicationError('CONSENT_BINDING_MISMATCH')
     roots = targets + tuple(m.base_ref for p in proposals for m in p.mutations if m.base_ref is not None)
     roots += tuple(c.owner_revision_ref for p in proposals for c in p.claim_refs)
+    from ..proposal_closure import proposal_review_revision_refs
+    roots += tuple(ref for proposal in proposals for ref in proposal_review_revision_refs(proposal))
     revisions = uow.proposals.resolve_revision_graph(roots, budget)
     ids = sorted({m.artifact_id for p in proposals for m in p.mutations})
     owners = tuple(uow.engineering.get_artifact(identifier) for identifier in ids)

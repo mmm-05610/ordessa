@@ -2,20 +2,21 @@
 from dataclasses import asdict
 from ordessa_infrastructure.encoding import canonical_bytes
 from ordessa_engineering.domain.common.mechanisms.codec import (require_object, decode_tuple, decode_digest, decode_actor, decode_selector)
-from ordessa_engineering.domain.artifacts.method_codec import (decode_method_ref)
+from ordessa_engineering.domain.artifacts.method_codec import (decode_method_ref, decode_exact_method_resource)
 from ordessa_engineering.domain.artifacts.ref_codec import (decode_artifact_ref)
 from ordessa_engineering.domain.artifacts.provenance_codec import (decode_source, decode_claim_ref)
 from ordessa_engineering.domain.changes.ref_codec import (decode_proposal_ref)
+from ordessa_engineering.domain.reviews.ref_codec import (decode_review_ref)
 from ordessa_engineering.domain.changes.baseline_codec import (decode_repository_ref)
 from ..common.models.identity import (Scope)
 from ..common.outcomes.diagnostics import (ReferenceError)
 from ..common.mechanisms.codec import (canonical_value)
 from ..approvals.scope import PathRule, RepositoryScope, EnvironmentRef, EffectLimit, ActionScope
 from ..reviews.models import (CriterionSetRef)
-from ..reviews.requirements import (SubjectSelector,TemplateTarget,TemplateCheck,
+from ..reviews.requirements import (SubjectSelector,ExactArtifactRevisionSelector,TemplateTarget,TemplateCheck,
     ReviewRequirementTemplate,ReviewRequirementTemplateRef)
 from .intent import ImplementationIntentSpec
-from .models import Proposal, Mutation, ProposalEvidenceLink, ProposalControl, MAX_PROPOSAL_BYTES
+from .models import Proposal, Mutation, ProposalEvidenceLink, ProposalControl, SourceChange, MAX_PROPOSAL_BYTES
 
 
 def _scope(value):
@@ -70,8 +71,14 @@ def _spec(value):
 
 def _template_target(value):
     require_object(value,{'role','selector'}, code='INVALID_REVISION')
-    require_object(value['selector'],{'kind','index','implementation_intent_id','schema_version'}, code='INVALID_REVISION')
-    return TemplateTarget(value['role'],SubjectSelector(**value['selector']))
+    selector=value['selector']
+    if type(selector) is dict and selector.get('kind')=='exact_artifact_revision':
+        require_object(selector,{'kind','artifact_revision_ref'}, code='INVALID_REVISION')
+        parsed=ExactArtifactRevisionSelector(decode_artifact_ref(selector['artifact_revision_ref']))
+    else:
+        require_object(selector,{'kind','index','implementation_intent_id','schema_version'}, code='INVALID_REVISION')
+        parsed=SubjectSelector(**selector)
+    return TemplateTarget(value['role'],parsed)
 
 
 def _template_check(value):
@@ -104,17 +111,26 @@ def _link(value):
     return ProposalEvidenceLink(decode_claim_ref(value['claim_ref']),decode_source(value['source_ref']),decode_selector(value['source_selector']),value['relation'],value['rationale'])
 
 
+def _source_change(value):
+    require_object(value, {'baseline', 'candidate', 'method_resource_refs', 'review_refs'}, 'INVALID_SOURCE_CHANGE')
+    return SourceChange(decode_source(value['baseline']), decode_source(value['candidate']),
+        decode_tuple(value['method_resource_refs'], decode_exact_method_resource, code='INVALID_SOURCE_CHANGE'),
+        decode_tuple(value['review_refs'], decode_review_ref, code='INVALID_SOURCE_CHANGE'))
+
+
 DRAFT_FIELDS=frozenset({'intent','rationale','mutations','basis_sources','claim_refs','evidence_links','method_ref',
     'review_requirement_templates','implementation_intent','supersedes_refs'})
 
 
-def decode_draft(scope, proposal_id, created_at, created_by, change_id, value):
-    require_object(value,DRAFT_FIELDS,'INVALID_PROPOSAL')
+def decode_draft(scope, proposal_id, created_at, created_by, change_id, value, schema_version=1):
+    expected = DRAFT_FIELDS if schema_version == 1 else DRAFT_FIELDS | {'source_change'}
+    require_object(value,expected,'INVALID_PROPOSAL')
     try:
         return Proposal(scope,proposal_id,created_at,created_by,change_id,value['intent'],value['rationale'],
             decode_tuple(value['mutations'],_mutation, code='INVALID_REVISION'),decode_tuple(value['basis_sources'],decode_source, code='INVALID_REVISION'),decode_tuple(value['claim_refs'],decode_claim_ref, code='INVALID_REVISION'),
             decode_tuple(value['evidence_links'],_link, code='INVALID_REVISION'),decode_method_ref(value['method_ref']),decode_tuple(value['review_requirement_templates'],_template, code='INVALID_REVISION'),
-            _spec(value['implementation_intent']),decode_tuple(value['supersedes_refs'],decode_proposal_ref, code='INVALID_REVISION'))
+            _spec(value['implementation_intent']),decode_tuple(value['supersedes_refs'],decode_proposal_ref, code='INVALID_REVISION'),
+            schema_version, None if schema_version == 1 else _source_change(value['source_change']))
     except (KeyError,TypeError,ValueError,AttributeError,OverflowError,RecursionError):
         raise ReferenceError('INVALID_PROPOSAL') from None
 
@@ -131,11 +147,13 @@ def encode_proposal(value):
 def decode_proposal(raw):
     try:
         value=canonical_value(raw,maximum=MAX_PROPOSAL_BYTES)
-        require_object(value,DRAFT_FIELDS|{'realm_id','project_id','proposal_id','created_at','created_by','schema_version','change_id','digest'}, code='INVALID_REVISION')
-        if type(value['schema_version']) is not int or value['schema_version']!=1:
+        if type(value) is not dict or type(value.get('schema_version')) is not int or value['schema_version'] not in {1, 2}:
             raise ReferenceError('INVALID_PROPOSAL')
+        draft_fields = DRAFT_FIELDS if value['schema_version'] == 1 else DRAFT_FIELDS | {'source_change'}
+        require_object(value,draft_fields|{'realm_id','project_id','proposal_id','created_at','created_by','schema_version','change_id','digest'}, code='INVALID_REVISION')
         record=decode_draft(Scope(value['realm_id'],value['project_id']),value['proposal_id'],value['created_at'],
-            decode_actor(value['created_by']),value['change_id'],{k:value[k] for k in DRAFT_FIELDS})
+            decode_actor(value['created_by']),value['change_id'],{k:value[k] for k in draft_fields},
+            schema_version=value['schema_version'])
         if record.digest!=decode_digest(value['digest']) or encode_proposal(record)!=raw:
             raise ReferenceError('INVALID_PROPOSAL')
         return record

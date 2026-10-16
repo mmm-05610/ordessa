@@ -17,9 +17,11 @@ from .method_schema import METHOD_SCHEMA_VERSION, METHOD_DDL
 from .implementation_schema import IMPLEMENTATION_SCHEMA_VERSION, IMPLEMENTATION_DDL, IMPLEMENTATION_TABLES
 from .submission_repository import SQLiteSubmissionRepository
 from .submission_schema import SUBMISSION_SCHEMA_VERSION, SUBMISSION_DDL, IMPLEMENTATION_APPLY_DDL
-from .dispatch_schema import DISPATCH_SCHEMA_VERSION, DISPATCH_DDL
+from .dispatch_schema import (DISPATCH_SCHEMA_VERSION, DISPATCH_DDL,
+                              WORK_DISPATCH_SCHEMA_VERSION)
 from .acceptance_schema import ACCEPTANCE_SCHEMA_VERSION
 from .reviewer_assignment_schema import REVIEWER_ASSIGNMENT_SCHEMA_VERSION
+from .external_record_schema import EXTERNAL_RECORD_SCHEMA_VERSION
 
 
 class _RollbackOnly(Exception):
@@ -110,7 +112,7 @@ class SQLiteUoWFactory:
         if not isinstance(library, EngineeringLibrary):
             raise ApplicationError("UOW_AUTHORITY_REQUIRED")
         with library._read_connection():
-            if library._schema_version not in {APPLICATION_SCHEMA_VERSION, REVIEW_SCHEMA_VERSION, MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION}:
+            if library._schema_version not in {APPLICATION_SCHEMA_VERSION, REVIEW_SCHEMA_VERSION, MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION}:
                 raise ApplicationError("APPLICATION_SCHEMA_REQUIRED")
         self.library = library
         self.authority_id = library.library_id
@@ -183,7 +185,7 @@ class SQLiteEngineeringUoW:
             for reads in getattr(read_fences, 'values', ()):
                 self.engineering.check_read_set(reads)
             from .method_repository import SQLiteMethodRepository
-            self._methods = SQLiteMethodRepository(self._access) if self._library._schema_version in (METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION) else None
+            self._methods = SQLiteMethodRepository(self._access) if self._library._schema_version in (METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION) else None
             fences = getattr(self._library, "_method_guard_fences", None)
             for control, selection in getattr(fences, "values", ()):
                 if self._methods is None:
@@ -192,27 +194,31 @@ class SQLiteEngineeringUoW:
             self._reviews = None
             self._proposals = None
             self._authorization = None
-            if self._library._schema_version in (AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+            if self._library._schema_version in (AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
                 from .authorization_repository import SQLiteAuthorizationRepository
                 self._authorization = SQLiteAuthorizationRepository(self._access)
-            if self._library._schema_version in (PROPOSAL_SCHEMA_VERSION, AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+            if self._library._schema_version in (PROPOSAL_SCHEMA_VERSION, AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
                 from .proposal_repository import SQLiteProposalRepository
                 self._proposals = SQLiteProposalRepository(self._access)
-            if self._library._schema_version in (REVIEW_SCHEMA_VERSION, MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+            if self._library._schema_version in (REVIEW_SCHEMA_VERSION, MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
                 from .review_repository import SQLiteReviewRepository
                 self._reviews = SQLiteReviewRepository(self._access)
             from .implementation_repository import SQLiteImplementationRepository
-            from .dispatch_repository import SQLiteDispatchRepository
+            from .dispatch_repository import SQLiteDispatchRepository, SQLiteWorkDispatchRepository
             from .workflow_transactions import _TransactionScope
             self._workflow = _TransactionScope(self._library, connection, self.scope)
-            self._dispatch = SQLiteDispatchRepository(self._access) if self._library._schema_version in (DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION) else None
-            self._submissions = SQLiteSubmissionRepository(self._access) if self._library._schema_version in (SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION) else None
-            self._implementation = SQLiteImplementationRepository(self._access) if self._library._schema_version in (IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION) else None
+            self._dispatch = SQLiteDispatchRepository(self._access) if self._library._schema_version in (DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION) else None
+            # The declared-Work dispatch relation is its own relation on schema 17:
+            # a declared Work has no run row, so it is never the run repository.
+            self._work_dispatch = SQLiteWorkDispatchRepository(self._access) if self._library._schema_version == WORK_DISPATCH_SCHEMA_VERSION else None
+            self._submissions = SQLiteSubmissionRepository(self._access) if self._library._schema_version in (SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION) else None
+            self._implementation = SQLiteImplementationRepository(self._access) if self._library._schema_version in (IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION) else None
             from .acceptance_repository import SQLiteAcceptanceRepository
-            self._acceptance = SQLiteAcceptanceRepository(self._access) if self._library._schema_version in (ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION) else None
+            self._acceptance = SQLiteAcceptanceRepository(self._access) if self._library._schema_version in (ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION) else None
             from .reviewer_assignment_repository import SQLiteReviewerAssignmentRepository
             self._reviewer_assignments = (SQLiteReviewerAssignmentRepository(self._access)
-                if self._library._schema_version == REVIEWER_ASSIGNMENT_SCHEMA_VERSION else None)
+                if self._library._schema_version in (REVIEWER_ASSIGNMENT_SCHEMA_VERSION,
+                                                     EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION) else None)
             return self
         except BaseException as exc:
             try:
@@ -245,6 +251,14 @@ class SQLiteEngineeringUoW:
         if self._dispatch is None:
             raise ApplicationError('DISPATCH_SCHEMA_REQUIRED')
         return self._dispatch
+
+    @property
+    def work_dispatch(self):
+        """The declared-Work dispatch relation (schema 17), never the run one."""
+        self._access.check_active()
+        if self._work_dispatch is None:
+            raise ApplicationError('WORK_DISPATCH_SCHEMA_REQUIRED')
+        return self._work_dispatch
 
     @property
     def implementation(self):
@@ -331,6 +345,26 @@ class SQLiteEngineeringUoW:
                 self._manager.__exit__(type(poison), poison, poison.__traceback__)
                 raise ApplicationError("TRANSACTION_UNCERTAIN", retry="reconcile") from poison
             if error is None:
+                # Source declarations retain control through COMMIT, including
+                # changes made in this same TX. Historical compiled-method
+                # guards keep their existing begin-time contract.
+                method_fences = getattr(self._library, "_method_guard_fences", None)
+                try:
+                    for control, selection in getattr(method_fences, "values", ()):
+                        if control.method_ref.schema_version != 2:
+                            continue
+                        if self._methods is None:
+                            raise ApplicationError("METHOD_CONTROL_SCHEMA_REQUIRED")
+                        self._methods.check_guard(control, selection)
+                except BaseException as fence_error:
+                    try:
+                        self._manager.__exit__(type(fence_error), fence_error,
+                                               fence_error.__traceback__)
+                    except EngineeringError as cleanup:
+                        code = ("COMMIT_UNKNOWN" if cleanup.code == "library_rollback_failed"
+                                else "STORAGE_UNAVAILABLE")
+                        raise ApplicationError(code, retry="reconcile") from cleanup
+                    raise
                 # Reviewer assignments are security-sensitive role evidence.
                 # Re-read just those owner versions in this same transaction
                 # immediately before commit; other read-set kinds retain their

@@ -17,3 +17,8 @@ __all__ += ["ParsedContent", "ParsedResource", "ParsedSourceBundle"]
 
 from .compiled import ResultRouting, LoopSpec
 __all__ += ['ResultRouting', 'LoopSpec']
+
+from .method import (ActionInput, StepInput, ActionStep, ActionOutput,
+                     AdmissionRequirement, PreparationDocument, ActionDefinition, MethodDefinition)
+__all__ += ['ActionInput', 'StepInput', 'ActionStep', 'ActionOutput',
+            'AdmissionRequirement', 'PreparationDocument', 'ActionDefinition', 'MethodDefinition']

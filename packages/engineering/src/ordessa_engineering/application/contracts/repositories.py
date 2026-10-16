@@ -46,6 +46,8 @@ class CommandJournal(Protocol):
                  state: str = "completed") -> JournalEntry: ...
     def find_completed_review_request(self, scope, *, review_id: str,
                                       plan_digest: Digest) -> JournalEntry | None: ...
+    def find_operation(self, scope, operation_id: str, *,
+                       operation: str) -> JournalEntry | None: ...
 
 
 class ProposalRepository(Protocol):
@@ -93,6 +95,23 @@ class ReviewRepository(Protocol):
 class CommandAccessPort(Protocol):
     """Trusted composition supplies this port; a client ActorRef is not proof."""
     def require(self, context: CommandContext, operation: str) -> None: ...
+
+    def check_work_capability(self, context: CommandContext, operation: str) -> bool:
+        """Check one declared capability with the active Work caller and scope."""
+        ...
+
+    def admit_work_step(self, context: CommandContext, operation: str, *, request_id: str):
+        """Issue a child context through the original authority, with no new grant."""
+        ...
+
+    def guard_unit_bootstrap(self, context: CommandContext, *, permission: object):
+        """Suspend dispatch admission while the original Unit validates its start.
+
+        The selected Unit permission must belong to this exact authority,
+        caller and scope. Engineering admission resumes only after current
+        authority revalidation; this does not grant a Unit action.
+        """
+        ...
 
     def handoff_effect_write(self, context: CommandContext, *, invocation_key: bytes,
                              action_instances, target_thread, expires_at: float):

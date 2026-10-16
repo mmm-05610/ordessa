@@ -31,6 +31,9 @@ def build_review_check_admission(
     composite_reviewer_authority,
     expected_access,
     expected_scope,
+    source_materials=None,
+    method_guard=None,
+    source_review_bindings=None,
 ) -> EngineeringReviewAdmission:
     """Build the original admission over exact typed check-source owners.
 
@@ -83,7 +86,9 @@ def build_review_check_admission(
 
     mixed = MixedReviewerSource(factory, method_control, blobs, sources=sources,
         source_for_capability=mapping, reviewer_authority=composite_reviewer_authority)
-    admission = EngineeringReviewAdmission(factory, method_control, review_bindings, mixed)
+    admission = EngineeringReviewAdmission(factory, method_control, review_bindings, mixed,
+        source_materials=source_materials, method_guard=method_guard,
+        source_review_bindings=source_review_bindings)
     bound_review_check_capabilities(admission, expected_factory=factory,
         expected_access=expected_access, expected_scope=expected_scope)
     return admission

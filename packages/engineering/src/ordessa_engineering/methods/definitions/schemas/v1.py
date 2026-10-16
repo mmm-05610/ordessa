@@ -85,6 +85,50 @@ WORKFLOW_SCHEMA_V1 = _object({
             "max_rounds":{"type":"integer","minimum":1,"maximum":4096},
             "on_exhausted":_TEXT}, ("loop_id","from_step","to_step","max_rounds","on_exhausted"))},
 }, ("schema_version", "entry", "steps", "stop_outcomes", "wait_kinds"))
+
+# Optional, method-neutral declarations carried by OperationNode.config. These
+# schemas deliberately describe identifiers and finite projections only; the
+# compiler binds ResourceRefs and the original application owners resolve the
+# referenced facts.
+_REVIEW_DOC_TYPES_V1 = {"type": "array", "minItems": 1, "uniqueItems": True, "items": _TEXT}
+_REVIEW_TARGET_ROLE_V1 = {"enum": ["primary", "base", "proposed", "output", "support"]}
+_REVIEW_TARGET_SLOT_V1 = _object({
+    "source": {"const": "slot"}, "slot": _TEXT, "document_types": _REVIEW_DOC_TYPES_V1, "role": _REVIEW_TARGET_ROLE_V1,
+}, ("source", "slot", "document_types", "role"))
+_REVIEW_TARGET_PROPOSAL_V1 = _object({
+    "source": {"const": "proposal_proposed_revisions"}, "document_types": _REVIEW_DOC_TYPES_V1, "role": _REVIEW_TARGET_ROLE_V1,
+}, ("source", "document_types", "role"))
+_REVIEW_TARGET_SUBMISSION_V1 = _object({
+    "source": {"const": "submission_output_revisions"}, "document_types": _REVIEW_DOC_TYPES_V1, "role": _REVIEW_TARGET_ROLE_V1,
+}, ("source", "document_types", "role"))
+_REVIEW_MATERIAL_V1 = {"oneOf": [
+    _object({"name": _TEXT, "source": {"const": "slot"}, "slot": _TEXT}, ("name", "source", "slot")),
+    *[_object({"name": _TEXT, "source": {"const": source}, "slot": _TEXT}, ("name", "source"))
+      for source in ("proposal_record", "implementation_intent", "package_record",
+          "submission_record", "review_record", "acceptance_mapping")],
+    *[_object({"name": _TEXT, "source": {"const": source}}, ("name", "source"))
+      for source in ("targets", "method_content", "source_captures", "claim_bindings")],
+]}
+_REVIEW_MEMBER_V1 = _object({
+    "member_id": _TEXT, "request_node": _TEXT, "plan_slot": _TEXT,
+    "standard": RESOURCE_REF_SCHEMA_V1, "response_wait": _TEXT, "record_node": _TEXT,
+    "advance_waits": _TEXTS,
+}, ("member_id", "request_node", "plan_slot", "standard", "response_wait", "record_node"))
+REVIEW_GROUP_CONFIG_SCHEMA_V1 = _object({
+    "contract": {"const": "ordessa.method-review-group/1"}, "group_id": _TEXT,
+    "subject_slot": _TEXT,
+    "target_sources": {"type": "array", "minItems": 1,
+        "items": {"oneOf": [_REVIEW_TARGET_SLOT_V1, _REVIEW_TARGET_PROPOSAL_V1, _REVIEW_TARGET_SUBMISSION_V1]}},
+    "material_sources": {"type": "array", "items": _REVIEW_MATERIAL_V1},
+    "members": {"type": "array", "minItems": 1, "items": _REVIEW_MEMBER_V1},
+    "gate_wait": _TEXT, "required_members": {"const": "all_declared"},
+    "empty_members": {"const": "error"},
+}, ("contract", "group_id", "subject_slot", "target_sources", "material_sources",
+    "members", "gate_wait", "required_members", "empty_members"))
+REVIEW_BINDING_CONFIG_SCHEMA_V1 = _object({
+    "contract": {"const": "ordessa.method-review-binding/1"}, "anchor_node": _TEXT,
+    "group_id": _TEXT, "member_id": _TEXT,
+}, ("contract", "anchor_node", "group_id", "member_id"))
 _VOCABULARY = {"oneOf": [
     _object({"kind": {"const": "choice"}, "options": {"type": "array", "minItems": 1,
         "items": _object({"option_id": _TEXT, "description": _TEXT}, ("option_id", "description"))}}, ("kind", "options")),

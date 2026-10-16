@@ -8,7 +8,7 @@ import threading
 
 from ....application.contracts.errors import ApplicationError
 from ....application.contracts.commands import CommandContext
-from ....application.contracts.snapshots import EngineeringTargetBindings
+from ....application.contracts.snapshots import EngineeringTargetBindings, ResolvedReviewMaterial
 from ....application.orchestration.method_content import document_type_for_payload
 from ....application.usecases.proposal_closure import resolve_record
 from ....domain.artifacts.refs import ArtifactRevisionRef
@@ -207,6 +207,36 @@ class SQLiteReviewBindings:
         with self.factory.begin(context.scope, 'read') as uow:
             return tuple((name, uow.engineering.resolve_revision(ref))
                          for name, ref in phase.material_inputs)
+
+    def resolve_plan_bindings(self, context, plan):
+        """Resolve the exact configured phase through its original selection.
+
+        This is the plan-aware delivery port, not a persisted Work selector.
+        The admission owner independently checks the full Proposal closure.
+        """
+        from ....domain.reviews.models import ReviewPlan
+        if type(plan) is not ReviewPlan or plan.scope != context.scope:
+            raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
+        return self.resolve_bindings(context, plan.requirement.method_ref,
+                                     plan.requirement.phase_key)
+
+    def material_inputs_for_plan(self, context, plan):
+        """Project configured immutable artifacts into typed named materials."""
+        from ....domain.artifacts.models import InlinePayload, MethodPayload
+        from ordessa_infrastructure.encoding import canonical_bytes
+        self.resolve_plan_bindings(context, plan)
+        result = []
+        for name, revision in self.material_inputs(
+                context, plan.requirement.method_ref, plan.requirement.phase_key):
+            if type(revision.payload) is MethodPayload:
+                value = revision.payload.content.value
+            elif type(revision.payload) is InlinePayload:
+                value = revision.payload.value
+            else:
+                raise ApplicationError('DECISION_INPUT_BINDING_UNAVAILABLE')
+            result.append(ResolvedReviewMaterial(name, revision.ref, 'method_content',
+                                                canonical_bytes(value)))
+        return tuple(result)
 
 
 __all__ = ['ConfiguredReviewPhase', 'SQLiteReviewBindings']

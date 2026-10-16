@@ -6,9 +6,9 @@ from dataclasses import asdict, dataclass, field, fields
 from ordessa_infrastructure.encoding import canonical_bytes
 from ordessa_engineering.domain.artifacts.refs import (ArtifactRevisionRef)
 from ordessa_engineering.domain.common.models.refs import (BlobRef)
-from ordessa_engineering.domain.artifacts.method_binding import (MethodRef)
+from ordessa_engineering.domain.artifacts.method_binding import (MethodRef, ExactMethodResourceRef)
 from ordessa_engineering.domain.reviews.refs import (ReviewRef)
-from ordessa_engineering.domain.reviews.targets import (Target, TargetSet)
+from ordessa_engineering.domain.reviews.targets import (Target, TargetSet, SourceTargetRef)
 from ..common.models.values import (Digest, validate_id)
 from ..common.models.identity import (Scope)
 from ..common.outcomes.diagnostics import (ReferenceError)
@@ -68,20 +68,36 @@ class ReviewRequirement:
     required_check_keys: tuple[CheckKey, ...]
     eligible_reviewer_roles: tuple[str, ...]
     phase_key: str
+    schema_version: int = 1
+    method_resource_refs: tuple[ExactMethodResourceRef, ...] = ()
     digest: Digest = field(init=False)
 
     def __post_init__(self):
         if (type(self.scope) is not Scope or type(self.expected_targets) is not TargetSet
-                or type(self.method_ref) is not MethodRef or type(self.criterion_set_ref) is not CriterionSetRef):
+                or type(self.method_ref) is not MethodRef or type(self.criterion_set_ref) is not CriterionSetRef
+                or type(self.schema_version) is not int or self.schema_version not in {1, 2}):
             raise ReferenceError("INVALID_SCHEMA")
+        validate_items(self.method_resource_refs, ExactMethodResourceRef,
+                       nonempty=self.schema_version == 2)
+        if (self.schema_version == 1 and self.method_resource_refs
+                or self.schema_version == 2 and (len(self.method_resource_refs) > 256
+                    or any(ref.method_ref != self.method_ref for ref in self.method_resource_refs))):
+            raise ReferenceError("INVALID_METHOD_RESOURCE")
+        object.__setattr__(self, "method_resource_refs", ordered_unique(
+            self.method_resource_refs, lambda item: canonical_bytes(asdict(item)),
+            code="INVALID_METHOD_RESOURCE"))
         validate_id(self.requirement_id)
         validate_id(self.phase_key)
         validate_version(self.requirement_version, positive=True)
         if type(self.purpose) is not str or self.purpose not in PURPOSES:
             raise ReferenceError("INVALID_SCHEMA")
-        if any((t.ref.realm_id, t.ref.project_id) != (self.scope.realm_id, self.scope.project_id)
+        if any(((t.ref.scope.realm_id, t.ref.scope.project_id) if type(t.ref) is SourceTargetRef
+                else (t.ref.realm_id, t.ref.project_id)) != (self.scope.realm_id, self.scope.project_id)
                for t in self.expected_targets.targets):
             raise ReferenceError("REALM_MISMATCH")
+        if (any(type(t.ref) is SourceTargetRef for t in self.expected_targets.targets)
+                and self.schema_version != 2):
+            raise ReferenceError("INVALID_REVIEW_REQUIREMENT_VERSION")
         validate_items(self.required_check_keys, CheckKey, nonempty=True)
         if any(k.target not in self.expected_targets.targets for k in self.required_check_keys):
             raise ReferenceError("CHECK_OUT_OF_PLAN")
@@ -96,7 +112,18 @@ class ReviewRequirement:
         object.__setattr__(self, "digest", record_digest("review-requirement", self.hash_payload()))
 
     def hash_payload(self):
-        return payload_fields(self, {"digest"})
+        excluded = {"digest"}
+        if self.schema_version == 1:
+            excluded.update({"schema_version", "method_resource_refs"})
+        return {item.name: projection(getattr(self, item.name), identity=True)
+                for item in fields(self) if item.name not in excluded}
+
+    def __canonical_projection__(self, *, identity=False):
+        excluded = set()
+        if self.schema_version == 1:
+            excluded.update({"schema_version", "method_resource_refs"})
+        return {item.name: projection(getattr(self, item.name), identity=identity)
+                for item in fields(self) if item.name not in excluded}
 
 
 @dataclass(frozen=True)
@@ -469,7 +496,7 @@ class ReviewRecord:
         return payload_fields(self, excluded)
 
     def projection(self):
-        result = asdict(self)
+        result = projection(self)
         if self.identity.schema_version == 1:
             del result["raw_response_ref"]
         return result
@@ -508,9 +535,16 @@ class ReviewSetKey:
     def for_requirement(cls, requirement):
         if type(requirement) is not ReviewRequirement:
             raise ReferenceError("INVALID_SCHEMA")
+        method_pin = requirement.method_ref.snapshot_digest
+        if requirement.schema_version == 2:
+            method_pin = record_digest("review-method-resources", {
+                "method_ref": asdict(requirement.method_ref),
+                "resources": [projection(item, identity=True)
+                              for item in requirement.method_resource_refs],
+            })
         return cls(requirement.scope, requirement.requirement_id, requirement.requirement_version,
                    requirement.purpose, requirement.expected_targets.digest,
-                   requirement.method_ref.snapshot_digest, requirement.criterion_set_ref.digest)
+                   method_pin, requirement.criterion_set_ref.digest)
 
 
 @dataclass(frozen=True)

@@ -84,6 +84,38 @@ class SQLiteCommandJournal:
             _fail("SCOPE_MISMATCH")
         return entry
 
+    def find_operation(self, scope, operation_id: str, *, operation: str) -> JournalEntry | None:
+        """Find one command by its stable operation identity in this exact scope.
+
+        The lookup deliberately does not invent a caller key. It returns the
+        original journal entry, decoded by the same strict path as ``get`` and
+        ``reserve``, so callers can compare the real principal and request id.
+        """
+        self._require_scope_for(scope)
+        self._validate_id(operation_id)
+        self._validate_id(operation)
+        rows = self.access.execute(
+            "SELECT realm_id, principal_id, request_id FROM eng_commands "
+            "WHERE realm_id=? AND project_id=? AND operation_id=? "
+            "ORDER BY principal_id, request_id LIMIT 2",
+            (scope.realm_id, scope.project_id, operation_id),
+        ).fetchall()
+        if len(rows) > 1:
+            _fail("JOURNAL_CORRUPT")
+        if not rows:
+            return None
+        try:
+            key = CommandKey(*rows[0])
+        except (TypeError, ValueError, ReferenceError):
+            _fail("JOURNAL_CORRUPT")
+        entry = self._select(key)
+        if (entry is None or entry.project_id != scope.project_id
+                or entry.operation_id != operation_id):
+            _fail("JOURNAL_CORRUPT")
+        if entry.operation != operation:
+            _fail("OPERATION_IDENTITY_CONFLICT")
+        return entry
+
     def find_completed_review_request(self, scope, *, review_id: str,
                                       plan_digest: Digest) -> JournalEntry | None:
         """Find the unique terminal request carrying this exact Work review proof.

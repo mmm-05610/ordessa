@@ -7,12 +7,14 @@ from collections.abc import Mapping
 from ordessa_infrastructure.encoding.canonical_json import canonical_bytes, LIBRARY_JSON_PROFILE
 
 from ....application.contracts.errors import ApplicationError
-from ....application.contracts.execution_observations import ExecutionObservationRef
+from ....application.contracts.execution_observations import (
+    ExecutionObservationRef, MAX_EXECUTION_RECEIPT_BYTES)
 from ....domain.common.models.values import Digest
 from ....domain.common.models.refs import BlobRef
 
 
 _STATES = {'reserved', 'possibly-written', 'completed', 'failed', 'unknown'}
+_DEFAULT_RECEIPT_MAX_BYTES = 262144
 
 
 def _plain_view(value, depth=0):
@@ -29,8 +31,16 @@ def _plain_view(value, depth=0):
 
 
 def capture_execution_observation(records, blobs, *, authority_id, unit_ref, operation_ref,
-                                  expected_prompt_digest, query_invocation):
-    """Authorized cold-read and byte capture only; does not create a Submission or Grant."""
+                                  expected_prompt_digest, query_invocation,
+                                  max_receipt_bytes=_DEFAULT_RECEIPT_MAX_BYTES):
+    """Authorized cold-read and byte capture only; no Submission or Grant.
+
+    The original Records adapter passes its public finite receipt budget here;
+    direct historical callers retain the former 256 KiB default.
+    """
+    if (type(max_receipt_bytes) is not int
+            or not 1 <= max_receipt_bytes <= MAX_EXECUTION_RECEIPT_BYTES):
+        raise ApplicationError('EXECUTION_RECEIPT_BOUND_INVALID')
     if (not isinstance(unit_ref, Mapping)
             or set(unit_ref) != {'environmentNamespace','unitId','ownerProviderRef','sourceRevision'}
             or type(operation_ref) is not str or not 0 < len(operation_ref) <= 256
@@ -70,7 +80,7 @@ def capture_execution_observation(records, blobs, *, authority_id, unit_ref, ope
     except (TypeError, ValueError, UnicodeError) as exc:
         raise ApplicationError('EXECUTION_RECEIPT_NOT_CANONICAL') from exc
     digest = hashlib.sha256(encoded).hexdigest()
-    if len(encoded) > 262144:
+    if len(encoded) > max_receipt_bytes:
         raise ApplicationError('EXECUTION_RECEIPT_BOUND_EXCEEDED')
     expected = Digest('sha256', digest)
     blob_ref = blobs.put_verified(encoded, expected, 'application/json')

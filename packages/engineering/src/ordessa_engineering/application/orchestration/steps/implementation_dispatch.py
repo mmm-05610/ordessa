@@ -97,9 +97,25 @@ class ImplementationDispatch:
                     raise ApplicationError('DISPATCH_SOURCE_SNAPSHOT_INVALID')
             yield grant,decisions
 
-    def _work_package(self,uow,run_id,*,step_id=None,live=False,attempt=None):
+    def _work_package(self,uow,run_id,*,step_id=None,live=False,attempt=None,request=None,binding=None):
         from ..dispatch_method_run import resolve_method_run_package
-        return resolve_method_run_package(uow,run_id,self.method_runs,step_id=step_id,live=live,attempt=attempt)
+        package=resolve_method_run_package(uow,run_id,self.method_runs,step_id=step_id,live=live,attempt=attempt)
+        if request is not None:
+            from ..dispatch_recipe import check_dispatch_recipe
+            check_dispatch_recipe(uow,self.method_runs,package,request)
+        if binding is not None:
+            from ..dispatch_recipe import check_bound_dispatch_recipe
+            check_bound_dispatch_recipe(uow,self.method_runs,package,binding)
+        return package
+
+    @contextmanager
+    def _input_guards(self,context,package,unit,request):
+        with ExitStack() as stack:
+            if self.source_snapshots is not None:
+                guard=getattr(self.source_snapshots,'guard_dispatch_input',None)
+                if callable(guard):
+                    stack.enter_context(guard(context,package,unit,request))
+            yield stack.enter_context(self._guards(context,package,unit))
 
     @staticmethod
     def _existing(uow,run_id,step_id,attempt):
@@ -118,6 +134,60 @@ class ImplementationDispatch:
             'result_blob_ref':None if row['result_blob_json'] is None else decode_json(row['result_blob_json']),
             'engineering_completed':False,'accepted':False,'reason':reason}
 
+    def dispatch_declared_work(self, identity, work_id, action_id, step_id, attempt,
+                               unit_ref, params, actions, context, *, timeout=60):
+        """Dispatch one declared Work step, refusing by the real missing item.
+
+        The subject comes from the Work, never from a run row: a generation step
+        acts on the already reviewed change, an implementation step on the frozen
+        admitted package. Each precondition is checked in order against real
+        state and refuses by name, so no run row, package or grant is ever stood
+        in for a declared step.
+        """
+        self._access(context, _SEND)
+        if self.execution is None or self.blobs is None:
+            raise ApplicationError('DISPATCH_EXECUTION_AUTHORITY_UNAVAILABLE')
+        if not callable(getattr(self.selection, 'guard_selection', None)):
+            raise ApplicationError('DISPATCH_SELECTION_AUTHORITY_UNAVAILABLE')
+        if (type(actions) is not tuple or not actions
+                or len(set(actions)) != len(actions)
+                or type(attempt) is not int or not 1 <= attempt <= 4096):
+            raise ApplicationError('INVALID_ARGUMENT')
+        for value in (work_id, action_id, step_id):
+            validate_id(value)
+        # The same platform rule the implementation line enforces: generation,
+        # change application and acceptance are not dispatched as implementation
+        # work. A declared generation step therefore has no dispatch here.
+        if set(actions) & {'generate_package', 'apply_change', 'accept_artifact'}:
+            raise ApplicationError('ACTION_NOT_AUTHORIZED')
+        # An implementation step of a declared Work needs a frozen admitted
+        # package to act on; the Work's own associations are the only source.
+        with self.factory.begin(context.scope, 'read') as uow:
+            binding = self._declared_work_subject(uow, work_id, action_id, step_id)
+        if binding is None:
+            raise ApplicationError('DISPATCH_DECLARED_WORK_SUBJECT_MATERIAL_UNAVAILABLE')
+        raise ApplicationError('DISPATCH_DECLARED_WORK_GRANT_UNAVAILABLE')
+
+    def _declared_work_subject(self, uow, work_id, action_id, step_id):
+        """The declared step's subject, taken from this Work's own records.
+
+        Returns a schema-2 binding when the Work already carries a subject this
+        step may act on (a frozen package for implementation), otherwise None.
+        Nothing is inferred from a run row or from a caller-supplied reference.
+        """
+        from ordessa_engineering.application.contracts.work_context import (
+            WORK_CONTEXT_KIND, WORK_STABLE_ID_PREFIX, decode_work_binding)
+        stable = f'{WORK_STABLE_ID_PREFIX}{work_id}'
+        head = uow.workflow.head_ref(WORK_CONTEXT_KIND, stable)
+        if head is None:
+            return None
+        work_binding = decode_work_binding(uow.workflow.read(head))
+        packages = [association for association in work_binding.associations
+                    if association.kind == 'package']
+        if len(packages) != 1:
+            return None
+        return packages[0].ref
+
     def dispatch(self,run_id,step_id,attempt,unit_ref,params,actions,context,*,timeout=60):
         self._access(context,_SEND)
         if self.execution is None or self.blobs is None:raise ApplicationError('DISPATCH_EXECUTION_AUTHORITY_UNAVAILABLE')
@@ -125,12 +195,20 @@ class ImplementationDispatch:
             raise ApplicationError('DISPATCH_SELECTION_AUTHORITY_UNAVAILABLE')
         for value in (run_id,step_id):validate_id(value)
         if type(attempt) is not int or not 1<=attempt<=4096 or type(actions) is not tuple or not actions or len(set(actions))!=len(actions):raise ApplicationError('INVALID_ARGUMENT')
-        raw,prompt_digest=self.execution.freeze_input(unit_ref,params)
-        prompt=self.blobs.put_verified(raw,_digest(raw),'application/json')  # Outside business TX.
+        request=decode_json(canonical_bytes({'run_id':run_id,'step_id':step_id,
+            'attempt':attempt,'unit_ref':_data(unit_ref),'params':_data(params),
+            'actions':list(actions),'timeout':timeout}))
         unit_bytes=canonical_bytes(_data(unit_ref))
         with self.factory.begin(context.scope,'read') as uow:
             package=self._work_package(uow,run_id,step_id=step_id)
             old=self._existing(uow,run_id,step_id,attempt)
+            if old is None:
+                self._work_package(uow,run_id,step_id=step_id,live=True,attempt=attempt,request=request)
+        # A fresh recipe is now method/package checked before any input blob
+        # or conservative action reservation. Replay retains its old binding.
+        raw,prompt_digest=self.execution.freeze_input(unit_ref,request['params'])
+        prompt=self.blobs.put_verified(raw,_digest(raw),'application/json')
+        with self.factory.begin(context.scope,'read') as uow:
             if old is not None:
                 binding=decode_dispatch(old['binding_bytes'])
                 if (binding.package_ref!=package.ref or binding.unit_ref_bytes!=unit_bytes
@@ -140,10 +218,10 @@ class ImplementationDispatch:
                 # No operation or consumption ID is minted on a retry, and no
                 # presumed native absence is inferred from a refused query.
                 return self._view(old,'RESERVED_REQUIRES_ORIGINAL_NEVER_SENT_PROOF' if old['dispatch_phase']=='reserved' else None)
-            self._work_package(uow,run_id,step_id=step_id,live=True,attempt=attempt)
-        with self._guards(context,package,unit_ref) as (grant,decisions):
+            self._work_package(uow,run_id,step_id=step_id,live=True,attempt=attempt,request=request)
+        with self._input_guards(context,package,unit_ref,request) as (grant,decisions):
             with self.factory.begin(context.scope) as uow:
-                self._work_package(uow,run_id,step_id=step_id,live=True,attempt=attempt)
+                self._work_package(uow,run_id,step_id=step_id,live=True,attempt=attempt,request=request)
                 ImplementationUseCases._resolve_package(uow,package,now=context.received_at)
                 self.approvals._check_gates(uow,decisions)
                 if not set(actions)<=set(package.payload.allowed_actions):raise ApplicationError('ACTION_NOT_AUTHORIZED')
@@ -162,9 +240,9 @@ class ImplementationDispatch:
                 uow.commit()
         # Only this fresh invocation owns the newly reserved first send. A crash
         # here leaves reserved visible with debit retained, not a replay token.
-        with self._guards(context,package,unit_ref) as (_grant,decisions):
+        with self._input_guards(context,package,unit_ref,request) as (_grant,decisions):
             with self.factory.begin(context.scope) as uow:
-                self._work_package(uow,run_id,step_id=step_id,live=True,attempt=attempt)
+                self._work_package(uow,run_id,step_id=step_id,live=True,attempt=attempt,request=request)
                 ImplementationUseCases._resolve_package(uow,package,now=context.received_at)
                 self.approvals._check_gates(uow,decisions)
                 if uow.authorization.get_control(binding.approval_ref)['version']!=binding.control_version:
@@ -230,8 +308,13 @@ class ImplementationDispatch:
         if type(deadline) not in (int,float) or not loop.time()<deadline<=loop.time()+10:
             raise ApplicationError('DISPATCH_EFFECT_DEADLINE_INVALID')
         with self.factory.begin(context.scope,'read') as read:
-            package=self._work_package(read,binding.run_id,step_id=binding.step_id,live=True,attempt=binding.attempt)
-        with self._guards(context,package,decode_json(binding.unit_ref_bytes)) as (grant,decisions):
+            package=self._work_package(read,binding.run_id,step_id=binding.step_id,
+                live=True,attempt=binding.attempt,binding=binding)
+            request={'run_id':binding.run_id,'step_id':binding.step_id,'attempt':binding.attempt,
+                'unit_ref':decode_json(binding.unit_ref_bytes),
+                'params':decode_json(read.implementation.read_blob(binding.prompt_ref)),
+                'actions':[action for action,_ in binding.action_instances],'timeout':None}
+        with self._input_guards(context,package,decode_json(binding.unit_ref_bytes),request) as (grant,decisions):
             while True:
                 if loop.time()>=deadline:raise ApplicationError('DISPATCH_EFFECT_TIMEOUT')
                 uow=begin(context.scope)
@@ -244,7 +327,8 @@ class ImplementationDispatch:
             with ExitStack() as stack:
                 stack.callback(uow.__exit__,None,None,None)
                 # No await occurs until all original business predicates pass.
-                package_now=self._work_package(uow,binding.run_id,step_id=binding.step_id,live=True,attempt=binding.attempt)
+                package_now=self._work_package(uow,binding.run_id,step_id=binding.step_id,
+                    live=True,attempt=binding.attempt,binding=binding)
                 if package_now.ref!=binding.package_ref or package_now!=package:
                     raise ApplicationError('DISPATCH_RUN_BINDING_MISMATCH')
                 now=utc_now()
@@ -284,7 +368,18 @@ class ImplementationDispatch:
         if self.history_sources is None:raise ApplicationError('DISPATCH_HISTORY_SOURCE_AUTHORITY_UNAVAILABLE')
         # This is authorized history read-time provenance, not live selection
         # or an action Grant. The old strong selection port is not weakened.
-        with self.history_sources.guard_history_read(context,package,decode_json(binding.unit_ref_bytes)):
+        with ExitStack() as source_stack:
+            guard=getattr(self.history_sources,'guard_dispatch_input',None)
+            if callable(guard):
+                with self.factory.begin(context.scope,'read') as read:
+                    frozen_params=decode_json(read.implementation.read_blob(binding.prompt_ref))
+                source_stack.enter_context(guard(context,package,decode_json(binding.unit_ref_bytes),
+                    {'run_id':binding.run_id,'step_id':binding.step_id,'attempt':binding.attempt,
+                     'unit_ref':decode_json(binding.unit_ref_bytes),'params':frozen_params,
+                     'actions':[action for action,_ in binding.action_instances],
+                     'timeout':None}))  # History queries impose no send timeout.
+            source_stack.enter_context(self.history_sources.guard_history_read(
+                context,package,decode_json(binding.unit_ref_bytes)))
             capture=self.execution.capture(binding)  # Authorized native cold read; never dispatch.
             # Capture's original function already checks full Unit/op/input/query.
             if capture.operation_ref!=binding.execution_operation_ref or capture.expected_prompt_digest!='sha256:'+binding.prompt_input_digest.hex or capture.query_digest!=binding.expected_query_digest:

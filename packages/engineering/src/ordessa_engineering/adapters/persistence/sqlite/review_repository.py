@@ -23,12 +23,15 @@ from ordessa_engineering.domain.reviews.models import (
     ReviewRequestState,
     ReviewRequestExpectation,
 )
+from ordessa_engineering.domain.reviews.targets import SourceTargetRef
 from ordessa_engineering.domain.common.models.values import (MAX_VERSION)
 from .artifact_repository import SQLiteArtifactRepository
 from .material_validation import MaterialBudget
 from .blob_bytes import BlobBytesError, read_bytes, validate_ref
 from .acceptance_schema import ACCEPTANCE_SCHEMA_VERSION
 from .reviewer_assignment_schema import REVIEWER_ASSIGNMENT_SCHEMA_VERSION
+from .external_record_schema import EXTERNAL_RECORD_SCHEMA_VERSION
+from .dispatch_schema import WORK_DISPATCH_SCHEMA_VERSION
 from ordessa_engineering.domain.reviews.codec import (
     decode_control, decode_key, decode_plan, decode_record, decode_requirement,
     encode_control, encode_key, encode_plan, encode_record, encode_requirement,
@@ -104,10 +107,17 @@ class SQLiteReviewRepository:
             revisions={r.ref:r for r in self.artifacts.resolve_graph(artifact_refs,budget=budget)}
         for target in requirement.expected_targets.targets:
             if type(target.ref) is ProposalRef:
-                if getattr(self.access._connection,'_ordessa_schema_version',None) not in (7, 8, 9, 10, 11, 12, 13, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+                if getattr(self.access._connection,'_ordessa_schema_version',None) not in (7, 8, 9, 10, 11, 12, 13, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
                     _fail('UNSUPPORTED_REFERENCE_KIND')
                 from .proposal_repository import SQLiteProposalRepository
                 SQLiteProposalRepository(self.access).get_proposal(target.ref,budget=budget)
+            elif type(target.ref) is SourceTargetRef:
+                # External pins are validated by the guarded application source
+                # admission before writes. Historical reads verify only the
+                # immutable canonical record and never require the provider to
+                # remain available.
+                if requirement.schema_version != 2 or target.ref.scope != requirement.scope:
+                    _fail('UNSUPPORTED_REFERENCE_KIND')
             elif type(target.ref) is not ArtifactRevisionRef:
                 _fail('UNSUPPORTED_REFERENCE_KIND')
         for key in requirement.required_check_keys if checks is None else checks:

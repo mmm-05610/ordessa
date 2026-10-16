@@ -11,12 +11,14 @@ from ..common.models.identity import Scope
 from ..common.models.values import Digest, validate_id, validate_text, validate_items, utc_instant
 from ..common.outcomes.diagnostics import ReferenceError
 from ..common.mechanisms.hashing import record_digest
+from ..common.mechanisms.codec import projection
 from ..artifacts.refs import ArtifactRevisionRef
 from ..artifacts.method_binding import MethodRef
 from ..reviews.models import ReviewRequirement
 from .refs import ApprovalRef, ConsentPolicyRef, NoticeRef
 from ..changes.models import ChangeSet
 from ..changes.application_plan import HeadExpectation
+from .implementation import WORK_PACKAGE_SCHEMA_VERSION, WorkPackageAuthorization
 
 
 def _refs(scope, refs):
@@ -27,7 +29,7 @@ def _refs(scope, refs):
 
 
 def _seal(record, kind):
-    payload = {k: v for k, v in asdict(record).items() if k != 'digest'}
+    payload = {k: v for k, v in projection(record).items() if k != 'digest'}
     if len(canonical_bytes(payload)) > 2 * 1024 * 1024:
         raise ReferenceError('CONSENT_RECORD_TOO_LARGE')
     object.__setattr__(record, 'digest', record_digest(kind, payload))
@@ -77,6 +79,43 @@ class ConversationNotice:
     @property
     def ref(self):
         return NoticeRef(self.scope, self.notice_id, self.digest)
+
+
+@dataclass(frozen=True)
+class WorkPackageNotice:
+    """Schema-2 notice presenting one exact Work/package authorization.
+
+    It carries the *same* authorization value its intent references, plus the
+    raw conversation text and its source. It deliberately holds no intent digest:
+    the intent points at the notice, so an intent summary here would be a cycle.
+    Its scope is the authorization's own scope — a second copy could disagree.
+    """
+
+    notice_id: str
+    authorization: WorkPackageAuthorization
+    actual_text: str
+    source: ConversationSource
+    policy_ref: ConsentPolicyRef
+    schema_version: int = field(default=WORK_PACKAGE_SCHEMA_VERSION, init=False)
+    digest: Digest = field(init=False, default=None)
+
+    def __post_init__(self):
+        if (type(self.authorization) is not WorkPackageAuthorization
+                or type(self.source) is not ConversationSource
+                or type(self.policy_ref) is not ConsentPolicyRef):
+            raise ReferenceError('INVALID_NOTICE')
+        validate_id(self.notice_id)
+        validate_text(self.actual_text)
+        _seal(self, 'work-package-notice')
+
+    @property
+    def scope(self):
+        """Derived from the authorization; a stored copy could disagree."""
+        return self.authorization.scope
+
+    @property
+    def ref(self):
+        return NoticeRef(self.authorization.scope, self.notice_id, self.digest)
 
 
 @dataclass(frozen=True)
@@ -237,8 +276,10 @@ class ApprovalGrant:
         validate_id(self.approval_id)
         validate_id(self.challenge_id)
         utc_instant(self.granted_at)
-        from .implementation import ImplementationAuthorizationIntent
-        if (type(self.intent) not in (AuthorizationIntent, ChangeAuthorizationIntent, ImplementationAuthorizationIntent) or type(self.evidence) is not ConversationEvidence
+        from .implementation import ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent
+        if (type(self.intent) not in (AuthorizationIntent, ChangeAuthorizationIntent,
+                                      ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent)
+                or type(self.evidence) is not ConversationEvidence
                 or self.evidence.disposition != 'confirm' or self.evidence.intent_digest != self.intent.digest
                 or self.evidence.notice_ref != self.intent.notice_ref or self.evidence.policy_ref != self.intent.policy_ref
                 or not self.intent.not_before <= self.granted_at < self.intent.expires_at):

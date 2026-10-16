@@ -51,5 +51,14 @@ class MethodStatePort(Protocol):
     def read_snapshot(self, method_ref):
         """Read the exact frozen definition for run history; no live effect grant."""
         ...
+    def read_declaration(self, context, method_ref, *, expected_version=None):
+        """Read an exact published declaration plus its current control state.
+
+        It must never materialize a compiled program, and a snapshot that simply
+        exists is not enough: a disabled or re-versioned control is refused with
+        the same codes the program path uses. Returns the declaration and the
+        control version actually observed.
+        """
+        ...
     def guard_method(self, context, method_ref, *, expected_version=None): ...
     def guard_selected(self, context, *, expected_version=None): ...

@@ -7,7 +7,9 @@ from contextlib import ExitStack, contextmanager
 from dataclasses import asdict
 from ...contracts.commands import CommandContext
 from ...contracts.errors import ApplicationError
-from ...contracts.run_waits import BoundRunWait, run_wait_row_digest
+from ...contracts.run_waits import (
+    BoundRunWait, ReviewReadiness, run_wait_row_digest,
+)
 from ...contracts.method_work import BoundWorkWait
 from ..approvals.service import ApprovalUseCases
 from ..support.clock import utc_now
@@ -52,10 +54,49 @@ class CurrentRunWaitUseCases(ApprovalUseCases):
                 decisions = ()
                 if condition.family in {'review_gate','action_authorization'}:
                     decisions = guards.enter_context(self._gates(context, condition.intent))
+                elif condition.family in {'review_plan_ready','review_response_ready'}:
+                    readiness = condition.readiness
+                    if type(readiness) is not ReviewReadiness:
+                        raise ApplicationError('REVIEW_READINESS_UNAVAILABLE')
+                    read_guard = getattr(self.factory, 'guard_read_set', None)
+                    if not callable(read_guard):
+                        raise ApplicationError('WORK_READ_SET_GUARD_UNAVAILABLE')
+                    # guard_wait is the selected Work-source boundary. Its
+                    # readiness owner guard remains held here through COMMIT;
+                    # this fence additionally rechecks the typed owner reads.
+                    guards.enter_context(read_guard(readiness.read_set))
+                    yield condition, row, decisions
+                    return
                 yield condition, row, decisions
 
     def _check(self, uow, condition, decisions, now):
         self._check_gates(uow, decisions)
+        if condition.family in {'review_plan_ready','review_response_ready'}:
+            readiness = condition.readiness
+            if type(readiness) is not ReviewReadiness:
+                raise ApplicationError('REVIEW_READINESS_UNAVAILABLE')
+            uow.engineering.check_read_set(readiness.read_set)
+            input_revision = uow.engineering.resolve_revision(readiness.input_ref)
+            if input_revision.ref != readiness.input_ref:
+                raise ApplicationError('REVIEW_READINESS_CHANGED')
+            if resolve_exact(uow, readiness.subject_ref) is None:
+                raise ApplicationError('REVIEW_READINESS_CHANGED')
+            for target in readiness.plan.requirement.expected_targets.targets:
+                if resolve_exact(uow, target.ref) is None:
+                    raise ApplicationError('REVIEW_READINESS_CHANGED')
+            if condition.family == 'review_response_ready':
+                expectation = readiness.read_set.review_requests[0]
+                try:
+                    stored_plan = uow.reviews.get_plan(readiness.plan.review_id)
+                    request = uow.reviews.get_request(readiness.plan.review_id)
+                except Exception as exc:
+                    if getattr(exc, 'code', None) == 'NOT_FOUND':
+                        raise ApplicationError('REVIEW_REQUEST_CHANGED') from exc
+                    raise
+                if (stored_plan != readiness.plan or request.state != 'requested'
+                        or request.version != expectation.expected_request_version
+                        or request.fence != expectation.expected_fence):
+                    raise ApplicationError('REVIEW_REQUEST_CHANGED')
         if condition.family in {'object_exists','result_exists'}:
             for ref in condition.refs:
                 if type(ref) is AcceptanceReceiptRef:
@@ -105,36 +146,3 @@ class CurrentRunWaitUseCases(ApprovalUseCases):
                 'wait_reason':row['wait_reason'], 'family':condition.family, 'ready':True,
                 'row_digest':asdict(condition.row_digest), 'condition_digest':asdict(condition.digest),
                 'next_step_ordinal':condition.next_step_ordinal}
-
-    def resume(self, parameters, context, *, read_set=None):
-        op = 'engineering.runs.resume'
-        value,reads,digest = self._input(op,parameters,context,read_set)
-        try:
-            validate_id(value['run_id'])
-            expected_row = Digest(**value['expected_row_digest'])
-            expected_condition = Digest(**value['expected_condition_digest'])
-        except (ReferenceError, TypeError, ValueError):
-            raise ApplicationError('INVALID_INPUT') from None
-        replay = self._replay(op,context,digest)
-        if replay is not None:
-            return replay
-        with self._bound(context,value['run_id']) as (condition,row,decisions):
-            if (condition.row_digest != expected_row or condition.digest != expected_condition
-                    or condition.next_step_ordinal != value['expected_next_step_ordinal']):
-                raise ApplicationError('RUN_WAIT_CHANGED')
-            def mutate(uow):
-                now = utc_now()
-                self._check(uow,condition,decisions,now)
-                advance = {}
-                status, cursor = 'RUNNING', row['cursor']
-                if type(condition) is BoundWorkWait:
-                    inputs = {**row['inputs'], 'slots':{**row['inputs']['slots'], **dict(condition.slot_updates)}}
-                    advance = dict(next_cursor=condition.next_cursor,next_inputs=inputs,
-                        next_status=condition.next_status,next_wait_reason=condition.next_wait_reason)
-                    status, cursor = condition.next_status, condition.next_cursor
-                MethodRunOrchestrator.claim_current_wait(uow.workflow,condition.run_id,
-                    expected_row_digest=expected_row,
-                    expected_next_step_ordinal=condition.next_step_ordinal,now=now,**advance)
-                return {'run_id':condition.run_id, 'status':status, 'cursor':cursor,
-                    'resumed_condition_digest':asdict(condition.digest), 'dispatched':False}
-            return self._run(op,context,reads,digest,mutate)

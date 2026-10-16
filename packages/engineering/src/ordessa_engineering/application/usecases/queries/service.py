@@ -9,6 +9,7 @@ from ordessa_engineering.domain.reviews.target_codec import (decode_subject_ref)
 from ordessa_engineering.domain.changes.ref_codec import (decode_proposal_ref)
 from ordessa_engineering.domain.reviews.ref_codec import (decode_review_ref)
 from ordessa_engineering.domain.approvals.ref_codec import (decode_approval_ref)
+from ordessa_engineering.domain.packages.codec import (decode_package_ref)
 from ....domain.common.outcomes.diagnostics import (ReferenceError)
 from ....domain.common.mechanisms.codec import (canonical_value)
 from ....domain.common.models.values import (validate_id)
@@ -17,7 +18,7 @@ from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.domain.approvals.consent import NoticeRef
 from ordessa_engineering.domain.approvals.consent_codec import decode_record
 from .references import resolve_exact
-from .commands import read_command
+from .commands import read_command, read_operation
 
 
 _INPUTS = {
@@ -37,6 +38,7 @@ _INPUTS = {
     "engineering.approvals.get_intent": {"intent_id"},
     "engineering.approvals.get_challenge": {"challenge_id"},
     "engineering.approvals.list_pending": {"limit", "after_challenge_id"},
+    "engineering.operations.get": {"request_id"},
 }
 SUPPORTED_QUERIES = tuple(_INPUTS)
 
@@ -79,6 +81,8 @@ class EngineeringQueries:
                     target = decode_review_ref(ref)
                 elif type(ref) is dict and ref.get("kind") == "approval":
                     target = decode_approval_ref(ref)
+                elif type(ref) is dict and ref.get("kind") == "implementation_package":
+                    target = decode_package_ref(ref)
                 elif type(ref) is dict and set(ref) == {'scope', 'notice_id', 'digest'}:
                     target = decode_record(canonical_bytes(ref), NoticeRef)
                 else:
@@ -127,4 +131,6 @@ class EngineeringQueries:
                 return uow.proposals.get_control(target)
             if query == "engineering.changes.get":
                 return uow.proposals.get_change(target)
+            if query == "engineering.operations.get":
+                return read_operation(uow, context, target)
             return read_command(uow, context, target)

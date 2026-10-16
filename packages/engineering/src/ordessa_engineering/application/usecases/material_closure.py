@@ -7,6 +7,8 @@ not re-implement those rules and does not pre-read to reuse across transactions.
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
+import hashlib
 from urllib.parse import urljoin
 
 from jsonschema import Draft202012Validator
@@ -15,13 +17,20 @@ from referencing.exceptions import NoSuchResource
 from referencing.jsonschema import DRAFT202012
 
 from ...domain.artifacts.models import BlobPayload, MethodPayload
-from ...domain.artifacts.provenance import VersionCapture
+from ...domain.artifacts.provenance import SourceRef, VersionCapture
+from ...domain.artifacts.method_binding import MethodRef, ExactMethodResourceRef
+from ...domain.changes.models import SourceChange
 from ...domain.common.outcomes.diagnostics import ReferenceError
 from ...methods.definitions.errors import MethodFailure
 from ...methods.validation.schema import validate_document_schemas
 
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.application.contracts.access import MaterialAccessPort, revision_validation_key
+from ordessa_engineering.application.contracts.source_materials import (
+    SourceMaterialPort, MethodDeclarationGuard,
+)
+
+_MAX_METHOD_RESOURCE_BYTES = 256 * 1024
 
 
 def _deny(code):
@@ -56,6 +65,82 @@ def verify_sources(sources, links, budget: MaterialAccessPort):
         _deny('MATERIAL_LIMIT' if exc.code == 'SELECTOR_WORK_LIMIT' else 'MATERIAL_CONTENT_INVALID')
     except KeyError:
         _deny('MATERIAL_CONTENT_INVALID')
+
+
+def verify_external_source(context, source: SourceRef, source_materials: SourceMaterialPort):
+    """Read one exact external immutable version and verify its captured bytes.
+
+    Historical record decoding never calls this helper. Fresh create/review/
+    package operations call it with the original context-scoped demand port.
+    """
+    if (type(source) is not SourceRef or type(source.capture) is not VersionCapture
+            or source_materials is None or not callable(getattr(source_materials, 'read', None))):
+        _deny('SOURCE_VERSION_UNAVAILABLE')
+    try:
+        raw = source_materials.read(context, source)
+    except ApplicationError:
+        raise
+    except Exception as exc:
+        raise ApplicationError('SOURCE_VERSION_UNAVAILABLE') from exc
+    if (type(raw) is not bytes or len(raw) != source.byte_length
+            or hashlib.sha256(raw).hexdigest() != source.capture.content_digest.hex):
+        _deny('SOURCE_CONTENT_MISMATCH')
+    return raw
+
+
+def _method_ref_matches(definition, method_ref):
+    ref = getattr(definition, 'method_ref', None)
+    digest = getattr(ref, 'snapshot_digest', None)
+    digest = digest.hex if hasattr(digest, 'hex') else digest
+    return (getattr(ref, 'method_id', None) == method_ref.method_id
+            and getattr(ref, 'release_version', None) == method_ref.release_version
+            and getattr(ref, 'schema_version', None) == method_ref.schema_version
+            and digest == method_ref.snapshot_digest.hex)
+
+
+@contextmanager
+def guard_method_resources(context, method_ref: MethodRef,
+                           resource_refs: tuple[ExactMethodResourceRef, ...],
+                           method_guard: MethodDeclarationGuard):
+    """Hold the exact schema-2 declaration guard through the caller's COMMIT."""
+    if (type(method_ref) is not MethodRef or method_ref.schema_version != 2
+            or type(resource_refs) is not tuple or not resource_refs
+            or method_guard is None
+            or not callable(getattr(method_guard, 'guard', None))
+            or not callable(getattr(method_guard, 'read_resource', None))):
+        _deny('METHOD_AUTHORITY_UNAVAILABLE')
+    try:
+        guard = method_guard.guard(context, method_ref)
+        with guard as definition:
+            if not _method_ref_matches(definition, method_ref):
+                _deny('METHOD_PIN_MISMATCH')
+            declared = {item.resource_id: item for item in getattr(definition, 'resources', ())}
+            seen = set()
+            for exact in resource_refs:
+                if (type(exact) is not ExactMethodResourceRef or exact.method_ref != method_ref
+                        or exact.resource_id in seen):
+                    _deny('METHOD_RESOURCE_MISMATCH')
+                seen.add(exact.resource_id)
+                resource = declared.get(exact.resource_id)
+                if resource is None or resource.sha256 != exact.resource_digest.hex:
+                    _deny('METHOD_RESOURCE_MISMATCH')
+                raw = method_guard.read_resource(context, exact)
+                if (type(raw) is not bytes or len(raw) > _MAX_METHOD_RESOURCE_BYTES
+                        or hashlib.sha256(raw).hexdigest() != exact.resource_digest.hex):
+                    _deny('METHOD_RESOURCE_MISMATCH')
+            yield definition
+    except ApplicationError:
+        raise
+    except Exception as exc:
+        raise ApplicationError('METHOD_AUTHORITY_UNAVAILABLE') from exc
+
+
+def verify_source_change(context, source_change: SourceChange,
+                         source_materials: SourceMaterialPort):
+    if type(source_change) is not SourceChange:
+        _deny('SOURCE_CHANGE_INVALID')
+    verify_external_source(context, source_change.baseline, source_materials)
+    verify_external_source(context, source_change.candidate, source_materials)
 
 
 def verify_material(revision, budget: MaterialAccessPort):

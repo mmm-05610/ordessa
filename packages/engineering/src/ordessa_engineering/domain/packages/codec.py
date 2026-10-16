@@ -7,14 +7,15 @@ from ..common.outcomes.diagnostics import ReferenceError
 from ..artifacts.ref_codec import decode_artifact_ref
 from ..artifacts.method_codec import decode_method_ref, decode_exact_method_resource
 from ..artifacts.models import MethodContent
+from ..artifacts.provenance_codec import decode_source
 from ..changes.ref_codec import decode_proposal_ref
 from ..changes.baseline_codec import decode_repository_ref
 from ..changes.models import ChangeSet
 from ..changes.codec import _template_ref, _env
 from ..approvals.ref_codec import decode_approval_ref
 from ..reviews.ref_codec import decode_review_ref
-from .models import (ImplementationPackage,ImplementationPackagePayload,PackageFile,
-    PackageCoverage,PackageDerivation,package_payload_projection)
+from .models import (ImplementationPackage,ImplementationPackagePayload,PreparedPackagePayload,
+    PackageDocument,PackageFile,PackageCoverage,PackageDerivation,package_payload_projection)
 from .refs import ImplementationPackageRef
 
 _CODE='INVALID_PACKAGE'
@@ -41,6 +42,9 @@ def _derivation(value):
     _object(value,PackageDerivation)
     return PackageDerivation(decode_digest(value['intent_digest']),_tuple(value['input_refs'],decode_blob_ref),
         value['generator_id'],value['generator_version'],decode_digest(value['output_manifest_digest']))
+def _document(value):
+    _object(value,PackageDocument)
+    return PackageDocument(value['role'],decode_source(value['source_ref']))
 def _content(value):
     if value is None:
         return None
@@ -48,6 +52,14 @@ def _content(value):
     return MethodContent.from_value(decode_exact_method_resource(value['schema_ref']),value['value'],
         None if value['rendered_body_ref'] is None else decode_blob_ref(value['rendered_body_ref']))
 def decode_package_payload(value):
+    if type(value) is not dict:
+        raise ReferenceError(_CODE)
+    if value.get('package_schema') == 'ordessa.implementation-package/v2':
+        _object(value,PreparedPackagePayload)
+        return PreparedPackagePayload(decode_source(value['baseline']),decode_source(value['candidate']),
+            decode_proposal_ref(value['change_ref']),_tuple(value['review_refs'],decode_review_ref),
+            decode_method_ref(value['method_ref']),_tuple(value['method_resource_refs'],decode_exact_method_resource),
+            _tuple(value['documents'],_document))
     _object(value,ImplementationPackagePayload)
     if value['package_schema'] != 'ordessa.implementation-package/v1':
         raise ReferenceError(_CODE)

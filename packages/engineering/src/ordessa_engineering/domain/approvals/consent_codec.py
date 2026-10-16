@@ -1,7 +1,7 @@
 """Closed canonical codecs for conversation-backed approval records."""
 from dataclasses import asdict, fields
 from ordessa_infrastructure.encoding import canonical_bytes
-from ..common.mechanisms.codec import canonical_value, require_object, decode_scope, decode_digest, decode_tuple
+from ..common.mechanisms.codec import canonical_value, require_object, decode_scope, decode_digest, decode_tuple, projection
 from ..common.outcomes.diagnostics import ReferenceError
 from ..artifacts.ref_codec import decode_artifact_ref
 from ..artifacts.method_codec import decode_method_ref
@@ -10,13 +10,18 @@ from ..changes.ref_codec import decode_proposal_ref
 from ..changes.models import ChangeSet
 from ..changes.application_plan import HeadExpectation
 from .consent import (ConsentPolicyRef, ConversationSource, NoticeRef, ConversationNotice,
-                      AuthorizationIntent, ChangeAuthorizationIntent, ConsentChallenge, ConversationEvidence, ApprovalGrant)
+                      WorkPackageNotice, AuthorizationIntent, ChangeAuthorizationIntent,
+                      ConsentChallenge, ConversationEvidence, ApprovalGrant)
 
-from .implementation import ImplementationAuthorizationIntent, ActionBudgetSlot
+from .implementation import (ImplementationAuthorizationIntent, ActionBudgetSlot,
+                             WorkPackageAuthorization, WorkPackageAuthorizationIntent,
+                             WORK_PACKAGE_SCHEMA_VERSION, WORK_PACKAGE_SUBJECT_KIND)
 from ..changes.codec import decode_implementation_spec, decode_action_scope
+from ..packages.codec import decode_package_ref
 from ..reviews.ref_codec import decode_review_ref
 
 _TYPES = (ImplementationAuthorizationIntent, ConsentPolicyRef, ConversationSource, NoticeRef, ConversationNotice,
+          WorkPackageAuthorization, WorkPackageNotice, WorkPackageAuthorizationIntent,
           AuthorizationIntent, ChangeAuthorizationIntent, ConsentChallenge, ConversationEvidence, ApprovalGrant)
 
 
@@ -24,16 +29,43 @@ def _decode(value, cls):
     if cls is AuthorizationIntent and type(value) is dict and value.get('intent_kind') == 'change_apply':
         cls = ChangeAuthorizationIntent
     if cls is AuthorizationIntent and type(value) is dict and value.get('intent_kind') == 'implementation':
-        cls = ImplementationAuthorizationIntent
+        # Strict schema-version dispatch for the intent family: an absent version
+        # is the original v1 implementation intent; the declared v2 version
+        # selects the Work/package intent. Any other version is refused, never
+        # guessed or silently downgraded to v1.
+        version = value.get('schema_version')
+        if version is None:
+            cls = ImplementationAuthorizationIntent
+        elif version == WORK_PACKAGE_SCHEMA_VERSION:
+            cls = WorkPackageAuthorizationIntent
+        else:
+            raise ReferenceError('INVALID_CONSENT_RECORD')
+    if cls is ConversationNotice and type(value) is dict and 'schema_version' in value:
+        # The notice family follows the same rule: only the declared v2 version
+        # selects the Work/package notice; an unknown version is refused.
+        if value.get('schema_version') != WORK_PACKAGE_SCHEMA_VERSION:
+            raise ReferenceError('INVALID_CONSENT_RECORD')
+        cls = WorkPackageNotice
     if cls not in _TYPES:
         raise ReferenceError('INVALID_CONSENT_RECORD')
     require_object(value, {f.name for f in fields(cls)}, 'INVALID_CONSENT_RECORD')
     result = {}
     for key, item in value.items():
-        if key == 'digest' and cls in (ConversationNotice, AuthorizationIntent, ChangeAuthorizationIntent, ImplementationAuthorizationIntent, ConversationEvidence, ApprovalGrant):
+        if key == 'digest' and cls in (ConversationNotice, AuthorizationIntent, ChangeAuthorizationIntent, ImplementationAuthorizationIntent, ConversationEvidence, ApprovalGrant,
+                                       WorkPackageAuthorization, WorkPackageNotice, WorkPackageAuthorizationIntent):
             continue
-        if key == 'intent_kind' and cls in (ChangeAuthorizationIntent, ImplementationAuthorizationIntent):
+        if key == 'intent_kind' and cls in (ChangeAuthorizationIntent, ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent):
             if item != ('change_apply' if cls is ChangeAuthorizationIntent else 'implementation'):
+                raise ReferenceError('INVALID_CONSENT_RECORD')
+            continue
+        if key == 'schema_version' and cls in (WorkPackageAuthorization,
+                                               WorkPackageAuthorizationIntent, WorkPackageNotice):
+            # An unknown schema version is refused, never coerced to v2.
+            if item != WORK_PACKAGE_SCHEMA_VERSION:
+                raise ReferenceError('INVALID_CONSENT_RECORD')
+            continue
+        if key == 'subject_kind' and cls is WorkPackageAuthorization:
+            if item != WORK_PACKAGE_SUBJECT_KIND:
                 raise ReferenceError('INVALID_CONSENT_RECORD')
             continue
         if key == 'scope':
@@ -44,7 +76,11 @@ def _decode(value, cls):
             item = decode_artifact_ref(item)
         elif key == 'method_ref':
             item = decode_method_ref(item)
-        elif key in ('digest', 'binding_digest', 'presented_digest', 'nonce_digest', 'intent_digest'):
+        elif key == 'package_ref':
+            item = decode_package_ref(item)
+        elif key == 'authorization':
+            item = _decode(item, WorkPackageAuthorization)
+        elif key in ('digest', 'binding_digest', 'presented_digest', 'nonce_digest', 'intent_digest', 'work_digest'):
             item = decode_digest(item)
         elif key == 'implementation_spec':
             item = decode_implementation_spec(item)
@@ -101,7 +137,7 @@ def decode_record(raw, cls):
 def encode_record(record):
     if type(record) not in _TYPES:
         raise ReferenceError('INVALID_CONSENT_RECORD')
-    raw = canonical_bytes(asdict(record))
+    raw = canonical_bytes(projection(record))
     if decode_record(raw, type(record)) != record:
         raise ReferenceError('INVALID_CONSENT_RECORD')
     return raw

@@ -15,9 +15,11 @@ from .apply_schema import APPLY_SCHEMA_VERSION
 from .method_schema import METHOD_SCHEMA_VERSION, METHOD_DDL
 from .implementation_schema import IMPLEMENTATION_SCHEMA_VERSION, IMPLEMENTATION_DDL, IMPLEMENTATION_TABLES
 from .submission_schema import SUBMISSION_SCHEMA_VERSION, SUBMISSION_DDL, IMPLEMENTATION_APPLY_DDL
-from .dispatch_schema import DISPATCH_SCHEMA_VERSION, DISPATCH_DDL
+from .dispatch_schema import (DISPATCH_SCHEMA_VERSION, DISPATCH_DDL,
+                              WORK_DISPATCH_SCHEMA_VERSION)
 from .acceptance_schema import ACCEPTANCE_SCHEMA_VERSION
 from .reviewer_assignment_schema import REVIEWER_ASSIGNMENT_SCHEMA_VERSION
+from .external_record_schema import EXTERNAL_RECORD_SCHEMA_VERSION
 
 
 class SQLiteAuthorizationRepository:
@@ -202,12 +204,12 @@ class SQLiteAuthorizationRepository:
 
     def require_apply_schema(self):
         self.access.check_active()
-        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
             raise ApplicationError('APPLY_SCHEMA_REQUIRED')
 
     def require_implementation_authorization_schema(self):
         self.access.check_active()
-        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
             raise ApplicationError('IMPLEMENTATION_AUTHORIZATION_SCHEMA_REQUIRED')
 
     def consume_action(self, ref, *, action, action_instance_id, target_digest, now):
@@ -224,7 +226,7 @@ class SQLiteAuthorizationRepository:
                 raise ApplicationError('CONSENT_BINDING_MISMATCH')
             limit = intent.action_budget
         elif type(intent) is AuthorizationIntent:
-            if (getattr(self.access._connection, '_ordessa_schema_version', None) not in (ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION)
+            if (getattr(self.access._connection, '_ordessa_schema_version', None) not in (ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION)
                     or action != 'accept_artifact' or action not in intent.actions
                     or type(target_digest) is not Digest):
                 raise ApplicationError('ACTION_NOT_AUTHORIZED')
@@ -283,7 +285,7 @@ class SQLiteAuthorizationRepository:
         if type(grant.intent) is ChangeAuthorizationIntent:
             action = 'apply_change'
         elif (type(grant.intent) is AuthorizationIntent
-                and getattr(self.access._connection, '_ordessa_schema_version', None) in (ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION)):
+                and getattr(self.access._connection, '_ordessa_schema_version', None) in (ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION)):
             action = 'accept_artifact'
         else:
             raise ApplicationError('ACTION_NOT_AUTHORIZED')

@@ -1,5 +1,6 @@
 """Frozen review templates; exact requirements are expanded after their subject."""
 from dataclasses import dataclass, field, asdict
+from typing import Literal
 
 from ..common.models.values import (Digest, validate_id, validate_items, validate_version, ordered_unique)
 from ..common.models.identity import (Scope)
@@ -42,12 +43,23 @@ class SubjectSelector:
 
 
 @dataclass(frozen=True)
-class TemplateTarget:
-    role: str
-    selector: SubjectSelector
+class ExactArtifactRevisionSelector:
+    """Select one explicit immutable artifact revision as a review target."""
+    artifact_revision_ref: ArtifactRevisionRef
+    kind: Literal['exact_artifact_revision'] = field(default='exact_artifact_revision', init=False)
 
     def __post_init__(self):
-        if type(self.selector) is not SubjectSelector or self.role not in {'primary','base','proposed','output','support'}:
+        if type(self.artifact_revision_ref) is not ArtifactRevisionRef:
+            raise ReferenceError('INVALID_REVIEW_SELECTOR')
+
+
+@dataclass(frozen=True)
+class TemplateTarget:
+    role: str
+    selector: SubjectSelector | ExactArtifactRevisionSelector
+
+    def __post_init__(self):
+        if type(self.selector) not in {SubjectSelector, ExactArtifactRevisionSelector} or self.role not in {'primary','base','proposed','output','support'}:
             raise ReferenceError('INVALID_REVIEW_SELECTOR')
 
 
@@ -141,7 +153,14 @@ def expand_requirement(template, proposal_ref, mutations, claim_refs, resolved_r
         raise ReferenceError('REALM_MISMATCH')
     def target(value):
         selector=value.selector
-        if selector.kind=='self_proposal':
+        if type(selector) is ExactArtifactRevisionSelector:
+            ref=selector.artifact_revision_ref
+            revision=resolved_revisions.get(ref)
+            if ((ref.realm_id,ref.project_id)!=(template.scope.realm_id,template.scope.project_id)
+                    or type(revision) is not ArtifactRevision or revision.ref!=ref
+                    or revision.scope!=template.scope):
+                raise ReferenceError('UNRESOLVED_REVIEW_TARGET')
+        elif selector.kind=='self_proposal':
             ref=proposal_ref
         else:
             sequence=claim_refs if selector.kind=='claim_owner' else mutations

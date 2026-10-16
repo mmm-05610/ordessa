@@ -9,9 +9,11 @@ from ordessa_engineering.domain.artifacts.method_binding import MethodRef
 from .method_schema import METHOD_SCHEMA_VERSION
 from .implementation_schema import IMPLEMENTATION_SCHEMA_VERSION, IMPLEMENTATION_DDL, IMPLEMENTATION_TABLES
 from .submission_schema import SUBMISSION_SCHEMA_VERSION, SUBMISSION_DDL, IMPLEMENTATION_APPLY_DDL
-from .dispatch_schema import DISPATCH_SCHEMA_VERSION, DISPATCH_DDL
+from .dispatch_schema import (DISPATCH_SCHEMA_VERSION, DISPATCH_DDL,
+                              WORK_DISPATCH_SCHEMA_VERSION)
 from .acceptance_schema import ACCEPTANCE_SCHEMA_VERSION
 from .reviewer_assignment_schema import REVIEWER_ASSIGNMENT_SCHEMA_VERSION
+from .external_record_schema import EXTERNAL_RECORD_SCHEMA_VERSION
 
 
 def _method(value):
@@ -29,7 +31,7 @@ class SQLiteMethodRepository:
 
     def _check(self):
         self.access.check_active()
-        if getattr(self.access._connection,'_ordessa_schema_version',None) not in (METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+        if getattr(self.access._connection,'_ordessa_schema_version',None) not in (METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
             raise ApplicationError('METHOD_CONTROL_SCHEMA_REQUIRED')
 
     def _prefix(self):
@@ -119,6 +121,30 @@ class SQLiteMethodRepository:
             raise ApplicationError('METHOD_CONTROL_CHANGED')
         self._event(control,reason,occurred_at)
         return control
+
+    def control_declaration(self, method, expected_version, enabled, event_ref, reason, occurred_at):
+        """Explicit initial control for an already published declaration.
+
+        Called only by the original guarded management command. It uses the
+        original control/event tables and does not select or compile a method.
+        Publication itself never calls this operation.
+        """
+        self.access.require_write();self._check()
+        if type(method) is not MethodRef or method.schema_version != 2:
+            raise ApplicationError('INVALID_INPUT')
+        try:
+            self.control(method)
+        except ApplicationError as exc:
+            if exc.code != 'METHOD_CONTROL_UNAVAILABLE':
+                raise
+            if expected_version != 0:
+                raise ApplicationError('METHOD_CONTROL_CHANGED')
+            control=MethodControl(self.access.scope,method,enabled,1,event_ref)
+            self.access.execute('INSERT INTO eng_method_controls VALUES (?,?,?,?,?,?)',
+                self._prefix()+(method.snapshot_digest.hex,int(enabled),1,event_ref.hex))
+            self._event(control,reason,occurred_at)
+            return control
+        return self.set_control(method,expected_version,enabled,event_ref,reason,occurred_at)
 
     def check_guard(self, control, selection=None):
         if control.scope != self.access.scope:

@@ -8,6 +8,9 @@ from ...domain.common.models.refs import BlobRef
 
 
 ObservationState = Literal['reserved', 'possibly-written', 'completed', 'failed', 'unknown']
+# Complete native receipts include the input/frame and bounded output evidence.
+# The adapter still supplies the original owner's equal or smaller actual cap.
+MAX_EXECUTION_RECEIPT_BYTES = 2 * 1024 * 1024
 
 
 class AuthorizedAcpTurnReader(Protocol):
@@ -30,4 +33,5 @@ class ExecutionObservationRef:
     authority_id: str
 
 
-__all__ = ['AuthorizedAcpTurnReader', 'ObservationState', 'ExecutionObservationRef']
+__all__ = ['AuthorizedAcpTurnReader', 'ObservationState', 'ExecutionObservationRef',
+           'MAX_EXECUTION_RECEIPT_BYTES']

@@ -15,6 +15,8 @@ from .implementation_routes import ImplementationRoutesPort
 from .repositories import CommandAccessPort, ProposalControlAdmission
 from .run_waits import CurrentRunWaitBindings
 from .submissions import SubmissionReportSourcePort, SubmissionSourcePort
+from .source_materials import SourceMaterialPort, MethodDeclarationGuard
+from .reviewer_admission import SourceReviewBindingsPort
 from ...domain.changes.dispatch import DispatchBinding
 
 
@@ -58,6 +60,13 @@ class EngineeringPorts:
     implementation_routes: ImplementationRoutesPort | None = None
     execution_dispatch: ExecutionDispatchPort | None = None
     reviewer_assignments: ReviewerAssignmentsPort | None = None
+    source_materials: SourceMaterialPort | None = None
+    method_guard: MethodDeclarationGuard | None = None
+    source_review_bindings: SourceReviewBindingsPort | None = None
+    # Optional source-review execution remains composition-owned.  The Work
+    # action is unavailable unless both halves are supplied.
+    review_run: Callable | None = None
+    review_plan_factory: Callable | None = None
 
 
 __all__ = ["EngineeringPorts", "ReviewAdmissionPort", "ReviewControlAdmissionPort",

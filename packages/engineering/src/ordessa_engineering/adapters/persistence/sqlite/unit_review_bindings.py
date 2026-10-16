@@ -10,14 +10,26 @@ import hashlib
 from ordessa_infrastructure.encoding import canonical_bytes
 
 from ....application.contracts.errors import ApplicationError
+from ....application.contracts.snapshots import EngineeringTargetBindings, ResolvedReviewMaterial
 from ....application.contracts.unit_review import UnitReviewBinding, NativeReviewInvocation
 from ....application.orchestration.decision_checks import GenericDecisionCheckSource
 from ....application.orchestration.unit_review_answers import decode_unit_review_result
-from ....domain.artifacts.models import MethodPayload, InlinePayload
 from ....domain.common.models.values import Digest
 from ....domain.reviews.models import ReviewRequestState
 from ....domain.reviews.models import ReviewRecord
 from ....methods.definitions.models.compiled import thaw_value
+
+
+def _fixed_material_inputs(materials):
+    """Project only exact typed owner material resolutions into delivery JSON."""
+    if (type(materials) is not tuple
+            or any(type(material) is not ResolvedReviewMaterial for material in materials)
+            or len({material.name for material in materials}) != len(materials)):
+        raise ApplicationError('DECISION_INPUT_BINDING_UNAVAILABLE')
+    return {
+        material.name: {'ref': asdict(material.ref), 'value': material.value}
+        for material in materials
+    }
 
 
 
@@ -26,8 +38,8 @@ class SQLiteUnitReviewBindings:
                  invocation_resolver, author_unit_resolver=None, authorship_source=None):
         if (getattr(method_control,'factory',None) is not factory
                 or getattr(review_bindings,'factory',None) is not factory
-                or not (callable(getattr(review_bindings,'material_inputs',None))
-                        or callable(getattr(review_bindings,'material_inputs_for_plan',None)))
+                or not callable(getattr(review_bindings,'resolve_plan_bindings',None))
+                or not callable(getattr(review_bindings,'material_inputs_for_plan',None))
                 or not callable(getattr(records,'acp_prompt_input_digest',None))
                 or not callable(invocation_resolver)
                 or (author_unit_resolver is not None and not callable(author_unit_resolver))):
@@ -88,23 +100,13 @@ class SQLiteUnitReviewBindings:
             schema = self.methods.snapshots.read_blob(resource.blob_ref)
             if hashlib.sha256(schema).hexdigest() != document.schema_resource.sha256:
                 raise ApplicationError('UNIT_REVIEW_SCHEMA_MISMATCH')
-            resolve_plan=getattr(self.bindings,'resolve_plan_bindings',None)
-            selected = (resolve_plan(context,plan) if callable(resolve_plan) else
-                        self.bindings.resolve_bindings(context,plan.requirement.method_ref,plan.requirement.phase_key))
+            selected = self.bindings.resolve_plan_bindings(context,plan)
+            if type(selected) is not EngineeringTargetBindings:
+                raise ApplicationError('METHOD_TARGET_BINDINGS_UNAVAILABLE')
             with self.factory.begin(context.scope,'read') as uow:
                 deliveries = tuple(uow.engineering.resolve_revision(t.ref) for t in selected.targets.targets)
-            plan_materials=getattr(self.bindings,'material_inputs_for_plan',None)
-            named = (plan_materials(context,plan) if callable(plan_materials) else
-                     self.bindings.material_inputs(context,plan.requirement.method_ref,plan.requirement.phase_key))
-            inputs = {}
-            for name, revision in named:
-                if type(revision.payload) is MethodPayload:
-                    value = revision.payload.content.value
-                elif type(revision.payload) is InlinePayload:
-                    value = revision.payload.value
-                else:
-                    raise ApplicationError('DECISION_INPUT_BINDING_UNAVAILABLE')
-                inputs[name] = {'ref':asdict(revision.ref),'value':value}
+            named = self.bindings.material_inputs_for_plan(context,plan)
+            inputs = _fixed_material_inputs(named)
             keys = tuple(k for k in plan.check_keys if any(c.criterion_id == k.criterion_id
                 and any(ch.capability_id == 'ordessa.decision.evaluate' for ch in c.checks) for c in standard.criteria))
             questions = GenericDecisionCheckSource._questions(snapshot,plan,standard,keys) if keys else ()

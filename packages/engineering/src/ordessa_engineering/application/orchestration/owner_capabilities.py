@@ -64,10 +64,18 @@ _PACKAGE_PAYLOAD = _obj({
         'generator_id':{'type':'string'},'generator_version':{'type':'string'},'output_manifest_digest':_DIGEST}),
     'package_schema':{'const':'ordessa.implementation-package/v1'},
 })
+_PREPARED_PACKAGE_PAYLOAD = _obj({
+    'baseline':_SOURCE_REF,'candidate':_SOURCE_REF,'change_ref':_PROPOSAL_REF,
+    'review_refs':_array(_REVIEW_REF),'method_ref':_METHOD_REF,
+    'method_resource_refs':_array(_EXACT_RESOURCE),
+    'documents':_array(_obj({'role':{'type':'string','minLength':1,'maxLength':128},
+                             'source_ref':_SOURCE_REF})),
+    'package_schema':{'const':'ordessa.implementation-package/v2'},
+})
 _PACKAGE_RECORD = _obj({'scope':_obj({'realm_id':{'type':'string'},'project_id':{'type':'string'}}),
     'package_id':{'type':'string','minLength':1,'maxLength':512},'created_at':{'type':'string'},
     'created_by':_obj({'actor_id':{'type':'string'},'actor_kind':{'enum':['human','agent','checker','service']},'issuer':{'type':'string'}}),
-    'payload':_PACKAGE_PAYLOAD,'digest':_DIGEST})
+    'payload':{'oneOf':[_PACKAGE_PAYLOAD,_PREPARED_PACKAGE_PAYLOAD]},'digest':_DIGEST})
 
 _EXECUTION_RECORD_REF = _obj({'environment_namespace':{'type':'string'},'unit_id':{'type':'string'},
     'owner_provider_ref_bytes':_JSON_OBJECT,'source_revision':{'type':'string'},'operation_ref':{'type':'string'},
@@ -110,12 +118,19 @@ _UNIT_REF = {
 _UNIT_REF['x-maxCanonicalBytes'] = 4096
 _DISPATCH = {
     'type':'object','additionalProperties':False,'required':['dispatch'],
+    # The declared Work's own identity, exactly as the working entry accepts it
+    # (`EngineeringOwnerOperations._WORK_DISPATCH_FORM`). There is no `run_id`:
+    # `additionalProperties` is false, so a run-shaped dispatch request is
+    # refused by the schema itself.
     'properties': {'dispatch': {'type':'object','additionalProperties':False,
-        'required':['run_id','step_id','attempt','unit_ref','params','actions','timeout'],
-        'properties': {'run_id':{'type':'string','minLength':1,'maxLength':512},'step_id':{'type':'string','minLength':1,'maxLength':512},
+        'description':'One declared Work step (schema-17 work_step_log); never a run.',
+        'required':['work_id','action_id','step_id','attempt','unit_ref','params','actions','timeout'],
+        'properties': {'work_id':{'type':'string','minLength':1,'maxLength':512},
+            'action_id':{'type':'string','minLength':1,'maxLength':512},
+            'step_id':{'type':'string','minLength':1,'maxLength':512},
             'attempt':{'type':'integer','minimum':1,'maximum':4096},'unit_ref':_UNIT_REF,
             'params':{'type':'object','x-maxCanonicalBytes':262144,
-                'description':'Canonical JSON object; callback keys are forbidden recursively; sessionId is fixed by the original run.'},
+                'description':'Canonical JSON object; callback keys are forbidden recursively; the session is fixed by the original Unit session.'},
             'actions':{'type':'array','items':{'type':'string','enum':['edit_repository','run_checks','create_local_commit','export_bundle','publish_branch','deploy']},
                 'minItems':1,'uniqueItems':True},
             'timeout':{'type':'number','exclusiveMinimum':0,'maximum':60}}}},
@@ -123,10 +138,11 @@ _DISPATCH = {
 _DISPATCH['x-maxCanonicalBytes'] = 2097152
 
 
-def _descriptor(capability_id, input_schema, outcomes, *, guards, effect, idempotency, limits, note):
+def _descriptor(capability_id, input_schema, outcomes, *, guards, effect, idempotency, limits, note,
+                interface_version='1', input_schema_id=None):
     contract = {
         'contract_version':'ordessa.engineering-owner-operation/1',
-        'input_schema_id':f'urn:ordessa:engineering:owner-operation:{capability_id}:input:1',
+        'input_schema_id':input_schema_id or f'urn:ordessa:engineering:owner-operation:{capability_id}:input:1',
         'input_schema':input_schema,
         'workflow_outcomes':list(outcomes),
         'throws':'Original owner exceptions propagate; the adapter does not translate refusals.',
@@ -137,8 +153,23 @@ def _descriptor(capability_id, input_schema, outcomes, *, guards, effect, idempo
     }
     if capability_id=='engineering.executions.dispatch':
         contract['method_config_schema']={'type':'object','additionalProperties':False,
-            'required':['package_slot'],'properties':{'package_slot':{'type':'string','minLength':1}}}
-    return CapabilityDescriptor(capability_id, 'operation', '1',
+            'required':['package_slot','task_prompt'],'properties':{
+                'package_slot':{'type':'string','minLength':1},
+                'task_prompt':{'type':'object','additionalProperties':False,
+                    'required':['template_resource','bindings','actions','timeout'],
+                    'properties':{
+                        'template_resource':{'type':'string','minLength':1},
+                        'bindings':{'type':'object','minProperties':1,'maxProperties':32,
+                            'propertyNames':{'type':'string','pattern':'^[A-Za-z_][A-Za-z0-9_]*$'},
+                            'additionalProperties':{'type':'string','enum':[
+                                'work_id','action_id','step_id','attempt','package_id',
+                                'implementation_intent_id',
+                                'package_ref','method_ref','change_set','design_targets',
+                                'resolved_file_manifest','proposal_coverage','baseline_snapshots',
+                                'allowed_actions','execution_profile_ref','instructions_ref','skill_snapshot_refs']}},
+                        'actions':_DISPATCH['properties']['dispatch']['properties']['actions'],
+                        'timeout':{'type':'number','exclusiveMinimum':0,'maximum':60}}}}}
+    return CapabilityDescriptor(capability_id, 'operation', interface_version,
                                 method_digest('capability-contract', contract), contract)
 
 
@@ -148,17 +179,32 @@ def owner_capabilities():
         _descriptor('engineering.packages.freeze',
             {'type':'object','additionalProperties':False,'required':['record'],
              'properties':{'record':_PACKAGE_RECORD},'x-maxCanonicalBytes':2097152}, ['completed','unknown'],
-            guards=['Engineering access','original authorization admission/evidence','current review gates',
-                    'package graph/source/baseline validation','original action ledger'],
-            effect='Persist immutable ImplementationPackage and command journal in original Engineering UoW.',
+            guards=['Engineering access','exact source and method authorities','current review gates',
+                    'original change/proposal/review links and source digests','original command journal'],
+            effect='Persist immutable source-reference ImplementationPackage and command journal in original Engineering UoW.',
             idempotency='Original CommandContext key plus exact package-content request digest.',
             limits={'record_canonical_bytes_max':2097152},
-            note='completed means package record and journal were reread and matched; it is not dispatch authorization.'),
+            note='completed means package record and journal were reread and matched; it is not dispatch authorization.',
+            interface_version='2',input_schema_id='urn:ordessa:engineering:implementation-content:2'),
+        _descriptor('engineering.proposals.associate_review',
+            {'$schema':'https://json-schema.org/draft/2020-12/schema',
+             '$id':'urn:ordessa:engineering:operations:engineering.proposals.associate_review:input:1',
+             'type':'object','additionalProperties':False,
+             'required':['proposal_ref','expected_version','review_ref'],
+             'properties':{'proposal_ref':_PROPOSAL_REF,'expected_version':{'type':'integer','minimum':0},
+                           'review_ref':_REVIEW_REF}}, ['completed','rejected','unknown'],
+            guards=['Engineering access','original Change CAS and proposal control','exact current completed review',
+                    'reviewer trust and current source guards through original UoW COMMIT'],
+            effect='Persist immutable successor Proposal on the same Change with the exact ReviewRef; no artifact mutation or grant.',
+            idempotency='Original CommandContext key plus exact proposal/version/review request digest.',
+            limits={'proposal_ref_canonical_bytes_max':4096,'review_ref_canonical_bytes_max':4096},
+            note='This operation associates an existing actual review; it does not manufacture or certify one.'),
         _descriptor('engineering.executions.dispatch', _DISPATCH, ['completed','failed','unknown'],
-            guards=['original package/run resolver','original grant/review/control guards',
+            guards=['declared Work identity and its own records',
+                    'original frozen/admitted package and grant/review/control guards',
                     'source snapshot guard','original UnitRecords query identity','native effect-write lease'],
-            effect='One fixed run/step/attempt reserves its original debit before one native RPC call; no retry.',
-            idempotency='Original run/step/attempt and immutable operation binding; unknown sends are not retried.',
+            effect='One fixed declared Work step attempt reserves its original debit on the declared-Work relation before one native RPC call; no retry.',
+            idempotency='Original Work identity/step/attempt and immutable operation binding; unknown sends are not retried.',
             limits={'unit_ref_canonical_bytes_max':4096,'prompt_canonical_bytes_max':262144,
                     'attempt_min':1,'attempt_max':4096,'timeout_max_seconds':60},
             note='Outcome is only the original native RPC record status; engineering_completed is always false.'),

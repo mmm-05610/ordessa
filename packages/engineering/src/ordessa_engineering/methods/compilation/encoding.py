@@ -193,6 +193,10 @@ def compiled_program_from_canonical( value, bindings):
         skill_definitions=tuple(semantic_from_wire(SkillDefinition,x) for x in value["skill_resources"]),
         capability_bindings=encoding.capability_bindings)
     if program_to_canonical(result) != value: raise ValueError("typed program serialization is lossy")
+    # Decode the optional method-owned declarations from the exact frozen
+    # workflow config. Historical programs without them remain byte-identical.
+    from .review_bindings import decode_review_groups
+    decode_review_groups(result.workflow)
     return result
 
 def _historical_program_entry(program): return program_to_canonical(program)["workflow"]["entry"]

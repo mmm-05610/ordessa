@@ -1,17 +1,21 @@
 """Closed review target decoders; accepted representation is not resolver support."""
-from ordessa_engineering.domain.common.mechanisms.codec import require_object, decode_tuple, decode_digest, decode_actor, decode_blob_ref, decode_selector
+from ordessa_engineering.domain.common.mechanisms.codec import require_object, decode_tuple, decode_digest, decode_actor, decode_blob_ref, decode_selector, decode_scope
 from ordessa_engineering.domain.common.outcomes.diagnostics import ReferenceError
 from ordessa_engineering.domain.artifacts.ref_codec import decode_artifact_ref
+from ordessa_engineering.domain.artifacts.provenance_codec import decode_source
 from ordessa_engineering.domain.changes.ref_codec import decode_proposal_ref
 from ordessa_engineering.domain.changes.baseline_codec import decode_repository_ref
 from .refs import SubmissionRef
-from .targets import Target, TargetSet
+from .targets import Target, TargetSet, SourceTargetRef
 
 def decode_subject_ref(value):
     if type(value) is not dict or type(value.get('kind')) is not str:
         raise ReferenceError('INVALID_SCHEMA')
     parsers = {'artifact_revision': decode_artifact_ref, 'proposal': decode_proposal_ref,
                'repository_snapshot': decode_repository_ref}
+    if value['kind'] == 'external_source':
+        require_object(value, {'kind', 'scope', 'source_ref'}, 'INVALID_SCHEMA')
+        return SourceTargetRef(decode_scope(value['scope']), decode_source(value['source_ref']))
     if value['kind'] == 'submission':
         require_object(value, {'kind','realm_id','project_id','submission_id','digest'}, 'INVALID_SCHEMA')
         return SubmissionRef(value['realm_id'], value['project_id'], value['submission_id'], decode_digest(value['digest']))

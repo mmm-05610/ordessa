@@ -25,13 +25,14 @@ def captured_manifest(manifest_capture: ResourceBytes, limits: LoadLimits = Load
            for name in limits.__dataclass_fields__):
         raise MethodFailure(MethodError("LOAD_LIMITS_INVALID", "all load limits must be positive integers"))
     manifest_bytes = manifest_capture.data
+    manifest_path = manifest_capture.logical_path
     if not isinstance(manifest_bytes, bytes) or len(manifest_bytes) > limits.manifest_bytes:
-        raise MethodFailure(MethodError("RESOURCE_TOO_LARGE", "captured manifest is invalid or exceeds its byte limit", path="method.yaml"))
+        raise MethodFailure(MethodError("RESOURCE_TOO_LARGE", "captured manifest is invalid or exceeds its byte limit", path=manifest_path))
     manifest = validate_manifest_structure(parse_document(
-        manifest_bytes, "application/yaml", "method.yaml", depth_limit=limits.structure_depth,
-    ))
+        manifest_bytes, manifest_capture.media_type, manifest_path, depth_limit=limits.structure_depth,
+    ), manifest_path=manifest_path)
     if len(manifest["resources"]) > limits.total_resources:
-        raise MethodFailure(MethodError("RESOURCE_COUNT_INVALID", "captured resource count exceeds its limit", path="method.yaml"))
+        raise MethodFailure(MethodError("RESOURCE_COUNT_INVALID", "captured resource count exceeds its limit", path=manifest_path))
     return manifest
 
 
@@ -50,6 +51,8 @@ def rebuild_source_bundle(bundle: SourceBundle) -> ParsedSourceBundle:
     limits = bundle.limits
     manifest_bytes = bundle.manifest_bytes
     manifest = captured_manifest(bundle.manifest_capture, limits)
+    manifest_path = bundle.manifest_capture.logical_path
+    schema_version = manifest["schema_version"]
     total = len(manifest_bytes)
     identity = MethodIdentity(manifest["method_id"], manifest["release_version"], manifest["schema_version"])
 
@@ -71,12 +74,14 @@ def rebuild_source_bundle(bundle: SourceBundle) -> ParsedSourceBundle:
     seen_paths: dict[str, str] = {}
     for index, declaration in enumerate(manifest["resources"]):
         pointer = f"/resources/{index}"
-        validate_resource_fields(declaration, manifest_path="method.yaml", pointer=pointer)
+        validate_resource_fields(declaration, manifest_path=manifest_path, pointer=pointer,
+                                 schema_version=schema_version)
         resource_id = declaration.get("id")
         path = validate_logical_path(declaration.get("path"))
         media_type = declaration.get("media_type")
         expected_digest = declaration.get("sha256")
-        validate_resource_values(declaration, manifest_path="method.yaml", pointer=pointer)
+        validate_resource_values(declaration, manifest_path=manifest_path, pointer=pointer,
+                                 schema_version=schema_version)
         if resource_id in resources:
             raise MethodFailure(MethodError("DUPLICATE_RESOURCE_ID", "resource ID is duplicated", path="method.yaml", pointer=f"{pointer}/id"))
         path_key = unicodedata.normalize("NFC", path).casefold()
@@ -115,6 +120,8 @@ def verify_loaded_method(loaded: LoadedMethod) -> LoadedMethod:
     digest = loaded.manifest_digest
     lock = None
     golden = None
+    if expected.identity.schema_version != 1 and loaded.bundle_lock_bytes is not None:
+        raise MethodFailure(MethodError("METHOD_BUILD_EVIDENCE_UNSUPPORTED", "schema-2 declarations do not accept schema-1 bundle locks", path=loaded.source_bundle.manifest_capture.logical_path))
     if loaded.bundle_lock_bytes is None:
         if loaded.bundle_lock is not None or loaded.compiled_golden is not None or loaded.compiled_golden_bytes is not None:
             raise MethodFailure(MethodError("LOADED_LOCK_PROJECTION_MUTATED", "lock projection has no captured source bytes"))

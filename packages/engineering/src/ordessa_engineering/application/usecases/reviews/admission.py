@@ -3,18 +3,22 @@
 No model invocation or invented source verifier lives here. Missing original
 reviewer/trust/bindings owners refuse; no synthetic fallback is composed.
 """
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from dataclasses import asdict, replace
 from ordessa_infrastructure.encoding import canonical_bytes
 from ...contracts.errors import ApplicationError
-from ...contracts.reviewer_admission import VerifiedReviewResponse, CriterionAnswer
+from ...contracts.reviewer_admission import (VerifiedReviewResponse, CriterionAnswer,
+    SourceReviewBindingsPort, SourceReviewBinding)
+from ...contracts.source_materials import SourceMaterialPort, MethodDeclarationGuard
+from ..material_closure import (guard_method_resources, verify_external_source,
+    _method_ref_matches)
 from ...orchestration.method_bridge import MethodBridge
 from ...orchestration.method_answers import nominal_binding, nominal_requires_matching_evaluation
 from ..proposal_closure import resolve_record
 from ....domain.changes.refs import ProposalRef
 from ....domain.artifacts.refs import ArtifactRevisionRef
 from ....domain.reviews.refs import SubmissionRef
-from ....domain.reviews.models import ReviewPlan, ReviewRecord, Observation, observations_digest
+from ....domain.reviews.models import ReviewPlan, ReviewRecord, Observation, observations_digest, SourceTargetRef
 from ....domain.reviews.evidence import VerifiedReviewerEvidence
 from ....domain.reviews.identity import RecordIdentity
 from ....domain.common.models.values import Digest
@@ -72,13 +76,67 @@ def _review_observations(plan, standard, answers, check_keys):
 
 
 class EngineeringReviewAdmission:
-    def __init__(self, factory, method_control, bindings, reviewer_source=None):
+    def __init__(self, factory, method_control, bindings, reviewer_source=None, *,
+                 source_materials: SourceMaterialPort | None = None,
+                 method_guard: MethodDeclarationGuard | None = None,
+                 source_review_bindings: SourceReviewBindingsPort | None = None):
         if getattr(method_control,'factory',None) is not factory:
             raise ApplicationError('METHOD_AUTHORITY_MISMATCH')
         self.factory,self.methods,self.bindings,self.source=factory,method_control,bindings,reviewer_source
+        self.source_materials,self.method_guard=source_materials,method_guard
+        self.source_review_bindings=source_review_bindings
+        for port in (source_materials,method_guard):
+            if port is not None and getattr(port,'factory',None) is not factory:
+                raise ApplicationError('REVIEW_SOURCE_AUTHORITY_MISMATCH')
         self.bridge=MethodBridge()
 
+    @staticmethod
+    def _is_source_plan(plan):
+        return (type(plan) is ReviewPlan and
+            any(type(target.ref) is SourceTargetRef
+                for target in plan.requirement.expected_targets.targets))
+
+    @contextmanager
+    def _guard_source_plan(self,context,plan):
+        requirement=plan.requirement
+        targets=requirement.expected_targets.targets
+        if (not self._is_source_plan(plan) or requirement.schema_version!=2
+                or any(type(target.ref) is not SourceTargetRef for target in targets)
+                or any(target.ref.scope!=context.scope for target in targets)
+                or requirement.scope!=context.scope
+                or requirement.method_ref.schema_version!=2):
+            raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
+        if self.source_materials is None:
+            raise ApplicationError('SOURCE_VERSION_UNAVAILABLE')
+        if self.method_guard is None:
+            raise ApplicationError('METHOD_AUTHORITY_UNAVAILABLE')
+        if self.source_review_bindings is None:
+            raise ApplicationError('REVIEW_SOURCE_AUTHORITY_UNAVAILABLE')
+        with guard_method_resources(context,requirement.method_ref,
+                requirement.method_resource_refs,self.method_guard) as definition:
+            if not _method_ref_matches(definition,requirement.method_ref):
+                raise ApplicationError('METHOD_PIN_MISMATCH')
+            for target in targets:
+                verify_external_source(context,target.ref.source_ref,self.source_materials)
+            binding=self.source_review_bindings.resolve_source_plan(context,plan,definition)
+            if type(binding) is not SourceReviewBinding or binding.plan!=plan:
+                raise ApplicationError('METHOD_REVIEW_PLAN_CHANGED')
+            standard=binding.standard
+            if (getattr(standard,'standard_id',None)!=requirement.criterion_set_ref.criterion_set_id
+                    or getattr(getattr(standard,'resource_ref',None),'sha256',None)
+                        !=requirement.criterion_set_ref.digest.hex):
+                raise ApplicationError('METHOD_REQUIREMENTS_CHANGED')
+            selected_resource=getattr(standard,'resource_ref',None)
+            exact=tuple(ref for ref in requirement.method_resource_refs
+                        if ref.resource_id==getattr(selected_resource,'resource_id',None)
+                        and ref.resource_digest.hex==getattr(selected_resource,'sha256',None))
+            if len(exact)!=1 or exact[0].method_ref!=requirement.method_ref:
+                raise ApplicationError('METHOD_RESOURCE_MISMATCH')
+            yield standard
+
     def _expected(self, context, plan, snapshot, *, work_selector=None):
+        if self._is_source_plan(plan):
+            raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
         if self.bindings is None:
             raise ApplicationError('METHOD_TARGET_BINDINGS_UNAVAILABLE')
         plan_aware=callable(getattr(self.bindings,'resolve_plan_bindings',None))
@@ -95,7 +153,11 @@ class EngineeringReviewAdmission:
             raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
         self.bridge.require_workflow_phase(snapshot, binding)
         proposals={t.ref for t in binding.targets.targets if type(t.ref) is ProposalRef}
-        work_mode=work_selector is not None or plan_aware
+        # Plan-aware delivery is also available on the original standalone
+        # selection reader. Only the actual Work correlation port selects the
+        # persisted Work branch and its mandatory selector/closure protocol.
+        work_mode=(work_selector is not None or
+                   callable(getattr(self.bindings,'check_work_review_current',None)))
         if work_mode:
             phase_reader=getattr(self.bindings,
                 'resolve_phase_bindings_for_work' if work_selector is not None else 'resolve_phase_bindings_for_plan',None)
@@ -194,6 +256,8 @@ class EngineeringReviewAdmission:
                 budget=uow.proposals.validated_budget()
                 resolve_record(proposal,uow.proposals,budget)
                 roots=tuple(m.proposed_ref for m in proposal.mutations)+tuple(m.base_ref for m in proposal.mutations if m.base_ref is not None)+tuple(c.owner_revision_ref for c in proposal.claim_refs)
+                from ..proposal_closure import proposal_review_revision_refs
+                roots += proposal_review_revision_refs(proposal)
                 revisions=uow.proposals.resolve_revision_graph(roots,budget)
                 owners=tuple(uow.engineering.get_artifact(m.artifact_id) for m in proposal.mutations)
                 owners=tuple(replace(o,head_revision_id=None) if m.operation=='create' else o for o,m in zip(owners,proposal.mutations))
@@ -223,10 +287,24 @@ class EngineeringReviewAdmission:
     def guard_plan(self, context, plan, *, work_selector=None):
         if type(plan) is not ReviewPlan or plan.scope != context.scope:
             raise ApplicationError('INVALID_INPUT')
-        if (work_selector is None
-                and callable(getattr(self.bindings,'resolve_plan_bindings',None))):
-            raise ApplicationError('WORK_REVIEW_SELECTOR_REQUIRED')
-        with self.methods.guard_method(context,plan.requirement.method_ref) as snapshot:
+        if self._is_source_plan(plan):
+            if work_selector is not None:
+                raise ApplicationError('WORK_REVIEW_SELECTOR_INVALID')
+            with self._guard_source_plan(context,plan):
+                yield
+            return
+        work_bound = callable(getattr(self.bindings,'check_work_review_current',None))
+        with ExitStack() as guards:
+            if work_bound:
+                source_guard = getattr(self.bindings, 'guard_plan_bindings', None)
+                if not callable(source_guard):
+                    raise ApplicationError('WORK_REVIEW_BINDING_UNAVAILABLE')
+                # New plans require a current selector. Recording a requested
+                # plan recovers its exact original correlation and held source
+                # guard; it must not require a new request selector.
+                guards.enter_context(source_guard(context, plan, work_selector=work_selector))
+            snapshot = guards.enter_context(self.methods.guard_method(
+                context,plan.requirement.method_ref))
             self._expected(context,plan,snapshot,work_selector=work_selector)
             yield
 
@@ -245,8 +323,14 @@ class EngineeringReviewAdmission:
     def verify_response(self, context, plan, request, raw_response_ref):
         if self.source is None:
             raise ApplicationError('REVIEW_SOURCE_AUTHORITY_UNAVAILABLE')
+        if self._is_source_plan(plan):
+            with self._guard_source_plan(context,plan) as standard:
+                return self._verify_response_with_standard(context,plan,request,raw_response_ref,standard)
         with self.methods.guard_method(context,plan.requirement.method_ref) as snapshot:
             standard=self._expected(context,plan,snapshot)
+        return self._verify_response_with_standard(context,plan,request,raw_response_ref,standard)
+
+    def _verify_response_with_standard(self,context,plan,request,raw_response_ref,standard):
         if (request.scope!=context.scope or request.review_id!=plan.review_id or request.state!='requested'):
             raise ApplicationError('REVIEW_REQUEST_CHANGED')
         # The trusted source owner verifies actual provenance; Engineering owns

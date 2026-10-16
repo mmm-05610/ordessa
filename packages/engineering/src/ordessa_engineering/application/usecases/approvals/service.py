@@ -29,19 +29,17 @@ from ordessa_engineering.domain.reviews.rules import evaluate_gate
 from ..reviews.service import _trust
 
 
+WITHDRAWN_LEGACY_COMMANDS = frozenset({
+    'engineering.work.start', 'engineering.work.bind_inputs',
+    'engineering.work.record_command_step', 'engineering.work.record_dispatch_step',
+    'engineering.runs.resume', 'engineering.runs.cancel',
+})
+# Deliberately absent from _FIELDS below: the withdrawn routes keep no registered
+# contract, so the retained legacy owners cannot validate an input and their
+# write methods are structurally unreachable. Historical rows are decoded from
+# their persisted canonical bytes, which needs no operation schema.
 _FIELDS = {
-    'engineering.work.bind_inputs': {'run_id':{'type':'string'},'input_ref':{'type':'object'},
-        'expected_row_digest':{'type':'object'},'expected_next_step_ordinal':{'type':'integer','minimum':0}},
-    'engineering.work.record_dispatch_step': {'run_id':{'type':'string'},'attempt':{'type':'integer','minimum':1,'maximum':4096},'expected_row_digest':{'type':'object'},'expected_next_step_ordinal':{'type':'integer','minimum':0}},
-    'engineering.work.record_command_step': {'run_id':{'type':'string'},'operation_request_id':{'type':'string'},'expected_row_digest':{'type':'object'},'expected_next_step_ordinal':{'type':'integer','minimum':0}},
-    'engineering.work.start': {'run_id': {'type':'string'}, 'selection': {
-        'type':'object', 'additionalProperties':False,
-        'required':['proposal_ref','initial_slot_refs'], 'properties':{
-            'proposal_ref':{'type':'object'},
-            'initial_slot_refs':{'type':'object','maxProperties':128,
-                                 'additionalProperties':{'type':'object'}}}}},
-    'engineering.runs.resume': {'run_id': {'type':'string'}, 'expected_row_digest': {'type':'object'}, 'expected_condition_digest': {'type':'object'}, 'expected_next_step_ordinal': {'type':'integer','minimum':0}},
-    'engineering.acceptance.adopt': {'submission_ref': {'type':'object'}, 'approval_ref': {'type':'object'},
+    'engineering.acceptance.adopt': {'submission_ref': {'type': 'object'}, 'approval_ref': {'type': 'object'},
         'expected_control_version': {'type':'integer','minimum':0},
         'targets': {'type':'array','minItems':1,'maxItems':4096,'items': {'type':'object','properties':
             {'target_ref':{'type':'object'},'expected':{'type':'object'}},
@@ -57,9 +55,10 @@ _FIELDS = {
 }
 _SCHEMA_BYTES = {op: canonical_bytes({'$schema': 'https://json-schema.org/draft/2020-12/schema',
     '$id': f'urn:ordessa:engineering:operations:{op}:input:1', 'type': 'object',
-    'properties': props, 'required': [name for name in props if not
-        (op == 'engineering.work.start' and name == 'selection')],
+    'properties': props, 'required': [name for name in props],
     'additionalProperties': False}) for op, props in _FIELDS.items()}
+# Only the advertised surface is exported. The withdrawn compiled write routes
+# keep no contract at all, so no owner can validate an input for them.
 SUPPORTED_APPROVAL_COMMANDS = tuple(_FIELDS)
 
 

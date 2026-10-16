@@ -80,6 +80,24 @@ class SourceRef:
     byte_length: int
     original_url: str | None = None
 
+    @property
+    def content_identity(self) -> tuple:
+        """Return the exact captured content identity without resolving or reading it.
+
+        Capture/actor timestamps and presentation metadata describe how this
+        reference was recorded; they do not change the identity of its content.
+        This identity cannot recover historical bytes or establish permission.
+        """
+        if type(self.capture) is VersionCapture:
+            capture_identity = ("immutable_version", self.capture.upstream_version,
+                                self.capture.content_digest)
+        else:
+            blob = self.capture.blob_ref
+            capture_identity = ("immutable_excerpt", self.capture.upstream_version,
+                                (blob.digest, blob.byte_length, blob.media_type),
+                                self.capture.excerpt_digest, self.capture.selector)
+        return self.kind, self.locator, capture_identity
+
     def __post_init__(self):
         validate_id(self.source_id)
         validate_id(self.media_type)

@@ -32,6 +32,12 @@ def _consume(task):
         task.exception()
 
 async def run_decision(request, *, flow, services):
+    """Run one bounded decision using the public runner entry point."""
+    return await _execute_decision(request, flow=flow, services=services)
+
+
+async def _execute_decision(request, *, flow, services, on_started=None):
+    """Shared execution path; the private notification follows verified start."""
     if not isinstance(request, DecisionRequest) or not isinstance(flow, TrustedFlow):
         raise ContractError('run_input')
     flow.validate()
@@ -117,6 +123,8 @@ async def run_decision(request, *, flow, services):
             require_ack(ack, services.mode, expected_seq=1, expected_digest=expected['digest'])
             context.evidence_seq, context.evidence_digest = ack.seq, ack.digest
             started = True
+            if on_started is not None:
+                on_started(run_id)
         except asyncio.CancelledError:
             raise
         except Exception:

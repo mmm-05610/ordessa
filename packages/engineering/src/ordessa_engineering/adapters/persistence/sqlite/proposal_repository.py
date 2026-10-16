@@ -1,8 +1,10 @@
 """Proposal/change/control records on the caller's original Engineering UoW."""
 from .submission_schema import SUBMISSION_SCHEMA_VERSION
-from .dispatch_schema import DISPATCH_SCHEMA_VERSION, DISPATCH_DDL
+from .dispatch_schema import (DISPATCH_SCHEMA_VERSION, DISPATCH_DDL,
+                              WORK_DISPATCH_SCHEMA_VERSION)
 from .acceptance_schema import ACCEPTANCE_SCHEMA_VERSION
 from .reviewer_assignment_schema import REVIEWER_ASSIGNMENT_SCHEMA_VERSION
+from .external_record_schema import EXTERNAL_RECORD_SCHEMA_VERSION
 from dataclasses import asdict
 from ordessa_infrastructure.encoding import canonical_bytes
 from ordessa_engineering.application.contracts.errors import ApplicationError
@@ -147,7 +149,7 @@ class SQLiteProposalRepository:
         from .implementation_schema import IMPLEMENTATION_SCHEMA_VERSION
         from .implementation_repository import SQLiteImplementationRepository
         from ordessa_engineering.domain.changes.repository_baseline_codec import encode_repository_baseline
-        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
             raise ApplicationError('IMPLEMENTATION_BASELINE_AUTHORITY_UNAVAILABLE')
         if type(budget) is not MaterialBudget or budget.access is not self.access:
             raise ApplicationError('INVALID_ARGUMENT')

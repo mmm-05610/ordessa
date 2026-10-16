@@ -21,6 +21,7 @@ from .documents import compile_documents, compile_schema_resources
 from .skills import compile_skills
 from .capabilities import compile_capabilities
 from .workflow import _resource_ref, _bind_refs, _first_use_order
+from .review_bindings import validate_compiled_review_groups
 from .decisions import _decision_order
 
 
@@ -102,6 +103,7 @@ def _compile_captured_method(loaded: LoadedMethod, capabilities: CompilationCapa
         documents = program["documents"]
         skills = program["skill_resources"]
         compiled = CompiledMethod(loaded.source_bundle, loaded.parsed_source, bind_program(stored_program_from_canonical(program), loaded), report.diagnostics)
+        validate_compiled_review_groups(compiled.program)
         if (loaded.bundle_lock is not None and loaded.compiled_golden is not None
                 and loaded.compiled_golden.get("compiler_version") == compiler_version):
             expected = loaded.bundle_lock.get("compiled_plan_digest", {}).get("hex")

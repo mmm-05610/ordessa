@@ -19,6 +19,8 @@ from ordessa_engineering.domain.reviews.assignments import (
 from ordessa_engineering.domain.reviews.codec import _digest as decode_digest
 from ordessa_engineering.domain.common.mechanisms.codec import decode_scope
 from .reviewer_assignment_schema import REVIEWER_ASSIGNMENT_SCHEMA_VERSION
+from .external_record_schema import EXTERNAL_RECORD_SCHEMA_VERSION
+from .dispatch_schema import WORK_DISPATCH_SCHEMA_VERSION
 
 
 def _json(raw: bytes) -> str:
@@ -67,7 +69,7 @@ class SQLiteReviewerAssignmentRepository:
         return self.access.scope.realm_id, self.access.scope.project_id
 
     def _require_schema(self):
-        if getattr(self.access._connection, "_ordessa_schema_version", None) != REVIEWER_ASSIGNMENT_SCHEMA_VERSION:
+        if getattr(self.access._connection, "_ordessa_schema_version", None) not in (REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
             raise ApplicationError("REVIEWER_ASSIGNMENT_SCHEMA_REQUIRED")
 
     @staticmethod

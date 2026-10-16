@@ -110,8 +110,10 @@ def load_method(source: MethodSource, reader: ResourceReader | None = None,
         manifest_path = validate_logical_path(source.manifest_path)
         manifest_bytes = _read(reader, source, manifest_path, limits.manifest_bytes)
         budget.account(manifest_bytes, manifest_path)
-        manifest = validate_manifest_structure(parse_document(manifest_bytes, "application/yaml", manifest_path,
-                                                     depth_limit=limits.structure_depth))
+        manifest_media_type = "application/json" if manifest_path.endswith(".json") else "application/yaml"
+        manifest = validate_manifest_structure(parse_document(manifest_bytes, manifest_media_type, manifest_path,
+                                                     depth_limit=limits.structure_depth), manifest_path=manifest_path)
+        schema_version = manifest["schema_version"]
         declarations = manifest.get("resources")
         if not isinstance(declarations, list) or not declarations or len(declarations) > limits.total_resources:
             raise MethodFailure(MethodError("RESOURCE_COUNT_INVALID", "method resource count is empty or exceeds its limit", path=manifest_path, pointer="/resources"))
@@ -121,14 +123,16 @@ def load_method(source: MethodSource, reader: ResourceReader | None = None,
         parsed_resources = {}
         for index, declaration in enumerate(declarations):
             pointer = f"/resources/{index}"
-            validate_resource_fields(declaration, manifest_path=manifest_path, pointer=pointer)
+            validate_resource_fields(declaration, manifest_path=manifest_path, pointer=pointer,
+                                     schema_version=schema_version)
             resource_id = declaration.get("id")
             path = validate_logical_path(declaration.get("path"))
             media_type = declaration.get("media_type")
             digest = declaration.get("sha256")
             if not isinstance(resource_id, str) or not resource_id or resource_id in ids:
                 raise MethodFailure(MethodError("DUPLICATE_RESOURCE_ID", "resource ID is invalid or duplicated", path=manifest_path, pointer=f"{pointer}/id"))
-            validate_resource_values(declaration, manifest_path=manifest_path, pointer=pointer)
+            validate_resource_values(declaration, manifest_path=manifest_path, pointer=pointer,
+                                     schema_version=schema_version)
             path_key = unicodedata.normalize("NFC", path).casefold()
             if path_key in paths:
                 raise MethodFailure(MethodError("RESOURCE_PATH_COLLISION", f"path collides with resource {paths[path_key]}", resource_id=resource_id, path=path))
@@ -144,27 +148,30 @@ def load_method(source: MethodSource, reader: ResourceReader | None = None,
             loaded[resource_id] = CapturedResource(resource_id, captured)
             parsed_resources[resource_id] = ParsedResource(resource_id, ParsedContent(captured, value))
 
-        entry = manifest.get("entry")
-        validate_entry_structure(entry, manifest_path=manifest_path)
-        entry_resource = loaded.get(entry["resource"])
-        if entry_resource is None or next(item for item in declarations if item["id"] == entry["resource"]).get("kind") != "workflow":
-            raise MethodFailure(MethodError("MANIFEST_ENTRY_INVALID", "manifest entry must reference a declared workflow resource", resource_id=entry.get("resource"), path=manifest_path, pointer="/entry/resource"))
+        if schema_version == 1:
+            entry = manifest.get("entry")
+            validate_entry_structure(entry, manifest_path=manifest_path)
+            entry_resource = loaded.get(entry["resource"])
+            if entry_resource is None or next(item for item in declarations if item["id"] == entry["resource"]).get("kind") != "workflow":
+                raise MethodFailure(MethodError("MANIFEST_ENTRY_INVALID", "manifest entry must reference a declared workflow resource", resource_id=entry.get("resource"), path=manifest_path, pointer="/entry/resource"))
 
-        capability_ids: set[str] = set()
-        requires = manifest.get("requires")
-        validate_requires_structure(requires, manifest_path=manifest_path)
-        for index, requirement in enumerate(requires):
-            validate_requirement_structure(requirement, manifest_path=manifest_path, pointer=f"/requires/{index}")
-            capability_id = requirement.get("capability_id")
-            if not isinstance(capability_id, str) or not capability_id or capability_id in capability_ids:
-                raise MethodFailure(MethodError("DUPLICATE_CAPABILITY", "capability ID is invalid or duplicated", path=manifest_path, pointer=f"/requires/{index}/capability_id"))
-            capability_ids.add(capability_id)
+            capability_ids: set[str] = set()
+            requires = manifest.get("requires")
+            validate_requires_structure(requires, manifest_path=manifest_path)
+            for index, requirement in enumerate(requires):
+                validate_requirement_structure(requirement, manifest_path=manifest_path, pointer=f"/requires/{index}")
+                capability_id = requirement.get("capability_id")
+                if not isinstance(capability_id, str) or not capability_id or capability_id in capability_ids:
+                    raise MethodFailure(MethodError("DUPLICATE_CAPABILITY", "capability ID is invalid or duplicated", path=manifest_path, pointer=f"/requires/{index}/capability_id"))
+                capability_ids.add(capability_id)
 
-        bundle_lock, compiled_golden, bundle_lock_bytes, compiled_golden_bytes = _load_optional_lock(
-            reader, source, manifest_bytes, manifest, loaded, limits, budget,
-        )
+            bundle_lock, compiled_golden, bundle_lock_bytes, compiled_golden_bytes = _load_optional_lock(
+                reader, source, manifest_bytes, manifest, loaded, limits, budget,
+            )
+        else:
+            bundle_lock = compiled_golden = bundle_lock_bytes = compiled_golden_bytes = None
         ordered_resources = tuple(loaded[key] for key in sorted(loaded))
-        source_bundle = SourceBundle(ResourceBytes(manifest_path, "application/yaml", manifest_bytes), ordered_resources, limits)
+        source_bundle = SourceBundle(ResourceBytes(manifest_path, manifest_media_type, manifest_bytes), ordered_resources, limits)
         parsed_source = ParsedSourceBundle(source_bundle, ParsedContent(source_bundle.manifest_capture, manifest),
             tuple(parsed_resources[key] for key in sorted(parsed_resources)))
         verification = None if bundle_lock_bytes is None and compiled_golden_bytes is None else VerificationInputs(

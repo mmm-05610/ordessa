@@ -3,19 +3,20 @@ from dataclasses import dataclass, field, asdict
 from ordessa_infrastructure.encoding import canonical_bytes
 from ..common.models.identity import (Scope)
 from ..common.models.values import (Digest, validate_id)
-from ordessa_engineering.domain.artifacts.method_binding import (MethodRef)
+from ordessa_engineering.domain.artifacts.method_binding import (MethodRef, ExactMethodResourceRef)
 from ordessa_engineering.domain.artifacts.refs import (ArtifactRevisionRef)
 from ordessa_engineering.domain.changes.refs import (ProposalRef)
 from ..common.outcomes.diagnostics import (ReferenceError)
 from ..common.mechanisms.hashing import (record_digest)
 from ..common.models.identity import (ActorRef)
 from ..common.models.values import (utc_instant)
-from ordessa_engineering.domain.artifacts.provenance import (SourceRef, ClaimRef)
+from ordessa_engineering.domain.artifacts.provenance import (SourceRef, VersionCapture, ClaimRef)
 from ordessa_engineering.domain.common.models.selection import (ContentSelector)
 from ..common.mechanisms.codec import (projection)
 from ..common.models.values import (validate_items, ordered_unique, validate_text, validate_version)
-from ..reviews.requirements import ReviewRequirementTemplate
+from ..reviews.requirements import ExactArtifactRevisionSelector, ReviewRequirementTemplate
 from .intent import ImplementationIntentSpec
+from ordessa_engineering.domain.reviews.refs import ReviewRef
 
 MAX_PROPOSAL_BYTES=2*1024*1024
 
@@ -58,6 +59,34 @@ class ProposalEvidenceLink:
 
 
 @dataclass(frozen=True)
+class SourceChange:
+    baseline: SourceRef
+    candidate: SourceRef
+    method_resource_refs: tuple[ExactMethodResourceRef, ...]
+    review_refs: tuple[ReviewRef, ...] = ()
+
+    def __post_init__(self):
+        if (type(self.baseline) is not SourceRef or type(self.candidate) is not SourceRef
+                or type(self.baseline.capture) is not VersionCapture
+                or type(self.candidate.capture) is not VersionCapture
+                or self.baseline.locator != self.candidate.locator
+                or self.baseline.content_identity == self.candidate.content_identity):
+            raise ReferenceError('INVALID_SOURCE_CHANGE')
+        validate_items(self.method_resource_refs, ExactMethodResourceRef, nonempty=True)
+        if len(self.method_resource_refs) > 256:
+            raise ReferenceError('SOURCE_CHANGE_BOUND_EXCEEDED')
+        refs = ordered_unique(self.method_resource_refs,
+                              lambda item: canonical_bytes(asdict(item)),
+                              code='DUPLICATE_CHECK')
+        object.__setattr__(self, 'method_resource_refs', refs)
+        validate_items(self.review_refs, ReviewRef)
+        if len(self.review_refs) > 4096:
+            raise ReferenceError('SOURCE_CHANGE_BOUND_EXCEEDED')
+        object.__setattr__(self, 'review_refs', ordered_unique(
+            self.review_refs, lambda item: canonical_bytes(asdict(item)), code='DUPLICATE_CHECK'))
+
+
+@dataclass(frozen=True)
 class Proposal:
     scope: Scope
     proposal_id: str
@@ -75,18 +104,34 @@ class Proposal:
     implementation_intent: ImplementationIntentSpec | None = None
     supersedes_refs: tuple[ProposalRef,...] = ()
     schema_version: int = 1
+    source_change: SourceChange | None = None
     digest: Digest = field(init=False)
 
     def __post_init__(self):
         if (type(self.scope) is not Scope or type(self.created_by) is not ActorRef or type(self.method_ref) is not MethodRef
-                or type(self.schema_version) is not int or self.schema_version!=1):
+                or type(self.schema_version) is not int or self.schema_version not in {1, 2}):
             raise ReferenceError('INVALID_PROPOSAL')
         validate_id(self.proposal_id)
         validate_id(self.change_id)
         utc_instant(self.created_at)
         validate_text(self.intent)
         validate_text(self.rationale)
-        validate_items(self.mutations,Mutation,nonempty=True)
+        if self.schema_version == 1:
+            if self.source_change is not None:
+                raise ReferenceError('INVALID_PROPOSAL')
+            validate_items(self.mutations,Mutation,nonempty=True)
+        else:
+            if (type(self.source_change) is not SourceChange or self.mutations or self.basis_sources
+                    or self.claim_refs or self.evidence_links or self.review_requirement_templates
+                    or self.implementation_intent is not None):
+                raise ReferenceError('INVALID_SOURCE_CHANGE')
+            if any(ref.method_ref != self.method_ref for ref in self.source_change.method_resource_refs):
+                raise ReferenceError('INVALID_METHOD_RESOURCE')
+            if any((ref.realm_id, ref.project_id) != (self.scope.realm_id, self.scope.project_id)
+                   for ref in self.source_change.review_refs):
+                raise ReferenceError('REALM_MISMATCH')
+            if self.source_change.review_refs and not self.supersedes_refs:
+                raise ReferenceError('INVALID_SUPERSEDES_REF')
         if len({m.artifact_id for m in self.mutations})!=len(self.mutations):
             raise ReferenceError('DUPLICATE_MUTATION')
         # Preserve both index-addressed sequences. Sorting would retarget templates.
@@ -124,6 +169,10 @@ class Proposal:
                 if selector.kind=='result_of_intent':
                     if self.implementation_intent is None or selector.implementation_intent_id!=self.implementation_intent.implementation_intent_id:
                         raise ReferenceError('INVALID_REVIEW_SELECTOR')
+                elif type(selector) is ExactArtifactRevisionSelector:
+                    ref=selector.artifact_revision_ref
+                    if (ref.realm_id,ref.project_id)!=scope:
+                        raise ReferenceError('INVALID_REVIEW_SELECTOR')
                 elif selector.kind!='self_proposal':
                     sequence=self.claim_refs if selector.kind=='claim_owner' else self.mutations
                     if selector.index>=len(sequence) or selector.kind=='base_mutation' and sequence[selector.index].base_ref is None:
@@ -133,10 +182,14 @@ class Proposal:
             raise ReferenceError('PROPOSAL_TOO_LARGE')
 
     def hash_payload(self):
-        return {'realm_id':self.scope.realm_id,'project_id':self.scope.project_id, **{name:projection(getattr(self,name),identity=True) for name in (
+        names = (
             'proposal_id','created_at','created_by','schema_version','change_id','intent','rationale',
             'mutations','basis_sources','claim_refs','evidence_links','method_ref','review_requirement_templates',
-            'implementation_intent','supersedes_refs')}}
+            'implementation_intent','supersedes_refs')
+        if self.schema_version == 2:
+            names += ('source_change',)
+        return {'realm_id':self.scope.realm_id,'project_id':self.scope.project_id,
+                **{name:projection(getattr(self,name),identity=True) for name in names}}
 
     def projection(self):
         result=self.hash_payload()

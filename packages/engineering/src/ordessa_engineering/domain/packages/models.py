@@ -1,5 +1,6 @@
 """Finite, immutable E4.4 package content. No repository IO or grant issuance."""
 from dataclasses import dataclass, field, asdict
+from ordessa_infrastructure.encoding import canonical_bytes
 from ..common.models.identity import Scope, ActorRef
 from ..common.models.refs import BlobRef
 from ..common.models.values import Digest, validate_id, validate_items, normalized_path, utc_instant, validate_text
@@ -14,6 +15,7 @@ from ..approvals.scope import ACTIONS, FILE_OPERATIONS, EnvironmentRef
 from ..artifacts.refs import ArtifactRevisionRef
 from ..artifacts.method_binding import MethodRef, ExactMethodResourceRef
 from ..artifacts.models import MethodContent
+from ..artifacts.provenance import SourceRef, VersionCapture
 from ..reviews.refs import ReviewRef
 from ..reviews.requirements import ReviewRequirementTemplateRef
 from .refs import ImplementationPackageRef
@@ -83,6 +85,59 @@ class PackageDerivation:
         validate_items(self.input_refs, BlobRef, nonempty=True)
         validate_id(self.generator_id)
         validate_id(self.generator_version)
+
+
+@dataclass(frozen=True)
+class PackageDocument:
+    role: str
+    source_ref: SourceRef
+
+    def __post_init__(self):
+        validate_id(self.role)
+        if len(self.role) > 128 or type(self.source_ref) is not SourceRef or type(self.source_ref.capture) is not VersionCapture:
+            raise ReferenceError('INVALID_PACKAGE_DOCUMENT')
+
+
+@dataclass(frozen=True)
+class PreparedPackagePayload:
+    baseline: SourceRef
+    candidate: SourceRef
+    change_ref: ProposalRef
+    review_refs: tuple[ReviewRef, ...]
+    method_ref: MethodRef
+    method_resource_refs: tuple[ExactMethodResourceRef, ...]
+    documents: tuple[PackageDocument, ...]
+    package_schema: str = field(default='ordessa.implementation-package/v2', init=False)
+
+    def __post_init__(self):
+        if (type(self.baseline) is not SourceRef or type(self.candidate) is not SourceRef
+                or type(self.baseline.capture) is not VersionCapture
+                or type(self.candidate.capture) is not VersionCapture
+                or self.baseline.locator != self.candidate.locator
+                or self.baseline.content_identity == self.candidate.content_identity
+                or type(self.change_ref) is not ProposalRef or type(self.method_ref) is not MethodRef):
+            raise ReferenceError('INVALID_PACKAGE')
+        validate_items(self.review_refs, ReviewRef, nonempty=True)
+        if len(self.review_refs) > 4096:
+            raise ReferenceError('PACKAGE_BOUND_EXCEEDED')
+        object.__setattr__(self, 'review_refs', ordered_refs(self.review_refs))
+        validate_items(self.method_resource_refs, ExactMethodResourceRef, nonempty=True)
+        if (len(self.method_resource_refs) > 256
+                or any(item.method_ref != self.method_ref for item in self.method_resource_refs)):
+            raise ReferenceError('INVALID_METHOD_RESOURCE')
+        object.__setattr__(self, 'method_resource_refs', ordered_refs(self.method_resource_refs))
+        validate_items(self.documents, PackageDocument)
+        if len(self.documents) > 4096:
+            raise ReferenceError('PACKAGE_BOUND_EXCEEDED')
+        identities = [(item.role, item.source_ref.content_identity) for item in self.documents]
+        if len(set(identities)) != len(identities):
+            raise ReferenceError('DUPLICATE_PACKAGE_DOCUMENT')
+
+
+def ordered_refs(items):
+    if len(set(items)) != len(items):
+        raise ReferenceError('DUPLICATE_CHECK')
+    return tuple(sorted(items, key=lambda item: canonical_bytes(asdict(item))))
 
 def package_manifest_digest(files):
     return record_digest('implementation-package-manifest', {'files': [projection(f, identity=True) for f in files]})
@@ -175,17 +230,23 @@ class ImplementationPackage:
     package_id: str
     created_at: str
     created_by: ActorRef
-    payload: ImplementationPackagePayload
+    payload: ImplementationPackagePayload | PreparedPackagePayload
     digest: Digest = field(init=False)
 
     def __post_init__(self):
-        if type(self.scope) is not Scope or type(self.created_by) is not ActorRef or type(self.payload) is not ImplementationPackagePayload:
+        if (type(self.scope) is not Scope or type(self.created_by) is not ActorRef
+                or type(self.payload) not in {ImplementationPackagePayload, PreparedPackagePayload}):
             raise ReferenceError('INVALID_PACKAGE')
         validate_id(self.package_id)
         utc_instant(self.created_at)
-        p = self.payload.change_set.proposal_refs[0]
-        if (p.realm_id,p.project_id) != (self.scope.realm_id,self.scope.project_id):
+        change_ref = (self.payload.change_set.proposal_refs[0]
+                      if type(self.payload) is ImplementationPackagePayload else self.payload.change_ref)
+        if (change_ref.realm_id,change_ref.project_id) != (self.scope.realm_id,self.scope.project_id):
             raise ReferenceError('REALM_MISMATCH')
+        if type(self.payload) is PreparedPackagePayload:
+            refs = (change_ref, *self.payload.review_refs)
+            if any((item.realm_id,item.project_id)!=(self.scope.realm_id,self.scope.project_id) for item in refs):
+                raise ReferenceError('REALM_MISMATCH')
         value={'scope':asdict(self.scope),'package_id':self.package_id,'created_at':self.created_at,
                'created_by':asdict(self.created_by),'payload':package_payload_projection(self.payload,identity=True)}
         object.__setattr__(self,'digest',record_digest('implementation-package',value))
@@ -197,5 +258,6 @@ class ImplementationPackage:
 
 def package_payload_projection(payload, *, identity=False):
     value = projection(payload, identity=identity)
-    value['method_content'] = None if payload.method_content is None else payload.method_content.projection(identity=identity)
+    if type(payload) is ImplementationPackagePayload:
+        value['method_content'] = None if payload.method_content is None else payload.method_content.projection(identity=identity)
     return value

@@ -16,7 +16,7 @@ from ordessa_engineering.domain.common.models.identity import (Scope)
 from ordessa_engineering.domain.common.outcomes.diagnostics import (ReferenceError)
 from ordessa_engineering.domain.common.models.identity import (ActorRef)
 from ordessa_engineering.domain.reviews.identity import (RecordIdentity)
-from ordessa_engineering.domain.common.mechanisms.codec import (canonical_value)
+from ordessa_engineering.domain.common.mechanisms.codec import (canonical_value, projection)
 from ordessa_engineering.domain.reviews.models import (
     AggregationPolicy,
     CheckKey,
@@ -39,6 +39,7 @@ from ordessa_engineering.domain.common.mechanisms.codec import (require_object, 
 from ordessa_engineering.domain.reviews.target_codec import (decode_subject_ref, decode_target, decode_target_set)
 from ordessa_engineering.domain.reviews.ref_codec import (decode_review_ref)
 from ordessa_engineering.domain.artifacts.method_codec import (decode_method_ref)
+from ordessa_engineering.domain.artifacts.method_codec import (decode_exact_method_resource)
 
 
 def _common_decode(parser, value):
@@ -112,13 +113,22 @@ def _check_key(value):
 
 
 def _requirement(value):
-    value = _fields(value, ReviewRequirement)
+    if type(value) is not dict:
+        _invalid()
+    version = value.get("schema_version", 1)
+    expected = {item.name for item in fields(ReviewRequirement)}
+    if version == 1:
+        expected -= {"schema_version", "method_resource_refs"}
+    elif version != 2:
+        _invalid()
+    _object(value, expected)
     return ReviewRequirement(
         _scope(value["scope"]), value["requirement_id"], value["requirement_version"],
         value["purpose"], _target_set(value["expected_targets"]), _method_ref(value["method_ref"]),
         _criterion_set_ref(value["criterion_set_ref"]),
         tuple(_check_key(item) for item in _list(value["required_check_keys"])),
-        tuple(_list(value["eligible_reviewer_roles"])), value["phase_key"],
+        tuple(_list(value["eligible_reviewer_roles"])), value["phase_key"], version,
+        tuple(decode_exact_method_resource(item) for item in _list(value.get("method_resource_refs", []))),
     )
 
 
@@ -228,8 +238,8 @@ def _decode(raw, cls, parse):
         if canonical_bytes(value) != raw:
             _invalid()
         result = parse(value)
-        projection = result.projection() if type(result) is ReviewRecord else asdict(result)
-        if type(result) is not cls or canonical_bytes(projection) != raw:
+        encoded = result.projection() if type(result) is ReviewRecord else projection(result)
+        if type(result) is not cls or canonical_bytes(encoded) != raw:
             _invalid()
         return result
     except (ReferenceError, TypeError, ValueError, KeyError, AttributeError,
@@ -241,8 +251,8 @@ def _encode(value, cls, decode):
     try:
         if type(value) is not cls:
             _invalid()
-        projection = value.projection() if type(value) is ReviewRecord else asdict(value)
-        raw = canonical_bytes(projection)
+        encoded = value.projection() if type(value) is ReviewRecord else projection(value)
+        raw = canonical_bytes(encoded)
         if len(raw) > _MAX_BYTES:
             _invalid()
         # Decoding recomputes all init=False identities and the ReviewRecord

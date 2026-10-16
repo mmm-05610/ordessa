@@ -1,6 +1,8 @@
 """The sole strict JSON/YAML resource parser; no file IO."""
 from __future__ import annotations
 import json
+from copy import deepcopy
+from functools import lru_cache
 from typing import Any
 import yaml
 from yaml.events import (AliasEvent, MappingEndEvent, MappingStartEvent, ScalarEvent, SequenceEndEvent, SequenceStartEvent)
@@ -53,7 +55,14 @@ def _reject_aliases_anchors(text: str, path: str, depth_limit: int) -> None:
         )) from exc
 
 
-def parse_document(raw: bytes, media_type: str, path: str, *, depth_limit: int = 64) -> Any:
+_PARSE_CACHE_MAX_BYTES = 256 * 1024
+
+
+# Keep multiple resources across bundle reconstructions with a fixed bound.
+# Only successful pure parsing is reused; resource IO and current request
+# state remain outside this cache.
+@lru_cache(maxsize=128)
+def _parse_small_document(raw: bytes, media_type: str, path: str, depth_limit: int) -> Any:
     try:
         text = raw.decode("utf-8", errors="strict")
     except UnicodeDecodeError as exc:
@@ -81,3 +90,11 @@ def parse_document(raw: bytes, media_type: str, path: str, *, depth_limit: int =
         )) from exc
     validate_json_value(value, path=path, depth_limit=depth_limit)
     return value
+
+
+def parse_document(raw: bytes, media_type: str, path: str, *, depth_limit: int = 64) -> Any:
+    # Large captures bypass the cache so a small number of inputs cannot pin
+    # an unbounded amount of source data or parsed trees in process memory.
+    if len(raw) > _PARSE_CACHE_MAX_BYTES:
+        return _parse_small_document.__wrapped__(raw, media_type, path, depth_limit)
+    return deepcopy(_parse_small_document(raw, media_type, path, depth_limit))

@@ -28,8 +28,11 @@ from .method_schema import METHOD_SCHEMA_VERSION, METHOD_DDL, METHOD_TABLES
 from .implementation_schema import IMPLEMENTATION_SCHEMA_VERSION, IMPLEMENTATION_DDL, IMPLEMENTATION_TABLES
 
 from .submission_schema import SUBMISSION_SCHEMA_VERSION, SUBMISSION_TABLES, MIGRATION11_DDL
-from .dispatch_schema import DISPATCH_SCHEMA_VERSION, DISPATCH_DDL
+from .dispatch_schema import (DISPATCH_SCHEMA_VERSION, DISPATCH_DDL,
+                              WORK_DISPATCH_SCHEMA_VERSION, WORK_DISPATCH_DDL)
 from .acceptance_schema import ACCEPTANCE_SCHEMA_VERSION, ACCEPTANCE_TABLES, ACCEPTANCE_MIGRATION_DDL
+from .external_record_schema import EXTERNAL_RECORD_SCHEMA_VERSION, EXTERNAL_RECORD_DDL
+from .reviewer_assignment_schema import REVIEWER_ASSIGNMENT_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_TABLES
 
 _OLD_TABLES = ('library_meta', 'materials', 'heads', 'runs', 'step_log', 'idempotency')
 _SNAPSHOT_TABLES = ('eng_method_blobs', 'eng_method_snapshots', 'eng_method_releases', 'eng_schema_migrations')
@@ -56,6 +59,8 @@ def _rows(connection, source_version):
               + (IMPLEMENTATION_TABLES if source_version >= 11 else ())
               + (SUBMISSION_TABLES if source_version >= 12 else ())
               + (ACCEPTANCE_TABLES if source_version >= ACCEPTANCE_SCHEMA_VERSION else ()))
+    if source_version >= EXTERNAL_RECORD_SCHEMA_VERSION:
+        tables += REVIEWER_ASSIGNMENT_TABLES
     def cell(value):
         if isinstance(value, bytes):
             return {"byte_length": len(value), "sha256": hashlib.sha256(value).hexdigest()}
@@ -193,6 +198,23 @@ def migrate_schema13(library: EngineeringLibrary, *, backup_path: Path) -> Migra
                     target_version=ACCEPTANCE_SCHEMA_VERSION, ddl=ACCEPTANCE_MIGRATION_DDL)
 
 
+def migrate_schema16(library: EngineeringLibrary, *, backup_path: Path) -> MigrationReceipt:
+    """Explicit additive declared-Work dispatch relation schema17; never on open.
+
+    A declared Work has no `runs` row, so its dispatch rows need their own
+    relation; the run-scoped `step_log` is left completely untouched.
+    """
+    return _migrate(library, backup_path=backup_path,
+                    source_version=EXTERNAL_RECORD_SCHEMA_VERSION,
+                    target_version=WORK_DISPATCH_SCHEMA_VERSION, ddl=WORK_DISPATCH_DDL)
+
+
+def migrate_schema15(library: EngineeringLibrary, *, backup_path: Path) -> MigrationReceipt:
+    """Explicitly widen immutable Proposal records to schema2; never on open."""
+    return _migrate(library, backup_path=backup_path, source_version=REVIEWER_ASSIGNMENT_SCHEMA_VERSION,
+                    target_version=EXTERNAL_RECORD_SCHEMA_VERSION, ddl=EXTERNAL_RECORD_DDL)
+
+
 def _set_foreign_keys(connection, enabled):
     # SQLite ignores this pragma inside a transaction. Verify the actual value.
     if connection.in_transaction:
@@ -301,7 +323,7 @@ def _migrate(library, *, backup_path, source_version, target_version, ddl):
             EngineeringLibrary._validate_schema(backup_guard, library.library_id, source_version)
             if _check_backup(selected, library.library_id, source_version) != (before, backup_digest):
                 raise EngineeringError('migration_backup_changed')
-            if target_version in (MATERIAL_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION):
+            if target_version in (MATERIAL_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION):
                 _set_foreign_keys(connection, False)
             connection.execute('BEGIN IMMEDIATE')
             library._check_bound_state(allow_journal=True)
@@ -314,7 +336,7 @@ def _migrate(library, *, backup_path, source_version, target_version, ddl):
             connection.execute('PRAGMA user_version=' + str(target_version))
             connection.execute('INSERT INTO eng_schema_migrations VALUES (?, ?, ?, ?)',
                                (target_version, before, backup_digest, str(selected)))
-            if target_version in (MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION) and connection.execute('PRAGMA foreign_key_check').fetchone() is not None:
+            if target_version in (MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION) and connection.execute('PRAGMA foreign_key_check').fetchone() is not None:
                 raise EngineeringError('migration_foreign_keys_invalid')
             EngineeringLibrary._validate_schema(connection, library.library_id, target_version)
             if _source_digest_after(connection, source_version, target_version) != before:
@@ -324,7 +346,7 @@ def _migrate(library, *, backup_path, source_version, target_version, ddl):
                 allow_journal=True)
             commit_started = True
             connection.commit()
-            if target_version in (MATERIAL_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION):
+            if target_version in (MATERIAL_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION):
                 _set_foreign_keys(connection, True)
             library._schema_version = target_version
             connection._ordessa_schema_version = target_version
@@ -334,7 +356,7 @@ def _migrate(library, *, backup_path, source_version, target_version, ddl):
             # If COMMIT lost its result, do not retry on this connection. The
             # durable migration row and explicit backup allow later inspection.
             library.close()
-            if target_version in (MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION) and commit_started:
+            if target_version in (MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION) and commit_started:
                 raise EngineeringError('migration_commit_unknown') from exc
             raise
         finally:

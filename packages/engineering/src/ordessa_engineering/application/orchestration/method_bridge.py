@@ -43,6 +43,10 @@ def command_capabilities():
             contract['response_mode'] = 'exact_utf8_envelope_verified_by_original_admission'
         if operation == 'engineering.reviews.request':
             contract['completion'] = 'review_request_persisted_not_review_pass'
+        if operation == 'engineering.proposals.associate_review':
+            contract['completion'] = 'immutable_successor_proposal_on_same_change_with_exact_completed_review_ref'
+            contract['required_admission'] = 'original_change_cas_exact_review_current_source_guards_and_reviewer_trust_through_commit'
+            contract['authorization_effect'] = 'none_no_grant_no_artifact_mutation'
         if operation in ('engineering.reviews.assign_reviewer', 'engineering.reviews.revoke_reviewer'):
             contract['completion'] = 'original_library_reviewer_assignment_or_revocation_committed'
             contract['required_admission'] = 'dedicated_current_capability_exact_method_plan_request_and_original_unit_queries'
@@ -59,7 +63,8 @@ def command_capabilities():
             contract['policy_owner'] = 'external_method_workflow_schema_and_roles'
             contract['automatic_dispatch'] = False
             contract['completion'] = {
-                'engineering.work.start': 'original_run_initialized_at_declared_wait_node',
+                'engineering.work.start': 'declarative_work_context_persisted_pinned_to_released_declaration',
+                'engineering.work.invoke': 'declared_action_delegated_to_mapped_command_journaled',
                 'engineering.work.bind_inputs': 'explicit_immutable_input_revision_bound_by_original_run_cas_cursor_unchanged',
                 'engineering.work.record_command_step': 'original_command_journal_result_and_step_cursor_committed',
                 'engineering.work.record_dispatch_step': 'original_native_dispatch_receipt_and_step_cursor_committed',
@@ -67,9 +72,15 @@ def command_capabilities():
         if operation == 'engineering.runs.resume':
             contract['completion'] = 'original_wait_cursor_claimed_not_business_effect_dispatched'
             contract['required_admission'] = 'trusted_current_work_condition_and_same_transaction_run_cas'
-            contract['wait_families'] = ['object_exists','review_gate','action_authorization','result_exists']
+            contract['wait_families'] = ['object_exists','review_gate','action_authorization','result_exists',
+                                         'review_plan_ready','review_response_ready']
             contract['compiled_work_advance'] = 'method-declared_bind_match_next_slots_and_cursor_same_cas; no automatic_effect'
             contract['policy_owner'] = 'external_method_and_original_registered_business_bindings'
+        if operation == 'engineering.runs.cancel':
+            contract['completion'] = 'declared_cancelled_method_stop_in_original_run_and_journal_not_unit_stop'
+            contract['required_admission'] = 'authenticated_operation_scope_exact_method_and_same_transaction_row_ordinal_cas'
+            contract['external_effects'] = 'unknown_reserved_possibly_written_refuse_until_original_owner_reconciliation_no_resend'
+            contract['policy_owner'] = 'existing_frozen_method_cancellation_contract_and_stop_outcomes'
         if operation == 'engineering.acceptance.adopt':
             contract['completion'] = 'artifact_acceptance_receipt_persisted'
             contract['authorization_branch'] = 'exact_submission_artifact_acceptance'
@@ -350,7 +361,12 @@ def _review_rows(snapshot, bindings, *, revisions=()):
             if not set(criterion.required_inputs or ()) <= set(bindings.input_slots):
                 raise ApplicationError('METHOD_INPUT_SLOT_UNAVAILABLE')
             checks = tuple(thaw_value(check.bindings) for check in criterion.checks)
-            iteration = any('iteration' in check for check in checks)
+            modes = tuple(check['iteration'] for check in checks if 'iteration' in check)
+            if any(mode not in ('once', 'each_evidence_required_claim') for mode in modes):
+                raise ApplicationError('METHOD_CHECK_ITERATION_UNAVAILABLE')
+            # Explicit once is the existing single key per target behavior.
+            # Only the declared claim expansion introduces claim-specific keys.
+            iteration = 'each_evidence_required_claim' in modes
             if iteration and (len(checks) != 1 or checks[0].get('iteration') != 'each_evidence_required_claim'
                     or checks[0].get('claim_selection') != 'all_declared_claims'
                     or checks[0].get('empty_claim_set') != 'error'):
@@ -386,6 +402,15 @@ def _review_rows(snapshot, bindings, *, revisions=()):
                     if required: required_keys.append(key)
                 applicable_targets.add(target)
         if not policies:
+            if bindings.workflow_node_id is not None:
+                from ...methods import decode_review_binding
+                node = next((n for n in snapshot.program.workflow.steps
+                             if n.id == bindings.workflow_node_id), None)
+                if node is not None and decode_review_binding(node) is not None:
+                    # A declared group member must produce its own complete
+                    # single-Plan requirement. Empty applicability cannot
+                    # silently omit a standard from the group's full gate.
+                    raise ApplicationError('METHOD_REVIEW_APPLICABLE_EMPTY')
             continue
         if (standard.reduction.required_criteria != 'all_applicable' or standard.reduction.empty_applicable_set != 'error'
                 or standard.reduction.priority != ('block','manual','pass')):

@@ -68,3 +68,80 @@ BEGIN SELECT RAISE(ABORT, 'DISPATCH_BINDING_IMMUTABLE'); END;
 """
 
 DISPATCH_TABLES = ('step_log',)
+
+
+# A declared Work has no `runs` row by construction, and none is ever invented,
+# so its dispatch rows live in their own relation. Keyed by the namespaced
+# declared-Work identity, with the *same* phase/immutability/transition
+# predicates as the run-scoped table — rendered from one template so the state
+# machine is reused rather than re-implemented — and with no foreign key onto
+# `runs`. Historical `step_log` rows are neither moved nor deleted.
+WORK_DISPATCH_SCHEMA_VERSION = 17
+
+_TRIGGER_TEMPLATE = """
+CREATE TRIGGER {table}_dispatch_insert_valid BEFORE INSERT ON {table}
+WHEN NEW.binding_digest IS NOT NULL AND (
+ NEW.dispatch_scope_json IS NULL OR NEW.binding_bytes IS NULL
+ OR NEW.execution_operation_ref IS NULL OR NEW.dispatch_phase IS NOT 'reserved'
+ OR NEW.status!='reserved' OR NEW.dispatch_version!=0 OR NEW.dispatch_fence!=1
+ OR NEW.result_blob_json IS NOT NULL OR NEW.operation!='engineering.execution.dispatch'
+ OR typeof(NEW.dispatch_scope_json)!='text' OR typeof(NEW.binding_digest)!='text'
+ OR length(NEW.binding_digest)!=64 OR typeof(NEW.binding_bytes)!='blob'
+ OR length(NEW.binding_bytes) NOT BETWEEN 1 AND 2097152
+ OR typeof(NEW.execution_operation_ref)!='text'
+)
+BEGIN SELECT RAISE(ABORT, 'DISPATCH_BINDING_INVALID'); END;
+
+CREATE TRIGGER {table}_dispatch_binding_immutable BEFORE UPDATE ON {table}
+WHEN OLD.binding_digest IS NOT NULL AND (
+ NEW.{key} IS NOT OLD.{key} OR NEW.step_id IS NOT OLD.step_id OR NEW.attempt IS NOT OLD.attempt
+ OR NEW.ordinal IS NOT OLD.ordinal OR NEW.operation IS NOT OLD.operation
+ OR NEW.dispatch_scope_json IS NOT OLD.dispatch_scope_json
+ OR NEW.binding_digest IS NOT OLD.binding_digest OR NEW.binding_bytes IS NOT OLD.binding_bytes
+ OR NEW.execution_operation_ref IS NOT OLD.execution_operation_ref
+ OR NEW.dispatch_fence IS NOT OLD.dispatch_fence
+ OR NEW.receipt_ref_json IS NOT OLD.receipt_ref_json
+)
+BEGIN SELECT RAISE(ABORT, 'DISPATCH_BINDING_IMMUTABLE'); END;
+
+CREATE TRIGGER {table}_dispatch_transition BEFORE UPDATE ON {table}
+WHEN OLD.binding_digest IS NOT NULL AND (
+ NEW.dispatch_version IS NOT OLD.dispatch_version+1
+ OR NEW.dispatch_phase IS NULL OR NOT (
+   (OLD.dispatch_phase='reserved' AND NEW.dispatch_phase='possibly_written')
+   OR (OLD.dispatch_phase IN ('possibly_written','unknown')
+       AND NEW.dispatch_phase IN ('completed','failed','unknown'))
+ )
+ OR NEW.status IS NOT NEW.dispatch_phase
+)
+BEGIN SELECT RAISE(ABORT, 'DISPATCH_TRANSITION_INVALID'); END;
+"""
+
+WORK_DISPATCH_DDL = """
+CREATE TABLE work_step_log (
+  dispatch_key TEXT NOT NULL,
+  ordinal INTEGER NOT NULL,
+  step_id TEXT NOT NULL,
+  operation TEXT NOT NULL,
+  attempt INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  receipt_ref_json TEXT NOT NULL,
+  dispatch_scope_json TEXT,
+  binding_digest TEXT,
+  binding_bytes BLOB,
+  execution_operation_ref TEXT,
+  dispatch_phase TEXT
+   CHECK(dispatch_phase IS NULL OR dispatch_phase IN
+         ('reserved','possibly_written','completed','failed','unknown')),
+  dispatch_version INTEGER NOT NULL DEFAULT 0
+   CHECK(typeof(dispatch_version)='integer' AND dispatch_version BETWEEN 0 AND 9007199254740991),
+  dispatch_fence INTEGER NOT NULL DEFAULT 1
+   CHECK(typeof(dispatch_fence)='integer' AND dispatch_fence BETWEEN 1 AND 9007199254740991),
+  result_blob_json TEXT,
+  PRIMARY KEY (dispatch_key, ordinal)
+);
+CREATE UNIQUE INDEX work_step_log_dispatch_attempt_unique
+ ON work_step_log(dispatch_key,step_id,attempt) WHERE binding_digest IS NOT NULL;
+CREATE UNIQUE INDEX work_step_log_execution_operation_unique
+ ON work_step_log(execution_operation_ref) WHERE execution_operation_ref IS NOT NULL;
+""" + _TRIGGER_TEMPLATE.format(table='work_step_log', key='dispatch_key')

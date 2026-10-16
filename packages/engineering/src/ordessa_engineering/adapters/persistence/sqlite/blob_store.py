@@ -3,9 +3,11 @@ from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.domain.common.outcomes.library_failures import EngineeringError
 from .engineering_library import EngineeringLibrary
 from .submission_schema import SUBMISSION_SCHEMA_VERSION, SUBMISSION_DDL, IMPLEMENTATION_APPLY_DDL
-from .dispatch_schema import DISPATCH_SCHEMA_VERSION, DISPATCH_DDL
+from .dispatch_schema import (DISPATCH_SCHEMA_VERSION, DISPATCH_DDL,
+                              WORK_DISPATCH_SCHEMA_VERSION)
 from .acceptance_schema import ACCEPTANCE_SCHEMA_VERSION
 from .reviewer_assignment_schema import REVIEWER_ASSIGNMENT_SCHEMA_VERSION
+from .external_record_schema import EXTERNAL_RECORD_SCHEMA_VERSION
 from .blob_bytes import BlobBytesError, reference_for, validate_ref, read_bytes, put_bytes
 from .unit_of_work import _read_transaction
 
@@ -23,7 +25,7 @@ class SQLiteBlobStore:
         if not isinstance(library, EngineeringLibrary):
             raise ApplicationError("BLOB_AUTHORITY_REQUIRED")
         with library._read_connection():
-            if library._schema_version not in {3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION}:
+            if library._schema_version not in {3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION}:
                 raise ApplicationError("BLOB_SCHEMA_REQUIRED")
         self.library = library
         self.authority_id = library.library_id

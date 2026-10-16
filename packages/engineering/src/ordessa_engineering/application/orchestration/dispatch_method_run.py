@@ -6,6 +6,7 @@ from ..contracts.errors import ApplicationError
 from ..contracts.method_work import WORK_CONTRACT
 from .method_runs import MethodRunBindings, _check_rounds
 from ...domain.packages.codec import decode_package_ref
+from ...domain.packages.models import ImplementationPackagePayload, PreparedPackagePayload
 from ...methods.definitions.models.compiled import OperationNode, thaw_value
 
 
@@ -70,6 +71,10 @@ def _resolve_package(uow,run_id,*,step_id=None,live=False,attempt=None):
     except Exception as exc:
         raise ApplicationError('DISPATCH_WORK_BINDING_INVALID') from exc
     package=uow.implementation.resolve_package(ref)
+    if type(getattr(package, 'payload', None)) is PreparedPackagePayload:
+        raise ApplicationError('IMPLEMENTATION_ENVELOPE_UNAVAILABLE')
+    if type(getattr(package, 'payload', None)) is not ImplementationPackagePayload:
+        raise ApplicationError('IMPLEMENTATION_ENVELOPE_UNAVAILABLE')
     if package.scope!=uow.scope or package.payload.method_ref!=method:
         raise ApplicationError('DISPATCH_WORK_BINDING_INVALID')
     return package

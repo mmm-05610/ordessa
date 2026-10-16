@@ -276,13 +276,8 @@ class ReviewUseCases:
                 or type(fence) is not int or not 1 <= fence <= MAX_VERSION):
             raise ApplicationError('INVALID_INPUT')
 
-    def record_command(self, parameters, context: CommandContext, *, read_set=None):
-        """Record an exact UTF-8 envelope through the original response owner.
-
-        Caller cannot supply a Plan, reviewer evidence, observations or verdict
-        separately. Production admission verifies the original durable envelope.
-        """
-        self._authorize(context, 'engineering.reviews.record')
+    @staticmethod
+    def _record_command_bytes(parameters):
         parameters = _input(parameters)
         if (type(parameters) is not dict or set(parameters) !=
                 {'review_id', 'request_version', 'fence', 'raw_response_utf8'}
@@ -293,6 +288,29 @@ class ReviewUseCases:
             raw = parameters['raw_response_utf8'].encode('utf-8', errors='strict')
         except UnicodeError:
             raise ApplicationError('INVALID_INPUT') from None
+        ReviewUseCases._request_arguments(parameters['review_id'], parameters['request_version'],
+                                         parameters['fence'])
+        if len(raw) > _MAX_RESPONSE_BYTES:
+            raise ApplicationError('INVALID_INPUT')
+        return parameters, raw
+
+    @staticmethod
+    def record_command_request_digest(parameters, context, reads):
+        """The original response journal identity for its public UTF-8 envelope."""
+        value, raw = ReviewUseCases._record_command_bytes(parameters)
+        projection = {'review_id': value['review_id'], 'request_version': value['request_version'],
+                      'fence': value['fence'], 'raw_response_digest': hashlib.sha256(raw).hexdigest()}
+        return ReviewUseCases._digest('engineering.reviews.record', context, _input(projection),
+                                     ReviewUseCases._reads(context, reads))
+
+    def record_command(self, parameters, context: CommandContext, *, read_set=None):
+        """Record an exact UTF-8 envelope through the original response owner.
+
+        Caller cannot supply a Plan, reviewer evidence, observations or verdict
+        separately. Production admission verifies the original durable envelope.
+        """
+        self._authorize(context, 'engineering.reviews.record')
+        parameters, raw = self._record_command_bytes(parameters)
         return self.record_response(parameters['review_id'], raw, context,
             expected_request_version=parameters['request_version'], fence=parameters['fence'],
             read_set=read_set)

@@ -78,6 +78,22 @@ class _TransactionScope:
         return self._library._write_material(self._connection, kind=kind, stable_id=stable_id,
                                              revision=revision, body=body, generated=generated)
 
+    def write_work_context(self, *, stable_id, revision, body):
+        """Sole authorized writer of a declarative Work row.
+
+        The library refuses this kind for every other writer, so a Work binding
+        cannot be forged or overwritten through a generic material write. No
+        program, cursor or run row is involved.
+        """
+        marker = '_ordessa_work_context_write'
+        previous = getattr(self._connection, marker, False)
+        self._connection.__dict__[marker] = True
+        try:
+            return self._library._write_material(self._connection, kind='work-context',
+                stable_id=stable_id, revision=revision, body=body, generated=False)
+        finally:
+            self._connection.__dict__[marker] = previous
+
     def create_generated(self, *, kind, stable_id, body):
         return self._library._create_generated(self._connection, kind=kind, stable_id=stable_id, body=body)
 

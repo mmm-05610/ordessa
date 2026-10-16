@@ -7,6 +7,8 @@ from ordessa_engineering.domain.common.models.values import validate_id
 from ordessa_engineering.domain.common.outcomes.diagnostics import ReferenceError
 from .acceptance_schema import ACCEPTANCE_SCHEMA_VERSION
 from .reviewer_assignment_schema import REVIEWER_ASSIGNMENT_SCHEMA_VERSION
+from .external_record_schema import EXTERNAL_RECORD_SCHEMA_VERSION
+from .dispatch_schema import WORK_DISPATCH_SCHEMA_VERSION
 
 
 class SQLiteAcceptanceRepository:
@@ -15,7 +17,7 @@ class SQLiteAcceptanceRepository:
 
     def _schema(self):
         self.access.check_active()
-        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
             raise ApplicationError('ACCEPTANCE_SCHEMA_REQUIRED')
 
     def create(self, receipt):

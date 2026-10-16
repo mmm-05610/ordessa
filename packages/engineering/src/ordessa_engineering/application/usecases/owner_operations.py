@@ -139,7 +139,7 @@ class EngineeringOwnerOperations:
             return OwnerOperationResult(operation, 'unknown', reason='OWNER_RESULT_INCOMPLETE')
         if not _journal_matches(self.factory, context, operation, result):
             return OwnerOperationResult(operation, 'unknown', reason='OWNER_JOURNAL_MISMATCH')
-        if (set(value) != {'package_ref', 'binding_proof', 'action_instance_id', 'dispatchable'}
+        if (set(value) != {'package_ref', 'dispatchable'}
                 or value['dispatchable'] is not False):
             return OwnerOperationResult(operation, 'unknown', reason='OWNER_RESULT_SHAPE_MISMATCH')
         ref = decode_package_ref(value['package_ref'])
@@ -149,11 +149,23 @@ class EngineeringOwnerOperations:
             return OwnerOperationResult(operation, 'unknown', reason='OWNER_RECORD_MISMATCH')
         return OwnerOperationResult(operation, 'completed', {'package_ref': ref, 'record': stored})
 
+    # The declared-Work dispatch form: the Work's own identity (its dispatch key
+    # is derived from `work_id`/`action_id`/`step_id`) on schema-17 work_step_log.
+    # `run_id` is never part of it — the historical run form is not an active
+    # writer — and this exact set is what the owner capability advertises.
+    _WORK_DISPATCH_FORM = frozenset({'work_id', 'action_id', 'step_id', 'attempt',
+                                     'unit_ref', 'params', 'actions', 'timeout'})
+
     def dispatch_execution(self, parameters, context):
         if set(parameters) != {'dispatch'} or type(parameters['dispatch']) is not dict:
             raise ApplicationError('OWNER_OPERATION_INPUT_INVALID')
         request = parameters['dispatch']
-        required = {'run_id', 'step_id', 'attempt', 'unit_ref', 'params', 'actions', 'timeout'}
+        # The active write entry takes a declared Work identity only. The
+        # historical run form is never an active writer here; old dispatch rows
+        # stay readable/reconcilable through their own records.
+        if 'run_id' in request or 'work_id' not in request:
+            raise ApplicationError('OWNER_OPERATION_INPUT_INVALID')
+        required = self._WORK_DISPATCH_FORM
         if set(request) != required or type(request['actions']) is not list:
             raise ApplicationError('OWNER_OPERATION_INPUT_INVALID')
         if (type(request['attempt']) is not int or not 1 <= request['attempt'] <= 4096
@@ -163,18 +175,40 @@ class EngineeringOwnerOperations:
                 or type(request['unit_ref']) is not dict or type(request['params']) is not dict):
             raise ApplicationError('OWNER_OPERATION_INPUT_INVALID')
         operation = 'engineering.executions.dispatch'
-        returned = self.dispatch.dispatch(request['run_id'], request['step_id'], request['attempt'],
+        from ..contracts.dispatch_identity import work_dispatch_key
+        identity = work_dispatch_key(request['work_id'], request['action_id'],
+                                    request['step_id'])
+        # `params` is handed to the owner as the caller's declared input and is
+        # *not* checked here against the trusted assembly (the Work's declared
+        # subject, the frozen package, the exact method resource, the original
+        # Unit session): this adapter holds no assembly of its own, and inventing
+        # one from the caller's payload would fabricate the very authority the
+        # owner is asked for. The gap is reported in the result below instead of
+        # being assumed away.
+        returned = self.dispatch.dispatch_declared_work(identity,
+            request['work_id'], request['action_id'], request['step_id'], request['attempt'],
             request['unit_ref'], request['params'], tuple(request['actions']), context,
             timeout=request['timeout'])
+        # The declared Work's own relation (schema 17) is the only row an active
+        # dispatch writes: a declared Work has no `runs` row, so the run-scoped
+        # `step_log` is never this step's record. The stored row must be this
+        # Work identity, this step and this attempt, and its binding must be the
+        # frozen declared-Work binding the owner accepted.
         with self.factory.begin(context.scope, 'read') as uow:
-            row = uow.dispatch.get(request['run_id'], request['step_id'], request['attempt'], context.scope)
+            row = uow.work_dispatch.get(identity, request['step_id'], request['attempt'],
+                                        context.scope)
             binding = decode_dispatch(row['binding_bytes'])
-            package = self.dispatch._work_package(uow, request['run_id'],step_id=request['step_id'])
-        if (binding.run_id != request['run_id'] or binding.step_id != request['step_id']
+        if (row['run_id'] != identity or row['step_id'] != request['step_id']
+                or row['attempt'] != request['attempt']
+                or binding.binding_version != 2 or binding.work is None
+                or binding.work.get('dispatch_key') != identity
+                or binding.work.get('work_id') != request['work_id']
+                or binding.work.get('action_id') != request['action_id']
+                or binding.work.get('step_id') != request['step_id']
                 or binding.attempt != request['attempt']
                 or binding.unit_ref_bytes != canonical_bytes(request['unit_ref'])
                 or tuple(action for action, _ in binding.action_instances) != tuple(request['actions'])
-                or binding.scope != context.scope or binding.package_ref != package.ref):
+                or binding.scope != context.scope):
             return OwnerOperationResult(operation, 'unknown', engineering_completed=False,
                                         reason='OWNER_BINDING_MISMATCH')
         phase = row['dispatch_phase']
@@ -187,19 +221,25 @@ class EngineeringOwnerOperations:
             with self.factory.begin(context.scope, 'read') as uow:
                 uow.implementation.read_blob(result_ref)
         # Compare the owner's immediate view with its durable row. A caller
-        # cannot substitute an outcome after the transaction has committed.
+        # cannot substitute an identity, an attempt, a frozen input or an outcome
+        # after the transaction has committed. The view carries the declared Work
+        # identity, never a run id; an absent completion flag is not a claim, a
+        # present true one is refused.
         if (type(returned) is not dict or returned.get('phase') != phase
-                or returned.get('run_id') != request['run_id']
+                or returned.get('identity') != identity
                 or returned.get('step_id') != request['step_id']
                 or returned.get('attempt') != request['attempt']
                 or returned.get('binding_digest') != {'algorithm': binding.digest.algorithm,
                                                        'hex': binding.digest.hex}
-                or returned.get('engineering_completed') is not False
+                or returned.get('engineering_completed', False) is not False
                 or canonical_bytes(returned.get('result_blob_ref')) !=
                    (b'null' if result_ref is None else canonical_bytes(decode_json(row['result_blob_json'])))):
             outcome = 'unknown'
         return OwnerOperationResult(operation, outcome,
-            {'binding': binding, 'observation_ref': result_ref}, engineering_completed=False,
-            accepted=False, dispatch_phase=phase,
+            {'binding': binding, 'observation_ref': result_ref,
+             # Never silently treated as verified: this adapter cannot compare the
+             # caller's params with the trusted Work/package/method/Unit assembly.
+             'params_assembly': 'NOT_VERIFIED_AGAINST_TRUSTED_WORK_ASSEMBLY'},
+            engineering_completed=False, accepted=False, dispatch_phase=phase,
             reason=None if outcome == phase else 'OWNER_RESULT_MISMATCH')
 

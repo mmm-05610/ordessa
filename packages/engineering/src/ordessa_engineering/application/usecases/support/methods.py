@@ -25,7 +25,9 @@ class MethodUseCases:
         if self.access is None: raise ApplicationError('ACCESS_AUTHORITY_UNAVAILABLE')
         self.access.require(context,operation)
         if self.management is None: raise ApplicationError('METHOD_MANAGEMENT_UNAVAILABLE')
-        snapshot=self.snapshots.get(SnapshotRef(method.method_id,method.release_version,method.schema_version,method.snapshot_digest.hex))
+        ref=SnapshotRef(method.method_id,method.release_version,method.schema_version,method.snapshot_digest.hex)
+        snapshot=(self.snapshots.get_declaration(ref) if method.schema_version == 2
+                  else self.snapshots.get(ref))
         parameters={'method_ref':asdict(method),**parameters}
         import hashlib
         schema=canonical_bytes({'operation':operation,'internal_contract':'1'})
@@ -58,10 +60,16 @@ class MethodUseCases:
         return Digest('sha256',value.removeprefix('sha256:'))
 
     def adopt(self, method, context, *, expected_version):
+        if type(method) is MethodRef and method.schema_version == 2:
+            raise ApplicationError('METHOD_EXECUTION_UNSUPPORTED')
         validate_version(expected_version)
         return self._run('engineering.methods.adopt',method,context,{'expected_version':expected_version},lambda repo,id,event,snapshot:repo.select(method,id,expected_version,event,context.received_at,self._plan_digest(snapshot)))
 
     def control(self, method, context, *, expected_version, enabled, reason):
         validate_version(expected_version);validate_text(reason)
         if type(enabled) is not bool: raise ApplicationError('INVALID_INPUT')
-        return self._run('engineering.methods.control',method,context,dict(expected_version=expected_version,enabled=enabled,reason=reason),lambda repo,id,event,snapshot:repo.set_control(method,expected_version,enabled,event,reason,context.received_at))
+        def mutate(repo, operation_id, event, snapshot):
+            if method.schema_version == 2:
+                return repo.control_declaration(method,expected_version,enabled,event,reason,context.received_at)
+            return repo.set_control(method,expected_version,enabled,event,reason,context.received_at)
+        return self._run('engineering.methods.control',method,context,dict(expected_version=expected_version,enabled=enabled,reason=reason),mutate)

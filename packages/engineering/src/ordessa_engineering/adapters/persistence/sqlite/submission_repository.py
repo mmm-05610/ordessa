@@ -5,9 +5,11 @@ from ordessa_engineering.domain.changes.submission_codec import encode_submissio
 from ordessa_engineering.domain.reviews.refs import SubmissionRef
 from ordessa_engineering.domain.common.outcomes.diagnostics import ReferenceError
 from .submission_schema import SUBMISSION_SCHEMA_VERSION
-from .dispatch_schema import DISPATCH_SCHEMA_VERSION, DISPATCH_DDL
+from .dispatch_schema import (DISPATCH_SCHEMA_VERSION, DISPATCH_DDL,
+                              WORK_DISPATCH_SCHEMA_VERSION)
 from .acceptance_schema import ACCEPTANCE_SCHEMA_VERSION
 from .reviewer_assignment_schema import REVIEWER_ASSIGNMENT_SCHEMA_VERSION
+from .external_record_schema import EXTERNAL_RECORD_SCHEMA_VERSION
 
 
 class SQLiteSubmissionRepository:
@@ -16,7 +18,7 @@ class SQLiteSubmissionRepository:
 
     def _prefix(self):
         self.access.check_active()
-        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
             raise ApplicationError('SUBMISSION_SCHEMA_REQUIRED')
         return self.access.scope.realm_id, self.access.scope.project_id
 

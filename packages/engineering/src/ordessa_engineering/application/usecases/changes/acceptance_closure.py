@@ -91,6 +91,8 @@ def resolve_submission_acceptance(uow, submission_ref, *, method_runs=None):
         roots = tuple(m.proposed_ref for m in proposal.mutations)
         roots += tuple(m.base_ref for m in proposal.mutations if m.base_ref is not None)
         roots += tuple(c.owner_revision_ref for c in proposal.claim_refs)
+        from ..proposal_closure import proposal_review_revision_refs
+        roots += proposal_review_revision_refs(proposal)
         graph = uow.proposals.resolve_revision_graph(roots, budget)
         proposals_by_ref[proposal_ref] = (proposal, graph)
         proposal_templates[proposal_ref] = tuple(t for t in proposal.review_requirement_templates if t.deferred)

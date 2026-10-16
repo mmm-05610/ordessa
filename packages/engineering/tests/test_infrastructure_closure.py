@@ -21,8 +21,9 @@ from ordessa_engineering.domain.common.outcomes.library_failures import Engineer
 _MANIFEST = Path(rs.__file__).parent / "resources" / "operation_registry.v1.json"
 
 #: The real transitive Infrastructure import closure of the hashed Engineering
-#: sources: the root, the three ``encoding`` modules and the five ``filesystem``
-#: modules, plus the database primitive consumed by the SQLite adapters.
+#: sources: the root, the identifiers module, the four ``encoding`` modules and
+#: the five ``filesystem`` modules, plus the database primitive consumed by the
+#: SQLite adapters.
 _EXPECTED_INFRA_KEYS = {
     "ordessa_infrastructure:__init__.py",
     "ordessa_infrastructure:database/__init__.py",
@@ -31,11 +32,13 @@ _EXPECTED_INFRA_KEYS = {
     "ordessa_infrastructure:encoding/__init__.py",
     "ordessa_infrastructure:encoding/canonical_json.py",
     "ordessa_infrastructure:encoding/digests.py",
+    "ordessa_infrastructure:encoding/immutable_json.py",
     "ordessa_infrastructure:filesystem/__init__.py",
     "ordessa_infrastructure:filesystem/directories.py",
     "ordessa_infrastructure:filesystem/errors.py",
     "ordessa_infrastructure:filesystem/files.py",
     "ordessa_infrastructure:filesystem/publication.py",
+    "ordessa_infrastructure:identifiers.py",
 }
 
 

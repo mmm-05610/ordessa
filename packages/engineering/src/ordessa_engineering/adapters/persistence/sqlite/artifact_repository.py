@@ -22,9 +22,11 @@ from .apply_schema import APPLY_SCHEMA_VERSION, APPLY_DDL
 from .method_schema import METHOD_SCHEMA_VERSION, METHOD_DDL
 from .implementation_schema import IMPLEMENTATION_SCHEMA_VERSION, IMPLEMENTATION_DDL, IMPLEMENTATION_TABLES
 from .submission_schema import SUBMISSION_SCHEMA_VERSION, SUBMISSION_DDL, IMPLEMENTATION_APPLY_DDL
-from .dispatch_schema import DISPATCH_SCHEMA_VERSION, DISPATCH_DDL
+from .dispatch_schema import (DISPATCH_SCHEMA_VERSION, DISPATCH_DDL,
+                              WORK_DISPATCH_SCHEMA_VERSION)
 from .acceptance_schema import ACCEPTANCE_SCHEMA_VERSION
 from .reviewer_assignment_schema import REVIEWER_ASSIGNMENT_SCHEMA_VERSION
+from .external_record_schema import EXTERNAL_RECORD_SCHEMA_VERSION
 from .material_validation import MaterialBudget
 from ordessa_engineering.application.contracts.access import revision_validation_key
 from ordessa_engineering.application.usecases.material_closure import verify_material
@@ -45,7 +47,7 @@ class SQLiteArtifactRepository:
 
     def require_material_schema(self):
         self.access.check_active()
-        if getattr(self.access._connection, '_ordessa_schema_version', None) not in {MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION}:
+        if getattr(self.access._connection, '_ordessa_schema_version', None) not in {MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION}:
             _fail('MATERIAL_SCHEMA_REQUIRED')
 
     def create(self, artifact: Artifact) -> None:
@@ -108,7 +110,7 @@ class SQLiteArtifactRepository:
         """Finite whole-batch CAS. Never a public single-artifact set_head."""
         from ordessa_engineering.domain.changes.application_plan import ChangeMutationPlan
         self.access.require_write()
-        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
             _fail('APPLY_SCHEMA_REQUIRED')
         if type(plan) is not ChangeMutationPlan:
             _fail('INVALID_ARGUMENT')
@@ -144,7 +146,7 @@ class SQLiteArtifactRepository:
         requires each current head in the target's parent closure.
         """
         self.access.require_write()
-        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+        if getattr(self.access._connection, '_ordessa_schema_version', None) not in (ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
             _fail('ACCEPTANCE_SCHEMA_REQUIRED')
         if type(plan) is not AcceptancePlan or plan.scope != self._scope():
             _fail('INVALID_ACCEPTANCE_PLAN')
@@ -199,7 +201,7 @@ class SQLiteArtifactRepository:
         self._validate_id(revision.artifact_id)
         self._validate_id(revision.revision_id)
         db_version = getattr(self.access._connection, '_ordessa_schema_version', None)
-        if db_version in {MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION}:
+        if db_version in {MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION}:
             if revision.schema_version != 2:
                 _fail('MATERIAL_REVISION_REQUIRED')
         elif revision.schema_version != 1:
@@ -333,7 +335,7 @@ class SQLiteArtifactRepository:
                     _fail('INVALID_ARGUMENT')
                 seen.add(key)
                 if (getattr(self.access._connection, '_ordessa_schema_version', None)
-                        != REVIEWER_ASSIGNMENT_SCHEMA_VERSION):
+                        not in (REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION)):
                     _fail('REVIEWER_ASSIGNMENT_SCHEMA_REQUIRED')
                 from .reviewer_assignment_repository import SQLiteReviewerAssignmentRepository
                 SQLiteReviewerAssignmentRepository(self.access).check_active_control(
@@ -357,7 +359,7 @@ class SQLiteArtifactRepository:
             # The same original UoW connection resolves the predicate; an old
             # schema must refuse it rather than silently ignoring expectations.
             from .review_schema import REVIEW_SCHEMA_VERSION
-            if getattr(self.access._connection, "_ordessa_schema_version", None) not in {REVIEW_SCHEMA_VERSION, MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION}:
+            if getattr(self.access._connection, "_ordessa_schema_version", None) not in {REVIEW_SCHEMA_VERSION, MATERIAL_SCHEMA_VERSION, PROPOSAL_SCHEMA_VERSION, AUTHORIZATION_SCHEMA_VERSION, APPLY_SCHEMA_VERSION, METHOD_SCHEMA_VERSION, IMPLEMENTATION_SCHEMA_VERSION, SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION}:
                 _fail("REVIEW_SCHEMA_REQUIRED")
             from .review_repository import SQLiteReviewRepository
             SQLiteReviewRepository(self.access).check_expectations(read_set.review_sets, read_set.review_controls, read_set.review_requests)

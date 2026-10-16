@@ -15,15 +15,30 @@ from ordessa_infrastructure.encoding.canonical_json import LIBRARY_JSON_PROFILE
 
 from ...application.contracts.errors import ApplicationError
 from ...application.contracts.execution_dispatch import EXECUTION_DISPATCH
+from ...application.contracts.execution_observations import MAX_EXECUTION_RECEIPT_BYTES
 from ...application.usecases.changes.execution_capture import capture_execution_observation
 from ...domain.changes.dispatch import DispatchBinding
-from ...domain.common.mechanisms.hashing import record_digest
+from ...domain.changes.dispatch_codec import decode_dispatch, encode_dispatch
 from ...domain.common.models.values import Digest
 
 
 _UNIT_FIELDS = {'environmentNamespace', 'unitId', 'ownerProviderRef', 'sourceRevision'}
 _CALLBACK_KEYS = {'on_request', 'before_write', 'on_observation'}
 _MAX_PROMPT_BYTES = 262144
+
+
+def _raise_capacity_error(error):
+    # Observation failures may retain the original capacity refusal as a cause.
+    # Convert it before an enclosing method guard interprets foreign exceptions
+    # as an unavailable authority. This never changes the original journal state.
+    seen = set()
+    for _ in range(8):
+        if error is None or id(error) in seen:
+            return
+        seen.add(id(error))
+        if getattr(error, 'code', None) == 'ACP_EVIDENCE_CAPACITY_EXCEEDED':
+            raise ApplicationError('EXECUTION_EVIDENCE_CAPACITY_EXCEEDED') from error
+        error = error.__cause__ or error.__context__
 
 
 def _plain(value, depth=0):
@@ -81,7 +96,10 @@ class RecordedDispatchExecution:
                 or not callable(getattr(records, 'acp_prompt_input_digest', None))
                 or not callable(getattr(records, 'acp_turn_query_digest', None))
                 or not callable(getattr(records, 'query_acp_turn', None))
-                or unit_instance is not None and not callable(getattr(unit_instance, 'prompt_recorded', None))
+                or not callable(getattr(records, 'validate_acp_prompt_capacity', None))
+                or type(getattr(records, 'acp_turn_evidence_max_bytes', None)) is not int
+                or not 0 < records.acp_turn_evidence_max_bytes <= MAX_EXECUTION_RECEIPT_BYTES
+                or unit_instance is not None and not callable(getattr(unit_instance, 'prompt', None))
                 or not callable(getattr(blobs, 'read_verified', None))
                 or not callable(getattr(blobs, 'put_verified', None))):
             raise ApplicationError('RECORDED_DISPATCH_ORIGINAL_OWNER_REQUIRED')
@@ -148,10 +166,14 @@ class RecordedDispatchExecution:
             raw = canonical_bytes(frozen, profile=LIBRARY_JSON_PROFILE)
             if len(raw) > _MAX_PROMPT_BYTES:
                 raise ApplicationError('RECORDED_DISPATCH_INPUT_TOO_LARGE')
+            self.records.validate_acp_prompt_capacity(unit, frozen)
             native_digest = self.records.acp_prompt_input_digest(unit, frozen)
         except ApplicationError:
             raise
-        except (TypeError, ValueError, UnicodeError, OverflowError, RecursionError) as exc:
+        except Exception as exc:
+            _raise_capacity_error(exc)
+            if not isinstance(exc, (TypeError, ValueError, UnicodeError, OverflowError, RecursionError)):
+                raise
             raise ApplicationError('RECORDED_DISPATCH_INPUT_INVALID') from exc
         if (type(native_digest) is not str or not native_digest.startswith('sha256:')
                 or len(native_digest) != 71 or any(c not in '0123456789abcdef' for c in native_digest[7:])):
@@ -176,8 +198,17 @@ class RecordedDispatchExecution:
     def _binding_values(self, binding, *, live_session=True):
         if type(binding) is not DispatchBinding:
             raise ApplicationError('RECORDED_DISPATCH_BINDING_REQUIRED')
-        if binding.digest != record_digest('implementation-dispatch-binding-v1',binding.projection()):
-            raise ApplicationError('RECORDED_DISPATCH_BINDING_TAMPERED')
+        try:
+            # The domain codec owns the closed v1/v2 field sets and recomputes
+            # each version's digest during decode. Round-tripping its canonical
+            # bytes preserves the historical v1 identity while accepting only
+            # a complete, untampered v2 Work binding.
+            encoded_binding = encode_dispatch(binding)
+            verified_binding = decode_dispatch(encoded_binding)
+            if verified_binding != binding:
+                raise ValueError('dispatch binding round-trip changed identity')
+        except Exception as exc:
+            raise ApplicationError('RECORDED_DISPATCH_BINDING_TAMPERED') from exc
         try:
             if type(binding.unit_ref_bytes) is not bytes or len(binding.unit_ref_bytes) > 4096:
                 raise ApplicationError('RECORDED_DISPATCH_UNIT_REF_INVALID')
@@ -209,6 +240,12 @@ class RecordedDispatchExecution:
         session_id = self._session_id(unit) if live_session else params.get('sessionId')
         if type(session_id) is not str or not session_id or params.get('sessionId') != session_id:
             raise ApplicationError('RECORDED_DISPATCH_SESSION_MISMATCH')
+        if live_session:
+            try:
+                self.records.validate_acp_prompt_capacity(unit, params)
+            except Exception as exc:
+                _raise_capacity_error(exc)
+                raise
         actual = self.records.acp_prompt_input_digest(unit, params)
         if actual != expected_input:
             raise ApplicationError('RECORDED_DISPATCH_INPUT_DIGEST_MISMATCH')
@@ -225,11 +262,12 @@ class RecordedDispatchExecution:
         unit, params, _ = self._binding_values(binding)
         self._require_effect_owner()  # Original owner identity check, before reserve/write.
         try:
-            return self.unit_instance.prompt_recorded(unit, self.authorized_lease,
+            return self.unit_instance.prompt(unit, self.authorized_lease,
                 operation_ref=binding.execution_operation_ref, timeout=timeout, **params)
-        except Exception:
+        except Exception as exc:
             # Original UnitRecords owns reserved/possibly-written/unknown
             # semantics. Never retry or create a parallel attempt here.
+            _raise_capacity_error(exc)
             raise
 
     @contextmanager
@@ -260,21 +298,37 @@ class RecordedDispatchExecution:
         return capture_execution_observation(self.records, self.blobs,
             authority_id=self.blobs.authority_id, unit_ref=unit,
             operation_ref=binding.execution_operation_ref,
-            expected_prompt_digest=expected_prompt, query_invocation=invocation)
+            expected_prompt_digest=expected_prompt, query_invocation=invocation,
+            max_receipt_bytes=self.records.acp_turn_evidence_max_bytes)
 
 
 class _EngineeringEffectWriteGuardFactory:
     """Fixed per-request bridge for one exact handoff token and Unit binding."""
 
-    def __init__(self, dispatch_owner, context, records, blobs):
+    def __init__(self, dispatch_owner, context, records, blobs, *, generation_dispatch=None):
         from threading import Lock
-        if (getattr(dispatch_owner,'blobs',None) is not blobs
+        if generation_dispatch is not None and (
+                getattr(generation_dispatch, 'blobs', None) is not blobs
+                or getattr(generation_dispatch, 'factory', None) is None
+                or getattr(generation_dispatch.factory, 'authority_id', None) != getattr(blobs, 'authority_id', None)
+                or not callable(getattr(generation_dispatch, '_access', None))
+                or not callable(getattr(generation_dispatch, 'acquire_effect_write', None))
+                or getattr(generation_dispatch, 'access', None) is None
+                or not callable(getattr(generation_dispatch.access, 'handoff_effect_write', None))
+                or not callable(getattr(generation_dispatch.access, 'consume_effect_write', None))
+                or getattr(getattr(generation_dispatch, 'execution', None), 'records', None) is not records
+                or (dispatch_owner is not None
+                    and getattr(generation_dispatch, 'factory', None)
+                        is not getattr(dispatch_owner, 'factory', None))):
+            raise ApplicationError('RECORDED_DISPATCH_EFFECT_AUTHORITY_REQUIRED')
+        if (dispatch_owner is not None and (getattr(dispatch_owner,'blobs',None) is not blobs
                 or getattr(dispatch_owner,'factory',None) is None
                 or getattr(blobs,'authority_id',None)!=dispatch_owner.factory.authority_id
                 or not callable(getattr(dispatch_owner,'acquire_effect_write',None))
-                or getattr(dispatch_owner,'access',None) is None):
+                or getattr(dispatch_owner,'access',None) is None)):
             raise ApplicationError('RECORDED_DISPATCH_EFFECT_AUTHORITY_REQUIRED')
         self.dispatch_owner=dispatch_owner
+        self.generation_dispatch=generation_dispatch
         # Keep the constructor shape for trusted composition compatibility,
         # but never retain this one request's context. The live call context
         # is supplied and authenticated for each handoff below.
@@ -289,8 +343,13 @@ class _EngineeringEffectWriteGuardFactory:
         from threading import Thread
         from ...application.contracts.commands import CommandContext
         from ...domain.changes.dispatch_codec import encode_dispatch
-        if (type(context) is not CommandContext or access is not self.dispatch_owner.access
-                or type(binding) is not DispatchBinding or binding.scope!=context.scope
+        if type(context) is not CommandContext or type(binding) is not DispatchBinding:
+            raise ApplicationError('DISPATCH_EFFECT_HANDOFF_BINDING_INVALID')
+        generation = (binding.subject is not None
+                      and binding.subject.get('subject_kind') == 'reviewed_change')
+        owner = self.generation_dispatch if generation else self.dispatch_owner
+        if (owner is None or access is not owner.access
+                or binding.scope!=context.scope
                 or not isinstance(target_thread,Thread)
                 or type(timeout) not in (int,float) or not math.isfinite(timeout)
                 or timeout <= 0):
@@ -301,9 +360,11 @@ class _EngineeringEffectWriteGuardFactory:
             # Prepare and verify the immutable original dispatch before
             # suspending the caller's authority. Nothing below the handoff
             # factory callback opens a second Engineering transaction.
-            self.dispatch_owner._access(context,EXECUTION_DISPATCH)
-            with self.dispatch_owner.factory.begin(context.scope,'read') as uow:
-                row=uow.dispatch.get(binding.run_id,binding.step_id,binding.attempt,binding.scope)
+            owner._access(context, EXECUTION_DISPATCH)
+            with owner.factory.begin(context.scope,'read') as uow:
+                row=(uow.work_dispatch.get(binding.run_id,binding.step_id,binding.attempt,binding.scope)
+                     if generation else
+                     uow.dispatch.get(binding.run_id,binding.step_id,binding.attempt,binding.scope))
                 if (row['binding_bytes']!=encode_dispatch(binding)
                         or row['dispatch_phase']!='possibly_written'
                         or row['dispatch_fence']!=binding.fence):
@@ -313,7 +374,7 @@ class _EngineeringEffectWriteGuardFactory:
                     invocation_key=bytes.fromhex(binding.digest.hex),
                     action_instances=binding.action_instances,
                     target_thread=target_thread,expires_at=deadline) as handoff:
-                slot=(context,binding,handoff,current_thread())
+                slot=(context,binding,handoff,current_thread(),owner)
                 with self._slot_lock:
                     if self._slot is not None:
                         raise ApplicationError('DISPATCH_EFFECT_HANDOFF_BUSY')
@@ -334,7 +395,7 @@ class _EngineeringEffectWriteGuardFactory:
             slot=self._slot
         if slot is None:
             raise ApplicationError('DISPATCH_EFFECT_HANDOFF_UNAVAILABLE')
-        context,binding,handoff,caller_thread=slot
+        context,binding,handoff,caller_thread,owner=slot
         if current_thread() is not caller_thread:
             raise ApplicationError('DISPATCH_EFFECT_HANDOFF_CALLER_MISMATCH')
         unit=_plain(unit_ref);fixed=_plain(params)
@@ -346,12 +407,12 @@ class _EngineeringEffectWriteGuardFactory:
                 or self.blobs.read_verified(binding.prompt_ref)!=canonical_bytes(fixed,profile=LIBRARY_JSON_PROFILE)):
             raise ApplicationError('DISPATCH_EFFECT_BINDING_MISMATCH')
         def acquire(identity,deadline):
-            return self.dispatch_owner.acquire_effect_write(
+            return owner.acquire_effect_write(
                 context,binding,identity,deadline,handoff=handoff)
         return EffectWriteGuard(unit,operation_ref,input_digest,fixed,acquire)
 
 
-def engineering_effect_write_guard_factory(dispatch_owner, context, records, blobs):
+def engineering_effect_write_guard_factory(dispatch_owner, context, records, blobs, *, generation_dispatch=None):
     """Build the Unit hook from the canonical owner or its original dispatcher.
 
     With the canonical ``EngineeringOwnerOperations`` return, this adapter
@@ -365,7 +426,9 @@ def engineering_effect_write_guard_factory(dispatch_owner, context, records, blo
     from ...application.orchestration.steps.implementation_dispatch import ImplementationDispatch
     from ...application.usecases.owner_operations import EngineeringOwnerOperations
 
-    if type(dispatch_owner) is EngineeringOwnerOperations:
+    if dispatch_owner is None and generation_dispatch is not None:
+        dispatch = None
+    elif type(dispatch_owner) is EngineeringOwnerOperations:
         dispatch = getattr(dispatch_owner, 'dispatch', None)
         execution = getattr(dispatch, 'execution', None)
         factory = getattr(dispatch_owner, 'factory', None)
@@ -391,13 +454,14 @@ def engineering_effect_write_guard_factory(dispatch_owner, context, records, blo
         raise ApplicationError('RECORDED_DISPATCH_EFFECT_AUTHORITY_REQUIRED')
     factory = getattr(dispatch, 'factory', None)
     access = getattr(dispatch, 'access', None)
-    if (factory is None or access is None
+    if dispatch is not None and (factory is None or access is None
             or getattr(dispatch, 'blobs', None) is not blobs
             or getattr(blobs, 'authority_id', None) != getattr(factory, 'authority_id', None)
             or not callable(getattr(dispatch, '_access', None))
             or not callable(getattr(dispatch, 'acquire_effect_write', None))):
         raise ApplicationError('RECORDED_DISPATCH_EFFECT_AUTHORITY_REQUIRED')
-    return _EngineeringEffectWriteGuardFactory(dispatch, context, records, blobs)
+    return _EngineeringEffectWriteGuardFactory(dispatch, context, records, blobs,
+                                               generation_dispatch=generation_dispatch)
 
 
 class NativeDispatchSources:
@@ -408,12 +472,22 @@ class NativeDispatchSources:
     invocation and its input digest for this exact package/Unit. A wire label or
     copied grant is never a resolver. UnitServices repeats actual owner checks.
     """
-    def __init__(self, services, binding_resolver):
+    def __init__(self, services, binding_resolver, *, dispatch_input_guard=None):
         from ordessa_units.public import UnitServices
         if type(services) is not UnitServices or not callable(binding_resolver):
             raise ApplicationError('DISPATCH_SOURCE_SNAPSHOT_AUTHORITY_UNAVAILABLE')
         self.services=services
         self.resolver=binding_resolver
+        if dispatch_input_guard is not None and not callable(dispatch_input_guard):
+            raise ApplicationError('DISPATCH_METHOD_INPUT_SOURCE_UNAVAILABLE')
+        self.dispatch_input_guard=dispatch_input_guard
+
+    @contextmanager
+    def guard_dispatch_input(self,context,package,unit_ref,recipe):
+        if self.dispatch_input_guard is None:
+            raise ApplicationError('DISPATCH_METHOD_INPUT_SOURCE_UNAVAILABLE')
+        with self.dispatch_input_guard(context,package,unit_ref,recipe):
+            yield
 
     def _resolve(self,context,package,unit_ref):
         from ordessa_execution_agents.profiles import ProfileRevisionRef

@@ -10,6 +10,9 @@ from ..outcomes.diagnostics import ReferenceError
 def projection(value, *, identity=False):
     if type(value) is BlobRef and identity:
         return value.identity_projection()
+    canonical_projection = getattr(type(value), "__canonical_projection__", None)
+    if callable(canonical_projection):
+        return canonical_projection(value, identity=identity)
     if is_dataclass(value):
         return {f.name: projection(getattr(value, f.name), identity=identity) for f in fields(value)}
     if type(value) is tuple:

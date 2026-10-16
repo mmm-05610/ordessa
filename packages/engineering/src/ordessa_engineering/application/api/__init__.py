@@ -9,6 +9,8 @@ from ..contracts.commands import CommandContext, CommandResult, ReadSet
 from ..contracts.method_work import (
     WorkReviewSelector, decode_work_review_selector, work_review_selector_projection,
 )
+from ..contracts.run_waits import ReviewReadiness, ReviewReadinessBindings
+from ..contracts.snapshots import ResolvedReviewMaterial
 from ..contracts.execution_dispatch import EXECUTION_DISPATCH
 from ..contracts.errors import ApplicationError
 from ..contracts.mixed_reviews import MixedReviewerAuthorityPort
@@ -21,6 +23,8 @@ from ..contracts.unit_review import (
 from ..usecases.owner_operations import OwnerOperationResult
 from ...domain.reviews.assignments import ReviewerAssignmentRef
 from ..usecases.reviews.assignments import ASSIGN_REVIEWER, REVOKE_REVIEWER
+from ..contracts.profile_selection import ProfileSelectionSource, ProfileChoicePort, ProfileUnitPort
+from ..orchestration.profile_selection import select_method_profile, select_and_create_method_unit
 
 __all__ = ["EngineeringService", "SUPPORTED_COMMANDS", "SUPPORTED_QUERIES", "CommandContext",
            "CommandResult", "ReadSet", "WorkReviewSelector", "decode_work_review_selector",
@@ -28,4 +32,7 @@ __all__ = ["EngineeringService", "SUPPORTED_COMMANDS", "SUPPORTED_QUERIES", "Com
            "ApplicationError", "bound_review_check_capabilities",
            "OwnerOperationResult", "UnitReviewBinding", "UnitReviewBindingResolver",
            "UnitReviewerAuthority", "NativeReviewInvocation", "MixedReviewerAuthorityPort",
-           "ReviewerAssignmentRef", "ASSIGN_REVIEWER", "REVOKE_REVIEWER"]
+           "ReviewerAssignmentRef", "ASSIGN_REVIEWER", "REVOKE_REVIEWER",
+           "ReviewReadiness", "ReviewReadinessBindings", "ResolvedReviewMaterial",
+           "ProfileSelectionSource", "ProfileChoicePort", "ProfileUnitPort",
+           "select_method_profile", "select_and_create_method_unit"]

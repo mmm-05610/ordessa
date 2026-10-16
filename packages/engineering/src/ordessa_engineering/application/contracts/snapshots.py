@@ -73,3 +73,46 @@ class EngineeringTargetBindings:
 
 
 __all__.append('EngineeringTargetBindings')
+
+
+@dataclass(frozen=True)
+class ResolvedReviewMaterial:
+    """One named immutable owner projection; the value is not source authority.
+
+    The original binding resolver resolves ``ref`` and holds its source guards.
+    Records retain their actual ref types; they are never wrapped as artifacts.
+    Canonical bytes keep nested caller aliases outside the fixed delivery.
+    """
+    name: str
+    ref: object
+    projection: str
+    value_bytes: bytes
+
+    def __post_init__(self):
+        from ...domain.artifacts.refs import ArtifactRevisionRef
+        from ...domain.changes.refs import ProposalRef
+        from ...domain.changes.baselines import RepositorySnapshotRef
+        from ...domain.packages.refs import ImplementationPackageRef
+        from ...domain.reviews.refs import ReviewRef, SubmissionRef
+        from ordessa_infrastructure.encoding import canonical_bytes, decode_json
+        validate_id(self.name)
+        validate_id(self.projection)
+        if (type(self.ref) not in (ArtifactRevisionRef, ProposalRef, RepositorySnapshotRef,
+                                  ImplementationPackageRef, SubmissionRef, ReviewRef)
+                or type(self.value_bytes) is not bytes or not self.value_bytes
+                or len(self.value_bytes) > 2097152):
+            raise ReferenceError('INVALID_REVIEW_MATERIAL')
+        try:
+            value = decode_json(self.value_bytes)
+            if canonical_bytes(value) != self.value_bytes:
+                raise ReferenceError('INVALID_REVIEW_MATERIAL')
+        except (TypeError, ValueError, UnicodeError) as exc:
+            raise ReferenceError('INVALID_REVIEW_MATERIAL') from exc
+
+    @property
+    def value(self):
+        from ordessa_infrastructure.encoding import decode_json
+        return decode_json(self.value_bytes)
+
+
+__all__.append('ResolvedReviewMaterial')

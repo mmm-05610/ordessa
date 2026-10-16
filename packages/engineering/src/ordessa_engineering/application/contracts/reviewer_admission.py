@@ -5,6 +5,27 @@ from ...domain.reviews.models import CheckKey
 from ...domain.reviews.evidence import VerifiedReviewerEvidence
 from ...domain.artifacts.refs import ArtifactRevisionRef
 from ...domain.reviews.refs import SubmissionRef
+from ...domain.reviews.models import ReviewPlan
+from ...methods.definitions.models import MethodDefinition, StandardDefinition
+
+
+@dataclass(frozen=True)
+class SourceReviewBinding:
+    """Method-owner selection, never evidence of reviewer authorization."""
+    plan: ReviewPlan
+    standard: StandardDefinition
+
+
+class SourceReviewBindingsPort(Protocol):
+    def resolve_source_plan(self, context, plan: ReviewPlan,
+                            definition: MethodDefinition) -> SourceReviewBinding:
+        """Independently bind the exact explicit source-review action and checks.
+
+        Do not echo a client plan as approval. Actual source/trust admission is
+        still performed by ReviewerSourcePort and held through original COMMIT.
+        No global workflow phase or fabricated ArtifactRevision participates.
+        """
+        ...
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,9 @@
+# Explicit pair-level change review criteria
+
+Assess only the exact baseline and candidate captures supplied for this invocation and the declared scope. Preserve the full captured `SourceRef`/`VersionCapture` identities; missing, mismatched, unavailable, or out-of-scope material is insufficient and must be refused before invoking a reviewer. A digest identifies captured bytes but does not recover them or establish that a cited excerpt is true.
+
+The caller supplies exactly one claim and one or more explicit evidence excerpts for every required check in `source-review-binding`. Each required check is one narrow relationship judgment over the baseline-candidate pair. The same answer is explicitly bound to that check's criterion key for each side of the pair; it is one pair-level judgment, not two independent judgments. Assess only whether the caller-provided claim is supported, contradicted, or unresolved by the supplied excerpts and the applicable check statement. Do not discover or generate claims, reasons, or findings.
+
+Every required check must receive a result. Missing caller material, missing evidence, a changed reference, failed source read, or excerpt not found in the exact captured source text is rejected before model invocation. `unknown` is insufficient and never passes. Aggregate as `all_required`: any `not_passed` yields `not_passed`; otherwise any `unknown` yields `unknown`; only all `passed` checks with all required material present yields `passed`.
+
+The adapter assembles the result from the caller's unchanged claims/evidence and the original durable native decision records. Native run, question, and answer digests identify the records used. They do not authenticate the caller's claims or make source references proof of semantic support. This text is guidance; deterministic identity, scope, completeness, membership, record, and aggregation checks belong to their responsible system owners.

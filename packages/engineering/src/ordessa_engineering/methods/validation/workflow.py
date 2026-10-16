@@ -9,6 +9,157 @@ from ..definitions.errors import Diagnostic
 from ..definitions.models import CapabilityDescriptor, LoadLimits, LoadedMethod
 
 
+def _review_binding_diagnostics(loaded: LoadedMethod, workflow: dict[str, Any],
+                                workflow_id: str, path: str) -> list[Diagnostic]:
+    """Validate the opt-in frozen-config review declarations as closed data."""
+    from jsonschema import Draft202012Validator
+    from ..definitions.schemas.v1 import REVIEW_BINDING_CONFIG_SCHEMA_V1, REVIEW_GROUP_CONFIG_SCHEMA_V1
+
+    diagnostics: list[Diagnostic] = []
+    steps = workflow.get("steps", [])
+    by_id = {step.get("id"): step for step in steps if isinstance(step, dict)}
+    slots = set(workflow.get("context_slots", []))
+    resources = loaded.resources
+    declared_document_types = {item.get("document_type") for item in loaded.manifest.get("documents", [])
+        if isinstance(item, dict)}
+    groups: list[tuple[str, dict[str, Any]]] = []
+    claimed_requests: set[str] = set()
+
+    def issue(code, message, pointer):
+        diagnostics.append(Diagnostic(code, "error", message, workflow_id, path, pointer))
+
+    for step in steps:
+        if not isinstance(step, dict) or step.get("kind") != "operation":
+            continue
+        config = step.get("config", {})
+        if not isinstance(config, dict):
+            continue
+        if "review_group" in config:
+            raw = config["review_group"]
+            if not Draft202012Validator(REVIEW_GROUP_CONFIG_SCHEMA_V1).is_valid(raw):
+                issue("REVIEW_GROUP_DECLARATION_INVALID", "review_group must match its closed v1 contract", f"/steps/{step.get('id')}/config/review_group")
+            else:
+                groups.append((step["id"], raw))
+        if "review_binding" in config:
+            raw = config["review_binding"]
+            if (step.get("operation") != "engineering.reviews.request"
+                    or not Draft202012Validator(REVIEW_BINDING_CONFIG_SCHEMA_V1).is_valid(raw)):
+                issue("REVIEW_BINDING_DECLARATION_INVALID", "review_binding is only valid on an exact request operation and must match its closed v1 contract", f"/steps/{step.get('id')}/config/review_binding")
+
+    group_ids: set[str] = set()
+    for anchor, group in groups:
+        pointer = f"/steps/{anchor}/config/review_group"
+        group_id = group["group_id"]
+        if group_id in group_ids:
+            issue("DUPLICATE_REVIEW_GROUP", "review group id must be unique", f"{pointer}/group_id")
+        group_ids.add(group_id)
+        if group["subject_slot"] not in slots:
+            issue("REVIEW_GROUP_SLOT_UNKNOWN", "review subject slot must be declared", f"{pointer}/subject_slot")
+        target_types: set[str] = set()
+        for index, target in enumerate(group["target_sources"]):
+            if target["source"] == "slot" and target["slot"] not in slots:
+                issue("REVIEW_GROUP_SLOT_UNKNOWN", "target source slot must be declared", f"{pointer}/target_sources/{index}/slot")
+            if not set(target["document_types"]) <= declared_document_types:
+                issue("REVIEW_GROUP_DOCUMENT_TYPE_UNKNOWN", "target source uses an undeclared method document type", f"{pointer}/target_sources/{index}/document_types")
+            target_types.update(target["document_types"])
+        for index, material in enumerate(group["material_sources"]):
+            if material["source"] == "slot" and material.get("slot") not in slots:
+                issue("REVIEW_GROUP_SLOT_UNKNOWN", "material source slot must be declared", f"{pointer}/material_sources/{index}/slot")
+        material_names = [item["name"] for item in group["material_sources"]]
+        if len(set(material_names)) != len(material_names):
+            issue("REVIEW_GROUP_MATERIAL_DUPLICATE", "material source names must be unique", f"{pointer}/material_sources")
+
+        members = group["members"]
+        member_ids = [item["member_id"] for item in members]
+        request_ids = [item["request_node"] for item in members]
+        standard_ids = [item["standard"]["resource"] for item in members]
+        if len(set(member_ids)) != len(member_ids) or len(set(request_ids)) != len(request_ids) or len(set(standard_ids)) != len(standard_ids):
+            issue("REVIEW_GROUP_MEMBER_DUPLICATE", "group member, request, and standard identities must be unique", f"{pointer}/members")
+        if request_ids and request_ids[0] != anchor:
+            issue("REVIEW_GROUP_ANCHOR_INVALID", "group anchor must be its first request node", f"{pointer}/members/0/request_node")
+        gate = by_id.get(group["gate_wait"])
+        if not isinstance(gate, dict) or gate.get("kind") != "wait":
+            issue("REVIEW_GROUP_GATE_INVALID", "group gate_wait must name a wait node", f"{pointer}/gate_wait")
+
+        for index, member in enumerate(members):
+            member_ptr = f"{pointer}/members/{index}"
+            request_id = member["request_node"]
+            request = by_id.get(request_id)
+            response = by_id.get(member["response_wait"])
+            record = by_id.get(member["record_node"])
+            resource_id = member["standard"]["resource"]
+            if resource_id not in resources or resources[resource_id].declaration.get("kind") != "standard":
+                issue("REVIEW_GROUP_STANDARD_INVALID", "member standard must resolve to a declared standard resource", f"{member_ptr}/standard")
+            else:
+                value = resources[resource_id].value
+                if not isinstance(value, dict):
+                    issue("REVIEW_GROUP_STANDARD_INVALID", "standard resource must be a parsed object", f"{member_ptr}/standard")
+                    continue
+                applicable_count = 0
+                for c_index, criterion in enumerate(value.get("criteria", [])):
+                    applies = set(criterion.get("applies_to", []))
+                    # Standards are reusable across document types. The same
+                    # all_applicable rule used by MethodBridge determines which
+                    # criteria need material in this member's target set.
+                    if applies and not applies.intersection(target_types):
+                        continue
+                    applicable_count += 1
+                    required_inputs = set(criterion.get("required_inputs", []))
+                    if not required_inputs <= set(material_names):
+                        issue("REVIEW_GROUP_MATERIAL_COVERAGE_INVALID", "group must declare every criterion input", f"{member_ptr}/standard/criteria/{c_index}/required_inputs")
+                if not target_types or not applicable_count:
+                    issue("REVIEW_GROUP_TARGET_COVERAGE_INVALID", "member standard must have at least one applicable declared target type", f"{member_ptr}/standard/criteria")
+            if not isinstance(request, dict) or request.get("kind") != "operation" or request.get("operation") != "engineering.reviews.request":
+                issue("REVIEW_GROUP_REQUEST_INVALID", "member request_node must name a reviews.request operation", f"{member_ptr}/request_node")
+                continue
+            if request_id in claimed_requests:
+                issue("REVIEW_GROUP_REQUEST_DUPLICATE", "request node cannot belong to multiple review groups", f"{member_ptr}/request_node")
+            claimed_requests.add(request_id)
+            request_config = request.get("config", {})
+            expected_binding = {"contract": "ordessa.method-review-binding/1", "anchor_node": anchor,
+                "group_id": group_id, "member_id": member["member_id"]}
+            if request_config.get("review_binding") != expected_binding:
+                issue("REVIEW_GROUP_BINDING_MISMATCH", "request binding must point to this exact anchor and member", f"/steps/{request_id}/config/review_binding")
+            if request_config.get("standards") != [{"resource": resource_id}]:
+                issue("REVIEW_GROUP_STANDARD_MISMATCH", "request operation must declare exactly its member standard", f"/steps/{request_id}/config/standards")
+            if request.get("inputs", {}).get("plan") != member["plan_slot"] or member["plan_slot"] not in slots:
+                issue("REVIEW_GROUP_PLAN_SLOT_INVALID", "member plan_slot must be the request plan input and a declared context slot", f"{member_ptr}/plan_slot")
+            if (not isinstance(response, dict) or response.get("kind") != "wait"
+                    or _declared_next(request.get("outcomes", {}).get("completed")) != member["response_wait"]):
+                issue("REVIEW_GROUP_RESPONSE_INVALID", "request completed edge must lead to the declared response wait", f"{member_ptr}/response_wait")
+            if (not isinstance(record, dict) or record.get("kind") != "operation"
+                    or record.get("operation") != "engineering.reviews.record"
+                    or (isinstance(response, dict) and response.get("next") != member["record_node"])):
+                issue("REVIEW_GROUP_RECORD_INVALID", "response wait must lead to the declared reviews.record operation", f"{member_ptr}/record_node")
+            if isinstance(record, dict):
+                advance_waits = member.get("advance_waits", [])
+                if index + 1 == len(members) and advance_waits:
+                    issue("REVIEW_GROUP_ADVANCE_INVALID", "final member cannot declare advance waits", f"{member_ptr}/advance_waits")
+                expected_next = (advance_waits[0] if advance_waits else
+                    (members[index + 1]["request_node"] if index + 1 < len(members) else group["gate_wait"]))
+                if _declared_next(record.get("outcomes", {}).get("completed")) != expected_next:
+                    issue("REVIEW_GROUP_CLOSURE_INVALID", "record completed edge must advance to the next declared member or final gate", f"/steps/{member['record_node']}/outcomes/completed")
+                for wait_index, wait_id in enumerate(advance_waits):
+                    wait = by_id.get(wait_id)
+                    if not isinstance(wait, dict) or wait.get("kind") != "wait":
+                        issue("REVIEW_GROUP_ADVANCE_INVALID", "advance_waits must name wait nodes", f"{member_ptr}/advance_waits/{wait_index}")
+                        continue
+                    next_node = (advance_waits[wait_index + 1] if wait_index + 1 < len(advance_waits)
+                        else (members[index + 1]["request_node"] if index + 1 < len(members) else group["gate_wait"]))
+                    if wait.get("next") != next_node:
+                        issue("REVIEW_GROUP_ADVANCE_INVALID", "advance waits must form the declared ordered path", f"{member_ptr}/advance_waits/{wait_index}")
+
+    bound_requests = {step.get("id") for step in steps if isinstance(step, dict)
+        and isinstance(step.get("config"), dict) and "review_binding" in step["config"]}
+    if bound_requests != claimed_requests:
+        issue("REVIEW_GROUP_BINDING_UNOWNED", "every review_binding must be owned by exactly one declared group", "/steps")
+    return diagnostics
+
+
+def _declared_next(value):
+    return value.get("next") if isinstance(value, dict) and set(value) == {"next"} else None
+
+
 def validate_workflow(loaded: LoadedMethod, capabilities: Mapping[str, CapabilityDescriptor],
                       limits: LoadLimits) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
@@ -198,4 +349,5 @@ def validate_workflow(loaded: LoadedMethod, capabilities: Mapping[str, Capabilit
             children = [item for item in edges.get(node, ()) if item in by_id and (node, item) not in counted_edges]
             for child in reversed(children):
                 stack.append((child, 0))
+    diagnostics.extend(_review_binding_diagnostics(loaded, value, workflow.declaration["id"], path))
     return diagnostics

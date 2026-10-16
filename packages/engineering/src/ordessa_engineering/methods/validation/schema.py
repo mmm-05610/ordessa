@@ -1,6 +1,8 @@
 """Static JSON Schema checks; no schema resolver may access the network."""
 from __future__ import annotations
 
+import json
+from functools import lru_cache
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
@@ -19,6 +21,13 @@ _SCHEMA_SINGLE_KEYWORDS = frozenset({
     "unevaluatedItems",
 })
 _SCHEMA_ARRAY_KEYWORDS = frozenset({"allOf", "anyOf", "oneOf", "prefixItems"})
+_SCHEMA_CACHE_MAX_BYTES = 256 * 1024
+
+
+@lru_cache(maxsize=64)
+def _check_schema_bytes(source_bytes: bytes, schema_bytes: bytes) -> None:
+    """Reuse successful static checks for the same captured schema content."""
+    Draft202012Validator.check_schema(json.loads(schema_bytes))
 
 
 def _schema_nodes(schema: object, pointer: str = ""):
@@ -70,7 +79,7 @@ def _is_reserved_core_id(identifier: str) -> bool:
 def validate_document_schemas(loaded: LoadedMethod) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
     for resource_id, resource in loaded.resources.items():
-        if resource.declaration.get("kind") != "document_schema":
+        if resource.declaration.get("kind") not in {"document_schema", "schema"}:
             continue
         schema = resource.value
         if not isinstance(schema, dict):
@@ -96,7 +105,7 @@ def validate_document_schemas(loaded: LoadedMethod) -> list[Diagnostic]:
         bundled_schemas = {
             other_id: (other.captured.logical_path, other.value)
             for other_id, other in loaded.resources.items()
-            if other.declaration.get("kind") == "document_schema"
+            if other.declaration.get("kind") in {"document_schema", "schema"}
         }
         for error in validate_schema_refs(
             schema, resource_id=resource_id,
@@ -104,7 +113,16 @@ def validate_document_schemas(loaded: LoadedMethod) -> list[Diagnostic]:
         ):
             diagnostics.append(Diagnostic(error.code, "error", error.message, error.resource_id, error.path, error.pointer))
         try:
-            Draft202012Validator.check_schema(schema)
+            # Preserve the original capture in the key and bind it to a
+            # deterministic encoding of the parsed projection. This cache
+            # only replaces check_schema; reference and policy checks above
+            # still execute for every validation request.
+            schema_bytes = json.dumps(schema, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+            source_bytes = resource.captured.data
+            if len(source_bytes) <= _SCHEMA_CACHE_MAX_BYTES and len(schema_bytes) <= _SCHEMA_CACHE_MAX_BYTES:
+                _check_schema_bytes(source_bytes, schema_bytes)
+            else:
+                Draft202012Validator.check_schema(schema)
         except SchemaError as exc:
             path = "/" + "/".join(str(part) for part in exc.absolute_path)
             diagnostics.append(Diagnostic("SCHEMA_INVALID", "error", "document schema is invalid", resource_id, resource.captured.logical_path, path))
