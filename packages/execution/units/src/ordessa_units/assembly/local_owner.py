@@ -318,6 +318,49 @@ class LocalUnitOwner:
             self._operations[id(invocation)] = (invocation, request, digest, action)
             return invocation
 
+    def _reserve_captured_input(self, request, unit, authorization, *, operation_ref,
+                                binding, fence_id, fence_revision, marker):
+        """Reserve the input recipe through this original Unit operation owner.
+
+        The coordinator supplies source pins, never an OperationIntent or
+        caller-built native invocation. Keep DTO construction on the existing
+        owner/Store SDK identity used by every other Local Unit operation.
+        """
+        from ordessa_infrastructure.database.records import DomainWrite
+        with self.authority.guard('interaction', authorization):
+            self.native_unit(unit, authorization)
+            if (request.environment_namespace != self.admission.environment_namespace
+                    or request.principal_scope != self.permission.principal_scope
+                    or safe_json(binding.get('unitRef')) != safe_json(unit.identity)
+                    or binding.get('ownerId') != self.owner_id
+                    or binding.get('permissionId') != self.permission.identity
+                    or binding.get('environmentNamespace') != request.environment_namespace):
+                raise AgentOwnerUnavailable('Captured input differs from original Unit operation owner')
+            capture = binding.get('capturedInputRef')
+            expected_operation = 'unit-input-' + _digest({
+                'environmentNamespace': request.environment_namespace,
+                'principalScope': request.principal_scope, 'requestId': request.request_id})[7:55]
+            if (not isinstance(capture, Mapping)
+                    or set(capture) != {'environmentNamespace', 'captureId', 'captureRevision', 'contentDigest'}
+                    or capture.get('environmentNamespace') != request.environment_namespace
+                    or type(capture.get('captureId')) is not str or not capture['captureId']
+                    or type(capture.get('captureRevision')) is not int or capture['captureRevision'] < 1
+                    or operation_ref != expected_operation
+                    or fence_id != 'capture-' + _digest({'unitRef': unit.identity, 'captureId': capture['captureId']})[7:]
+                    or type(fence_revision) is not int or fence_revision < 0
+                    or safe_json(marker) != safe_json({'principalScope': request.principal_scope,
+                        'requestId': request.request_id, 'operationRef': operation_ref,
+                        'captureRevision': capture['captureRevision']})):
+                raise AgentOwnerUnavailable('Captured input operation or fence source differs')
+            digest = _digest(binding)
+            step = StepIntent('prompt', unit.identity['ownerProviderRef'], digest, operation_ref + '.prompt')
+            intent = OperationIntent(operation_ref, 'unit-captured-input', None, binding, (step,))
+            with self.admission.admission_lock:
+                operation = self.admission.store_port.reserve_operation(request, digest, intent, writes=(
+                    DomainWrite('units.captured-input-attempts', fence_id, fence_revision, marker),))
+                claim = self.admission.store_port.claim_operation_step(request, digest, step)
+                return operation, claim
+
     def authorize_acp_turn_query(self, authorization, request, unit_ref, operation_ref,
                                  *, expected_prompt_input_digest):
         """Issue one read-only ticket for an exact receipt in this owner's UnitRecords.

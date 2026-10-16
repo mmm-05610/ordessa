@@ -9,6 +9,10 @@ description = "Complete Unit composition on the original governance and records 
 requires-python = ">=3.10"
 dependencies = ["ordessa-execution-agents==0.1.0", "ordessa-environments==0.1.0", "ordessa-execution-api==0.1.0", "ordessa-infrastructure==0.1.0", "agent-client-protocol==0.12.1"]
 
+# Host-bound local owner selection is optional; pure Harness compilation stays portable.
+[project.optional-dependencies]
+local-owner = ["ordessa-interfaces==0.1.0"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

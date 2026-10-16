@@ -353,3 +353,14 @@ from .admission.context import UnitAdmissionContext
 from .admission.fingerprint import ProtectedFingerprintHmac
 from .persistence.sqlite import SqliteUnitStore
 __all__ += ["UnitAdmissionContext", "SqliteUnitStore", "ProtectedFingerprintHmac"]
+
+from ordessa_units.channels.captured_contracts import (
+    UNIT_TEXT_CAPTURE_VERSION, UNIT_INPUT_VERSION, UnitTextCapture,
+    UnitCaptureContentPort, UnitWorkspaceExecutionEvidence, UnitWorkspaceExecutionPort,
+    UnitCapturedInputRefused, UnitCapturedInputPending,
+)
+from ordessa_units.channels.captured_input import ManagedUnitInputs
+__all__ += ["UNIT_TEXT_CAPTURE_VERSION", "UNIT_INPUT_VERSION", "UnitTextCapture",
+            "UnitCaptureContentPort", "UnitWorkspaceExecutionEvidence",
+            "UnitWorkspaceExecutionPort", "ManagedUnitInputs",
+            "UnitCapturedInputRefused", "UnitCapturedInputPending"]

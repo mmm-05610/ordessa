@@ -552,11 +552,11 @@ class UnitRecords:
         return digest({'action':'query-acp-turn', 'unitRef':dict(unit_ref),
                        'operationRef':operation_ref, 'expectedPromptInputDigest':expected_prompt_input_digest})
 
-    def query_acp_turn(self, unit_ref, operation_ref, context, *, input_digest, expected_prompt_input_digest):
+    def query_acp_turn(self, unit_ref, operation_ref, context, *, input_digest, expected_prompt_input_digest, allow_absent=False):
         """Authorized durable read; never opens a channel or retries a turn."""
         from .acp_turns import query
         return query(self, unit_ref, operation_ref, context, input_digest=input_digest,
-                     expected_prompt_input_digest=expected_prompt_input_digest)
+                     expected_prompt_input_digest=expected_prompt_input_digest, allow_absent=allow_absent)
 
     def _authorize(self, context, action, provider, node, digest, *, query=False, epoch_target=None):
         facts = self.verifier.verify_and_consume(context, action, provider, node, digest)

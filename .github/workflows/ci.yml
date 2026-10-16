@@ -50,10 +50,12 @@ jobs:
         run: |
           pip install \
             -e packages/infrastructure \
+            -e packages/interfaces \
             -e packages/interfaces/execution/c1-api \
             -e packages/execution/environments \
             -e packages/execution/agents \
-            -e packages/execution/units \
+            -e 'packages/execution/units[local-owner]' \
+            -e plugins/environments/local \
             -e plugins/harness/claude-code \
             -e plugins/harness/codex \
             -e plugins/harness/copilot \
@@ -105,6 +107,8 @@ jobs:
             plugins/harness/opencode/tests/opencode_subscriber_attribution.test.mjs
       - name: OpenCode declared resource conformance
         run: pytest -q apps/server/tests/test_sidecar_native_driver.py::test_every_shipped_driver_implements_the_declared_contract
+      - name: Unit captured input original-owner behavior
+        run: pytest -q packages/execution/units/tests/test_captured_input.py packages/execution/units/tests/test_local_owner_recorded_query.py
       - name: Unit configuration compiler read boundary
         run: pytest -q plugins/harness/codex/tests/test_pure_read.py
       - name: harness (green set; subprocess-install suites excluded, see ledger)

@@ -6,4 +6,4 @@ Trusted application composition chooses the compiler implementation. Harness dec
 
 Validation against the exact PR source snapshot: the existing Codex pure-read suite and nine additional boundary cases pass, 36 tests total. The original public-route positive case and read-denial assertions remain. CI runs this suite independently so another Codex module collection failure cannot hide it.
 
-This change does not provide the missing Codex managed-input adapter to the formal fresh Unit owner. Its existing unsupported-owner refusal remains, and the original lifecycle acceptance test is still a delivery blocker.
+Pure compiler binding grants no managed-input or native lifecycle authority. The later [captured Unit input follow-up](unit-captured-input-20261016.md) replaces the unsupported coordinator through the formal fresh Unit owner and preserves the original acceptance/replay/query scenario there; it still requires explicit real capture and Workspace authority ports.

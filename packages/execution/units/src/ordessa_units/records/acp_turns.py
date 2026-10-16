@@ -191,7 +191,9 @@ def finish(owner, operation, state, response=None):
         return sealed_mapping(body)
 
 
-def query(owner, unit_ref, operation, context, *, input_digest, expected_prompt_input_digest):
+def query(owner, unit_ref, operation, context, *, input_digest, expected_prompt_input_digest, allow_absent=False):
+    if type(allow_absent) is not bool:
+        refuse("Explicit boolean absent-receipt policy required")
     if input_digest != owner.acp_turn_query_digest(unit_ref, operation, expected_prompt_input_digest):
         refuse('ACP query input differs from authorized exact read request')
     unit = owner.resolve_unit_reference(unit_ref, context, input_digest=input_digest)
@@ -199,6 +201,8 @@ def query(owner, unit_ref, operation, context, *, input_digest, expected_prompt_
         if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='harness_acp_turn_attempts'").fetchone():
             refuse('ACP durable schema unavailable')
         body = _read(owner, db, operation)
+        if body is None and allow_absent:
+            return None  # Authorized absence; never a receipt or dispatch permission.
         if body is None or body['unitRef']['unitId'] != unit.unit_ref:
             refuse('Original ACP operation not found on this Unit')
         if body['inputDigest'] != expected_prompt_input_digest:
