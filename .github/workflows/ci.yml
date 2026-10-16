@@ -18,9 +18,6 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
-    env:
-      ORDESSA_BRAND_WHEELHOUSE: ${{ runner.temp }}/ordessa-offline-wheels
-      ORDESSA_ACP_WHEELHOUSE: ${{ runner.temp }}/ordessa-offline-wheels
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -74,6 +71,10 @@ jobs:
             -e plugins/harness/vibe
       - name: Prepare declared offline wheel dependencies
         run: |
+          export ORDESSA_ACP_WHEELHOUSE="$RUNNER_TEMP/ordessa-offline-wheels"
+          export ORDESSA_BRAND_WHEELHOUSE="$ORDESSA_ACP_WHEELHOUSE"
+          echo "ORDESSA_ACP_WHEELHOUSE=$ORDESSA_ACP_WHEELHOUSE" >> "$GITHUB_ENV"
+          echo "ORDESSA_BRAND_WHEELHOUSE=$ORDESSA_BRAND_WHEELHOUSE" >> "$GITHUB_ENV"
           # Use the same configured package source as installation; tests stay offline.
           python -m pip download --only-binary=:all: \
             --dest "$ORDESSA_ACP_WHEELHOUSE" \
