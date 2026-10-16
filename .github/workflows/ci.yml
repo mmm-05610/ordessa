@@ -107,6 +107,13 @@ jobs:
             plugins/harness/opencode/tests/opencode_subscriber_attribution.test.mjs
       - name: OpenCode declared resource conformance
         run: pytest -q apps/server/tests/test_sidecar_native_driver.py::test_every_shipped_driver_implements_the_declared_contract
+      - name: Original Unit records, verifier and factory identity
+        run: |
+          pytest -q \
+            packages/execution/agents/tests/agent_unit_model/test_fresh_unit_owner.py::test_binding_keeps_one_original_issuer_and_manager_without_factory_effect \
+            packages/execution/agents/tests/agent_unit_model/test_fresh_unit_owner.py::test_no_legacy_factory_reinterpretation_or_implicit_opt_in \
+            packages/execution/agents/tests/agent_unit_model/test_fresh_unit_owner.py::test_selected_record_ports_cannot_be_substituted
+          pytest -q packages/execution/units/tests/test_fresh_public_factory.py
       - name: Unit captured input original-owner behavior
         run: pytest -q packages/execution/units/tests/test_captured_input.py packages/execution/units/tests/test_local_owner_recorded_query.py
       - name: Unit configuration compiler read boundary

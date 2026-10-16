@@ -25,3 +25,13 @@ Same-request replay never prompts again. Another key cannot evade an unresolved 
 Tests cover real byte-write counting and guard lifetime, copied Unit and principal rejection, capture digest/loss checks, write-time Workspace revocation, permission expiry, Host access revocation, partial commits, missing ACP receipts, query after release, binding replacement refusal, unrelated direct prompts, and concurrent request keys at the capture fence. All native peers are controlled local fixtures; no real model, existing user service or user database is used. Real product Workspace/capture selection and whole-product execution remain separate, explicit assembly work.
 
 Exact-source validation: 85 passed (19 captured-input cases, 21 original local-owner query cases, 4 metadata-retirement cases, 36 pure-read cases and 5 historical codec/missing-port cases). The Unit wheel builds offline, carries the new modules byte-for-byte, and declares the host composition dependency only under its explicit extra. Three historical Codex skips remain unchanged.
+
+
+The blocking CI also runs the existing original-owner selection checks (9 passed)
+and public fresh Unit factory checks (2 passed). These exercise the actual
+records/verifier identities, refusal of a cold records clone and substituted
+selected ports, and two real Units retaining the exact original records/verifier
+while their own process bindings run the original start gate. Harness declaration
+DTO rejection tests cover metadata shape only; they do not stand in for these
+native owner checks. The fresh Unit positive case is the corresponding owner
+requirement after the retired provider factory is removed.
