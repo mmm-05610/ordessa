@@ -1,53 +1,42 @@
 # Ordessa
 
-Ordessa is the agent-desktop product monorepo: one repository holding the
-Electron desktop app, the Ordessa Server, the Pacthold governance kernel and
-the plugin set that composes the product.
+**A software engineering system for coding agents.**
 
-```text
-apps/desktop              Electron shell + extension host boot
-apps/server               Ordessa Server (ordessa_server)
-packages/pacthold         governance kernel (pacthold) + plugin contracts
-packages/desktop-platform extension api/loader/host, native bridge, contracts
-plugins/harness           harness lifecycle, ACP adaptation, Go ACP bridge
-plugins/…                 commands, workbench, connections, agent, connectors
-products/desktop          default product assembly manifest
-```
+Ordessa 是供编程 Agent 调用的软件工程任务执行与管理系统。
 
-## Quick start
+开发者在熟悉的 Codex、Claude Code 等工具中讨论方案，由主 Agent 调用系统提交设计变更。
+系统依据 DID 设计文档规范组织设计审核，参考 Spec Kit 的文档组织方式，将通过审核的变更
+转为包含规格说明、实施计划和任务清单的实施包，并关联设计版本、实施任务与验收记录，
+让任务有明确的设计依据和验收标准。
 
-Desktop (Node ≥ 22, npm ≥ 9):
+在此基础上，Ordessa 封装决策单元和 Agent 执行单元，组织执行者选择、任务派发、独立审查及
+进度查询。以下是项目的定位与设计方向；实现状态见下方说明。
 
-```sh
-npm ci
-npm run typecheck
-npm test            # 146 tests
-npm run build       # builds extensions + electron app
-npm run test:agent-shell && npm run test:electron   # smoke (headless)
-```
+## 设计重点
 
-Backend ( Python ≥ 3.9, Go toolchain pinned — see `docs/baseline.md`):
+- **可迭代的工程方法。** `methods` 定义审核标准、实施步骤、接受条件与有界返工规则，
+  让工程方法可以独立于通用执行机制持续改进。
+- **方法与机制分离。** 工程层解释方法、组织实施包和记录；决策单元与 Agent 执行单元
+  提供各自的执行能力，具体 provider 通过公开接口接入。
+- **原生通道与执行环境。** 保留 Harness 的原生交互语义，以 ACP 等通道连接执行者，
+  并通过 Environment 管理执行环境与生命周期。
+- **可追溯的工程过程。** 用精确版本引用关联设计、审核、实施包和执行记录；分别记录
+  执行结果、独立审查与工程接受结论。
 
-```sh
-python3.12 -m venv .venv && . .venv/bin/activate
-pip install -r apps/server/lockfiles/server-linux-py312.txt   # verified closure
-pip install -e packages/pacthold -e apps/server -e 'plugins/harness[dev]' -e 'apps/server[dev]' -e 'packages/pacthold[dev]'
-python -m ordessa_server --help
-python -m pytest packages/pacthold apps/server plugins/harness tests/acp_orchestration   # run from repo root; known-red ledger in docs/baseline.md
-bash plugins/harness/packaging/acp-adapter/build-acp-adapter-round-h.sh   # reproducible bridge
-```
+## 开发状态
 
-Docs: [`docs/baseline.md`](docs/baseline.md) (versions, gates, how to verify),
-[`docs/architecture.md`](docs/architecture.md) (components and dependency
-direction), [`docs/known-issues.md`](docs/known-issues.md) (registered debts
-and untested scope), [`docs/reference-index.md`](docs/reference-index.md)
-(where the pre-monorepo history lives and how to restore it).
+项目正在持续开发与结构收敛。声明式 Work、设计审核记录、实施包登记、执行状态持久化及
+版本化授权模型已有开发检查点；最新代码正在 [PR #70](https://github.com/mmm-05610/ordessa/pull/70)
+中审查与整合，尚未合入当前 main。
 
-## Status
+**真实 Agent 实施 → 独立审查 → 接受或有界返工的完整链路，尚未完成端到端验证。**
+当前仓库用于展示工程设计、实现和迭代过程，不代表完整产品已经交付。
 
-Development baseline established from the HD-002 candidates
-(backend `a0b343e0`, desktop `450944bd`, ACP bridge `41d9d94`) with known
-issues registered — see `docs/baseline.md` and `docs/known-issues.md`.
-Real-model end-to-end acceptance is **not** part of this baseline (untested
-scope listed there). The pre-migration repositories remain restorable from
-archive refs and the preservation batch.
+## 技术与文档
+
+Python · TypeScript · Electron · ACP · SQLite
+
+- [公开基线的组件与依赖方向](docs/architecture.md)
+- [开发与运行基线](docs/baseline.md)
+- [基线限制与已知问题](docs/known-issues.md)
+- [许可证](LICENSE)
