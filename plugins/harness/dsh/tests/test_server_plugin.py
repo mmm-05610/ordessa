@@ -152,7 +152,8 @@ def test_registration_does_not_require_a_live_owner():
 
 
 @pytest.mark.parametrize("field", ["records", "verifier"])
-def test_substituted_owner_records_or_verifier_is_refused(field):
+def test_non_declaration_owner_view_with_replaced_fields_is_rejected(field):
+    """This is DTO type rejection; actual owner identity is gated by Unit tests."""
     view = fresh_view()
     setattr(view, field, object())
     with pytest.raises(TypeError, match="frozen DSH Harness definition"):

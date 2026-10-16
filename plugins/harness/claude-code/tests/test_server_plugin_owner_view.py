@@ -3,9 +3,9 @@
 The plugin publishes only the frozen ``HarnessDefinitionDeclaration`` at the
 host's definition point. The retired provider factory and the owner-view wiring
 it used are gone: no live owner, records, journal or native process is consumed
-here. The assembled owner's records/verifier stay a real, refused-if-substituted
-input to the provider a deployment composes — the positive (the exact assembled
-pair is consumed) and negative (a substituted pair is refused) cases remain.
+here. Provider checks below use a controlled fixture unit_port and verify pair
+consistency relative to that object. Canonical Unit owner/factory/captured-input
+gates separately verify the actual selected issuer, records and verifier.
 """
 from types import SimpleNamespace
 
@@ -143,7 +143,7 @@ def test_registration_never_carries_a_live_owner_or_provider():
     payload = registration_payload(ClaudeCodeServerPlugin(frozen).build(context()))
     view = fresh_view()
     provider = live_provider(view)
-    # The provider consumes exactly the assembled owner's original records and verifier.
+    # The fixture provider retains the supplied fixture records and verifier.
     assert provider._records is view.records and provider._verifier is view.verifier
     assert 'prepare' in provider.descriptor.supported_methods
     assert 'start' not in provider.descriptor.supported_methods
@@ -178,7 +178,8 @@ def test_registration_ignores_environment_owner_attributes():
 
 
 @pytest.mark.parametrize('field', ['records', 'verifier'])
-def test_substituted_owner_records_or_verifier_is_refused(field):
+def test_non_declaration_owner_view_with_replaced_fields_is_rejected(field):
+    """This is DTO type rejection; actual owner identity is gated by Unit tests."""
     view = fresh_view()
     setattr(view, field, object())
     with pytest.raises(TypeError, match='frozen Claude Harness definition'):
@@ -186,8 +187,8 @@ def test_substituted_owner_records_or_verifier_is_refused(field):
 
 
 @pytest.mark.parametrize('mode', ['records', 'verifier', 'both'])
-def test_provider_refuses_other_records_or_verifier_than_the_assembled_owner(mode):
-    """The provider must bind the assembled owner's original records and verifier."""
+def test_provider_refuses_pair_mismatching_fixture_unit_port(mode):
+    """The provider must match the records/verifier on this fixture unit_port."""
     view = fresh_view()
     other = fresh_view()
     verifier = view.verifier if mode == 'records' else other.verifier

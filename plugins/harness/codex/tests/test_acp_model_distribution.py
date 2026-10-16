@@ -29,7 +29,7 @@ def _brand_wheelhouse():
 
 
 def test_independent_codex_model_wheel_without_server_monolith_product(tmp_path):
-    packages = ('packages/interfaces/execution/c1-api', 'packages/execution/kernel',
+    packages = ('packages/interfaces/execution/c1-api',
                 'packages/execution/agents', 'packages/execution/units', 'packages/execution/environments',
                 'packages/infrastructure', 'plugins/harness/codex')
     sources = []
@@ -50,7 +50,7 @@ def test_independent_codex_model_wheel_without_server_monolith_product(tmp_path)
     run([sys.executable, '-m', 'pip', 'wheel', '--no-index', '--no-build-isolation', '--no-deps',
          '--wheel-dir', str(wheels), *sources])
     own = sorted(wheels.glob('*.whl'))
-    assert [p.name.split('-')[0] for p in own] == ['ordessa_environments', 'ordessa_execution_agents', 'ordessa_execution_api', 'ordessa_harness_codex', 'ordessa_infrastructure', 'ordessa_units', 'pacthold']
+    assert [p.name.split('-')[0] for p in own] == ['ordessa_environments', 'ordessa_execution_agents', 'ordessa_execution_api', 'ordessa_harness_codex', 'ordessa_infrastructure', 'ordessa_units']
     assert len(list(wheels.glob('*.whl'))) == len(packages)
     isolated = tmp_path / 'isolated'; run([sys.executable, '-m', 'venv', str(isolated)])
     python = str(isolated / 'bin/python')
@@ -59,7 +59,7 @@ def test_independent_codex_model_wheel_without_server_monolith_product(tmp_path)
     program = '''
 import importlib.util,tomllib
 assert importlib.util.find_spec('pydantic_graph') is None
-assert all(importlib.util.find_spec(name) is None for name in ('ordessa_harness', 'ordessa_server',
+assert all(importlib.util.find_spec(name) is None for name in ('pacthold', 'ordessa_harness', 'ordessa_server',
     'ordessa_agent_tools', 'server_plugin_api', 'ordessa_harness_pi', 'ordessa_harness_claude_code'))
 from ordessa_execution_agents.harness.definitions.model_compilation import AdapterContext,ChoiceRequest,TargetHandle,BindSecret,MountContent
 from ordessa_harness_codex.acp_model_configuration import CodexAdapter
