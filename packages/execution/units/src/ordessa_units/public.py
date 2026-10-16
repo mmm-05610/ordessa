@@ -150,7 +150,8 @@ def unit_services(environment, *, invocation_issuer=None, node_evidence_port=Non
                    preparation_context_port=None, preparation_observation_port=None,
                    lifecycle_observation_port=None, input_capture_port=None,
                    native_input_state_port=None, first_input_observation_port=None,
-                   owner_ports: AgentOwnerPorts | None = None) -> UnitServices:
+                   owner_ports: AgentOwnerPorts | None = None,
+                   configuration_offer_compiler=None) -> UnitServices:
     """Bootstrap the sole execution-owned catalog on the existing Environment.
 
     No plugin activation, native process or second Environment is created.
@@ -200,7 +201,8 @@ def unit_services(environment, *, invocation_issuer=None, node_evidence_port=Non
             profiles = ProfileService(environment)
             services = UnitServices(profiles, nodes,
                 AgentConfiguration(environment, nodes, invocation_issuer=invocation_issuer),
-                AgentProviders(environment), AgentConfigurationOffers(environment),
+                AgentProviders(environment), AgentConfigurationOffers(environment,
+                    compiler_binding=configuration_offer_compiler),
                 AgentAssembly(environment, profiles, nodes,
                     invocation_issuer=invocation_issuer, context_port=preparation_context_port,
                     observation_port=preparation_observation_port, unit_manager=unit_manager),
@@ -236,6 +238,9 @@ def unit_services(environment, *, invocation_issuer=None, node_evidence_port=Non
                 or (invocation_issuer is not None
                     and services.material_operations._issuer is not invocation_issuer)):
             raise ValueError("Agent service authorities must be composed once before use")
+        if (configuration_offer_compiler is not None
+                and services.configuration_offers._compiler_binding is not configuration_offer_compiler):
+            raise ValueError('configuration compiler must be selected once before service publication')
         return services
 
 
@@ -327,8 +332,8 @@ __all__ += ["AGENT_MATERIAL_OPERATION_CONTRACT_VERSION", "MaterialOperations",
             "material_provider_ref", "material_invocation_target",
             "material_operation_facts", "material_reservation_usages"]
 
-from ordessa_units.configuration.offers import (PURE_READ_VERSION, OwnerReadContext, OwnerProposalInput, OwnerConfigurationOfferBatch, OwnerProposalAssessment)
-__all__ += ["PURE_READ_VERSION", "OwnerReadContext", "OwnerProposalInput", "OwnerConfigurationOfferBatch", "OwnerProposalAssessment"]
+from ordessa_units.configuration.offers import (PURE_READ_VERSION, OwnerReadContext, OwnerProposalInput, OwnerConfigurationOfferBatch, OwnerProposalAssessment, bind_configuration_offer_compiler)
+__all__ += ["PURE_READ_VERSION", "OwnerReadContext", "OwnerProposalInput", "OwnerConfigurationOfferBatch", "OwnerProposalAssessment", "bind_configuration_offer_compiler"]
 
 from ordessa_units.admission.owner_selection import (
     AgentOwnerInputs, AgentOwnerUnavailable, FreshUnitFactory, bind_unit_manager, validate_agent_owner_inputs,

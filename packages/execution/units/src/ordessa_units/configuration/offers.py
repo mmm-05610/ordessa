@@ -155,6 +155,50 @@ def require_assessment(input, result):
             if o['requirement']=='must' and (r is None or r['status']!='passed' or not r['evidenceRefs'] or r['checkerId']!=o['checkerId'] or r['checkerVersion']!=o['checkerVersion']): raise ConfigurationContractError('assessment must obligation unverified')
 
 
+@dataclass(frozen=True, repr=False)
+class _BoundConfigurationCompiler:
+    environment: object
+    admitted: object
+    descriptor: object
+    compiler: object
+    describe: object
+    assess: object
+
+    @property
+    def provider_ref(self):
+        return self.admitted.provider_ref
+
+
+def bind_configuration_offer_compiler(environment, compiler):
+    """Select one pure compiler on this original admission context.
+
+    This supplies only the two read/compile callbacks. It registers no runtime
+    provider, issues no invocation or Grant, and establishes no lifecycle
+    readiness. The application's trusted composition selects the implementation;
+    each read still rechecks the original catalog and current read policy.
+    """
+    from ordessa_execution_agents.harness.definitions.runtime_providers import (
+        RuntimeProviderDescriptor, PURE_READ_METHODS)
+    from ordessa_units.admission.context import UnitAdmissionContext
+    if type(environment) is not UnitAdmissionContext:
+        raise IdentityMismatchError('original Unit admission context required for compiler selection')
+    descriptor = getattr(compiler, 'descriptor', None)
+    if (type(descriptor) is not RuntimeProviderDescriptor
+            or descriptor.pure_read_contract_version != PURE_READ_VERSION
+            or any(name not in descriptor.supported_methods for name in PURE_READ_METHODS)
+            or any(not callable(getattr(compiler, name, None)) for name in PURE_READ_METHODS)):
+        raise GuaranteeUnavailableError('explicit versioned configuration compiler required')
+    with environment._admission_lock:
+        environment._check_open()
+        admitted = HarnessAdmission(environment).describe(descriptor.definition_ref)
+        if (descriptor.provider_id != admitted.descriptor.provider_id
+                or descriptor.definition_ref != admitted.descriptor.definition_ref
+                or descriptor.implementation_digest != admitted.descriptor.implementation_digest):
+            raise IdentityMismatchError('configuration compiler differs from admitted definition')
+        return _BoundConfigurationCompiler(environment, admitted, descriptor.snapshot(), compiler,
+            compiler.describe_configuration_offers, compiler.assess_configuration_proposal)
+
+
 class AgentConfigurationOffers:
     """Instance-configuration offer/proposal aggregation over admitted providers.
 
@@ -165,8 +209,13 @@ class AgentConfigurationOffers:
     authority (callers pass an explicitly built ``OwnerProposalInput``).
     """
 
-    def __init__(self, environment):
+    def __init__(self, environment, *, compiler_binding=None):
+        if compiler_binding is not None and (
+                type(compiler_binding) is not _BoundConfigurationCompiler
+                or compiler_binding.environment is not environment):
+            raise IdentityMismatchError('configuration compiler belongs to another admission context')
         self._environment = environment
+        self._compiler_binding = compiler_binding
 
     def _require_definition_ref(self, definition_ref):
         if (not isinstance(definition_ref, Mapping)
@@ -177,16 +226,30 @@ class AgentConfigurationOffers:
     def _pure_read_owner(self, definition_ref, method):
         self._require_definition_ref(definition_ref)
         env = self._environment
-        HarnessAdmission(env).describe(definition_ref)
-        # Public lookup rechecks same Environment, current read policy and admission.
+        env._check_open()
+        current = HarnessAdmission(env).describe(definition_ref)
         if not env._policy.admit_object_access(env._principal_scope,
                 f'{env.environment_id}:agents.definition:{definition_ref["definitionId"]}', 'read'):
             raise AdmissionRefusedError('configuration offer read refused')
-        raise GuaranteeUnavailableError('specific configuration offer compiler owner is not bound')
+        bound = self._compiler_binding
+        if bound is None or bound.descriptor.definition_ref != definition_ref:
+            raise GuaranteeUnavailableError('specific configuration offer compiler owner is not bound')
+        try:
+            descriptor = bound.compiler.descriptor.snapshot()
+        except Exception:
+            raise GuaranteeUnavailableError('configuration compiler owner changed') from None
+        if (current.provider_ref != bound.provider_ref
+                or current.descriptor != bound.admitted.descriptor
+                or descriptor != bound.descriptor):
+            raise GuaranteeUnavailableError('configuration compiler owner changed')
+        if method not in ('describe_configuration_offers', 'assess_configuration_proposal'):
+            raise GuaranteeUnavailableError('configuration compiler method unavailable')
+        return bound, OwnerReadContext(env.environment_id, current.provider_ref, env._principal_scope)
 
     def _recheck_read_owner(self, admitted, definition_ref, method):
         current, _ = self._pure_read_owner(definition_ref, method)
-        if current.provider_ref != admitted.provider_ref or current.descriptor != admitted.descriptor:
+        if (current is not admitted or current.provider_ref != admitted.provider_ref
+                or current.descriptor != admitted.descriptor):
             raise AdmissionRefusedError('pure-read owner changed during observation')
 
     def describe_configuration_offers(self, definition_ref):
@@ -194,7 +257,7 @@ class AgentConfigurationOffers:
         with env._admission_lock:
             admitted, context = self._pure_read_owner(definition_ref, 'describe_configuration_offers')
         try:
-            result = admitted.provider.describe_configuration_offers(definition_ref, context)
+            result = admitted.describe(definition_ref, context)
         except Exception as exc:
             if isinstance(exc, ConfigurationUnsupported): raise ConfigurationUnsupported('owner pure-read unsupported') from None
             if isinstance(exc, AdmissionRefusedError): raise AdmissionRefusedError('owner pure-read refused') from None
@@ -243,7 +306,7 @@ class AgentConfigurationOffers:
             if proposal.descriptor_revision != admitted.descriptor.definition_ref['revision']:
                 raise ConfigurationRevisionConflict('proposal descriptor revision differs')
         try:
-            result = admitted.provider.assess_configuration_proposal(proposal, context)
+            result = admitted.assess(proposal, context)
             require_assessment(proposal, result)
         except Exception as exc:
             if isinstance(exc, ConfigurationUnsupported): raise ConfigurationUnsupported('owner pure-read unsupported') from None
@@ -260,5 +323,5 @@ class AgentConfigurationOffers:
 __all__ = [
     "PURE_READ_VERSION", "OwnerReadContext", "OwnerProposalInput",
     "OwnerConfigurationOfferBatch", "OwnerProposalAssessment", "require_assessment",
-    "AgentConfigurationOffers",
+    "AgentConfigurationOffers", "bind_configuration_offer_compiler",
 ]

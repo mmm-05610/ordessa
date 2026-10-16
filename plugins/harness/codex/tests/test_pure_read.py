@@ -2,6 +2,8 @@
 from dataclasses import replace
 
 import pytest
+from ordessa_execution_api.environment import (
+    AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError)
 from ordessa_execution_api.environment.operations import safe_json
 from ordessa_harness_codex import CodexRuntimeProvider, CodexProviderRefused
 from ordessa_harness_codex.provider import DEFAULTS_SCHEMA, DEFAULT_FIELDS
@@ -169,26 +171,157 @@ def test_context_owner_and_source_refusals(change):
     with pytest.raises(CodexProviderRefused): provider.assess_configuration_proposal(value, context)
 
 
-def test_original_public_core_routes_read_and_enforces_read_permission():
-    from pacthold.public import Environment, InstallationRecord
-    from ordessa_units.public import AgentContributionSet, unit_services
-    from ordessa_execution_api.environment import AdmissionRefusedError
+@pytest.fixture
+def public_read_world(tmp_path):
+    from types import SimpleNamespace
+    from ordessa_units.admission.context import UnitAdmissionContext
+    from ordessa_units.admission.material_registration import MaterialCatalog
+    from ordessa_units.persistence.sqlite.store import SqliteUnitStore
+    from ordessa_execution_agents.harness.providers.registry import (
+        HarnessCatalog, HarnessDefinitionDescriptor, HarnessDefinitionDeclaration,
+        HarnessInstallationObservation)
     class Policy:
         refused = False
         def admit_object_access(self, principal, target, access):
             return not (self.refused and target == 'pure-codex:agents.definition:codex')
-    policy = Policy(); env = Environment('pure-codex', policy=policy, principal_scope='authenticated-test')
-    try:
-        env.install(InstallationRecord('codex-plugin', 'a' * 64)); env.enable('codex-plugin')
-        provider, _ = fixture()
-        env.activate('codex-plugin', AgentContributionSet(agent_runtime_providers=(provider,)))
-        api = unit_services(env)
-        offers = api.configuration_offers.describe_configuration_offers(DEF)
-        value = replace(proposal(), provider_ref=offers.owner_ref)
-        result = api.configuration_offers.assess_configuration_proposal(value)
-        assert result.status == 'valid'
-        policy.refused = True
-        with pytest.raises(AdmissionRefusedError): api.configuration_offers.describe_configuration_offers(DEF)
-        with pytest.raises(AdmissionRefusedError): api.configuration_offers.assess_configuration_proposal(value)
-        assert provider._channels == {} and provider._configuration_waiters == {}
-    finally: env.close()
+    policy = Policy()
+    store = SqliteUnitStore(tmp_path / 'original.sqlite')
+    holder = []
+    catalog = HarnessCatalog('pure-codex', policy=policy, principal_scope='authenticated-test',
+        retirement_guard=lambda owner, generation: holder[0].provider_retirement_guard(owner, generation))
+    descriptor = HarnessDefinitionDescriptor('codex', DEF, DIGEST, 'codex-app-server/v2', 'controlled')
+    declaration = HarnessDefinitionDeclaration(descriptor,
+        lambda ref: HarnessInstallationObservation('unknown'))
+    catalog.stage('codex-plugin', 1, 'controlled', 'a' * 64, (declaration,)).commit()
+    env = UnitAdmissionContext('pure-codex', store=store, policy=policy, fingerprint_port=None,
+        harness_catalog=catalog, material_catalog=MaterialCatalog('pure-codex'),
+        principal_scope='authenticated-test')
+    holder.append(env)
+    provider, _ = fixture()
+    yield SimpleNamespace(env=env, store=store, catalog=catalog, declaration=declaration,
+                          policy=policy, provider=provider)
+    env.close()
+    store.close()
+
+
+def test_original_public_core_routes_read_and_enforces_read_permission(public_read_world):
+    from ordessa_units.public import unit_services, bind_configuration_offer_compiler
+    world = public_read_world
+    env, provider, policy = world.env, world.provider, world.policy
+    binding = bind_configuration_offer_compiler(env, provider)
+    api = unit_services(env, configuration_offer_compiler=binding)
+    offers = api.configuration_offers.describe_configuration_offers(DEF)
+    value = replace(proposal(), provider_ref=offers.owner_ref)
+    result = api.configuration_offers.assess_configuration_proposal(value)
+    assert result.status == 'valid'
+    policy.refused = True
+    with pytest.raises(AdmissionRefusedError): api.configuration_offers.describe_configuration_offers(DEF)
+    with pytest.raises(AdmissionRefusedError): api.configuration_offers.assess_configuration_proposal(value)
+    assert provider._channels == {} and provider._configuration_waiters == {}
+
+
+def test_declaration_without_explicit_compiler_remains_unavailable(public_read_world):
+    from ordessa_units.public import unit_services
+    with pytest.raises(GuaranteeUnavailableError, match='compiler owner is not bound'):
+        unit_services(public_read_world.env).configuration_offers.describe_configuration_offers(DEF)
+    assert public_read_world.provider._channels == {}
+
+
+def test_compiler_binding_cannot_move_to_an_identical_other_context(public_read_world, tmp_path):
+    from ordessa_units.public import unit_services, bind_configuration_offer_compiler
+    from ordessa_units.admission.context import UnitAdmissionContext
+    world = public_read_world
+    binding = bind_configuration_offer_compiler(world.env, world.provider)
+    other = UnitAdmissionContext('pure-codex', store=world.store, policy=world.policy,
+        fingerprint_port=None, harness_catalog=world.catalog,
+        material_catalog=world.env.material_catalog, principal_scope='authenticated-test')
+    with pytest.raises(IdentityMismatchError, match='another admission context'):
+        unit_services(other, configuration_offer_compiler=binding)
+    assert other._agent_services is None
+
+
+def test_compiler_selection_cannot_replace_a_published_service_owner(public_read_world):
+    from ordessa_units.public import unit_services, bind_configuration_offer_compiler
+    world = public_read_world
+    first = bind_configuration_offer_compiler(world.env, world.provider)
+    api = unit_services(world.env, configuration_offer_compiler=first)
+    second = bind_configuration_offer_compiler(world.env, world.provider)
+    with pytest.raises(ValueError, match='selected once'):
+        unit_services(world.env, configuration_offer_compiler=second)
+    assert unit_services(world.env, configuration_offer_compiler=first) is api
+
+
+def test_compiler_descriptor_drift_is_refused_before_read_callback(public_read_world, monkeypatch):
+    from ordessa_units.public import unit_services, bind_configuration_offer_compiler
+    world = public_read_world
+    binding = bind_configuration_offer_compiler(world.env, world.provider)
+    api = unit_services(world.env, configuration_offer_compiler=binding)
+    monkeypatch.setattr(world.provider, 'descriptor', None)
+    with pytest.raises(GuaranteeUnavailableError, match='compiler owner changed'):
+        api.configuration_offers.describe_configuration_offers(DEF)
+
+
+def test_replaced_admission_generation_never_reuses_old_compiler(public_read_world):
+    from ordessa_units.public import unit_services, bind_configuration_offer_compiler
+    world = public_read_world
+    binding = bind_configuration_offer_compiler(world.env, world.provider)
+    api = unit_services(world.env, configuration_offer_compiler=binding)
+    world.catalog.drain('codex-plugin', 1)
+    world.catalog.retire('codex-plugin', 1)
+    world.catalog.stage('codex-plugin', 2, 'controlled', 'a' * 64, (world.declaration,)).commit()
+    with pytest.raises(GuaranteeUnavailableError, match='compiler owner changed'):
+        api.configuration_offers.describe_configuration_offers(DEF)
+
+
+def test_policy_cut_during_compilation_rejects_the_computed_result(public_read_world, monkeypatch):
+    from ordessa_units.public import unit_services, bind_configuration_offer_compiler
+    world = public_read_world
+    original = world.provider.describe_configuration_offers
+    def read_then_cut(*args):
+        result = original(*args)
+        world.policy.refused = True
+        return result
+    monkeypatch.setattr(world.provider, 'describe_configuration_offers', read_then_cut)
+    binding = bind_configuration_offer_compiler(world.env, world.provider)
+    api = unit_services(world.env, configuration_offer_compiler=binding)
+    with pytest.raises(AdmissionRefusedError, match='read refused'):
+        api.configuration_offers.describe_configuration_offers(DEF)
+    assert world.provider._channels == {} and world.provider._configuration_waiters == {}
+    with world.store.transaction() as db:
+        assert db.execute('SELECT COUNT(*) FROM env_requests').fetchone()[0] == 0
+
+
+def test_closed_original_context_cannot_read_bound_compiler(public_read_world):
+    from ordessa_units.public import unit_services, bind_configuration_offer_compiler
+    world = public_read_world
+    binding = bind_configuration_offer_compiler(world.env, world.provider)
+    api = unit_services(world.env, configuration_offer_compiler=binding)
+    world.env.close()
+    with pytest.raises(AdmissionRefusedError, match='closed'):
+        api.configuration_offers.describe_configuration_offers(DEF)
+
+
+def test_compiler_descriptor_drift_during_read_rejects_result(public_read_world, monkeypatch):
+    from ordessa_units.public import unit_services, bind_configuration_offer_compiler
+    world = public_read_world
+    original = world.provider.describe_configuration_offers
+    def read_then_drift(*args):
+        result = original(*args)
+        world.provider.descriptor = replace(world.provider.descriptor,
+            implementation_digest='sha256:' + 'f' * 64)
+        return result
+    monkeypatch.setattr(world.provider, 'describe_configuration_offers', read_then_drift)
+    binding = bind_configuration_offer_compiler(world.env, world.provider)
+    api = unit_services(world.env, configuration_offer_compiler=binding)
+    with pytest.raises(GuaranteeUnavailableError, match='compiler owner changed'):
+        api.configuration_offers.describe_configuration_offers(DEF)
+
+
+def test_compiler_binding_checks_exact_declared_implementation(public_read_world, monkeypatch):
+    from ordessa_units.public import bind_configuration_offer_compiler
+    world = public_read_world
+    monkeypatch.setattr(world.provider, 'descriptor', replace(world.provider.descriptor,
+        implementation_digest='sha256:' + 'f' * 64))
+    with pytest.raises(IdentityMismatchError, match='differs from admitted definition'):
+        bind_configuration_offer_compiler(world.env, world.provider)
+    assert world.provider._channels == {} and world.provider._configuration_waiters == {}

@@ -105,6 +105,8 @@ jobs:
             plugins/harness/opencode/tests/opencode_subscriber_attribution.test.mjs
       - name: OpenCode declared resource conformance
         run: pytest -q apps/server/tests/test_sidecar_native_driver.py::test_every_shipped_driver_implements_the_declared_contract
+      - name: Unit configuration compiler read boundary
+        run: pytest -q plugins/harness/codex/tests/test_pure_read.py
       - name: harness (green set; subprocess-install suites excluded, see ledger)
         run: |
           # Independent distributions have intentionally repeated test module names.
