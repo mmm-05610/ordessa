@@ -22,7 +22,7 @@ import { fileURLToPath } from "node:url"
 import test from "node:test"
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
-const DRIVER = new URL(`file://${path.join(pluginRoot, "runtime", "drivers", "opencode-native.mjs")}`)
+const DRIVER = new URL("../opencode/src/ordessa_harness_opencode/acp/opencode_native.mjs", import.meta.url)
 const SESSION = "ses_1"
 
 const json = (status, doc) => new Response(JSON.stringify(doc ?? {}), {

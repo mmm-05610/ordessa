@@ -38,10 +38,20 @@ from ordessa_harness.claude import production as claude_code_production
 from ordessa_harness.kilo import production as kilo_production
 from ordessa_harness.dsh import production as dsh_production
 from ordessa_harness.hermes import production as hermes_production
-from ordessa_harness.opencode import production as opencode_production
+from ordessa_harness_opencode import production as opencode_production
 from ordessa_harness.pi import production as pi_production
 from ordessa_harness.registry import load_builtin_registry
 from ordessa_harness.registry.loader import load_registry
+
+from functools import partial
+from ordessa_server.composition.harness_catalog import capture_harness_catalog
+from ordessa_execution_agents.harness.providers.declarations.capability_claims import capability_claims
+from ordessa_harness_opencode.registration_declarations import registration_declarations
+
+_opencode_declarations = registration_declarations()
+_opencode_catalog = capture_harness_catalog(
+    (_opencode_declarations,), launch_declarations=(_opencode_declarations,))
+_opencode_capabilities = partial(capability_claims, _opencode_catalog.registry)
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 DEFINITIONS = PLUGIN_ROOT / "src" / "ordessa_harness" / "harnesses.toml"
@@ -326,7 +336,8 @@ def _production_claims(family: str) -> dict:
             artifact_token="artifact", tree_digest="sha256:" + "a" * 64)
     else:
         document = module.deployment_document(
-            binary_token="binary", binary_digest="sha256:" + "a" * 64)
+            binary_token="binary", binary_digest="sha256:" + "a" * 64,
+            capabilities_for=_opencode_capabilities)
     harness = document["harnesses"][0]
     assert harness["id"] == family
     return harness["capabilityClaims"]

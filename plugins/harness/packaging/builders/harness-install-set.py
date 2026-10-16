@@ -34,15 +34,17 @@ REPO = Path(__file__).resolve().parents[2]  # the harness plugin root
 PLUGIN = REPO
 SCRIPT = "scripts/server-round1/harness-install-set.py"
 
-#: Every family the install set must cover, in registry order.
-FAMILIES = ("codex", "claude-code", "opencode", "hermes", "dsh", "kilo", "pi")
+#: Families still supported by this historical install-set producer.
+#: OpenCode native resources belong to its independent provider; this producer
+#: cannot stage those resources through the retired aggregate plugin root.
+FAMILIES = ("codex", "claude-code", "hermes", "dsh", "kilo", "pi")
 
 #: Families whose runtime artifact is a directory closure built by a builder
 #: script; the remaining ones (opencode) pin a single-file binary instead.
 CLOSURE_FAMILIES = ("codex", "claude-code", "hermes", "dsh", "kilo", "pi")
 
 MODULE_NAMES = {
-    "codex": "codex", "claude-code": "claude", "opencode": "opencode",
+    "codex": "codex", "claude-code": "claude",
     "hermes": "hermes", "dsh": "dsh", "kilo": "kilo", "pi": "pi",
 }
 

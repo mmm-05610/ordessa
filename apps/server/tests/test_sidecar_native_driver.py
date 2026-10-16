@@ -309,9 +309,11 @@ def test_every_shipped_driver_implements_the_declared_contract():
     The list is read from the seam module itself (one source of truth), and the
     drivers are asked to construct an instance the same way the sidecar does.
     """
+    from ordessa_harness_opencode.acp_resources import acp_resources
+
     drivers = [
         FIXTURE_DRIVER,
-        PLUGIN / "runtime" / "drivers" / "opencode-native.mjs",
+        dict(acp_resources())["acp/opencode_native.mjs"],
     ]
     result = subprocess.run(
         ["node", "--input-type=module", "-e", CONFORMANCE_PROBE,

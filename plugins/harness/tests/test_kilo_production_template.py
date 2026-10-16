@@ -153,6 +153,9 @@ def test_the_sidecar_glue_owns_the_same_model_mapping():
         path.parent.name for path in (REPO / "plugins" / "harness" / "src"
                                       / "ordessa_harness").glob("*/production.py")
     }
+    # A migrated brand owns its template in its independent distribution.
+    families.update(path.parents[2].name for path in (REPO / "plugins" / "harness").glob(
+        "*/src/ordessa_harness_*/production.py"))
     assert set(payload["aliases"]) <= families, "an alias without a production template is drift"
     assert payload["translated"] == production.NATIVE_MODEL_VALUE
     assert payload["passthrough"] == "deepseek-flash"

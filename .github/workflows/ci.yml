@@ -94,6 +94,17 @@ jobs:
       #  - test_external_adapter_product.py: builds a fixture distribution through a
       #    pip subprocess, which resolves differently on a clean runner than in a
       #    developer venv (registered in known-issues as a CI-env follow-up).
+      - name: OpenCode provider-owned native behavior
+        run: |
+          node --test \
+            plugins/harness/opencode/tests/opencode_abort_outcome_halfb.test.mjs \
+            plugins/harness/opencode/tests/opencode_control_leg_audit.test.mjs \
+            plugins/harness/opencode/tests/opencode_driver_tail.test.mjs \
+            plugins/harness/opencode/tests/opencode_pump_attribution_x20.test.mjs \
+            plugins/harness/opencode/tests/opencode_stream_framing.test.mjs \
+            plugins/harness/opencode/tests/opencode_subscriber_attribution.test.mjs
+      - name: OpenCode declared resource conformance
+        run: pytest -q apps/server/tests/test_sidecar_native_driver.py::test_every_shipped_driver_implements_the_declared_contract
       - name: harness (green set; subprocess-install suites excluded, see ledger)
         run: |
           # Independent distributions have intentionally repeated test module names.
