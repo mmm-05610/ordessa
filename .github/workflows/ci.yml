@@ -42,6 +42,33 @@ jobs:
                       -e plugins/assets/subagents -e plugins/assets/mcp \
                       -e plugins/assets/command-templates -e plugins/profile
           pip install -e products/server
+      # These independent distributions are present in this published snapshot.
+      # Install their declared local dependency closure before the unchanged
+      # Harness suite collects brand tests. This snapshot still declares the
+      # execution API dependency; it does not claim its retirement is complete.
+      - name: Install published independent Harness distributions
+        run: |
+          pip install \
+            -e packages/infrastructure \
+            -e packages/interfaces/execution/c1-api \
+            -e packages/execution/environments \
+            -e packages/execution/agents \
+            -e packages/execution/units \
+            -e plugins/harness/claude-code \
+            -e plugins/harness/codex \
+            -e plugins/harness/copilot \
+            -e plugins/harness/dsh \
+            -e plugins/harness/gemini_cli \
+            -e plugins/harness/goose \
+            -e plugins/harness/grok-build \
+            -e plugins/harness/hermes \
+            -e plugins/harness/kilo \
+            -e plugins/harness/kimi \
+            -e plugins/harness/opencode \
+            -e plugins/harness/pi \
+            -e plugins/harness/qoder \
+            -e plugins/harness/qwen \
+            -e plugins/harness/vibe
       - name: Kernel
         run: pytest -q packages/pacthold/tests
       - name: server-compat
