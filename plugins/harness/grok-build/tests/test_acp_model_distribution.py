@@ -28,7 +28,7 @@ def _acp_wheelhouse():
 
 
 def test_independent_grok_build_model_wheel_without_server_monolith_product(tmp_path):
-    packages = ('packages/interfaces/execution/c1-api', 'packages/execution/kernel',
+    packages = ('packages/interfaces/execution/c1-api',
                 'packages/execution/agents', 'packages/execution/environments', 'packages/execution/units',
                 'packages/infrastructure', 'plugins/harness/grok-build')
     sources = []
@@ -63,6 +63,7 @@ retired = {'ordessa-environment-api', 'ordessa-harness-transport'}
 assert not any(any(r.startswith(name) for name in retired) for r in own_requirements), own_requirements
 assert retired.isdisjoint({d.metadata['Name'] for d in distributions()})
 assert importlib.util.find_spec('ordessa_environment_api') is None
+assert importlib.util.find_spec('pacthold') is None
 assert importlib.util.find_spec('ordessa_harness_transport') is None
 assert all(importlib.util.find_spec(name) is None for name in ('ordessa_harness', 'ordessa_server',
     'ordessa_agent_tools', 'server_plugin_api', 'ordessa_harness_pi', 'ordessa_harness_claude_code',

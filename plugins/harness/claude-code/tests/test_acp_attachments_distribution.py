@@ -21,7 +21,7 @@ def _acp_wheelhouse():
 
 
 def test_independent_attachment_wheel_without_monolith_product_server_or_sdk(tmp_path):
-    packages = ('packages/interfaces/execution/c1-api', 'packages/execution/kernel',
+    packages = ('packages/interfaces/execution/c1-api',
                 'packages/execution/agents', 'packages/execution/units', 'packages/execution/environments',
                 'packages/infrastructure', 'plugins/harness/claude-code')
     wheels = tmp_path / 'wheels'
@@ -37,7 +37,7 @@ def test_independent_attachment_wheel_without_monolith_product_server_or_sdk(tmp
         '--no-deps', '--wheel-dir', str(wheels), *clean_sources], capture_output=True, text=True, timeout=60)
     assert build.returncode == 0, build.stdout + build.stderr
     own = sorted(wheels.glob('*.whl'))
-    assert [p.name.split('-')[0] for p in own] == ['ordessa_environments', 'ordessa_execution_agents', 'ordessa_execution_api', 'ordessa_harness_claude_code', 'ordessa_infrastructure', 'ordessa_units', 'pacthold']
+    assert [p.name.split('-')[0] for p in own] == ['ordessa_environments', 'ordessa_execution_agents', 'ordessa_execution_api', 'ordessa_harness_claude_code', 'ordessa_infrastructure', 'ordessa_units']
     artifacts = sorted(wheels.glob('*.whl')); assert len(artifacts) == len(packages)
     claude = list(wheels.glob('ordessa_harness_claude_code-*.whl')); assert len(claude) == 1
     with zipfile.ZipFile(claude[0]) as archive:
@@ -57,7 +57,7 @@ def test_independent_attachment_wheel_without_monolith_product_server_or_sdk(tmp
     program = '''
 import base64, hashlib, importlib.util, json
 assert all(importlib.util.find_spec(name) is None for name in
-    ('ordessa_harness', 'ordessa_agent_tools', 'ordessa_server', 'claude_agent_sdk', 'server_plugin_api'))
+    ('pacthold', 'ordessa_harness', 'ordessa_agent_tools', 'ordessa_server', 'claude_agent_sdk', 'server_plugin_api'))
 assert importlib.util.find_spec('pydantic_graph') is None
 import ordessa_harness_claude_code.server_plugin
 from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter

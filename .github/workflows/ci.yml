@@ -18,6 +18,9 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    env:
+      ORDESSA_BRAND_WHEELHOUSE: ${{ runner.temp }}/ordessa-offline-wheels
+      ORDESSA_ACP_WHEELHOUSE: ${{ runner.temp }}/ordessa-offline-wheels
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -69,6 +72,13 @@ jobs:
             -e plugins/harness/qoder \
             -e plugins/harness/qwen \
             -e plugins/harness/vibe
+      - name: Prepare declared offline wheel dependencies
+        run: |
+          # Use the same configured package source as installation; tests stay offline.
+          python -m pip download --only-binary=:all: \
+            --dest "$ORDESSA_ACP_WHEELHOUSE" \
+            'agent-client-protocol==0.12.1' 'PyYAML==6.0.3' 'tomli-w>=1.2.0,<2'
+          python -c 'import hashlib,os,pathlib; p=pathlib.Path(os.environ["ORDESSA_ACP_WHEELHOUSE"])/"agent_client_protocol-0.12.1-py3-none-any.whl"; assert hashlib.sha256(p.read_bytes()).hexdigest()=="aaf3cc301ed87d9e2c4ccb91adfe1cd58784355f6ce7e513f50e7ca2391862ef", "official ACP wheel hash mismatch"'
       - name: Server plugin public API
         run: pytest -q packages/interfaces/transport/server/plugin-api/tests
       - name: Kernel

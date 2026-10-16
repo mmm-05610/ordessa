@@ -31,10 +31,18 @@ RUNTIME = REPO / "plugins" / "harness" / "runtime"
 
 
 from functools import partial
+from ordessa_server.composition.harness_catalog import capture_harness_catalog
 from ordessa_server.composition.selected_harness_catalog import capture_selected_harness_catalog
 from ordessa_execution_agents.harness.providers.declarations.capability_claims import capability_claims
 
-_captured_harness_catalog = capture_selected_harness_catalog()
+from ordessa_harness_dsh.registration_declarations import registration_declarations
+
+# This brand's own test catalog is established explicitly here: the declarations
+# are read through this brand's public port and composed by the neutral capture
+# helper. Nothing is taken from the implicit global selection or another brand.
+_brand_declarations = registration_declarations()
+_captured_harness_catalog = capture_harness_catalog(
+    (_brand_declarations,), launch_declarations=(_brand_declarations,))
 registry_capabilities = partial(capability_claims, _captured_harness_catalog.registry)
 
 def test_checked_in_settings_match_the_module_constants():
@@ -194,6 +202,12 @@ def test_capability_claims_derive_from_the_registry():
     }
     for value in claims.values():
         assert isinstance(value, bool)
+
+
+def test_the_official_default_selection_stays_pi_only():
+    """Establishing this brand's catalog above must not change the product default."""
+    default_selection = capture_selected_harness_catalog()
+    assert [definition.harness_type for definition in default_selection.registry.all()] == ["pi"]
 
 
 def test_the_sidecar_glue_owns_the_same_model_mapping():
