@@ -3,7 +3,7 @@
 `ServerError` is not a host internal: it is the vocabulary a plugin uses to
 state *why* an operation refused, and the composition that hosts it projects it
 onto the wire family set (`server_plugin_api.wire_errors.WireError`). Before
-T014-S2c the class lived in `ordessa_server.errors` and every plugin imported
+T014-S2c the class lived in `server_plugin_api.internal_errors` and every plugin imported
 it from there, which is exactly the AGENTS rule-3 breach this slice closes: a
 plugin may import platform contracts, never host internals.
 

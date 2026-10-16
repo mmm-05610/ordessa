@@ -31,6 +31,7 @@ EXPECTED = {
     'TrustedFlow', 'flow_digest', 'reviewed_code_digest', 'RunContext', 'NodeServices',
     'immutable_queries', 'run_decision', 'read_result', 'BudgetExhausted',
     'EvidenceUnknown', 'RuntimeFailure', 'ExplicitCancellation',
+    'DecisionManager', 'DecisionManagerError', 'DecisionRun',
     'EvidenceError', 'FileEvidenceReader', 'FileEvidenceSink', 'MemoryEvidenceSink',
 }
 

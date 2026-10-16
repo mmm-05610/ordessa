@@ -3,14 +3,14 @@
 T014-S2c published this module because *plugins* raise `WireError` directly
 (the compatibility core's refusal path, the workspace plugin's wire surface,
 the ACP plugin's capability refusals) and importing it from
-`ordessa_server.wire.errors` was a rule-3 breach. One implementation answers
+`ordessa_server.composition.plugin_host.error_families` was a rule-3 breach. One implementation answers
 for host and plugin alike, which is the only way the frozen strings
 (`"models must be a list"`, `INVALID_REQUEST`, the 67-row family answers) stay
 byte-identical after the move.
 
 What is deliberately **not** here: the contributed half of the table. Contributed
 rows are per-composition state owned by the declaring plugin host
-(`ordessa_server.wire.errors.ErrorFamilyAggregate`), and a plugin never reads an
+(`ordessa_server.composition.plugin_host.error_families.ErrorFamilyAggregate`), and a plugin never reads an
 aggregate — it contributes a payload and resolves through the callable the host
 injects. This module holds only the *static* answers:
 

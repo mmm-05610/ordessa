@@ -1,6 +1,6 @@
 """Canonical product-record encoding shared by every domain that stores one.
 
-Moved out of `ordessa_server.records` by T014-S2c: three plugins
+Moved out of `server_plugin_api.record_encoding` by T014-S2c: three plugins
 (`server-compat`, `workspace`, `harness`) encode and digest records with these
 helpers, and importing them from the host was a rule-3 breach. They are
 genuinely shared wire/storage shape, not business rules, so they belong to the

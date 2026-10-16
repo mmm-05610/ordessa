@@ -14,7 +14,7 @@ Since T014-S2c the package also carries the vocabulary the host and the plugins
 *share* rather than one side owning: `ServerError` (what a plugin raises), the
 canonical record encoding, the wire/1 family set with its static code→family
 table and the `WireError` object, and the four param-shape primitives. Those
-moved out of `ordessa_server.errors`, `.records` and `.wire.{errors,handlers}`
+moved out of `server_plugin_api.internal_errors`, `.records` and `.wire.{errors,handlers}`
 because a plugin importing a host internal is the breach AGENTS rule 3 forbids,
 and moving them into one sibling plugin instead would have made the other two
 plugins import that sibling. The host imports them from here too — one
@@ -22,6 +22,9 @@ implementation, so a frozen refusal string cannot drift between sides. What
 stays host-side is per-composition state (the contributed family aggregate).
 """
 from __future__ import annotations
+
+from .selection import ServerPluginSelection
+from .root_ownership import OwnedRootBinding, RootOwnershipError, RootOwnershipPort
 
 from .acp_admission import (
     ACP_ADMISSION_PORT,
@@ -113,6 +116,8 @@ from .errors import (
 )
 
 __all__ = [
+    "ServerPluginSelection",
+    "OwnedRootBinding", "RootOwnershipError", "RootOwnershipPort",
     "ACP_ADMISSION_PORT",
     "ACP_ADMISSION_PORT_VERSION",
     "AcpAdmissionPort",

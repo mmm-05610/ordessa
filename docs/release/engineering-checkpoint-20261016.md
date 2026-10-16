@@ -46,3 +46,19 @@ qualification.
 
 The whitespace check reports existing extra blank lines at EOF in four pinned
 source files; their reviewed bytes were preserved.
+
+## Publication dependency follow-up
+
+The Server plugin API source moves from `packages/server-plugin-api` to
+`packages/interfaces/transport/server/plugin-api`; its distribution name and
+`server_plugin_api` import identity are unchanged. CI and Debian assembly use
+the new path, and the old source directory is removed from this checkpoint.
+The existing named-contribution version checks and all previous API tests are
+retained. The build environment explicitly supplies the declared setuptools
+backend for offline wheel tests.
+
+The missing Server test-support projection, its selected launch ports, the
+existing model-validation coordinator/selection, and Decision Manager source
+and regressions are included as their existing dependency closure. No real
+provider validation is run by publishing these files. Owner-view production
+assembly and Codex configuration-offer owner binding remain unresolved.

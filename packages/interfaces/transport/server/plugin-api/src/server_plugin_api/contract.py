@@ -14,7 +14,7 @@ SERVER_PLUGIN_API_VERSION = 1
 #: (`server.hello`, `workspaces.gitStatus`, `acp.channel.open`). The wire's
 #: own vocabulary; anything else is an `InvalidDeclarationError` at
 #: registration, not a bad request later.
-PLUGIN_METHOD_ID = re.compile(r"[a-z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9]*)*\Z")
+PLUGIN_METHOD_ID = re.compile(r"[a-z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)*\Z")
 
 _PLUGIN_ID = re.compile(r"[a-z0-9][a-z0-9._-]*\Z")
 _ROUTE_ID = re.compile(r"[a-z][a-z0-9-]*\Z")
@@ -70,9 +70,10 @@ class ServerMethodDescriptor:
     method_id: str
     required_params: frozenset[str]
     optional_params: frozenset[str]
-    handler: Callable[[Mapping[str, Any]], Any]
+    handler: Callable[..., Any]
     owner: str
     availability: Availability | None = None
+    contextual: bool = False
 
     def __post_init__(self) -> None:
         if not isinstance(self.method_id, str) or not PLUGIN_METHOD_ID.fullmatch(self.method_id):
@@ -91,6 +92,8 @@ class ServerMethodDescriptor:
             raise ValueError("owner must name the registering plugin")
         if self.availability is not None and not callable(self.availability):
             raise ValueError("availability must be callable when given")
+        if type(self.contextual) is not bool:
+            raise ValueError("contextual must be a boolean")
 
 
 @dataclass(frozen=True)

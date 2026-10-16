@@ -3,8 +3,9 @@
 These are the validators several components need and none of them owns:
 `_require`/`_bounded`/`_request_id` are used by the host's own dispatch wall and
 `server.hello`, while `_bounded`/`_require`/`_version` are also used by three
-plugins. Before T014-S2c they lived as private functions of
-`ordessa_server.wire.handlers`, so every plugin importing them reached into host
+plugins. Before T014-S2c they lived as private functions of the host's wire
+handler module (since moved to the interfaces distribution as
+`ordessa_interfaces.system_access.services.invocation`), so every plugin importing them reached into host
 internals (rule 3). Moving them into one *sibling plugin* would have been
 worse — it would have made workspace and harness import `ordessa_server_compat`
 — so they live here, in the contract package, and the host imports them too.
@@ -14,7 +15,7 @@ missing …"`, `"… must be a bounded string"`, `"requestId must contain at lea
 8 characters"`, `"… must be a non-negative safe integer"`) and the
 `INVALID_REQUEST` family are what clients branch on, which is why exactly one
 implementation exists and
-`packages/server-plugin-api/tests/test_wire_shape.py` pins each string.
+`packages/interfaces/transport/server/plugin-api/tests/test_wire_shape.py` pins each string.
 
 Domain-shape validators (`assignments`, `models`, `overrides`, `positive`,
 `slug`) are NOT here: the measured table in the lane report shows zero host use

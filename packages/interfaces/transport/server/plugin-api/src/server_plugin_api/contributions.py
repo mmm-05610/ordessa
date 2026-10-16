@@ -107,7 +107,8 @@ CLI_SERVER_FLAGS_API_VERSION = "v1"
 #: else is a `ContributionDeclarationError`, not a host surprise later.
 CONTRIBUTION_POINT_ID = re.compile(r"[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*\Z")
 
-_CONTRIBUTION_API_VERSION = re.compile(r"v[1-9][0-9]*\Z")
+_CONTRIBUTION_API_VERSION = re.compile(
+    r"(?:v[1-9][0-9]*|[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*/[1-9][0-9]*)\Z")
 
 _STAGE, _COMMIT, _ROLLBACK = "staged", "committed", "rolled-back"
 
@@ -169,7 +170,7 @@ class Contribution:
                 f"invalid contribution point id: {self.point_id!r}")
         if not isinstance(self.api_version, str) or not _CONTRIBUTION_API_VERSION.fullmatch(self.api_version):
             raise ContributionDeclarationError(
-                f"contribution {self.point_id}: api_version must look like 'v1', "
+                f"contribution {self.point_id}: api_version must be 'v1' or a named contract such as 'harness-definition/1', "
                 f"got {self.api_version!r}")
         if type(self.required) is not bool:
             raise ContributionDeclarationError(
