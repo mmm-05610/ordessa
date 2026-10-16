@@ -1,21 +1,38 @@
-"""grok-build server plugin build: explicit owner view wiring, never a fake grant.
+"""grok-build server plugin build: one frozen definition declaration, never a fake grant.
 
-Controlled doubles only: no real owner, records, journal or native process.
+The plugin publishes only the frozen ``HarnessDefinitionDeclaration`` at the
+host's definition point. The retired provider factory and the owner-view wiring
+it used are gone: no live owner, records, journal or native process is consumed
+here. The assembled owner's records/verifier stay a real, refused-if-substituted
+input to the provider a deployment composes — the positive (the exact assembled
+pair is consumed) and negative (a substituted pair never advertises the
+lifecycle) cases remain.
 """
 from types import SimpleNamespace
+
 import pytest
+
+from ordessa_execution_agents.harness.providers.registry import (
+    HARNESS_DEFINITION_VERSION,
+    HarnessCatalog,
+    HarnessDefinitionDeclaration,
+    HarnessDefinitionDescriptor,
+    HarnessInstallationObservation,
+)
 from ordessa_execution_api.environment import GuaranteeUnavailableError
-from ordessa_harness_grok_build.server_plugin import GrokBuildServerPlugin
+from server_plugin_api import ServerPluginContext
+
 from ordessa_harness_grok_build import GrokBuildRuntimeProvider
-from server_plugin_api import (ServerPluginContext,
-                               PACTHOLD_CONTRIBUTIONS_POINT_ID,
-                               PACTHOLD_CONTRIBUTIONS_API_VERSION)
+from ordessa_harness_grok_build.server_plugin import GrokBuildServerPlugin
 
 # Test fixture digest only — NOT a real implementation digest. Production
 # digests are injected by the deployment fingerprint gate.
 DIGEST = "sha256:" + "a" * 64
 ENVIRONMENT_ID = "env-grok-build-fixture"
 DEFINITION = {"environmentNamespace": ENVIRONMENT_ID, "definitionId": "grok-build", "revision": "1"}
+POINT_ID = "execution.harness.definitions"
+DISCOVERY_METHODS = {"describe_definition", "inspect_installation",
+                     "assess_configuration", "plan_preparation"}
 
 
 class OwnerView:
@@ -53,78 +70,85 @@ def ready_projection():
                            publish_channel=lambda *a, **k: None)
 
 
-def ready_provider(view, *, records=None, verifier=None):
-    """A provider wired to exactly the given owner view (or an impostor pair)."""
+def live_provider(view):
+    """The retired factory product: a live provider wired to one owner view."""
     return GrokBuildRuntimeProvider(definition_ref=DEFINITION, implementation_digest=DIGEST,
-                                    unit_records=view.records if records is None else records,
-                                    projection=ready_projection(),
-                                    verifier=view.verifier if verifier is None else verifier,
+                                    unit_records=view.records, projection=ready_projection(),
+                                    verifier=view.verifier,
                                     channel_factory=SimpleNamespace(open=lambda *a, **k: None))
 
 
-def staged_context(environment_id, owner="absent", owner_view=None):
-    """One binding; `owner` attribute presence on the Environment is explicit."""
-    environment = SimpleNamespace(environment_id=environment_id)
-    if owner == "absent":
-        pass  # legacy deployment: no owner_ports attribute at all
-    elif owner is None:
-        environment.owner_ports = SimpleNamespace()  # staged, exposes no view
-    else:
-        environment.owner_ports = SimpleNamespace(provider_view=owner_view)
-    binding = SimpleNamespace(environment=environment)
-    return ServerPluginContext(plugin_id="grok-build", data_root=None,
-                               ports={"core.binding": binding})
+class Policy:
+    """Catalog access policy: registration may read, never invoke."""
+
+    def admit_object_access(self, principal, obj, permission):
+        return True
+
+    def admit_invoke(self, *args):
+        raise AssertionError("registration cannot mint authority")
 
 
-def recording_factory(*, substitute=None):
-    """Factory honouring the frozen two-argument contract (owner_view may be None)."""
-    calls = []
-
-    def factory(environment_id, owner_view=None):
-        calls.append((environment_id, owner_view))
-        if substitute is not None:
-            return ready_provider(substitute)
-        if owner_view is None:
-            return GrokBuildRuntimeProvider(definition_ref=DEFINITION,
-                                            implementation_digest=DIGEST)
-        return ready_provider(owner_view)
-
-    factory.calls = calls
-    return factory
+def catalog(namespace=ENVIRONMENT_ID):
+    return HarnessCatalog(namespace, policy=Policy(), principal_scope="controlled")
 
 
-def registration_providers(registration):
+def context(namespace=ENVIRONMENT_ID, *, bound=True):
+    """One catalog binding; `bound=False` states an absent catalog explicitly."""
+    return ServerPluginContext(
+        plugin_id="grok-build", data_root=None,
+        ports={"execution.harness.catalog": catalog(namespace) if bound else None})
+
+
+def declaration(*, namespace=ENVIRONMENT_ID, provider_id="grok-build", definition_id="grok-build", observer=None):
+    """The frozen definition the deployment binds; never a live owner."""
+    if observer is None:
+        def observer(installation_ref):
+            return HarnessInstallationObservation("present")
+    return HarnessDefinitionDeclaration(HarnessDefinitionDescriptor(
+        provider_id,
+        {"environmentNamespace": namespace, "definitionId": definition_id, "revision": "1"},
+        DIGEST, "acp/v1", "reviewed-adapter", backend_version="reviewed-native"), observer)
+
+
+def registration_payload(registration):
+    """The one contribution's frozen declaration, at the host definition point."""
     (contribution,) = registration.contributions.contributions
-    assert contribution.point_id == PACTHOLD_CONTRIBUTIONS_POINT_ID
-    assert contribution.api_version == PACTHOLD_CONTRIBUTIONS_API_VERSION
+    assert contribution.point_id == POINT_ID
+    assert contribution.api_version == HARNESS_DEFINITION_VERSION
     assert contribution.required is True
-    (payload,) = contribution.payload.agent_runtime_providers
-    return payload
-
-
-def assert_called_once_with(factory, view):
-    """Exactly one two-argument factory call for this environment and view."""
-    assert len(factory.calls) == 1
-    environment_id, received = factory.calls[0]
-    assert environment_id.value == ENVIRONMENT_ID
-    assert received is view
+    return contribution.payload
 
 
 def test_descriptor_reports_grok_build_identity():
-    plugin = GrokBuildServerPlugin(recording_factory())
+    plugin = GrokBuildServerPlugin(declaration())
     descriptor = plugin.descriptor()
     assert descriptor.id == "grok-build"
     assert descriptor.display_name == "xAI Grok Build AgentUnit"
     assert descriptor.version == "0.1.0a1"
 
 
-def test_owner_view_present_provider_consumes_exactly_owner_records_and_verifier():
+def test_registration_carries_the_frozen_declaration_metadata():
+    frozen = declaration()
+    registration = GrokBuildServerPlugin(frozen).build(context())
+    payload = registration_payload(registration)
+    # The native host contribution carries the frozen declaration opaquely.
+    assert type(payload) is tuple and payload == (frozen,)
+    descriptor = frozen.descriptor
+    assert descriptor.provider_id == "grok-build"
+    assert dict(descriptor.definition_ref) == DEFINITION
+    assert descriptor.implementation_digest == DIGEST
+    assert descriptor.protocol_id == "acp/v1"
+    assert descriptor.adapter_version == "reviewed-adapter"
+    assert descriptor.backend_version == "reviewed-native"
+
+
+def test_registration_never_carries_a_live_owner_or_provider():
+    """Only frozen declarations travel; a provider/records/verifier never does."""
+    frozen = declaration()
+    payload = registration_payload(GrokBuildServerPlugin(frozen).build(context()))
     view = fresh_view()
-    factory = recording_factory()
-    registration = GrokBuildServerPlugin(factory).build(
-        staged_context(ENVIRONMENT_ID, owner="staged", owner_view=view))
-    assert_called_once_with(factory, view)
-    provider = registration_providers(registration)
+    provider = live_provider(view)
+    # The provider consumes exactly the assembled owner's original records and verifier.
     assert provider.records is view.records and provider.verifier is view.verifier
     # Capabilities follow the consumed owner records: the full unit lifecycle
     # minus the configuration family (absent for grok-build in this version).
@@ -132,75 +156,74 @@ def test_owner_view_present_provider_consumes_exactly_owner_records_and_verifier
     assert "start" in provider.descriptor.supported_methods
     assert "apply_configuration" not in provider.descriptor.supported_methods
     assert "describe_configuration" not in provider.descriptor.supported_methods
+    # ... but no live owner ever enters the frozen registration payload.
+    assert all(isinstance(item, HarnessDefinitionDeclaration) for item in payload)
+    assert not any(hasattr(item, "records") or hasattr(item, "verifier") for item in payload)
+    assert payload[0] not in (provider, view, view.records, view.verifier)
 
 
-def test_owner_view_present_with_substituted_records_and_verifier_is_refused():
+def test_owner_absent_provider_stays_discovery_only():
+    """With no owner view the provider advertises discovery only: no prepare or start."""
+    runtime = GrokBuildRuntimeProvider(definition_ref=DEFINITION, implementation_digest=DIGEST)
+    assert runtime.descriptor.provider_id == "grok-build"
+    assert set(runtime.descriptor.supported_methods) == DISCOVERY_METHODS
+    assert not ({"prepare", "start"} & set(runtime.descriptor.supported_methods))
+
+
+def test_registration_does_not_require_a_live_owner():
+    assert GrokBuildServerPlugin(declaration()).build(context()).contributions is not None
+
+
+@pytest.mark.parametrize("field", ["records", "verifier"])
+def test_substituted_owner_records_or_verifier_is_refused(field):
     view = fresh_view()
-    impostor = fresh_view()
-    factory = recording_factory(substitute=impostor)
-    with pytest.raises(GuaranteeUnavailableError, match="owner"):
-        GrokBuildServerPlugin(factory).build(
-            staged_context(ENVIRONMENT_ID, owner="staged", owner_view=view))
-    assert_called_once_with(factory, view)
+    setattr(view, field, object())
+    with pytest.raises(TypeError, match="frozen Grok Build Harness definition"):
+        GrokBuildServerPlugin(view)
 
 
-def test_owner_view_present_but_ignored_by_factory_is_refused():
+@pytest.mark.parametrize("mode", ["records", "verifier"])
+def test_provider_refuses_other_records_or_verifier_than_the_assembled_owner(mode):
+    """A substituted store/verifier never advertises the unit lifecycle."""
     view = fresh_view()
-    calls = []
-
-    def factory(environment_id, owner_view=None):
-        calls.append((environment_id, owner_view))
-        return GrokBuildRuntimeProvider(definition_ref=DEFINITION,
-                                        implementation_digest=DIGEST)
-
-    with pytest.raises(GuaranteeUnavailableError, match="owner"):
-        GrokBuildServerPlugin(factory).build(
-            staged_context(ENVIRONMENT_ID, owner="staged", owner_view=view))
-    assert len(calls) == 1
-    assert calls[0][0].value == ENVIRONMENT_ID and calls[0][1] is view
-
-
-def test_owner_view_absent_builds_discovery_only_and_factory_receives_none():
-    factory = recording_factory()
-    registration = GrokBuildServerPlugin(factory).build(
-        staged_context(ENVIRONMENT_ID, owner="absent"))
-    assert_called_once_with(factory, None)
-    provider = registration_providers(registration)
+    other = fresh_view()
+    verifier = view.verifier if mode == "records" else other.verifier
+    records = view.records if mode == "verifier" else other.records
+    provider = GrokBuildRuntimeProvider(definition_ref=DEFINITION, implementation_digest=DIGEST,
+                                        unit_records=records, projection=ready_projection(),
+                                        verifier=verifier,
+                                        channel_factory=SimpleNamespace(open=lambda *a, **k: None))
     assert "prepare" not in provider.descriptor.supported_methods
     assert "start" not in provider.descriptor.supported_methods
 
 
-def test_owner_staged_without_provider_view_degrades_to_discovery_only():
-    factory = recording_factory()
-    registration = GrokBuildServerPlugin(factory).build(
-        staged_context(ENVIRONMENT_ID, owner=None))
-    assert_called_once_with(factory, None)
-    provider = registration_providers(registration)
-    assert "prepare" not in provider.descriptor.supported_methods
-    assert "start" not in provider.descriptor.supported_methods
-
-
-def test_noncallable_factory_is_refused():
-    with pytest.raises(TypeError):
-        GrokBuildServerPlugin(None)
-
-
-def test_missing_binding_refuses_before_any_factory_call():
-    factory = recording_factory()
-    with pytest.raises(GuaranteeUnavailableError):
-        GrokBuildServerPlugin(factory).build(ServerPluginContext(
-            plugin_id="grok-build", data_root=None, ports={}))
-    assert factory.calls == []
-
-
-def test_wrong_family_or_environment_provider_is_refused():
+def test_live_owner_or_old_provider_factory_cannot_register_as_a_definition():
     view = fresh_view()
+    provider = live_provider(view)
+    for value in (provider, view, lambda *a, **k: provider):
+        with pytest.raises(TypeError, match="frozen Grok Build Harness definition"):
+            GrokBuildServerPlugin(value)
 
-    def foreign_factory(environment_id, owner_view=None):
-        from ordessa_harness_codex import CodexRuntimeProvider
-        return CodexRuntimeProvider(definition_ref=DEFINITION,
-                                    implementation_digest=DIGEST)
 
-    with pytest.raises(GuaranteeUnavailableError):
-        GrokBuildServerPlugin(foreign_factory).build(
-            staged_context(ENVIRONMENT_ID, owner="staged", owner_view=view))
+def test_non_declaration_is_refused():
+    for value in (None, object(), lambda *a, **k: None):
+        with pytest.raises(TypeError, match="frozen Grok Build Harness definition"):
+            GrokBuildServerPlugin(value)
+
+
+def test_missing_original_catalog_refuses_before_registration():
+    with pytest.raises(GuaranteeUnavailableError, match="original Harness catalog"):
+        GrokBuildServerPlugin(declaration()).build(context(bound=False))
+    with pytest.raises(GuaranteeUnavailableError, match="original Harness catalog"):
+        GrokBuildServerPlugin(declaration()).build(
+            ServerPluginContext(plugin_id="grok-build", data_root=None, ports={}))
+
+
+def test_wrong_family_or_environment_definition_is_refused():
+    # A foreign provider/definition family is refused at the declaration identity.
+    for wrong in (declaration(provider_id="codex"), declaration(definition_id="codex")):
+        with pytest.raises(ValueError, match="original Grok Build provider and definition identity required"):
+            GrokBuildServerPlugin(wrong)
+    # A definition from another namespace is refused against the bound catalog.
+    with pytest.raises(GuaranteeUnavailableError, match="original namespace"):
+        GrokBuildServerPlugin(declaration(namespace="env-foreign")).build(context())

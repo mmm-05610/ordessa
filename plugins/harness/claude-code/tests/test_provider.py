@@ -3,7 +3,21 @@ import hashlib
 from types import SimpleNamespace
 import pytest
 
+from ordessa_execution_agents.harness.providers.registry import (
+    HARNESS_DEFINITION_VERSION,
+    HarnessDefinitionDeclaration,
+    HarnessDefinitionDescriptor,
+    HarnessInstallationObservation,
+    harness_registration_snapshot,
+)
+from ordessa_units.public import RuntimeProvider
+
 from ordessa_harness_claude_code import ClaudeCodeRuntimeProvider, ClaudeProviderUnavailable
+
+# Reviewed protocol/adapter metadata; the brand package has no public port that
+# derives a frozen declaration from the runtime provider.
+CLAUDE_PROTOCOL_ID = "claude-agent-sdk"
+CLAUDE_ADAPTER_VERSION = "claude-code/1"
 
 
 def provider(**kwargs):
@@ -11,9 +25,32 @@ def provider(**kwargs):
                                     implementation_digest="sha256:" + "1" * 64, **kwargs)
 
 
+def definition_declaration(runtime):
+    """The frozen declaration carrying exactly this provider's registry identity.
+
+    The retired provider self-contribution (``contributions().agent_runtime_providers``)
+    is gone: a provider is published through the server plugin's frozen
+    ``HarnessDefinitionDeclaration`` instead.
+    """
+    def observer(installation_ref):
+        return HarnessInstallationObservation("unknown")
+    return HarnessDefinitionDeclaration(HarnessDefinitionDescriptor(
+        runtime.descriptor.provider_id, dict(runtime.descriptor.definition_ref),
+        runtime.descriptor.implementation_digest, CLAUDE_PROTOCOL_ID, CLAUDE_ADAPTER_VERSION), observer)
+
+
 def test_contribution_is_same_core_registry_contract_no_author_identity():
     runtime = provider()
-    assert runtime.contributions().agent_runtime_providers == (runtime,)
+    # The provider is the same core runtime-registry contract, and the frozen
+    # declaration is the registration vehicle that carries exactly its identity.
+    assert isinstance(runtime, RuntimeProvider)
+    declaration = definition_declaration(runtime)
+    assert type(declaration) is HarnessDefinitionDeclaration
+    assert harness_registration_snapshot(declaration) is not None
+    assert declaration.descriptor.provider_id == runtime.descriptor.provider_id == "claude"
+    assert dict(declaration.descriptor.definition_ref) == dict(runtime.descriptor.definition_ref)
+    assert declaration.descriptor.implementation_digest == runtime.descriptor.implementation_digest
+    assert declaration.descriptor.to_dict()["contractVersion"] == HARNESS_DEFINITION_VERSION
     assert runtime.descriptor.contract_version == "agent-runtime/2"
     assert not hasattr(runtime, "owner") and not hasattr(runtime, "generation")
     assert runtime.describe_definition(runtime.descriptor.definition_ref)["commandCatalogId"] == "claude-code"
