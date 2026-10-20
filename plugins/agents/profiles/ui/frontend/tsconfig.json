@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUncheckedIndexedAccess": true,
+    "paths": {
+      "@extensions/ordessa.contracts/contract.js": [
+        "../../../../../packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/contract.ts"
+      ],
+      "@extensions/ordessa.profile-api/contract.js": [
+        "../api/src/index.ts"
+      ],
+      "@ordessa/interface-contracts": [
+        "../../../../../packages/interfaces/contracts/typescript/src/wire.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx"
+  ]
+}

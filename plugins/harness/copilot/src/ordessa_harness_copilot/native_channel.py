@@ -418,7 +418,7 @@ def compile_config(materials: Mapping[str, Any]) -> dict:
     return {"args": args, "session": session}
 
 
-def capability_matrix() -> dict[str, dict]:
+def _historical_capability_matrix() -> dict[str, dict]:
     """declared/implemented/observed per capability; nothing observed (G1).
 
     No local Copilot CLI exists in this environment, so every ``observed``
@@ -438,3 +438,12 @@ def capability_matrix() -> dict[str, dict]:
         "transportFence": {"declared": "no", "implemented": "no", "observed": "no"},
         "requestReconciliation": {"declared": "yes", "implemented": "yes", "observed": "no"},
     }
+
+
+def capability_matrix() -> dict[str, dict]:
+    """Current SDK migration state; historical protocol declarations are retained."""
+    matrix = _historical_capability_matrix()
+    for item in matrix.values():
+        if 'implemented' in item and ('client' in item['implemented'] or item['implemented'] in ('yes','reply-no-auto','prepared-only')):
+            item['implemented'] = 'unavailable (original-owner native protocol port pending); historical requirement: ' + item['implemented']
+    return matrix

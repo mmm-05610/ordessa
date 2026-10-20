@@ -10,7 +10,7 @@ from agent_tools_fixtures.node_publication import setup as node_fixture, conclud
 from agent_tools_fixtures.invocation_authority import Authority, CurrentState
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import IdentityMismatchError, UnknownResultError, AdmissionRefusedError
+from ordessa_units.errors import UnitIdentityMismatch, UnitOperationUnknown, UnitAdmissionRefused
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import InvocationIssuer, InvocationAuthorityRefused
 from ordessa_execution_agents.harness.providers.registry.contributions import RUNTIME_METHODS

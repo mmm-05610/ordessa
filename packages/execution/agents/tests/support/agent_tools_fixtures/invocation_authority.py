@@ -9,8 +9,9 @@ from threading import Barrier
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment.errors import UnknownResultError
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, safe_json
+from ordessa_units.errors import UnitOperationUnknown
+from ordessa_units.definitions.operations import OperationIntent, StepIntent
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.persistence.sqlite.store import SqliteUnitStore
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import (

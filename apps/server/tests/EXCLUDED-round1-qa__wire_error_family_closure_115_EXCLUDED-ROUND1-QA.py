@@ -30,9 +30,9 @@ import pytest
 
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server.transport.http import create_app
-from ordessa_server.wire import errors as errors_module
-from ordessa_server.wire import handlers as handlers_module
-from ordessa_server.wire.errors import FAMILIES, WireError
+from ordessa_interfaces.http.serialization import errors as errors_module
+from ordessa_interfaces.http.serialization import handlers as handlers_module
+from ordessa_interfaces.http.serialization.errors import FAMILIES, WireError
 
 #: A domain code that exists nowhere: not a family, not in `_BY_CODE`.
 UNHEARD_OF = "PROVIDER_SYNC_LEDGER_CORRUPT"

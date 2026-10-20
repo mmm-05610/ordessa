@@ -28,7 +28,7 @@ apps/desktop/                    Electron app (from fc-functional apps/desktop)
 apps/server/                     Ordessa Server (ordessa_server) (from bc-native src/agent_box/server + service wiring)
 packages/pacthold/               governance core: pyproject + src/pacthold (work_core, storage, migrations, execution, extensions, service, resource_contracts, cli)
 packages/desktop-platform/       extension-api, extension-loader, extension-host, native-bridge, contracts/* (keep independent npm packages under this umbrella)
-plugins/harness/                 ordessa_harness + adapters/acp-adapter (Go source) + packaging + tests
+plugins/harness/                 pacthold.harness_kit + adapters/acp-adapter (Go source) + packaging + tests
 plugins/commands|workbench|connections|agent/*|connectors/*   (from fc-functional, unchanged paths)
 products/desktop/                (renamed from products/agent-desktop — check references before renaming)
 scripts/  tests/  docs/          root build/start/verify, cross-component tests, architecture/baseline/known-issues/reference-index/migration
@@ -41,7 +41,7 @@ package.json (npm workspaces) + package-lock.json + AGENTS.md + README.md
 | --- | --- | --- |
 | pyproject `pacthold` (already named) | `packages/pacthold`, dist `pacthold`, import `pacthold` | module dir `src/agent_box` → `src/pacthold`; all `agent_box`/`agent_box_harness` imports in ACTIVE code renamed; keep DB/config/data-format identifiers unchanged (data compat) unless individually justified |
 | `src/agent_box.server` (+ its service entry) | `apps/server`, dist `ordessa-server`, import `ordessa_server` | server must import `pacthold`, never embed core |
-| `plugins/agent-box-harness` | `plugins/harness`, dist `ordessa-harness`, import `ordessa_harness` | only this backend plugin enters main |
+| `plugins/agent-box-harness` | `plugins/harness`, dist `ordessa-harness`, import `pacthold.harness_kit` | only this backend plugin enters main |
 | acp-adapter Go module | `plugins/harness/adapters/acp-adapter` | keep upstream Go module path; internal to Harness |
 | desktop root pkg `ordessa-desktop` | monorepo root name `ordessa` | workspaces globs extended to packages/desktop-platform/* |
 | `products/agent-desktop` | `products/desktop` | verify no hardcoded path first |

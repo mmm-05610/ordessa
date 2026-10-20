@@ -4,7 +4,7 @@
  * P-B 交付 `server-bridge` 之前，这里的目录事实由本模块直接探针（不 spawn 任何服务）。
  */
 import { constants } from 'node:fs'
-import { access, mkdir, open, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { access, lstat, mkdir, open, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import type { Fault } from '@extensions/ordessa.contracts/contract.js'
@@ -19,6 +19,15 @@ export type DataRootCode =
 
 export const DATA_ROOT_ENV = 'ORDESSA_DATA_ROOT'
 export const DEFAULT_DATA_ROOT_DIR = '.ordessa'
+
+/**
+ * 数据根所有权标识。名字与内容是与 Server 侧共享的数据兼容标识（同
+ * `docs/archive/pre-restructure/source/docs/server-host-baseline.md`），权威拼写在
+ * `apps/server/src/ordessa_server/bootstrap/data_root.py` 的 `OWNER_MARKER_*`；
+ * 两处必须同步改动。
+ */
+export const OWNER_MARKER_NAME = '.agentbox-server-root'
+export const OWNER_MARKER_CONTENT = 'agentbox-server-r1\n'
 
 export function resolveDataRoot(env: Readonly<Record<string, string | undefined>>, home: string): string {
   const fromEnv = env[DATA_ROOT_ENV]
@@ -80,10 +89,75 @@ export async function acquireDataRootLock(dataRoot: string,
 
 /** 首次启动时创建数据根（0700 / 0600，契约要求）。 */
 export async function ensureDataRoot(dataRoot: string) {
+  // C-01 §3：谁创建谁立契。Server 的 DataRootOwner.acquire 拒绝任何"已存在
+  // 但无 owner marker"的目录（DATA_ROOT_UNOWNED），所以宿主首启创建的根必须
+  // 在这里写下 marker，否则随后 spawn 的 Server 会拒绝宿主自己刚创建的根。
+  // 已存在的目录不写：那是"外来根"判定，由 Server 拒绝，宿主不代为收养。
+  const created = await stat(dataRoot).then(() => false, () => true)
   await mkdir(dataRoot, { recursive: true, mode: 0o700 })
   await mkdir(path.join(dataRoot, 'logs'), { recursive: true, mode: 0o700 })
   await mkdir(path.join(dataRoot, 'secrets'), { recursive: true, mode: 0o700 })
   await writeFile(path.join(dataRoot, '.keep'), '', { mode: 0o600 })
+  if (created) {
+    await writeFile(path.join(dataRoot, OWNER_MARKER_NAME), OWNER_MARKER_CONTENT, { mode: 0o600 })
+  }
+  return dataRoot
+}
+
+/** Explicit maintenance operation, never called by ordinary startup.
+ * The user authorizes claiming a known existing Ordessa directory, for example
+ * one first created by account login. No existing file or permission is changed.
+ */
+export async function initializeExistingDataRoot(dataRoot: string,
+  { confirmed }: { confirmed: boolean }) {
+  if (confirmed !== true) throw Error('Existing data root requires explicit confirmation')
+  if (!path.isAbsolute(dataRoot) || path.resolve(dataRoot) !== dataRoot)
+    throw Error('Existing data root must be an absolute normalized path')
+  // Reject symlinked ancestors too, before reading a marker or lock.
+  for (let candidate = dataRoot; ; candidate = path.dirname(candidate)) {
+    if ((await lstat(candidate)).isSymbolicLink()) throw Error('Data root contains a symbolic link')
+    if (path.dirname(candidate) === candidate) break
+  }
+  const info = await lstat(dataRoot)
+  if (!info.isDirectory() || (process.getuid && info.uid !== process.getuid())
+      || (info.mode & 0o022) !== 0) throw Error('Existing data root must be owned by this user and not writable by others')
+  for (const name of ['.lock', 'server.lock', OWNER_MARKER_NAME]) {
+    const entry = await lstat(path.join(dataRoot, name)).catch(error => {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined
+      throw error
+    })
+    if (entry && (!entry.isFile() || entry.isSymbolicLink())) throw Error('Unsafe data root marker or lock')
+    if (name === '.lock' && entry) {
+      const record = JSON.parse(await readFile(path.join(dataRoot, name), 'utf8'))
+      if (!Number.isSafeInteger(record?.pid) || record.pid <= 0)
+        throw Error('Malformed existing Desktop lock requires review')
+    }
+    // A Server lock requires an OS-level lock probe; do not guess from its contents.
+    if (name === 'server.lock' && entry) throw Error('Existing Server lock requires separate ownership review')
+  }
+  const held = await readLock(dataRoot)
+  if (held) {
+    try { process.kill(held.pid, 0); throw Error(`Data root locked by pid ${held.pid}`) }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error
+    }
+  }
+  const marker = path.join(dataRoot, OWNER_MARKER_NAME)
+  let handle
+  try { handle = await open(marker, constants.O_RDONLY | constants.O_NOFOLLOW) }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+  }
+  if (handle) {
+    try {
+      if (await handle.readFile('utf8') !== OWNER_MARKER_CONTENT) throw Error('Invalid existing owner marker')
+    } finally { await handle.close() }
+    return dataRoot
+  }
+  // Exclusive create: a concurrent claimant can never have its marker overwritten.
+  const created = await open(marker, 'wx', 0o600)
+  try { await created.writeFile(OWNER_MARKER_CONTENT); await created.sync() }
+  finally { await created.close() }
   return dataRoot
 }
 

@@ -13,3 +13,6 @@ from .persistence.sqlite.method_report_bindings import SQLiteMethodUnitReportBin
 __all__ = ['ConfiguredReviewPhase','SQLiteReviewBindings','SQLiteWorkReviewBindings','SQLiteWorkReviewReadiness','SQLiteUnitReviewBindings',
            'SQLiteUnitReviewerAuthority','ConfiguredMaterialSubmission','SQLiteReviewAuthorshipSource',
            'SQLiteMethodUnitReportBindings']
+
+from .agent_reviewer_authority import SQLiteAgentReviewerAuthority
+__all__.append("SQLiteAgentReviewerAuthority")

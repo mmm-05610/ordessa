@@ -1,8 +1,13 @@
-"""Actual loader/compiler/store/control/run/journal/CAS; explicit test authorities.
+"""Loader/compiler/store/control/run/journal/CAS fixtures for read-only
+coverage of the historical compiled line.
 
-Tiny test method is generated in its own temp root. No 2.5 publication, actual
-user answer, production Grant, native execution, or model call is claimed.
+The compiled-lifecycle tests that used to live in this module were retired
+with the withdrawn create/advance routes; they are named in RETIRED_TESTS
+below so the coverage gap stays visible instead of looking like a passing
+suite. Read coverage keeps its subject through seed_historical_run, which
+seeds the same persisted row at the storage layer.
 """
+
 import asyncio, hashlib, json
 from contextlib import contextmanager
 from dataclasses import asdict, replace
@@ -18,7 +23,7 @@ from ordessa_engineering.application.contracts.commands import ReadSet
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.domain.common.outcomes.library_failures import EngineeringError
 from ordessa_engineering.application.orchestration.method_bridge import command_capabilities
-from ordessa_engineering.application.orchestration.method_runs import MethodRunBindings
+from ordessa_engineering.application.orchestration.method_runs import MethodRunBindings, MethodRunOrchestrator
 from ordessa_engineering.application.api.service import EngineeringService
 from ordessa_engineering.application.usecases.support.methods import MethodUseCases
 from ordessa_engineering.application.usecases.publish_snapshot import freeze_method
@@ -96,21 +101,61 @@ def env(tmp_path):
 
 def call(e,op,params,rid):return asyncio.run(e['facade'].execute(op,params,_context(e['scope'],rid)))
 def query(e,name,params,rid='read'):return asyncio.run(e['facade'].query(name,params,_context(e['scope'],rid)))
+HISTORICAL_NOW='2026-10-14T12:00:00.000000Z'
+DEFAULT_SLOTS={'kind':'other','initial':{'media_type':'application/json','schema_id':'urn:test:work','inline_value':{'fixture':True}}}
+def seed_historical_run(e,run_id,*,slots=None,cursor=None,status='WAITING_FOR_CONDITION',
+                        rounds=None):
+    """Seed one historical compiled row directly in the original store.
+
+    Reading is the only surviving capability of the compiled line, so coverage of
+    the consumers that read compiled rows seeds the same persisted row the
+    withdrawn route used to produce, at the storage layer: no Service route, no
+    retired owner write method and no source guard is exercised. A historical
+    fixture seed, never a product path.
+    """
+    from ordessa_engineering.methods.compilation.encoding import program_plan_digest
+    from ordessa_engineering.application.contracts.operation_registry import registry_ref
+    from ordessa_engineering.domain.artifacts.method_binding import MethodRef
+    from ordessa_engineering.domain.common.models.values import Digest
+    program=e['compiled'].value.program
+    entry=[(i,n) for i,n in enumerate(program.workflow.steps) if n.id==program.workflow.entry]
+    assert len(entry)==1
+    entry_cursor,node=entry[0]
+    published=e['sref']
+    method=MethodRef(published.method_id,published.release_version,published.schema_version,
+                     Digest('sha256',published.snapshot_digest))
+    marker={'work_contract':WORK_CONTRACT,'scope':asdict(e['scope']),'method_ref':asdict(method),
+            'compiled_plan_digest':program_plan_digest(program)}
+    inputs={**marker,'slots':DEFAULT_SLOTS if slots is None else slots}
+    if program.workflow.loops:
+        inputs['rounds']={loop.loop_id:1 for loop in program.workflow.loops} if rounds is None else rounds
+    registry=registry_ref(e['registry'])
+    final_cursor=entry_cursor if cursor is None else cursor
+    wait_reason=node.id if status=='WAITING_FOR_CONDITION' else None
+    with e['factory'].begin(e['scope']) as uow:
+        material=uow.workflow.write_material(kind='method',stable_id='compiled-work:'+run_id,
+            revision=1,body=marker,generated=False)
+        uow.workflow.insert_run(run_id=run_id,method_ref=material,registry_ref=registry,
+            inputs=inputs,now=HISTORICAL_NOW)
+        uow.workflow.update_run(run_id=run_id,status=status,cursor=final_cursor,
+            wait_reason=wait_reason,now=HISTORICAL_NOW)
+        uow.commit()
+    return run_id
+def resume_historical_run(e,run_id):
+    """Seed the persisted state a claimed wait left behind; never a route call.
+
+    The withdrawn resume used to claim the wait and move the cursor to the next
+    declared step. Consumers that read a running row are seeded with exactly that
+    persisted state, without exercising the retired advance method.
+    """
+    program=e['compiled'].value.program
+    entry=[i for i,n in enumerate(program.workflow.steps) if n.id==program.workflow.entry][0]
+    with e['factory'].begin(e['scope']) as uow:
+        uow.workflow.update_run(run_id=run_id,status='RUNNING',cursor=entry+1,
+            wait_reason=None,now='2026-10-14T12:01:00.000000Z')
+        uow.commit()
+    return run_id
 def resume_params(state):return {'run_id':'work','expected_row_digest':state['row_digest'],'expected_condition_digest':state['condition_digest'],'expected_next_step_ordinal':state['next_step_ordinal']}
-
-
-def prepare_operation_completion(e,request_id='actual-capture'):
-    call(e,'engineering.work.start',{'run_id':'work'},'start')
-    ready=query(e,'engineering.work.current_condition',{'run_id':'work'})
-    call(e,'engineering.runs.resume',resume_params(ready),'resume-seed')
-    row=query(e,'engineering.work.get',{'run_id':'work'})
-    actual=call(e,'engineering.artifacts.create',
-        {'kind':row['inputs']['slots']['kind'],'initial':row['inputs']['slots']['initial']},request_id)
-    assert actual.status=='completed'
-    current=e['lib'].run_row('work')
-    return {'run_id':'work','operation_request_id':request_id,
-        'expected_row_digest':asdict(run_wait_row_digest(current)),
-        'expected_next_step_ordinal':0}
 
 
 def adopt_workflow_variant(e, workflow, method_id):
@@ -133,62 +178,64 @@ def adopt_workflow_variant(e, workflow, method_id):
     return method
 
 
-def test_real_wait_command_wait_chain_and_history_do_not_dispatch(env):
-    e=env
-    start=call(e,'engineering.work.start',{'run_id':'work'},'start');assert start.result['dispatched'] is False
-    pending=query(e,'engineering.work.get',{'run_id':'work'})
-    assert pending['outputs']==({'name':'primary_artifact','context_slot':'artifact_ref',
-        'available':False,'reference':None},)
-    ready=query(e,WAIT_EVENT,{'run_id':'work'});result=call(e,'engineering.runs.resume',resume_params(ready),'resume-seed')
-    assert result.result['status']=='RUNNING' and result.result['cursor']==1
-    row=query(e,'engineering.work.get',{'run_id':'work'});assert row['inputs']['slots']['artifact_ref']==asdict(e['ref'])
-    assert row['outputs']==({'name':'primary_artifact','context_slot':'artifact_ref',
-        'available':True,'reference':asdict(e['ref'])},)
-    assert row['method_run']['method_binding']==row['inputs']['method_ref']
-    # Actual owner command is independently called once by the main agent.
-    actual=call(e,'engineering.artifacts.create',{'kind':row['inputs']['slots']['kind'],'initial':row['inputs']['slots']['initial']},'actual-capture')
-    assert actual.status=='completed'
-    step={'run_id':'work','operation_request_id':'actual-capture','expected_row_digest':asdict(run_wait_row_digest({**row,'method_ref':e['lib'].run_row('work')['method_ref']})),'expected_next_step_ordinal':0}
-    # Remove query projection-only ordinal before hashing the exact original row.
-    step['expected_row_digest']=asdict(run_wait_row_digest(e['lib'].run_row('work')))
-    recorded=call(e,'engineering.work.record_command_step',step,'record-step');assert recorded.result['status']=='WAITING_FOR_CONDITION'
-    history=query(e,'engineering.work.get',{'run_id':'work'})['method_run']['steps']
-    assert len(history)==1 and history[0]['attempt']==1 and history[0]['status']=='completed'
-    assert call(e,'engineering.work.record_command_step',step,'record-step')==recorded
-    ready=query(e,'engineering.runs.get_wait',{'run_id':'work'});done=call(e,'engineering.runs.resume',resume_params(ready),'resume-result')
-    assert done.result['status']=='SLICE_DONE' and done.result['dispatched'] is False
-    e['source'].revoked=True
-    assert query(e,'engineering.work.get',{'run_id':'work'})['next_step_ordinal']==1
-    assert call(e,'engineering.work.start',{'run_id':'work'},'start')==start
+WITHDRAWN_COMPILED_ROUTES = (
+    'engineering.work.bind_inputs',
+    'engineering.work.record_command_step',
+    'engineering.work.record_dispatch_step',
+    'engineering.runs.resume',
+    'engineering.runs.cancel',
+)
+
+RETIRED_TESTS = (
+    'test_real_wait_command_wait_chain_and_history_do_not_dispatch',
+    'test_source_revoke_and_wrong_match_do_not_advance_or_leave_command',
+    'test_start_requires_real_selection_source_and_wrong_scope_read_refuses',
+    'test_historical_runner_rows_remain_readable_but_are_not_current_work',
+    'test_competing_resume_claim_after_observation_is_rejected_without_receipt',
+    'test_registry_capability_drift_before_record_refuses_without_work_receipt',
+    'test_step_receipt_write_failure_rolls_back_record_command_and_cursor',
+    'test_start_rechecks_source_dependency_on_original_write_transaction',
+    'test_start_registry_drift_refuses_before_work_writes',
+    'test_start_owner_read_set_scope_is_required',
+    'test_counted_loop_restarts_from_persisted_rounds_and_rejects_reused_command',
+    'test_unmapped_completed_result_refuses_step_advance',
+)
+"""Original tests retired together with the withdrawn compiled routes.
+
+Each name above was a real test of the compiled run lifecycle: starting at the
+declared wait node, source revoke and mismatch handling, competing resume claims,
+registry drift before a write, step-receipt rollback of the command, counted loop
+rounds, and unmapped-result refusal. They are retired - the routes they drove are
+no longer advertised, so the tests cannot pass as written, and they are not
+rewritten or weakened here. The behavioural requirements they covered are
+registered in the docstrings of the modules that used to satisfy them.
+"""
 
 
-def test_source_revoke_and_wrong_match_do_not_advance_or_leave_command(env):
-    e=env;call(e,'engineering.work.start',{'run_id':'work'},'start')
-    ready=query(e,'engineering.runs.get_wait',{'run_id':'work'});e['source'].revoked=True
-    with pytest.raises(ApplicationError,match='WORK_SOURCE_REVOKED'):
-        call(e,'engineering.runs.resume',resume_params(ready),'revoked-resume')
-    e['source'].revoked=False;call(e,'engineering.runs.resume',resume_params(ready),'resume-seed')
-    with pytest.raises(ApplicationError,match='WORK_COMMAND_RESULT_MISMATCH'):
-        call(e,'engineering.work.record_command_step',{'run_id':'work','operation_request_id':'missing',
-            'expected_row_digest':asdict(run_wait_row_digest(e['lib'].run_row('work'))),'expected_next_step_ordinal':0},'missing-step')
-    with e['factory'].begin(e['scope'],'read') as uow:
-        assert uow.commands.get(_context(e['scope'],'missing-step').key) is None
-        assert uow.workflow.next_step_ordinal('work')==0
+def test_compiled_create_and_advance_routes_are_withdrawn(env):
+    """The advertised surface has no route into the compiled lifecycle."""
+    e = env
+    advertised = set(type(e['facade']).supported_commands)
+    for operation in WITHDRAWN_COMPILED_ROUTES:
+        assert operation not in advertised
+        with pytest.raises(ApplicationError) as refused:
+            call(e, operation, {'run_id': 'work'}, 'retired-' + operation)
+        assert refused.value.code == 'OPERATION_UNAVAILABLE'
 
 
-def test_start_requires_real_selection_source_and_wrong_scope_read_refuses(env):
-    e=env
-    missing=EngineeringService(e['factory'],e['access'])
-    with pytest.raises(ApplicationError,match='WORK_WAIT_AUTHORITY_UNAVAILABLE'):
-        asyncio.run(missing.execute('engineering.work.start',{'run_id':'missing'},_context(e['scope'],'start-missing')))
-    call(e,'engineering.work.start',{'run_id':'work'},'start')
-    from ordessa_engineering.domain.common.models.identity import Scope
-    bad=replace(_context(e['scope'],'wrong-scope'),scope=Scope(e['scope'].realm_id,'another-project'))
-    with pytest.raises(ApplicationError,match='WORK_BINDING_INVALID'):
-        asyncio.run(e['facade'].query('engineering.work.get',{'run_id':'work'},bad))
+def test_historical_compiled_row_is_readable_without_advancing(env):
+    """A historical row reads back through the retained read query only."""
+    e = env
+    seed_historical_run(e, 'retired-history-run')
+    listed = query(e, 'engineering.runs.list', {'limit': 4}, 'retired-history-list')
+    assert [row['run_id'] for row in listed['runs']] == ['retired-history-run']
+    assert listed['runs'][0]['status'] == 'WAITING_FOR_CONDITION'
+    assert listed['runs'][0]['execution'] == {'availability': 'unavailable'}
+    assert e['lib'].run_row('retired-history-run')['status'] == 'WAITING_FOR_CONDITION'
 
 
-def test_retired_did_method_schema_is_rejected_without_creating_current_work(env):
+def test_legacy_method_schema_is_rejected_without_creating_current_work(env):
+    """A legacy method payload is refused on the declarative route too."""
     e=env
     legacy={'schema_version':'engineering-method/1','method_id':'legacy','revision':1,
         'description':'historical runner input','registry_ref':{},'steps':[]}
@@ -198,212 +245,3 @@ def test_retired_did_method_schema_is_rejected_without_creating_current_work(env
         assert uow.commands.get(_context(e['scope'],'legacy-start').key) is None
         with pytest.raises(EngineeringError,match='run_not_found'):
             uow.workflow.run_row('legacy-run')
-
-
-def test_historical_runner_rows_remain_readable_but_are_not_current_work(env):
-    e=env
-    with e['factory'].begin(e['scope']) as uow:
-        old_method=uow.workflow.write_material(kind='method',stable_id='legacy-method',revision=1,
-            body={'schema_version':'engineering-method/1','steps':[{'operation':'did.apply'}]},generated=False)
-        uow.workflow.insert_run(run_id='legacy-history',method_ref=old_method,registry_ref={'legacy':True},
-            inputs={'schema_version':'engineering-method/1','refs':{'did':'historical'}},now='2026-10-09T12:00:00Z')
-        receipt=uow.workflow.create_generated(kind='step-receipt',stable_id='legacy-history-0',
-            body={'schema_version':'engineering-step-receipt/1','historical':True})
-        uow.workflow.insert_step_log(run_id='legacy-history',ordinal=0,step_id='apply',operation='did.apply',
-            attempt=1,status='APPLIED',receipt_ref=receipt)
-        uow.workflow.update_run(run_id='legacy-history',status='WAITING_FOR_ACCEPTANCE',cursor=1,
-            wait_reason='WAITING_FOR_ACCEPTANCE',now='2026-10-09T12:00:01Z')
-        uow.commit()
-    with e['factory'].begin(e['scope'],'read') as uow:
-        row_before=uow.workflow.run_row('legacy-history')
-        steps_before=e['lib'].step_rows('legacy-history')
-        material_before=uow.workflow.read(old_method)
-        receipt_before=uow.workflow.read(receipt)
-    with pytest.raises(ApplicationError,match='WORK_BINDING_INVALID'):
-        query(e,'engineering.work.get',{'run_id':'legacy-history'},'legacy-read')
-    with e['factory'].begin(e['scope'],'read') as uow:
-        assert uow.workflow.run_row('legacy-history')==row_before
-        assert e['lib'].step_rows('legacy-history')==steps_before
-        assert uow.workflow.read(old_method)==material_before
-        assert uow.workflow.read(receipt)==receipt_before
-
-
-def test_competing_resume_claim_after_observation_is_rejected_without_receipt(env):
-    e=env
-    call(e,'engineering.work.start',{'run_id':'work'},'start')
-    ready=query(e,'engineering.runs.get_wait',{'run_id':'work'})
-    competitor=EngineeringLibrary.open(e['lib'].path,library_id=e['lib'].library_id)
-    try:
-        def claim_before_resume(_view):
-            with competitor.transaction() as connection:
-                connection.execute("UPDATE runs SET status='RUNNING', wait_reason=NULL WHERE run_id='work'")
-        e['source'].before_condition_yield=claim_before_resume
-        with pytest.raises(ApplicationError,match='RUN_WAIT_CHANGED'):
-            call(e,'engineering.runs.resume',resume_params(ready),'raced-resume')
-    finally:
-        competitor.close()
-    with e['factory'].begin(e['scope'],'read') as uow:
-        assert uow.workflow.run_row('work')['status']=='RUNNING'
-        assert e['lib'].step_rows('work')==[]
-        assert uow.workflow.next_step_ordinal('work')==0
-        assert uow.commands.get(_context(e['scope'],'raced-resume').key) is None
-
-
-def test_registry_capability_drift_before_record_refuses_without_work_receipt(env):
-    e=env;step=prepare_operation_completion(e,'drifted-command')
-    e['registry']['revision']+=1
-    with pytest.raises(ApplicationError,match='METHOD_CAPABILITY_CHANGED'):
-        call(e,'engineering.work.record_command_step',step,'drifted-record')
-    with e['factory'].begin(e['scope'],'read') as uow:
-        assert uow.workflow.run_row('work')['status']=='RUNNING'
-        assert e['lib'].step_rows('work')==[]
-        assert uow.workflow.next_step_ordinal('work')==0
-        assert uow.commands.get(_context(e['scope'],'drifted-record').key) is None
-        assert uow.commands.get(_context(e['scope'],'drifted-command').key).state=='completed'
-
-
-def test_step_receipt_write_failure_rolls_back_record_command_and_cursor(env,monkeypatch):
-    e=env;step=prepare_operation_completion(e,'receipt-command')
-    original=e['lib']._create_generated
-    def fail_receipt(connection,*,kind,stable_id,body):
-        if kind=='step-receipt':
-            raise EngineeringError('injected_work_receipt_failure')
-        return original(connection,kind=kind,stable_id=stable_id,body=body)
-    monkeypatch.setattr(e['lib'],'_create_generated',fail_receipt)
-    with pytest.raises(EngineeringError,match='injected_work_receipt_failure'):
-        call(e,'engineering.work.record_command_step',step,'receipt-record')
-    with e['factory'].begin(e['scope'],'read') as uow:
-        assert uow.workflow.run_row('work')['status']=='RUNNING'
-        assert e['lib'].step_rows('work')==[]
-        assert uow.workflow.next_step_ordinal('work')==0
-        assert uow.commands.get(_context(e['scope'],'receipt-record').key) is None
-        assert uow.commands.get(_context(e['scope'],'receipt-command').key).state=='completed'
-
-
-def test_start_rechecks_source_dependency_on_original_write_transaction(env):
-    from ordessa_engineering.application.contracts.commands import ReadVersion
-    from ordessa_engineering.application.usecases.artifacts import ArtifactUseCases
-    e=env
-    with e['factory'].begin(e['scope'],'read') as uow:
-        observed=uow.engineering.get_artifact(e['ref'].artifact_id)
-    e['source'].start_reads=ReadSet(e['scope'],(ReadVersion('artifact',observed.artifact_id,observed.version),))
-    competitor=EngineeringLibrary.open(e['lib'].path,library_id=e['lib'].library_id)
-    try:
-        def advance_original_dependency():
-            result=ArtifactUseCases(SQLiteUoWFactory(competitor),e['access']).append_revision({
-                'artifact_id':observed.artifact_id,'expected_version':observed.version,
-                'parents':[asdict(e['ref'])],'payload':{
-                    'media_type':'application/json','schema_id':'urn:test:source',
-                    'inline_value':{'source':'changed-after-observation'}}},_context(e['scope'],'competing-source'))
-            assert result.status=='completed'
-        e['source'].before_start_yield=advance_original_dependency
-        with pytest.raises(ApplicationError,match='READ_SET_CHANGED'):
-            call(e,'engineering.work.start',{'run_id':'stale-start'},'stale-start-command')
-    finally:
-        competitor.close()
-    with e['factory'].begin(e['scope'],'read') as uow:
-        assert uow.engineering.get_artifact(observed.artifact_id).version==observed.version+1
-        assert uow.commands.get(_context(e['scope'],'stale-start-command').key) is None
-        with pytest.raises(EngineeringError,match='run_not_found'):
-            uow.workflow.run_row('stale-start')
-    assert e['lib'].head('method','compiled-work:stale-start') is None
-
-
-def test_start_registry_drift_refuses_before_work_writes(env):
-    e=env;calls=[]
-    def drifting_registry():
-        calls.append(True)
-        return {**e['registry'],'revision':len(calls)}
-    e['bindings'].registry_loader=drifting_registry
-    with pytest.raises(ApplicationError,match='METHOD_CAPABILITY_CHANGED'):
-        call(e,'engineering.work.start',{'run_id':'registry-start'},'registry-start-command')
-    assert len(calls)==2
-    with e['factory'].begin(e['scope'],'read') as uow:
-        assert uow.commands.get(_context(e['scope'],'registry-start-command').key) is None
-        with pytest.raises(EngineeringError,match='run_not_found'):
-            uow.workflow.run_row('registry-start')
-    assert e['lib'].head('method','compiled-work:registry-start') is None
-
-
-def test_start_owner_read_set_scope_is_required(env):
-    from ordessa_engineering.domain.common.models.identity import Scope
-    e=env;e['source'].start_reads=ReadSet(Scope('foreign','foreign'),())
-    with pytest.raises(ApplicationError,match='WORK_INPUT_INVALID'):
-        call(e,'engineering.work.start',{'run_id':'foreign-seed'},'foreign-seed-command')
-    with e['factory'].begin(e['scope'],'read') as uow:
-        assert uow.commands.get(_context(e['scope'],'foreign-seed-command').key) is None
-
-
-def test_counted_loop_restarts_from_persisted_rounds_and_rejects_reused_command(env):
-    e=env
-    workflow={'schema_version':1,'workflow_id':'bounded-loop','entry':'seed','resume_contract':WORK_CONTRACT,
-        'context_slots':['kind','initial','artifact_ref'],'wait_kinds':['owner_reconciliation'],
-        'stop_outcomes':['rejected'],'outputs':{'primary_artifact':'artifact_ref'},
-        'steps':[
-            {'id':'seed','kind':'wait','event':WAIT_EVENT,'bind':{'artifact_ref':'event.artifact_ref'},'next':'capture'},
-            {'id':'capture','kind':'operation','operation':'engineering.artifacts.create',
-             'inputs':{'kind':'kind','initial':'initial'},
-             'outcomes':{'completed':{'stop':'rejected'},'rejected':{'stop':'rejected'}},
-             'result_routing':{'path':'/revision_ref/project_id','outcomes':{'project-1':{'next':'capture'}}}},
-        ],
-        'loops':[{'loop_id':'again','from_step':'capture','to_step':'capture','max_rounds':2,'on_exhausted':'rejected'}]}
-    adopt_workflow_variant(e,workflow,'test.current-work-loop')
-    call(e,'engineering.work.start',{'run_id':'loop-run'},'loop-start')
-    ready=query(e,WAIT_EVENT,{'run_id':'loop-run'})
-    call(e,'engineering.runs.resume',{'run_id':'loop-run','expected_row_digest':ready['row_digest'],
-        'expected_condition_digest':ready['condition_digest'],'expected_next_step_ordinal':ready['next_step_ordinal']},'loop-resume')
-    row=query(e,'engineering.work.get',{'run_id':'loop-run'})
-    parameters={'kind':row['inputs']['slots']['kind'],'initial':row['inputs']['slots']['initial']}
-    first=call(e,'engineering.artifacts.create',parameters,'loop-command-1');assert first.status=='completed'
-    state=e['lib'].run_row('loop-run')
-    call(e,'engineering.work.record_command_step',{'run_id':'loop-run','operation_request_id':'loop-command-1',
-        'expected_row_digest':asdict(run_wait_row_digest(state)),'expected_next_step_ordinal':0},'loop-record-1')
-    state=e['lib'].run_row('loop-run')
-    assert state['inputs']['rounds']=={'again':2} and state['cursor']==1 and state['status']=='RUNNING'
-    with pytest.raises(ApplicationError,match='WORK_COMMAND_ALREADY_CONSUMED'):
-        call(e,'engineering.work.record_command_step',{'run_id':'loop-run','operation_request_id':'loop-command-1',
-            'expected_row_digest':asdict(run_wait_row_digest(state)),'expected_next_step_ordinal':1},'loop-record-reuse')
-    # Recreate the service object to model process recovery; the original rows
-    # and counter alone determine the next allowed transition.
-    e['facade']=EngineeringService(e['factory'],e['access'],current_wait_bindings=e['bindings'])
-    second=call(e,'engineering.artifacts.create',parameters,'loop-command-2');assert second.status=='completed'
-    state=e['lib'].run_row('loop-run')
-    finished=call(e,'engineering.work.record_command_step',{'run_id':'loop-run','operation_request_id':'loop-command-2',
-        'expected_row_digest':asdict(run_wait_row_digest(state)),'expected_next_step_ordinal':1},'loop-record-2')
-    assert finished.result['status']=='SLICE_DONE'
-    steps=query(e,'engineering.work.get',{'run_id':'loop-run'})['steps']
-    assert [(step['attempt'],step['status']) for step in steps]==[(1,'completed'),(2,'completed')]
-    assert e['lib'].run_row('loop-run')['inputs']['rounds']=={'again':2}
-    with e['factory'].begin(e['scope'],'read') as uow:
-        assert uow.workflow.read(uow.workflow.step_rows('loop-run')[-1]['receipt_ref'])['stop_outcome']=='rejected'
-
-
-def test_unmapped_completed_result_refuses_step_advance(env):
-    e=env
-    workflow={'schema_version':1,'workflow_id':'unmapped-result','entry':'seed','resume_contract':WORK_CONTRACT,
-        'context_slots':['kind','initial','artifact_ref'],'wait_kinds':['owner_reconciliation'],
-        'stop_outcomes':['rejected'],'steps':[
-            {'id':'seed','kind':'wait','event':WAIT_EVENT,'bind':{'artifact_ref':'event.artifact_ref'},'next':'capture'},
-            {'id':'capture','kind':'operation','operation':'engineering.artifacts.create',
-             'inputs':{'kind':'kind','initial':'initial'},
-             'outcomes':{'completed':{'stop':'rejected'},'rejected':{'stop':'rejected'}},
-             'result_routing':{'path':'/revision_ref/project_id','outcomes':{'other-project':{'stop':'rejected'}}}},
-        ]}
-    adopt_workflow_variant(e,workflow,'test.current-work-unmapped')
-    call(e,'engineering.work.start',{'run_id':'unmapped-run'},'unmapped-start')
-    ready=query(e,WAIT_EVENT,{'run_id':'unmapped-run'})
-    call(e,'engineering.runs.resume',{'run_id':'unmapped-run','expected_row_digest':ready['row_digest'],
-        'expected_condition_digest':ready['condition_digest'],'expected_next_step_ordinal':ready['next_step_ordinal']},'unmapped-resume')
-    row=query(e,'engineering.work.get',{'run_id':'unmapped-run'})
-    actual=call(e,'engineering.artifacts.create',{'kind':row['inputs']['slots']['kind'],
-        'initial':row['inputs']['slots']['initial']},'unmapped-command')
-    assert actual.status=='completed'
-    state=e['lib'].run_row('unmapped-run')
-    with pytest.raises(ApplicationError,match='WORK_RESULT_UNMAPPED'):
-        call(e,'engineering.work.record_command_step',{'run_id':'unmapped-run',
-            'operation_request_id':'unmapped-command','expected_row_digest':asdict(run_wait_row_digest(state)),
-            'expected_next_step_ordinal':0},'unmapped-record')
-    assert e['lib'].step_rows('unmapped-run')==[]
-    assert e['lib'].run_row('unmapped-run')['status']=='RUNNING'
-    with e['factory'].begin(e['scope'],'read') as uow:
-        assert uow.commands.get(_context(e['scope'],'unmapped-record').key) is None

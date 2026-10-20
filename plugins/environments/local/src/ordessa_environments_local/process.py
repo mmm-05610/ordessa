@@ -77,6 +77,14 @@ class LocalProcessHandle(SubprocessHandle):
         return await io.stderr.read(max_bytes,timeout)
 
     async def write_stdin(self,data,*,timeout=None):
+        return await self._write_stdin(data, timeout=timeout)
+
+    async def write_stdin_guarded(self,data,*,timeout=None,write_guard):
+        if not callable(write_guard):
+            raise EnvironmentRefused('restricted synchronous write guard required')
+        return await self._write_stdin(data, timeout=timeout, write_guard=write_guard)
+
+    async def _write_stdin(self,data,*,timeout=None,write_guard=None):
         timeout=validate_timeout(timeout);self._check_io()
         if not isinstance(data,bytes):raise EnvironmentRefused('stdin accepts bytes only')
         if self._write_busy:raise EnvironmentRefused('concurrent stdin writes are refused')
@@ -86,7 +94,17 @@ class LocalProcessHandle(SubprocessHandle):
         try:
             io=self._get_io();await io.bind()
             if io.writer.is_closing():raise EnvironmentRefused('stdin is closed')
-            io.writer.write(data);dispatched=True
+            if write_guard is None:
+                dispatched=True
+                io.writer.write(data)
+            else:
+                if deadline is not None and loop.time() >= deadline:
+                    raise EnvironmentRefused('guarded write deadline elapsed before dispatch')
+                # The original physical writer invokes the restricted guard in
+                # this same task/thread. No drain or response await holds it.
+                with write_guard():
+                    dispatched=True
+                    io.writer.write(data)
             if not io.writer._protocol._paused:
                 await io.writer.drain()
                 return len(data)
@@ -131,6 +149,13 @@ class LocalProcessHandle(SubprocessHandle):
             await asyncio.sleep(0.01 if remaining is None else min(0.01,remaining))
 
     async def cancel(self,*,force=False):
+        return self._cancel_now(force=force)
+
+    async def cancel_guarded(self,*,force=False,guard_effect):
+        if not callable(guard_effect):raise EnvironmentRefused('synchronous lifecycle guard required')
+        with guard_effect():return self._cancel_now(force=force)
+
+    def _cancel_now(self,*,force=False):
         if type(force) is not bool:raise EnvironmentRefused('force must be boolean')
         observation=self.observe()
         if observation.state=='exited':return ProcessCancellation('requested',observation)
@@ -140,6 +165,10 @@ class LocalProcessHandle(SubprocessHandle):
         except OSError:
             return ProcessCancellation('unknown',self.observe())
         return ProcessCancellation('requested',self.observe())
+
+    def release_guarded(self,*,guard_effect) -> Mapping[str,object]:
+        if not callable(guard_effect):raise EnvironmentRefused('synchronous lifecycle guard required')
+        with guard_effect():return self.release()
 
     def release(self) -> Mapping[str, object]:
         if self._release_receipt is not None:return dict(self._release_receipt)

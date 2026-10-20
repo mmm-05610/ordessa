@@ -82,6 +82,17 @@ class _ProcessView:
     async def write_stdin(self,data,*,timeout=None):
         return await self._call('write_stdin',data,timeout=timeout,native=True)
 
+    @property
+    def guarded_write_supported(self):
+        self._check(io=True)
+        return callable(getattr(self._target, 'write_stdin_guarded', None))
+
+    async def write_stdin_guarded(self,data,*,timeout=None,write_guard):
+        if not self.guarded_write_supported:
+            raise EnvironmentRefused('provider physical guarded writer unavailable')
+        return await self._call('write_stdin_guarded',data,timeout=timeout,
+                                write_guard=write_guard,native=True)
+
     async def close_stdin(self):
         return await self._call('close_stdin',native=True)
 
@@ -95,13 +106,45 @@ class _ProcessView:
     async def cancel(self,*,force=False):
         return await self._call('cancel',force=force,native=True,recovery=True)
 
+    @property
+    def guarded_termination_supported(self):
+        self._check()
+        return callable(getattr(self._target,'cancel_guarded',None))
+
+    @property
+    def guarded_detach_supported(self):
+        self._check()
+        return callable(getattr(self._target,'release_guarded',None))
+
+    async def cancel_guarded(self,*,force=False,guard_effect):
+        if not callable(guard_effect) or not callable(getattr(self._target,'cancel_guarded',None)):
+            raise EnvironmentRefused('provider physical guarded termination unavailable')
+        return await self._call('cancel_guarded',force=force,guard_effect=guard_effect,
+                                native=True,recovery=True)
+
+    def release_guarded(self,*,guard_effect):
+        if not callable(guard_effect) or not callable(getattr(self._target,'release_guarded',None)):
+            raise EnvironmentRefused('provider physical guarded detach unavailable')
+        return self._release(guard_effect=guard_effect)
+
     def release(self):
-        if self._release_receipt is not None:return dict(self._release_receipt)
+        return self._release()
+
+    def _release(self,*,guard_effect=None):
+        if self._release_receipt is not None:
+            if guard_effect is not None:
+                # A separate request still crosses its own authority/claim cut;
+                # the cached receipt cannot authorize or imply a fresh mutation.
+                with guard_effect():
+                    self._check()
+                    return dict(self._release_receipt)
+            return dict(self._release_receipt)
         self._check()
         self._use._store.begin_use_effect(self._use.identity,allow_unknown=True)
         unknown=False
         try:
-            facts=self._target.release()
+            facts=(self._target.release() if guard_effect is None else
+                   self._target.release_guarded(guard_effect=guard_effect))
             self._released=True
             unknown=self._target.observe().state=='unknown'
             self._release_receipt=dict(facts)

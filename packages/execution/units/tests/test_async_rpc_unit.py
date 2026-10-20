@@ -3,6 +3,7 @@ import importlib.util
 import json
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
+from uuid import uuid4
 
 import grpc
 import pytest
@@ -89,8 +90,9 @@ def remote(tmp_path):
         node = {'environmentNamespace':'env','nodeId':name,'generation':1}
         authority = Authority(provider_ref, node)
         evidence = AcpUnitEvidence(preparation_authority=lambda plan,facts:plan['context']['privateRootFacts'], start_authority=authority.continuation)
-        records = UnitRecords(OperationJournal(tmp_path/(name+'.sqlite')), scope_authority=Scope(), native_evidence=evidence,
-            verifier=authority, epoch_port=SimpleNamespace(current_epoch=lambda node:0), termination_evidence=evidence)
+        records = UnitRecords(OperationJournal(tmp_path/(name+'.sqlite'), acp_turn_opt_in=True), scope_authority=Scope(), native_evidence=evidence,
+            verifier=authority, epoch_port=SimpleNamespace(current_epoch=lambda node:0), termination_evidence=evidence,
+            acp_turn_opt_in=True)
         evidence.attach_owner(records)
         manifest = {'schemaVersion':'1','harnessDefinitionRef':dict(descriptor.definition_ref),'declarations':[], 'metadata':{'unit':name}}
         revision = ProfileRevisionRef('env',name,1,content_digest(canonical_content(manifest,'env')))
@@ -131,7 +133,8 @@ def remote(tmp_path):
 def prompt(flow):
     if not hasattr(flow,"grant"):
         flow.grant=flow.unit.lease_port.grant(flow.ref)
-    return flow.unit.prompt(flow.ref, flow.grant, prompt=[], timeout=2)
+    receipt = flow.unit.prompt(flow.ref, flow.grant, operation_ref='unit-test/' + uuid4().hex, prompt=[], timeout=2)
+    return receipt['response']['result']
 
 
 def test_two_units_independent_uses_session_material_and_release(remote):

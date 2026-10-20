@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_server.bootstrap import build_runtime
-from ordessa_server.bootstrap.runtime import StorageProviderMissingError
-from ordessa_server.plugin_host import ResolvedContribution
-from ordessa_harness_api import RuntimeAdapterDescriptor, VersionRange
+from ordessa_server.composition.runtime import build_runtime
+from ordessa_server.composition.runtime import StorageProviderMissingError
+from ordessa_server.composition.plugin_host import ResolvedContribution
+from ordessa_execution_agents.harness.definitions import RuntimeAdapterDescriptor, VersionRange
 from server_plugin_api import (
     Contribution, ContributionBatch, ContributionDeclarationError,
     ContributionOwnerBusyError, ContributionPointSpec,
@@ -67,6 +67,25 @@ def test_default_product_registers_both_harness_points_and_reuses_handlers_on_re
         runtime.stop()
 
 
+def test_default_product_core_binding_exposes_host_owned_root_port(tmp_path):
+    runtime = build_runtime(tmp_path / "root-proof")
+    try:
+        binding = runtime.core_binding
+        port = binding.root_ownership_port
+        assert callable(port.bind_owned_root)
+        root = runtime.data_root
+        store = root / "state" / "core.sqlite"
+        child = root / "state" / "agent-owner" / "operations.sqlite"
+        proof = port.bind_owned_root(root_path=root, store_path=store,
+                                     child_path=child)
+        proof.validate_for(root_path=root, store_path=store, child_path=child)
+        assert binding.owns_data_root is True
+    finally:
+        runtime.stop()
+    with pytest.raises(Exception, match="no longer current"):
+        proof.validate_for(root_path=root, store_path=store, child_path=child)
+
+
 def test_external_plugin_uses_carrier_and_busy_unload_authority(tmp_path):
     runtime = build_runtime(tmp_path / "data")
     host = runtime.plugin_host
@@ -88,7 +107,7 @@ def test_external_plugin_uses_carrier_and_busy_unload_authority(tmp_path):
 
 
 def test_explicit_bare_host_without_database_provider_refuses_before_writes(tmp_path, monkeypatch):
-    import ordessa_server.bootstrap.runtime as bootstrap_runtime
+    import ordessa_server.composition.runtime as bootstrap_runtime
 
     def missing_product():
         raise RuntimeError("SERVER_PRODUCT_MISSING: no product installed")
@@ -116,7 +135,7 @@ def test_explicit_bare_host_uses_installed_product_database_only(tmp_path):
 
 
 def test_explicit_plugins_with_database_factory_do_not_resolve_product(tmp_path, monkeypatch):
-    import ordessa_server.bootstrap.runtime as bootstrap_runtime
+    import ordessa_server.composition.runtime as bootstrap_runtime
 
     def unavailable_product():
         raise AssertionError("explicit host selection must not resolve a product")
@@ -141,7 +160,7 @@ def test_explicit_plugins_with_database_factory_do_not_resolve_product(tmp_path,
 
 
 def test_raising_database_factory_releases_data_root_ownership(tmp_path):
-    import ordessa_server.bootstrap.runtime as bootstrap_runtime
+    import ordessa_server.composition.runtime as bootstrap_runtime
 
     owners = []
     real_owner = bootstrap_runtime.DataRootOwner
@@ -172,7 +191,7 @@ def test_raising_database_factory_releases_data_root_ownership(tmp_path):
 
 
 def test_selected_product_without_database_provider_refuses_before_writes(tmp_path, monkeypatch):
-    import ordessa_server.bootstrap.runtime as bootstrap_runtime
+    import ordessa_server.composition.runtime as bootstrap_runtime
 
     class IncompleteProduct:
         def default_plugins(self):
@@ -189,8 +208,8 @@ def test_selected_product_without_database_provider_refuses_before_writes(tmp_pa
 
 
 def test_duplicate_product_points_refuse_before_host_or_data_writes(tmp_path, monkeypatch):
-    import ordessa_server.bootstrap.runtime as bootstrap_runtime
-    from ordessa_server_product.composition import create_composition
+    import ordessa_server.composition.runtime as bootstrap_runtime
+    from ordessa_server.composition.configuration.product_selection import create_host_product_composition as create_composition
 
     actual = create_composition()
 
@@ -214,8 +233,8 @@ def test_duplicate_product_points_refuse_before_host_or_data_writes(tmp_path, mo
 
 @pytest.mark.parametrize("point_id", ("wire.error-families", "wire.discovery-facets"))
 def test_product_cannot_redeclare_host_point_before_writes(tmp_path, monkeypatch, point_id):
-    import ordessa_server.bootstrap.runtime as bootstrap_runtime
-    from ordessa_server_product.composition import create_composition
+    import ordessa_server.composition.runtime as bootstrap_runtime
+    from ordessa_server.composition.configuration.product_selection import create_host_product_composition as create_composition
 
     actual = create_composition()
 
@@ -237,8 +256,8 @@ def test_product_cannot_redeclare_host_point_before_writes(tmp_path, monkeypatch
 
 
 def test_wire_construction_failure_closes_core_and_releases_owner(tmp_path, monkeypatch):
-    import ordessa_server.bootstrap.runtime as bootstrap_runtime
-    import ordessa_server.wire.handlers as wire_handlers
+    import ordessa_server.composition.runtime as bootstrap_runtime
+    import ordessa_interfaces.system_access.services.invocation as wire_handlers
 
     owners = []
     bindings = []
@@ -251,8 +270,8 @@ def test_wire_construction_failure_closes_core_and_releases_owner(tmp_path, monk
             owners.append(self)
 
     class TrackedBinding(real_binding):
-        def __init__(self, path):
-            super().__init__(path)
+        def __init__(self, path, **kwargs):
+            super().__init__(path, **kwargs)
             bindings.append(self)
 
         def close(self):
@@ -278,8 +297,8 @@ def test_wire_construction_failure_closes_core_and_releases_owner(tmp_path, monk
 
 def test_late_composition_failure_disposes_active_plugin_before_releasing_owner(
         tmp_path, monkeypatch):
-    import ordessa_server.bootstrap.runtime as bootstrap_runtime
-    import ordessa_server.wire.handlers as wire_handlers
+    import ordessa_server.composition.runtime as bootstrap_runtime
+    import ordessa_interfaces.system_access.services.invocation as wire_handlers
 
     events = []
     owners = []

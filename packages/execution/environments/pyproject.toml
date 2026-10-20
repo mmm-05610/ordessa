@@ -6,8 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "ordessa-environments"
 version = "0.1.0"
 description = "Scoped execution environment resources, use handles and neutral provider contracts"
-requires-python = ">=3.10"
-dependencies = []
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["ordessa-infrastructure==0.1.0", "ordessa-interfaces-contracts==0.1.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -15,3 +16,6 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[project.entry-points."ordessa.capabilities"]
+environments = "ordessa_environments.capability:factory"

@@ -1,0 +1,389 @@
+{
+  "schema": "ordessa-final-distribution-gates/3",
+  "headAtAudit": "8d42d0a8dbcc909220eada3345c7386fe55c3181",
+  "overall": "BLOCKED: required Linux SecretStorage unavailable; actual Engineering installed loader and final post-adaptation source freeze pending",
+  "readOnlyAudit": true,
+  "projectCount": 53,
+  "localDependencyMismatches": [],
+  "constraintFindings": [
+    {
+      "dependency": "decision-runtime",
+      "currentServer": "==0.2.0",
+      "currentEngineering": "==0.2.0",
+      "currentBindings": "==0.2.0",
+      "currentLocalVersion": "0.2.0",
+      "simultaneouslySatisfiable": true
+    },
+    {
+      "dependency": "jsonschema",
+      "currentInterfaces": ">=4.20,<5",
+      "currentEngineering": "==4.20.0",
+      "simultaneouslySatisfiable": true
+    }
+  ],
+  "baselineNightlyConsumerMetadata": {
+    "ordessa-engineering": {
+      "path": "packages/engineering/pyproject.toml",
+      "version": "0.1.0",
+      "dependencies": [
+        "decision-runtime==0.1.0",
+        "ordessa-infrastructure==0.1.0",
+        "pydantic-graph==2.54.0",
+        "PyYAML==6.0.3",
+        "jsonschema==4.19.2",
+        "referencing==0.36.2"
+      ]
+    },
+    "ordessa-system-access-bindings": {
+      "path": "packages/interfaces/system-access/bindings/pyproject.toml",
+      "version": "0.1.0",
+      "dependencies": [
+        "ordessa-infrastructure==0.1.0",
+        "ordessa-interfaces==0.1.0",
+        "ordessa-engineering==0.1.0",
+        "ordessa-execution-agents==0.1.0",
+        "ordessa-units==0.1.0",
+        "decision-runtime==0.1.0",
+        "ordessa-server-plugin-api>=0.1.0,<1"
+      ]
+    },
+    "decision-runtime": {
+      "path": "packages/execution/decision/pyproject.toml",
+      "version": "0.1.0",
+      "dependencies": [
+        "pydantic-graph==2.54.0"
+      ]
+    },
+    "ordessa-interfaces": {
+      "path": "packages/interfaces/pyproject.toml",
+      "version": "0.1.0",
+      "dependencies": [
+        "jsonschema==4.19.2",
+        "referencing==0.36.2",
+        "ordessa-infrastructure==0.1.0",
+        "ordessa-server-plugin-api>=0.1.0,<1",
+        "fastapi>=0.115,<1"
+      ]
+    }
+  },
+  "environmentAvailabilitySummary": {
+    "inheritedUnavailableRequirements": 7,
+    "newOrChangedUnavailableRequirements": 0,
+    "qualification": "Counts are requirement edges, not unique missing distributions; an existing environment observation is separate from package-index availability or version satisfiability."
+  },
+  "environmentQualification": "Missing or wrong versions in the existing build environment are availability observations, not equivalent to contradictory distribution requirements. No pip resolver or external installation was attempted; --no-deps installs are not full product closure.",
+  "commands": [
+    {
+      "command": "/home/maoqh/projects/ordessa/worktree/packages-convergence-20261019/.venv-convergence/bin/python -I -S /home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/audit.py",
+      "exitCode": 0,
+      "purpose": "53 pyproject dependency edges; manifest-listed source hashes; existing release checksums, RECORD and package-byte comparisons; read-only bundle verify"
+    },
+    {
+      "command": "/home/maoqh/projects/ordessa/worktree/packages-convergence-20261019/.venv-convergence/bin/python -I -S /home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/refine.py",
+      "exitCode": 0,
+      "purpose": "classify inherited environment availability and generated build copies; compare prior root wheel hashes and installed test source"
+    }
+  ],
+  "actionsNotTaken": [
+    "no external pip retry",
+    "no dependency pin edits",
+    "no rebuild of preserved restore source",
+    "no source edits",
+    "no git index/ref changes",
+    "no services or model calls"
+  ],
+  "allProjectManifestsMatchActualMetadata": true,
+  "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/audit.json",
+  "existingBuildEnvironmentUnsatisfiedRequirementEdges": [
+    {
+      "from": "ordessa-server",
+      "fromPath": "apps/server",
+      "requirement": "SecretStorage==3.5.0; sys_platform == 'linux'",
+      "activeOnThisPythonPlatform": true,
+      "buildEnvironmentVersion": null,
+      "buildEnvironmentSatisfies": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "availabilityClassification": "inherited dependency unavailable/incompatible in selected build environment"
+    },
+    {
+      "from": "ordessa-mcp-server",
+      "fromPath": "packages/interfaces/channels/mcp",
+      "requirement": "mcp==2.3.0",
+      "activeOnThisPythonPlatform": true,
+      "buildEnvironmentVersion": "2.2.0",
+      "buildEnvironmentSatisfies": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "availabilityClassification": "inherited dependency unavailable/incompatible in selected build environment"
+    },
+    {
+      "from": "ordessa-environments-openshell",
+      "fromPath": "plugins/environments/openshell",
+      "requirement": "openshell==0.1.3",
+      "activeOnThisPythonPlatform": true,
+      "buildEnvironmentVersion": null,
+      "buildEnvironmentSatisfies": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "availabilityClassification": "inherited dependency unavailable/incompatible in selected build environment"
+    },
+    {
+      "from": "ordessa-environments-openshell",
+      "fromPath": "plugins/environments/openshell",
+      "requirement": "grpcio>=1.78.0",
+      "activeOnThisPythonPlatform": true,
+      "buildEnvironmentVersion": null,
+      "buildEnvironmentSatisfies": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "availabilityClassification": "inherited dependency unavailable/incompatible in selected build environment"
+    },
+    {
+      "from": "ordessa-environments-openshell",
+      "fromPath": "plugins/environments/openshell",
+      "requirement": "protobuf>=6.31.1",
+      "activeOnThisPythonPlatform": true,
+      "buildEnvironmentVersion": null,
+      "buildEnvironmentSatisfies": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "availabilityClassification": "inherited dependency unavailable/incompatible in selected build environment"
+    }
+  ],
+  "sourcePreservation": {
+    "manifest": "workspaces/nightly-restructure-v3/manifest.json",
+    "restoredRoot": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/nightly-source-restore-probe",
+    "filter": "only manifest-existing file entries under apps/packages/plugins/tooling with .py/.toml suffix; no new directories enumerated; no secrets or databases read",
+    "checked": 2557,
+    "status": "FAIL",
+    "sourceStatus": "PASS",
+    "literalManifestComparisonStatus": "FAIL",
+    "sourceMissing": [],
+    "changed": [],
+    "generatedBuildCopiesMissingCount": 693,
+    "qualification": "2557 existing source entries match. The manifest also lists 693 absent build-directory generated copies; literal all-entry comparison is FAIL. No missing authoritative source path, no changed hash, no recovery material rewritten.",
+    "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/preserved-source-hashes.json",
+    "generatedMissingPathsEvidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/audit.json#/sourcePreservation/generatedBuildCopiesMissing"
+  },
+  "bundleRecovery": {
+    "command": [
+      "git",
+      "bundle",
+      "verify",
+      "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/all-refs.bundle"
+    ],
+    "exitCode": 0,
+    "status": "PASS",
+    "previousRestorationReceipt": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/history-restore-verified.json",
+    "qualification": "Current bundle integrity/prerequisites verified read-only; previous receipt records full restore and 895-ref comparison. No new restore or original index mutation.",
+    "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/bundle-verify.log"
+  },
+  "cliRelease": {
+    "path": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/current-cli-release-503b5889",
+    "status": "PASS",
+    "prior31PassLog": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/cli-retained-originals.log",
+    "prior31PassLogSha256": "f9ada280aa3a8b5c7f1025c5e34634c1d1b8a9cda6883553eb4e7cf005f9d47a",
+    "qualification": "31 PASS log records focused bundle/init/installed controlled HTTP acceptance. That test builds its own wheels; it does not install this release ZIP directly. Exact package payloads are compared to current source and 503b5889 tested-source bytes, while ZIP SHA256 identifies this particular release. Full product installed closure remains BLOCKED.",
+    "unlistedFiles": [],
+    "listedAbsentFiles": [],
+    "threeWheelMetadataClosure": [
+      {
+        "from": "ordessa-agent-tools",
+        "requirement": "ordessa-system-access-client==0.1.0",
+        "wheelVersion": "0.1.0",
+        "satisfied": true
+      },
+      {
+        "from": "ordessa-agent-tools",
+        "requirement": "ordessa-cli-runtime==0.1.0",
+        "wheelVersion": "0.1.0",
+        "satisfied": true
+      },
+      {
+        "from": "ordessa-cli-runtime",
+        "requirement": "ordessa-system-access-client==0.1.0",
+        "wheelVersion": "0.1.0",
+        "satisfied": true
+      }
+    ],
+    "threeWheelMetadataClosureSatisfied": true,
+    "installedTestSourceUnchangedSince503b5889": true,
+    "installedTestSourceSha256": "5934ddbb7b752d860da5154ac1bcb5ad58a3316ce1edbe478ed83f4f13787a21",
+    "packagePayloadFileCount": 23,
+    "previousRootReportWheelHashesMatch": true,
+    "bundleChecksumFileCount": 13,
+    "allChecksumEntriesMatch": true,
+    "wheels": [
+      {
+        "file": "ordessa_agent_tools-0.1.0a2-py3-none-any.whl",
+        "sha256": "10dd5cd36a21e70d90845bc0366e4d7452623b5eb80c9d3ee068bec4248146b2",
+        "name": "ordessa-agent-tools",
+        "version": "0.1.0a2",
+        "requiresDist": [
+          "ordessa-system-access-client==0.1.0",
+          "ordessa-cli-runtime==0.1.0"
+        ],
+        "recordBad": [],
+        "entryPoints": "[console_scripts]\nordessa-agent = ordessa_agent_tools.cli:main\n",
+        "payloadFiles": 3,
+        "allPayloadsMatchCurrentSourceAnd503b5889": true
+      },
+      {
+        "file": "ordessa_cli_runtime-0.1.0-py3-none-any.whl",
+        "sha256": "af762f4391226e3497af0a7fe55197a8bfcbbe13eb90ebb0bef9218ccb580a1d",
+        "name": "ordessa-cli-runtime",
+        "version": "0.1.0",
+        "requiresDist": [
+          "ordessa-system-access-client==0.1.0"
+        ],
+        "recordBad": [],
+        "entryPoints": null,
+        "payloadFiles": 14,
+        "allPayloadsMatchCurrentSourceAnd503b5889": true
+      },
+      {
+        "file": "ordessa_system_access_client-0.1.0-py3-none-any.whl",
+        "sha256": "81142608d87d8741cab5e036c6c1fba2613fae3a046ecefc20ad6f30146e37cd",
+        "name": "ordessa-system-access-client",
+        "version": "0.1.0",
+        "requiresDist": [],
+        "recordBad": [],
+        "entryPoints": null,
+        "payloadFiles": 6,
+        "allPayloadsMatchCurrentSourceAnd503b5889": true
+      }
+    ],
+    "qualificationNoRepeatedInstall": "No new venv test repeated: prior 31-PASS installed test remains unchanged, and current release package bytes, metadata, RECORD and previous root ZIP hashes were independently checked. This validates the three-wheel CLI scope, not Server/Engineering full closure."
+  },
+  "headOfLatestCheckpoint": "e352210510",
+  "historicalLocalDependencyMismatches": [
+    {
+      "from": "ordessa-engineering",
+      "fromPath": "packages/engineering",
+      "requirement": "decision-runtime==0.1.0",
+      "activeOnThisPythonPlatform": true,
+      "to": "decision-runtime",
+      "toVersion": "0.2.0",
+      "satisfied": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "classification": "integration mismatch: unchanged consumer pin with newly integrated Decision version"
+    },
+    {
+      "from": "ordessa-system-access-bindings",
+      "fromPath": "packages/interfaces/system-access/bindings",
+      "requirement": "decision-runtime==0.1.0",
+      "activeOnThisPythonPlatform": true,
+      "to": "decision-runtime",
+      "toVersion": "0.2.0",
+      "satisfied": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "classification": "integration mismatch: unchanged consumer pin with newly integrated Decision version"
+    }
+  ],
+  "historicalConstraintFindings": [
+    {
+      "dependency": "decision-runtime",
+      "currentServer": "==0.2.0",
+      "currentEngineering": "==0.1.0",
+      "currentLocalVersion": "0.2.0",
+      "classification": "introduced by integrating Decision 0.2 and its Server consumer while retaining verified nightly Engineering 0.1 pin; nightly local Decision was 0.1.0",
+      "simultaneouslySatisfiable": false
+    },
+    {
+      "dependency": "jsonschema",
+      "currentInterfaces": ">=4.20,<5",
+      "currentEngineering": "==4.19.2",
+      "classification": "introduced by integrating new Interfaces requirement while retaining nightly Engineering pin; nightly Interfaces also pinned 4.19.2",
+      "simultaneouslySatisfiable": false
+    }
+  ],
+  "historicalBuildEnvironmentUnsatisfiedRequirementEdges": [
+    {
+      "from": "ordessa-server",
+      "fromPath": "apps/server",
+      "requirement": "SecretStorage==3.5.0; sys_platform == 'linux'",
+      "activeOnThisPythonPlatform": true,
+      "buildEnvironmentVersion": null,
+      "buildEnvironmentSatisfies": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "availabilityClassification": "inherited dependency unavailable/incompatible in selected build environment"
+    },
+    {
+      "from": "ordessa-engineering",
+      "fromPath": "packages/engineering",
+      "requirement": "pydantic-graph==2.54.0",
+      "activeOnThisPythonPlatform": true,
+      "buildEnvironmentVersion": null,
+      "buildEnvironmentSatisfies": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "availabilityClassification": "inherited dependency unavailable/incompatible in selected build environment"
+    },
+    {
+      "from": "ordessa-engineering",
+      "fromPath": "packages/engineering",
+      "requirement": "jsonschema==4.19.2",
+      "activeOnThisPythonPlatform": true,
+      "buildEnvironmentVersion": "4.20.0",
+      "buildEnvironmentSatisfies": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "availabilityClassification": "inherited dependency unavailable/incompatible in selected build environment"
+    },
+    {
+      "from": "ordessa-mcp-server",
+      "fromPath": "packages/interfaces/channels/mcp",
+      "requirement": "mcp==2.3.0",
+      "activeOnThisPythonPlatform": true,
+      "buildEnvironmentVersion": "2.2.0",
+      "buildEnvironmentSatisfies": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "availabilityClassification": "inherited dependency unavailable/incompatible in selected build environment"
+    },
+    {
+      "from": "ordessa-environments-openshell",
+      "fromPath": "plugins/environments/openshell",
+      "requirement": "openshell==0.1.3",
+      "activeOnThisPythonPlatform": true,
+      "buildEnvironmentVersion": null,
+      "buildEnvironmentSatisfies": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "availabilityClassification": "inherited dependency unavailable/incompatible in selected build environment"
+    },
+    {
+      "from": "ordessa-environments-openshell",
+      "fromPath": "plugins/environments/openshell",
+      "requirement": "grpcio>=1.78.0",
+      "activeOnThisPythonPlatform": true,
+      "buildEnvironmentVersion": null,
+      "buildEnvironmentSatisfies": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "availabilityClassification": "inherited dependency unavailable/incompatible in selected build environment"
+    },
+    {
+      "from": "ordessa-environments-openshell",
+      "fromPath": "plugins/environments/openshell",
+      "requirement": "protobuf>=6.31.1",
+      "activeOnThisPythonPlatform": true,
+      "buildEnvironmentVersion": null,
+      "buildEnvironmentSatisfies": false,
+      "sameRequirementPresentInPreservedNightlyOwner": true,
+      "availabilityClassification": "inherited dependency unavailable/incompatible in selected build environment"
+    }
+  ],
+  "latestCheckpoint": {
+    "source": "installed-metadata-recheck.json",
+    "readOnlyLocalConstraintAudit": "current-local-dependency-constraints.json",
+    "localProjects": 53,
+    "activeLocalEdges": 99,
+    "localConstraintConflicts": 0,
+    "freshInstalledLocalWheels": 13,
+    "entryTestsPassed": 1,
+    "ownerImportCounts": [
+      57,
+      57,
+      82
+    ],
+    "snapshotFiles": 952,
+    "sourceBeforeEqualsAfter": true,
+    "pipCheckExit": 1,
+    "pipCheckRemaining": [
+      "ordessa-server requires SecretStorage==3.5.0 on Linux; absent"
+    ],
+    "qualification": "Actual list/help paths only; no actual installed Engineering loader claim. Subsequent preparation-wait and report changes require a final rebuilt snapshot. Prior broader53project optional plugin availability findings are separate from this selected13wheel closure."
+  }
+}

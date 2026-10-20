@@ -1,0 +1,9 @@
+{
+  "name": "@ordessa/interface-contracts",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/wire.ts"
+  },
+  "dependencies": {}
+}

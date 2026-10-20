@@ -1,0 +1,84 @@
+{
+  "headBeforeCheckpoint": "8e92edec6592bfb75981ce191142293377628c14",
+  "sourceConflicts": {
+    "resolved": 212,
+    "pending": 11,
+    "qualification": "BCA/staged2 + native consumers8 + full distribution1; source accounting only, not all acceptance"
+  },
+  "committed": {
+    "78c801031c": {
+      "scope": "Current source-review durable Decision job and strict separate historical proofs",
+      "validation": {
+        "tests": 168,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "xml": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/source-review-current-adapter/final-current.xml"
+      }
+    },
+    "40d6754cf9": {
+      "scope": "Original method/request guard spans independent permit consumption; suppression/async guards refused",
+      "validation": "22 final core + 6 real source cases; see source-review-current-adapter/guard-span-freeze.json. Prior source exit139 retained; no cause assumed."
+    },
+    "f150d83673": {
+      "scope": "Agent cold reconcile and explicit Unit V1/V2 historical reads",
+      "validation": "9 passed; engineering-dispatch-current-integration/COLD-QUERY-CHECKPOINT.md"
+    },
+    "48f6d114be": {
+      "scope": "Preserved pure brand policy imports through SDK explicit ports",
+      "validation": {
+        "tests": 106,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "xml": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/fifteen-brand-sdk-ports-final.xml"
+      }
+    },
+    "4f76218673": {
+      "scope": "Typed Harness retirement adapter with original Usage/SQL unchanged",
+      "validation": {
+        "tests": 41,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "xml": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/assertion-bca-staged-v4/final-owned-checkpoint.xml"
+      }
+    },
+    "8e92edec65": {
+      "scope": "Current Profile/Harness read owners and original pure proposal input",
+      "validation": "18 passed; decision-read-agent/receipt.json"
+    }
+  },
+  "newVerifiedUncommitted": {
+    "scope": "Staged-A guarantees at actual current Agent/Environment cuts",
+    "test": "tests/integration/packages_convergence/test_staged_agent_guarantee_migration.py",
+    "sha256": "905301f1ad419074eb133efed7955d8bb25733e89579d7d0304d86000e84e92a",
+    "validation": {
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/assertion-staged-guarantees-v5/staged-a-source-snapshot.xml"
+    },
+    "qualification": "Authorized external prepared configuration only; original C consumer admission/material handoff and full BCA/staged chain remain incomplete"
+  },
+  "worktreeScopeReview": {
+    "initialActionRejected": true,
+    "reason": "Reviewer could not establish authority for main-consolidation rather than original packages-convergence tree",
+    "newMainConversationEvidenceSupplied": true,
+    "evidenceSentinels": [
+      "Sentinel_2bd7df9126c08191a29f9bbbf2fcb91d",
+      "Sentinel_199b70717aa481919fa07e7b0f448183",
+      "Sentinel_abb95e133ae08191a6cbec8d2322870a",
+      "Sentinel_59a10b1932b48191a4769117c5f872b3"
+    ],
+    "verification": "Read-only status and SHA matched paused fixture; rejected command had not executed. Identical command retried once through same executor/workdir/permission route, approved and9passed; no alternative executor/workaround.",
+    "status": "RESOLVED FOR CURRENT REPOSITORY CONSOLIDATION SCOPE"
+  },
+  "pendingUncommitted": "AgentWork v2/2.7.3 online owner/Service send, Profile job and original source-chain fixture migration, Agent reviewer tagged role persistence; only independently validated slices count.",
+  "prohibitionsRetained": [
+    "no external pip retry",
+    "no DSH/model calls",
+    "no premature main advancement or worktree cleanup"
+  ]
+}

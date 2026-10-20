@@ -1,0 +1,19 @@
+{
+  "name": "@ordessa/extension-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./surface": "./src/surface.ts",
+    "./native-bridge": "./src/native-bridge.ts"
+  },
+  "dependencies": {
+    "@lumino/coreutils": "2.2.3",
+    "@lumino/disposable": "2.1.6",
+    "@lumino/signaling": "2.1.6"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}

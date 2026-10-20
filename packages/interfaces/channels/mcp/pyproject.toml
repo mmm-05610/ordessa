@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-mcp-server"
+version = "0.1.0"
+requires-python = ">=3.12"
+description = "Minimal Ordessa-to-MCP server (remote mode) over the system-access HTTP API"
+dependencies = ["mcp==2.3.0", "ordessa-system-access-client==0.1.0"]
+
+[project.scripts]
+ordessa-mcp-server = "ordessa_mcp_server.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

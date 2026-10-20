@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "purpose": "Pending original consumer verification; no real human reply/model judgment",
+  "cases": [
+    {
+      "id": "explicit-complete-checklist",
+      "expected": "Faithfully expand real explicit whole-checklist answer after full exact list was shown",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "continue-not-review",
+      "expected": "Continue implementation cannot infer review disposition",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "missing-answer",
+      "expected": "No answer remains pending; no ReviewRecord",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "ambiguous-answer",
+      "expected": "Ambiguous answer remains pending",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "full-plan-keys",
+      "expected": "Reject missing/duplicate/extra/replaced CheckKey",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "exact-plan-version",
+      "expected": "Reject stale/replaced plan/request/object version/policy",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "current-attestor-role",
+      "expected": "Original source/current role guard required through COMMIT",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "mechanical-error",
+      "expected": "Human cannot override wrong bytes/ref/version or absent mechanical proof",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "separate-grant",
+      "expected": "Human ReviewRecord does not create implementation Grant",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "automatic-jev",
+      "expected": "Automatic JEV satisfied remains manual without evaluation",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "policy-selection",
+      "expected": "Method declaration cannot select product trust policy itself",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "human-dispositions",
+      "expected": "Admitted independent semantic reply uses actual selected policy status mapping",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "scope-limit",
+      "expected": "Only claim_coverage and claim_support have declaration; no source_integrity or quality scope expansion",
+      "runtime_validation": "pending_engineering_consumer"
+    }
+  ]
+}

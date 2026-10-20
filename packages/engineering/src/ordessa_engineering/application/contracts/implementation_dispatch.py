@@ -31,6 +31,31 @@ class DispatchRepository(Protocol):
 
 
 class DispatchSelectionPort(Protocol):
+    def describe_work_profile(self, context, package, authorization):
+        """Return the fixed original Profile revision as its public JSON ref.
+
+        The live selection guard must confirm this same revision before send;
+        the value supplies report identity, never execution permission.
+        """
+        ...
+
+    def guard_work_scope(self, context, package, unit_ref, authorization, actions):
+        """Original Workspace/effect owner admits the exact requested scopes.
+
+        Profile selection and prompt text cannot establish repository/path or
+        external-effect confinement. Missing original authority must refuse.
+        """
+        ...
+
+    def guard_work_selection(self, context, package, unit_ref, authorization, params):
+        """Guard the actual selected original Unit and yield its EnvironmentRef.
+
+        Uses the product's original profile/query binding, not a Profile field
+        invented on PreparedPackagePayload. The caller separately checks the
+        selected environment against every requested Grant ActionScope.
+        """
+        ...
+
     def guard_selection(self,context,package,unit_ref):
         """Original selected profile/Unit/checkout capability provenance, held through COMMIT.
 

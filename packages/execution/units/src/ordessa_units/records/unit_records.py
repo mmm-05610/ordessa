@@ -25,16 +25,65 @@ from dataclasses import dataclass
 import hashlib
 import json
 import re
+from threading import RLock
 from typing import Mapping, Protocol
 from uuid import uuid4
 
-from ordessa_execution_api.environment.operations import safe_json, sealed_mapping
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_execution_agents.harness.definitions import ApplicationTarget, Unknown
 from .operation_journal import OperationJournal, JournalError
 
 
+UNIT_SCHEMA_SQL = """
+                CREATE TABLE IF NOT EXISTS harness_unit_reservations (
+                    unit_ref TEXT PRIMARY KEY, correlation TEXT NOT NULL UNIQUE,
+                    intent_json TEXT NOT NULL, intent_digest TEXT NOT NULL,
+                    scope_json TEXT NOT NULL, scope_key TEXT NOT NULL UNIQUE);
+                CREATE TABLE IF NOT EXISTS harness_unit_sessions (
+                    unit_ref TEXT PRIMARY KEY REFERENCES harness_unit_reservations(unit_ref),
+                    state TEXT NOT NULL, source_revision INTEGER NOT NULL,
+                    creation_correlation TEXT UNIQUE, native_json TEXT,
+                    native_digest TEXT);
+                CREATE TABLE IF NOT EXISTS harness_unit_confirmations (
+                    unit_ref TEXT PRIMARY KEY REFERENCES harness_unit_reservations(unit_ref),
+                    state TEXT NOT NULL, source_revision INTEGER NOT NULL,
+                    creation_correlation TEXT UNIQUE, native_json TEXT,
+                    native_digest TEXT, input_digest TEXT);
+                CREATE TABLE IF NOT EXISTS harness_unit_configuration_attempts (
+                    attempt_ref TEXT PRIMARY KEY,
+                    unit_ref TEXT NOT NULL REFERENCES harness_unit_reservations(unit_ref),
+                    correlation TEXT NOT NULL UNIQUE,
+                    identity_json TEXT NOT NULL, identity_digest TEXT NOT NULL,
+                    state TEXT NOT NULL, source_revision INTEGER NOT NULL,
+                    native_request_json TEXT, native_request_digest TEXT,
+                    confirmation_json TEXT, confirmation_digest TEXT);
+                CREATE TABLE IF NOT EXISTS harness_unit_terminations (
+                    unit_ref TEXT NOT NULL REFERENCES harness_unit_reservations(unit_ref),
+                    action TEXT NOT NULL,
+                    correlation TEXT NOT NULL UNIQUE,
+                    identity_json TEXT NOT NULL, identity_digest TEXT NOT NULL,
+                    state TEXT NOT NULL, source_revision INTEGER NOT NULL,
+                    outcome_json TEXT, outcome_digest TEXT,
+                    PRIMARY KEY (unit_ref, action));
+            """
+
+MANAGED_SCHEMA_SQL = """CREATE TABLE harness_managed_turn_attempts (
+                    operation_ref TEXT PRIMARY KEY,
+                    request_key TEXT NOT NULL UNIQUE,
+                    unit_ref TEXT NOT NULL REFERENCES harness_unit_reservations(unit_ref),
+                    input_digest TEXT NOT NULL,
+                    binding_json TEXT NOT NULL, binding_digest TEXT NOT NULL,
+                    execution_json TEXT NOT NULL, execution_digest TEXT NOT NULL,
+                    state TEXT NOT NULL, revision INTEGER NOT NULL,
+                    receipt_json TEXT, terminal_json TEXT)"""
+
 class UnitRecordsRefused(JournalError):
     pass
+
+
+class AcpEvidenceCapacityRefused(UnitRecordsRefused):
+    """The complete original ACP evidence cannot fit its finite owner budget."""
+    code = 'ACP_EVIDENCE_CAPACITY_EXCEEDED'
 
 
 @dataclass(frozen=True)
@@ -285,6 +334,11 @@ def _correlation(facts):
 
 
 class UnitRecords:
+    @property
+    def acp_turn_evidence_max_bytes(self):
+        from .acp_turns import MAX_EVIDENCE_BYTES
+        return MAX_EVIDENCE_BYTES
+
     def __init__(self, journal, *, scope_authority, native_evidence, verifier, epoch_port,
                  configuration_evidence=None, native_unit_evidence=None, input_association_evidence=None,
                  termination_evidence=None, managed_turn_opt_in=False, acp_turn_opt_in=False):
@@ -306,57 +360,23 @@ class UnitRecords:
         if type(acp_turn_opt_in) is not bool or acp_turn_opt_in and not journal.acp_turn_opt_in:
             raise UnitRecordsRefused('ACP turn schema requires original pristine journal opt-in')
         self.acp_turn_available = acp_turn_opt_in
+        # One private, bounded observation snapshot per original owner. The
+        # lock covers its SQLite transaction and post-COMMIT publication.
+        self._acp_observation_lock = RLock()
+        self._acp_observation_cache = None
         self._tickets = {}
         self._configuration_tickets = {}
         self._termination_tickets = {}
         authority = getattr(journal, '_unit_records_scope_authority', None)
         if authority is not None and authority is not scope_authority:
             raise UnitRecordsRefused("journal already has a different scope authority")
-        with journal._connect() as db:
-            db.executescript('''
-                CREATE TABLE IF NOT EXISTS harness_unit_reservations (
-                    unit_ref TEXT PRIMARY KEY, correlation TEXT NOT NULL UNIQUE,
-                    intent_json TEXT NOT NULL, intent_digest TEXT NOT NULL,
-                    scope_json TEXT NOT NULL, scope_key TEXT NOT NULL UNIQUE);
-                CREATE TABLE IF NOT EXISTS harness_unit_sessions (
-                    unit_ref TEXT PRIMARY KEY REFERENCES harness_unit_reservations(unit_ref),
-                    state TEXT NOT NULL, source_revision INTEGER NOT NULL,
-                    creation_correlation TEXT UNIQUE, native_json TEXT,
-                    native_digest TEXT);
-                CREATE TABLE IF NOT EXISTS harness_unit_confirmations (
-                    unit_ref TEXT PRIMARY KEY REFERENCES harness_unit_reservations(unit_ref),
-                    state TEXT NOT NULL, source_revision INTEGER NOT NULL,
-                    creation_correlation TEXT UNIQUE, native_json TEXT,
-                    native_digest TEXT, input_digest TEXT);
-                CREATE TABLE IF NOT EXISTS harness_unit_configuration_attempts (
-                    attempt_ref TEXT PRIMARY KEY,
-                    unit_ref TEXT NOT NULL REFERENCES harness_unit_reservations(unit_ref),
-                    correlation TEXT NOT NULL UNIQUE,
-                    identity_json TEXT NOT NULL, identity_digest TEXT NOT NULL,
-                    state TEXT NOT NULL, source_revision INTEGER NOT NULL,
-                    native_request_json TEXT, native_request_digest TEXT,
-                    confirmation_json TEXT, confirmation_digest TEXT);
-                CREATE TABLE IF NOT EXISTS harness_unit_terminations (
-                    unit_ref TEXT NOT NULL REFERENCES harness_unit_reservations(unit_ref),
-                    action TEXT NOT NULL,
-                    correlation TEXT NOT NULL UNIQUE,
-                    identity_json TEXT NOT NULL, identity_digest TEXT NOT NULL,
-                    state TEXT NOT NULL, source_revision INTEGER NOT NULL,
-                    outcome_json TEXT, outcome_digest TEXT,
-                    PRIMARY KEY (unit_ref, action));
-            ''')
-        if self.managed_turn_available:
+        if not journal.reopened_for_new_units:
             with journal._connect() as db:
-                db.execute('''CREATE TABLE harness_managed_turn_attempts (
-                    operation_ref TEXT PRIMARY KEY,
-                    request_key TEXT NOT NULL UNIQUE,
-                    unit_ref TEXT NOT NULL REFERENCES harness_unit_reservations(unit_ref),
-                    input_digest TEXT NOT NULL,
-                    binding_json TEXT NOT NULL, binding_digest TEXT NOT NULL,
-                    execution_json TEXT NOT NULL, execution_digest TEXT NOT NULL,
-                    state TEXT NOT NULL, revision INTEGER NOT NULL,
-                    receipt_json TEXT, terminal_json TEXT)''')
-        if self.acp_turn_available:
+                db.executescript(UNIT_SCHEMA_SQL)
+        if self.managed_turn_available and not journal.reopened_for_new_units:
+            with journal._connect() as db:
+                db.execute(MANAGED_SCHEMA_SQL)
+        if self.acp_turn_available and not journal.reopened_for_new_units:
             from .acp_turns import initialize
             initialize(self)
         # Retain one owner and one bound gate per journal object. The journal
@@ -546,17 +566,22 @@ class UnitRecords:
         from .acp_turns import digest
         return digest({'unitRef':dict(unit_ref), 'params':params})
 
+    def validate_acp_prompt_capacity(self, unit_ref, params):
+        """Read-only capacity check on the original confirmed Unit/session."""
+        from .acp_turns import validate_prompt_capacity
+        validate_prompt_capacity(self, unit_ref, params)
+
     @staticmethod
     def acp_turn_query_digest(unit_ref, operation_ref, expected_prompt_input_digest):
         from .acp_turns import digest
         return digest({'action':'query-acp-turn', 'unitRef':dict(unit_ref),
                        'operationRef':operation_ref, 'expectedPromptInputDigest':expected_prompt_input_digest})
 
-    def query_acp_turn(self, unit_ref, operation_ref, context, *, input_digest, expected_prompt_input_digest, allow_absent=False):
+    def query_acp_turn(self, unit_ref, operation_ref, context, *, input_digest, expected_prompt_input_digest):
         """Authorized durable read; never opens a channel or retries a turn."""
         from .acp_turns import query
         return query(self, unit_ref, operation_ref, context, input_digest=input_digest,
-                     expected_prompt_input_digest=expected_prompt_input_digest, allow_absent=allow_absent)
+                     expected_prompt_input_digest=expected_prompt_input_digest)
 
     def _authorize(self, context, action, provider, node, digest, *, query=False, epoch_target=None):
         facts = self.verifier.verify_and_consume(context, action, provider, node, digest)
@@ -578,6 +603,17 @@ class UnitRecords:
         return value
 
     def _unit(self, db, unit_ref):
+        if unit_ref in self.journal.historical_unit_ids:
+            raise UnitRecordsRefused('historical Unit stays fenced; reopen permits only fresh Units')
+        return self._reservation(db, unit_ref)
+
+    def _reservation(self, db, unit_ref):
+        """Recheck one stored reservation; the caller decides on the fence.
+
+        Execution paths reach this only through ``_unit`` (fenced). The one
+        historical read-only projection uses it directly and never unfences the
+        Unit: no live Unit object is returned and no execution path is enabled.
+        """
         row = db.execute('SELECT * FROM harness_unit_reservations WHERE unit_ref=?', (unit_ref,)).fetchone()
         if row is None or row['intent_digest'] != _digest(row['intent_json']):
             raise UnitRecordsRefused("unit missing or immutable facts damaged")
@@ -589,6 +625,41 @@ class UnitRecords:
         expected_key = safe_json({'environmentNamespace': unit.scope_ref.environment_namespace,
                                   'scopeId': unit.scope_ref.scope_id})
         if expected_key != row['scope_key']:
+            raise UnitRecordsRefused("scope identity damaged")
+        return unit
+
+    def _historical_reservation(self, db, unit_id):
+        """Immutable identity of one *historical* Unit on a reopened journal.
+
+        A reopened journal is admitted only through the verified owner/root
+        reopen, which pins the namespace, file identity and schema and pins the
+        canonical reservation bytes; the live scope index is deliberately not
+        restored. This read therefore rechecks the persisted facts themselves
+        (canonical bytes, digests, correlation, scope key and namespaces) and
+        returns the immutable reservation - never a live Unit, never an
+        execution path, and never a re-verified live scope mapping.
+        """
+        if self.journal.reopened_for_new_units is not True:
+            raise UnitRecordsRefused('historical read requires the verified reopened journal')
+        if unit_id not in self.journal.historical_unit_ids:
+            raise UnitRecordsRefused('historical read requires a historical Unit')
+        row = db.execute('SELECT * FROM harness_unit_reservations WHERE unit_ref=?',
+                         (unit_id,)).fetchone()
+        if row is None or row['intent_digest'] != _digest(row['intent_json']):
+            raise UnitRecordsRefused("unit missing or immutable facts damaged")
+        unit = UnitReservation(row['unit_ref'], row['intent_json'], row['scope_json'])
+        facts = unit.facts
+        if (row['correlation'] != facts['correlation']
+                or safe_json(facts) != row['intent_json']
+                or safe_json(unit.scope_ref.to_dict()) != row['scope_json']):
+            raise UnitRecordsRefused("unit correlation or canonical facts damaged")
+        namespace = unit.scope_ref.environment_namespace
+        if (namespace != facts['providerRef'].get('environmentNamespace')
+                or namespace != facts['nodeRef'].get('environmentNamespace')
+                or not namespace):
+            raise UnitRecordsRefused("unit scope namespace damaged")
+        if row['scope_key'] != safe_json({'environmentNamespace': namespace,
+                                          'scopeId': unit.scope_ref.scope_id}):
             raise UnitRecordsRefused("scope identity damaged")
         return unit
 
@@ -905,6 +976,30 @@ class UnitRecords:
         with self.journal._connect() as db:
             return self._unit(db, unit_ref)
 
+    def owner_read_unit_for_query(self, unit_ref):
+        """Pure identity read of one reservation, for historical ACP queries.
+
+        The caller names the complete public UnitRef; it must be exactly the
+        reservation's own immutable reference. This reuses the historical
+        read-only checks (canonical bytes, digests, correlation, scope and the
+        full UnitRef) without the execution fence - and without clearing it:
+        the return value is the immutable ``UnitReservation`` (identity only),
+        never a live Unit, a permission or an execution path.
+        """
+        if (not isinstance(unit_ref, Mapping)
+                or set(unit_ref) != {'environmentNamespace', 'unitId', 'ownerProviderRef', 'sourceRevision'}
+                or not isinstance(unit_ref['unitId'], str) or not unit_ref['unitId']):
+            raise UnitRecordsRefused('complete owner-bound Unit reference required')
+        with self.journal._connect() as db:
+            unit_id = unit_ref['unitId']
+            if unit_id in self.journal.historical_unit_ids:
+                unit = self._historical_reservation(db, unit_id)
+            else:
+                unit = self._unit(db, unit_id)
+        if safe_json(unit_ref) != safe_json(unit.public_ref):
+            raise UnitRecordsRefused('Unit reference differs from original owner source')
+        return unit
+
     def owner_read_session(self, unit_ref):
         """Owner-trusted session projection; consumes no invocation."""
         with self.journal._connect() as db:
@@ -1081,6 +1176,11 @@ class UnitRecords:
         if action not in TERMINATION_ACTIONS:
             raise UnitRecordsRefused('termination action must be stop or release')
         with self.journal._connect() as db:
+            if unit_ref in self.journal.historical_unit_ids:
+                # A reopened journal keeps every historical Unit fenced for
+                # execution; the stop/release proof itself is still the owner's
+                # own record, so it is projected read-only from that record.
+                return self._historical_termination(db, unit_ref, action)
             unit = self._unit(db, unit_ref)
             row = db.execute(
                 'SELECT * FROM harness_unit_terminations WHERE unit_ref=? AND action=?',
@@ -1088,6 +1188,57 @@ class UnitRecords:
             if row is None:
                 return None
             return self._termination_record(db, unit.unit_ref, action, row=row)
+
+    def _historical_termination(self, db, unit_ref, action):
+        """Read-only termination projection for one historical (fenced) Unit.
+
+        The reservation is rechecked exactly as ``_unit`` does (canonical bytes,
+        digests, correlation, scope key and the complete UnitRef), but the
+        historical fence is deliberately not cleared: this branch returns no
+        live Unit, enables no execution path, calls no termination validator and
+        writes nothing. The stored identity must be the same identity those
+        facts imply, and a ``confirmed`` action must still carry the original
+        persisted, non-empty proof.
+        """
+        unit = self._historical_reservation(db, unit_ref)
+        row = db.execute(
+            'SELECT * FROM harness_unit_terminations WHERE unit_ref=? AND action=?',
+            (unit.unit_ref, action)).fetchone()
+        if row is None:
+            return None
+        try:
+            stored = json.loads(row['identity_json'])
+        except Exception:
+            raise UnitRecordsRefused('termination record is damaged') from None
+        if (not isinstance(stored, Mapping)
+                or set(stored) != {'action', 'correlation', 'inputDigest', 'unitRef'}
+                or row['identity_digest'] != _digest(row['identity_json'])
+                or row['state'] not in ('opening', 'unknown', 'confirmed')
+                or type(row['source_revision']) is not int
+                or (row['state'] == 'opening') != (row['source_revision'] == 1)
+                or row['source_revision'] < 1
+                or row['action'] != action
+                or stored.get('action') != action
+                or stored.get('correlation') != row['correlation']
+                or not isinstance(stored.get('inputDigest'), str) or not stored['inputDigest']
+                or not isinstance(stored.get('unitRef'), Mapping)
+                or safe_json(stored['unitRef']) != safe_json(unit.public_ref)):
+            raise UnitRecordsRefused('termination record is damaged')
+        # The stored identity must be exactly the one these reservation facts
+        # imply: same action, same correlation, the same input digest and the
+        # complete UnitRef. A rewritten identity is damage, not a new attempt.
+        expected_identity = safe_json({'action': action,
+                                       'correlation': row['correlation'],
+                                       'inputDigest': stored['inputDigest'],
+                                       'unitRef': unit.public_ref})
+        if safe_json(stored) != expected_identity:
+            raise UnitRecordsRefused('termination record is damaged')
+        if row['state'] == 'confirmed' and (
+                row['outcome_json'] is None or row['outcome_digest'] is None
+                or not row['outcome_json']):
+            raise UnitRecordsRefused('confirmed termination lacks persisted proof')
+        return self._termination_record(db, unit.unit_ref, action,
+                                        expected_identity=expected_identity, row=row)
 
     def _check_termination_row(self, db, unit, action, expected_identity, row):
         try:

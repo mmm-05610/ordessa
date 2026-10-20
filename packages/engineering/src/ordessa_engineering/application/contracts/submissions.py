@@ -50,10 +50,23 @@ class SubmissionRepository(Protocol):
     def resolve(self, ref): ...
 
 
-def report_input_schema():
+def report_input_schema(schema_version=None):
     """Closed original Submission transport; report mode has a distinct operation."""
     from ..orchestration.owner_capabilities import owner_capabilities
     descriptor = next(d for d in owner_capabilities()
                       if d.capability_id == 'engineering.submissions.record_report')
+    schema = {'$schema':'https://json-schema.org/draft/2020-12/schema',
+              '$id':descriptor.contract['input_schema_id'], **descriptor.contract['input_schema']}
+    if schema_version in (1, 2):
+        from copy import deepcopy
+        schema = deepcopy(schema)
+        schema['properties']['record'] = schema['properties']['record']['oneOf'][schema_version - 1]
+    return schema
+
+
+def agent_report_input_schema():
+    """Current Agent report contract; never infer it from untrusted version text."""
+    from ..orchestration.owner_capabilities import agent_report_capability
+    descriptor = agent_report_capability()
     return {'$schema':'https://json-schema.org/draft/2020-12/schema',
             '$id':descriptor.contract['input_schema_id'], **descriptor.contract['input_schema']}

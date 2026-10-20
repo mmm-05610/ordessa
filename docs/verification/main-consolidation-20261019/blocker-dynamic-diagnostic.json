@@ -1,0 +1,66 @@
+{
+  "engineeringImportOnly": [
+    {
+      "module": "ordessa_engineering.adapters.decision.client",
+      "imported": false,
+      "error": "cannot import name 'BusinessOutcome' from 'decision_runtime' (packages/execution/decision/src/decision_runtime/__init__.py)"
+    },
+    {
+      "module": "ordessa_engineering.adapters.decision.source_reviewer",
+      "imported": false,
+      "error": "cannot import name 'BusinessOutcome' from 'decision_runtime' (packages/execution/decision/src/decision_runtime/__init__.py)"
+    },
+    {
+      "module": "ordessa_engineering.adapters.profile_flow",
+      "imported": false,
+      "error": "cannot import name 'BusinessOutcome' from 'decision_runtime' (packages/execution/decision/src/decision_runtime/__init__.py)"
+    },
+    {
+      "module": "ordessa_engineering.adapters.execution_profiles",
+      "imported": false,
+      "error": "cannot import name 'TaskBrief' from 'decision_runtime' (packages/execution/decision/src/decision_runtime/__init__.py)"
+    },
+    {
+      "module": "ordessa_engineering.adapters.registry.source_integrity",
+      "imported": true
+    }
+  ],
+  "registryImplementationFacts": {
+    "status": "unavailable",
+    "errorType": "EngineeringError",
+    "error": "operation_registry_dependency_unavailable"
+  },
+  "currentServerMain": {
+    "args": [
+      "--data-root",
+      "TEMPORARY_PATH_NOT_CREATED",
+      "--port",
+      "0"
+    ],
+    "exit": 2,
+    "stderr": "ordessa: --state or ORDESSA_STATE is required"
+  },
+  "preservedNightlyParser": {
+    "data_root": "/tmp/ordessa-diagnostic-no-write",
+    "port": 0
+  },
+  "schemaGenerator": {
+    "owner": "tooling/generation/generate-agent-cli-schemas.py",
+    "exit": 0
+  },
+  "qualification": "Import/parser/schema checks only; no service, business action, model call, install or user state access. No default HTTP startup claim.",
+  "desktopBridgeLifecycle": {
+    "command": "npm run --workspace apps/desktop/electron/server-bridge test -- tests/lifecycle.test.ts",
+    "restricted": {
+      "passed": 11,
+      "failed": 5,
+      "failure": "test-owned child stdout timeout"
+    },
+    "outsideSandbox": {
+      "exit": 0,
+      "passed": 16,
+      "failed": 0
+    },
+    "scope": "Existing handshake/lifecycle tests with test-owned fake child processes. Does not start or qualify actual default Server HTTP composition."
+  }
+}

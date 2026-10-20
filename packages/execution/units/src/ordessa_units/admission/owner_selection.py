@@ -7,11 +7,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Callable
-from ordessa_execution_api.environment import GuaranteeUnavailableError
+from ordessa_units.errors import UnitGuaranteeUnavailable
 from .owner_ports import AgentProviderView
 from .invocation import InvocationAuthorityPort, InvocationCurrentStatePort
 
-class AgentOwnerUnavailable(GuaranteeUnavailableError):
+class AgentOwnerUnavailable(UnitGuaranteeUnavailable):
     code = "AGENT_OWNER_UNAVAILABLE"
 
 
@@ -127,19 +127,19 @@ def bind_unit_manager(inputs: AgentOwnerInputs, *, environment_id, provider_view
     Creates only one live Manager, no records/store/issuer or native effects.
     Legacy selection is refused rather than reinterpreted or used as fallback.
     """
-    from ordessa_execution_api.environment import EnvironmentId
+    from ordessa_units.definitions.admission_identity import AdmissionNamespace
     from ordessa_units.records import UnitRecords
     from ordessa_units.management.manager import UnitManager
     from ordessa_units.management.instance import UnitInstance
     from ordessa_execution_agents.profiles import decode_revision_ref
-    from ordessa_execution_api.environment.operations import safe_json
+    from ordessa_infrastructure.encoding.immutable_json import safe_json
     from .invocation import InvocationIssuer, InvocationVerifier
 
     validate_agent_owner_inputs(inputs)
     if inputs.fresh_unit_factory is None:
         raise AgentOwnerUnavailable("fresh Unit factory selection is unavailable")
-    if type(environment_id) is not EnvironmentId or type(provider_view) is not AgentProviderView:
-        raise AgentOwnerUnavailable("original EnvironmentId and AgentProviderView are required")
+    if type(environment_id) is not AdmissionNamespace or type(provider_view) is not AgentProviderView:
+        raise AgentOwnerUnavailable("original AdmissionNamespace and AgentProviderView are required")
     records = provider_view.records
     verifier = provider_view.verifier
     issuer = getattr(getattr(verifier, '_verify', None), '__self__', None)
@@ -157,8 +157,7 @@ def bind_unit_manager(inputs: AgentOwnerInputs, *, environment_id, provider_view
             or records.native_unit_evidence is not inputs.native_unit_evidence
             or records.input_association_evidence is not inputs.input_association_evidence
             or records.termination_evidence is not inputs.termination_evidence
-            or not records.journal._initial_file_pristine
-            or not records.journal.preopened_file_identity_valid
+            or not records.journal.new_unit_admission_valid(environment_id.value)
             or records.acp_turn_available is not inputs.acp_turn_opt_in
             or records.journal.acp_turn_opt_in is not inputs.acp_turn_opt_in):
         raise AgentOwnerUnavailable("fresh Unit binding must retain original selected records and ACP opt-in")
@@ -199,7 +198,7 @@ def bind_unit_manager(inputs: AgentOwnerInputs, *, environment_id, provider_view
 
 def validate_agent_owner_selection(fingerprint_port, inputs):
     """Validate the explicitly supplied owner inputs before any host I/O."""
-    from ordessa_execution_api.environment import ProtectedFingerprintPort
+    from ordessa_units.definitions.fingerprints import ProtectedFingerprintPort
     if not isinstance(fingerprint_port, ProtectedFingerprintPort):
         raise AgentOwnerUnavailable("protected fingerprint port is required for Agent composition")
     validate_agent_owner_inputs(inputs)

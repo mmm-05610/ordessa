@@ -1,0 +1,115 @@
+{
+  "schema": "remaining-consolidation-groups/1",
+  "atHead": "ecd7b97ec861be92ebe64e71dba4934f8a71c2cf",
+  "count": 31,
+  "groups": [
+    {
+      "name": "A CLI 拆分/部署/发行归属（8）",
+      "classification": "已有实现，可机械适配；bundle/candidate generator 需修真实路径和已删除声明源，不能采用 a23 的 blanket build refusal。",
+      "action": "当前 CLI/channel/client 源候选与 AgentTools owner 已在工作区；拆分 wheel 和原断言需验证后共同提交。",
+      "paths": [
+        "apps/cli/deployment/__init__.py",
+        "apps/cli/deployment/composition.py",
+        "apps/cli/deployment/configuration.py",
+        "apps/cli/packaging/build_bundle.py",
+        "apps/cli/pyproject.toml",
+        "apps/cli/src/ordessa_agent_tools/cli.py",
+        "apps/cli/src/ordessa_agent_tools/client.py",
+        "apps/cli/src/ordessa_agent_tools/native_clients/__init__.py"
+      ]
+    },
+    {
+      "name": "B 原断言迁移（4）",
+      "classification": "原先已存在的未完成断言迁移，不是四项可删除的测试。",
+      "action": "三个测试在 nightly 已有实际独立 owner；harness discovery 的旧 sandbox resolution 已被 SDK 删除。保留断言并明确等价接口缺口。",
+      "paths": [
+        "apps/cli/tests/integration/test_bca_longitudinal.py",
+        "apps/cli/tests/integration/test_directory_binding.py",
+        "apps/cli/tests/integration/test_staged_agent_assembly.py",
+        "packages/execution/agents/tests/test_harness_discovery_consumer.py"
+      ]
+    },
+    {
+      "name": "C 当前 Product/Agent owner 已落盘验证（3）",
+      "classification": "现已提交、已有实际验证，清单滞后于 owner 整合。",
+      "action": "ecd7b97ec8 的真实 HTTP/Product/root/foreground 9 PASS 覆盖当前 product/owner，两个 distribution wheel 已构建；全部安装闭包另计。",
+      "paths": [
+        "apps/server/deployment/default-product/pyproject.toml",
+        "apps/server/deployment/default-product/src/ordessa_server_product/agent_owner.py",
+        "apps/server/deployment/default-product/src/ordessa_server_product/composition.py"
+      ]
+    },
+    {
+      "name": "D UI seed probe 归属（1）",
+      "classification": "已有当前 seed 实现，可机械迁移。",
+      "action": "实际 owner 是 tooling/checks/server_product；当前 consumer 两项通过，提交依赖于当前 CLI/client owner。",
+      "paths": [
+        "apps/server/deployment/default-product/scripts/seed-profile-ui-probe.py"
+      ]
+    },
+    {
+      "name": "E 原 native configuration 消费链（8）",
+      "classification": "a23 已未完成的新 SDK 消费适配；直接拷贝会撤掉较新 nightly 的 native 功能。",
+      "action": "backend/bridge 应保留 nightly 的 selected public ports；configuration/readers/turn 不可用 stub 代替旧作用链。需逐项区分历史读取与当前 SDK effect，保留原断言。没有发现需要改变审批业务规则的理由。",
+      "paths": [
+        "apps/server/deployment/default-product/src/ordessa_server_product/acp_channel/profile_owner.py",
+        "apps/server/deployment/default-product/src/ordessa_server_product/harness_adapters/application/__init__.py",
+        "apps/server/deployment/default-product/src/ordessa_server_product/harness_adapters/application/configuration_service.py",
+        "apps/server/deployment/default-product/src/ordessa_server_product/harness_adapters/application/native_evidence.py",
+        "apps/server/deployment/default-product/src/ordessa_server_product/harness_adapters/configuration/model/backend.py",
+        "apps/server/deployment/default-product/src/ordessa_server_product/harness_adapters/configuration/model/bridge.py",
+        "apps/server/deployment/default-product/src/ordessa_server_product/harness_adapters/configuration/model/live_service.py",
+        "apps/server/deployment/default-product/src/ordessa_server_product/turn_application.py"
+      ]
+    },
+    {
+      "name": "F Server namespace 接缝（5）",
+      "classification": "已有明确物理 owner，多数为机械接缝或拒绝恢复旧 facade。",
+      "action": "decision bindings 属 composition；bootstrap 保持纯导入；Engineering context 属 interfaces/system-access/bindings；HTTP 属中立 transport/server。当前 HTTP 18 PASS 已验证实际服务入口。",
+      "paths": [
+        "apps/server/src/ordessa_server/adapters/decision/__init__.py",
+        "apps/server/src/ordessa_server/bootstrap/__init__.py",
+        "apps/server/src/ordessa_server/system_access/context.py",
+        "apps/server/src/ordessa_server/transport/http/__init__.py",
+        "apps/server/src/ordessa_server/transport/http/app.py"
+      ]
+    },
+    {
+      "name": "G Server 发行依赖冲突（1）",
+      "classification": "新下层与冻结/现解冻的上层接口版本冲突。",
+      "action": "Engineering 0.1 pin 与当前 Decision 0.2 不相容；jsonschema 约束无交集。只能随真实适配更新，不作 pin-only 兼容声明。",
+      "paths": [
+        "apps/server/pyproject.toml"
+      ]
+    },
+    {
+      "name": "H 编码断言的物理 owner（1）",
+      "classification": "已有实现，可机械更新测试到实际 Infrastructure/历史 Unit owner。",
+      "action": "保留原 canonical equality、持久化与 namespace 键断言；不得把 Unit 在线执行器重新导入到当前入口。",
+      "paths": [
+        "tests/contracts/test_canonical_encoding.py"
+      ]
+    }
+  ],
+  "crossCuttingGates": [
+    "Engineering source reviewer/Profile/Unit adaptation and original evidence/history compatibility",
+    "Production trusted inputs for default current HTTP product; do not infer grants from token/loopback",
+    "Installed closure, original assertion migration and recoverable cleanup remain separate gates"
+  ],
+  "newDesignAssessment": "No business approval redesign is required by these path conflicts. Missing old native-evidence contracts are a concrete lower/adapter interface gap, not authorization to fabricate manifests or expand Decision features indefinitely.",
+  "closedAfterSnapshot": {
+    "targets": [
+      "apps/server/deployment/default-product/pyproject.toml",
+      "apps/server/deployment/default-product/src/ordessa_server_product/agent_owner.py",
+      "apps/server/deployment/default-product/src/ordessa_server_product/composition.py",
+      "apps/server/src/ordessa_server/adapters/decision/__init__.py",
+      "apps/server/src/ordessa_server/bootstrap/__init__.py",
+      "apps/server/src/ordessa_server/system_access/context.py",
+      "apps/server/src/ordessa_server/transport/http/__init__.py",
+      "apps/server/src/ordessa_server/transport/http/app.py",
+      "tests/contracts/test_canonical_encoding.py"
+    ],
+    "receipt": "grouped-owner-resolution.json",
+    "remaining": 22
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "command": ".venv-nightly/bin/python -B methods/nova-feature-delivery/_support/verification/verify_both.py",
+  "process_exit_code": 1,
+  "stage": "verification-script setup; compiler not invoked",
+  "error": "TypeError in ssl.SSLSocket import because the first verifier revision replaced socket.socket with a function",
+  "correction": "Keep socket.socket class unchanged; refuse network via audit hook and connection functions",
+  "method_runtime_execution": "not_attempted",
+  "core_changed": "no"
+}

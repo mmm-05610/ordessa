@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ordessa:method:incremental-engineering:method-feedback:2",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "document_type": {
+      "const": "method-feedback"
+    },
+    "schema_version": {
+      "const": 2
+    },
+    "execution_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_id",
+        "revision",
+        "digest",
+        "locator"
+      ]
+    },
+    "submission_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_id",
+        "revision",
+        "digest",
+        "locator"
+      ]
+    },
+    "adoption_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_id",
+        "revision",
+        "digest",
+        "locator"
+      ]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "object_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "object_id",
+                "revision",
+                "digest",
+                "locator"
+              ]
+            }
+          },
+          "kind": {
+            "enum": [
+              "implementation",
+              "design",
+              "method",
+              "judgment_quality"
+            ]
+          },
+          "impact": {
+            "type": "string",
+            "minLength": 1
+          },
+          "route": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "finding_id",
+          "evidence_refs",
+          "kind",
+          "impact",
+          "route"
+        ]
+      }
+    },
+    "method_change_authorized": {
+      "const": false
+    }
+  },
+  "required": [
+    "document_type",
+    "schema_version",
+    "execution_ref",
+    "submission_ref",
+    "adoption_ref",
+    "findings",
+    "method_change_authorized"
+  ]
+}

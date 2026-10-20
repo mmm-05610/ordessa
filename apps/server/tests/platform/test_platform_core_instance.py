@@ -1,185 +1,49 @@
-"""T015/S1c platform gates: the single Pacthold seam and the core-instance topology.
+"""Host topology and Agent Unit contracts on one Product Environment.
 
-Every guard here answers a row of the quickstart gate table with a REAL
-composition, not a substitute:
-
-* 「核心实例」 — "关闭 A 后 B 仍可读写": proven with TWO live
-  ``build_runtime`` compositions in ONE process (a single-instance test
-  cannot pass this gate — the table says so in terms), plus the unbound-owner
-  counterexample (an owner that never bound cannot submit).
-* 「联合注册」 — the plugin contribution round stages through the composed
-  ``CoreBinding`` into the real C1 registry (A's implementation checkpoint
-  ``b47b6d7803`` wired ``stage/submit/query/request_stop/reconcile/close``
-  for real), so this lane's wording moves from "替身通过" to a composed pass.
-* S1c topology — the composition's C1 Core owns its own file inside the data
-  root (``state/core.sqlite``); the shared-file alternative is not merely
-  rejected but *demonstrated unsafe* by
-  ``test_shared_file_topology_counterexample_double_applies_a_write``.
-
-The doubles are controlled services in the sense the spec allows: the
-C1-protocol providers are defined HERE (the seam never depends on a business
-plugin), while everything on the other side of the seam is the real
-``pacthold.public`` kernel at A's merged checkpoint.
+Controlled public providers exercise the real Agent Tools deployment, Server
+Host and SQLite authority. The retained shared-file CoreStore witness records
+why two connections to one legacy database were rejected; it is not a runtime
+registration path. No model or native process is invoked.
 """
 from __future__ import annotations
+from ordessa_units.errors import UnitAdmissionRefused
+from ordessa_server.composition.runtime import RuntimeCompositionUnavailable
+from ordessa_execution_agents.harness.providers.registry.errors import CatalogIdentityConflict
+from pacthold.core.registration import RegistrationConflictError
 
-import dataclasses
+import json
 import sqlite3
 import threading
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
-from contribution_fakes import ContribPlugin, contribution
-from pacthold.public import (
-    AcquireOutcome,
-    AcquireRequest,
-    AcquireResult,
-    ContractNotRegisteredError,
-    CoreStore,
-    ExecutionPlan,
-    ExecutionState,
-    LeaseState,
-    MissingContractReferenceError,
-    Observation,
-    ObservationKind,
-    ProviderNotRegisteredError,
-    ReconcileOutcome,
-    ReconcileRequest,
-    ReconcileResult,
-    ReconcileSupport,
-    RegistrationConflictError,
-    ReleaseOutcome,
-    ReleaseRequest,
-    ReleaseResult,
-    ResourceProviderDescriptor,
-    ResourceRequirement,
-    RuntimeClosedError,
-    StartOutcome,
-    StartRequest,
-    StartResult,
-    StopOutcome,
-    StopRequest,
-    StopResult,
+from pacthold.public import CoreStore, Environment
+from ordessa_infrastructure.identifiers import RequestKey
+from ordessa_units.definitions.operations import UsageMutation, node_holder, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
+from ordessa_units.public import (
+    AgentContributionSet, DirectoryBindingRef, InvocationCurrentState,
+    InvocationGrant, unit_services,
 )
+from ordessa_execution_agents.harness.providers.registry.contributions import (
+    RUNTIME_METHODS, RUNTIME_PROVIDER_VERSION, RuntimeProviderDescriptor,
+)
+from ordessa_units.bindings.assembly import PreparationContext, PreparationObservation
+from ordessa_units.bindings.publication import NodePublicationEvidence, decode_node_ref
+from ordessa_units.lifecycle.service import LifecycleObservation
 from server_plugin_api import (
-    PACTHOLD_CONTRIBUTIONS_API_VERSION,
-    PACTHOLD_CONTRIBUTIONS_POINT_ID,
+    Contribution, ContributionBatch, PACTHOLD_CONTRIBUTIONS_API_VERSION,
+    PACTHOLD_CONTRIBUTIONS_POINT_ID, ServerPluginDescriptor, ServerPluginRegistration,
 )
-
-from ordessa_server.bootstrap import build_runtime
-from ordessa_server.core_binding import CoreBinding
-
-DIGEST_A = "a" * 64
-DIGEST_B = "b" * 64
-
-
-@dataclasses.dataclass(frozen=True)
-class FragmentV1:
-    """A controlled C1 contract (frozen dataclass + versioned id), test-side."""
-
-    contract_id: dataclasses.ClassVar[str] = "sample.t015.fragment@1"
-    text: str = ""
-
-
-class ControlledResourceProvider:
-    def __init__(self, provider_id: str = "res.t015", *,
-                 supported: frozenset[str] | None = None) -> None:
-        self.provider_id = provider_id
-        self.supported_contract_ids = supported or frozenset({FragmentV1.contract_id})
-        self.acquire_calls: list = []
-        self.reconcile_calls: list = []
-
-    def describe(self) -> ResourceProviderDescriptor:
-        return ResourceProviderDescriptor(
-            id=self.provider_id, display_name="controlled t015 resource",
-            version="1.0", reconcile_support=ReconcileSupport.SUPPORTED)
-
-    def acquire(self, request: AcquireRequest) -> AcquireResult:
-        self.acquire_calls.append(request)
-        lease_id = f"lease-{len(self.acquire_calls)}"
-        return AcquireResult(
-            outcome=AcquireOutcome.SUCCESS, operation_key=request.operation_key,
-            execution_id=request.execution_id, lease_id=lease_id,
-            safe_handle=f"handle-{lease_id}", lease_state=LeaseState.ACQUIRED)
-
-    def release(self, request: ReleaseRequest) -> ReleaseResult:
-        return ReleaseResult(
-            outcome=ReleaseOutcome.SUCCESS, operation_key=request.operation_key,
-            execution_id=request.execution_id, lease_id=request.lease_id)
-
-    def reconcile(self, request: ReconcileRequest) -> ReconcileResult:
-        self.reconcile_calls.append(request)
-        return ReconcileResult(
-            outcome=ReconcileOutcome.SUCCESS, operation_key=request.operation_key,
-            execution_id=request.execution_id, resolution_ref="evidence-t015")
-
-
-class ControlledExecutionProvider:
-    provider_id = "exec.t015"
-
-    def __init__(self, *, supported: frozenset[str] | None = None) -> None:
-        self.supported_contract_ids = supported or frozenset({FragmentV1.contract_id})
-        self.start_calls: list = []
-        self.stop_calls: list = []
-
-    def describe(self) -> ResourceProviderDescriptor:
-        return ResourceProviderDescriptor(
-            id=self.provider_id, display_name="controlled t015 execution",
-            version="1.0", reconcile_support=ReconcileSupport.UNSUPPORTED)
-
-    def start(self, request: StartRequest) -> StartResult:
-        self.start_calls.append(request)
-        return StartResult(
-            outcome=StartOutcome.SUCCESS, operation_key=request.operation_key,
-            execution_id=request.execution_id,
-            run_safe_handle=f"run-{request.execution_id}")
-
-    def observe(self, handle) -> Observation:
-        return Observation(kind=ObservationKind.RUNNING, safe_handle=handle.safe_handle)
-
-    def stop(self, request: StopRequest) -> StopResult:
-        self.stop_calls.append(request)
-        return StopResult(
-            outcome=StopOutcome.SUCCESS, operation_key=request.operation_key,
-            execution_id=request.execution_id)
-
-
-def payload(*, res=None, exe=None, contracts=(FragmentV1,)):
-    """A plugin-side opaque payload in exactly the shape the C2 carrier
-    transports: one object with the three C1 field names. ``bind_owner``
-    translates it by identity — no mirror dataclass in between."""
-    return SimpleNamespace(
-        contracts=contracts,
-        resource_providers=(res if res is not None else ControlledResourceProvider(),),
-        execution_providers=(exe if exe is not None else ControlledExecutionProvider(),),
-    )
-
-
-def plan_for(request_key: str, digest: str = DIGEST_A):
-    return ExecutionPlan(
-        request_key=request_key, digest=digest, provider_id="exec.t015",
-        provider_version="1.0", work_id="work-0001",
-        resources=(ResourceRequirement(
-            slot="frag", contract_id=FragmentV1.contract_id, provider_id="res.t015"),))
-
-
-@pytest.fixture()
-def binding(tmp_path) -> CoreBinding:
-    # Built exactly the way build_runtime builds it: one per composition,
-    # its own file inside the data root, opened lazily.
-    b = CoreBinding(tmp_path / "state" / "core.sqlite")
-    yield b
-    b.close()
-
-
-# -- the seam itself -----------------------------------------------------------
-
+from ordessa_server.composition.agent_tools import AgentServiceConfiguration, AgentToolsDeployment
+from ordessa_server.composition.agent_tools.owner_ports import OwnerPorts
+from ordessa_server.composition.plugin_host.host import OwnerLifecycleError
+from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 
 def test_the_seam_names_no_core_internals_import():
     """Binding rule (1), checkable form: core_binding.py imports from
     pacthold.public and nowhere else inside the kernel."""
-    from ordessa_server import core_binding as module
+    from ordessa_server.composition import core_binding as module
 
     source = Path(module.__file__).read_text(encoding="utf-8")
     for line in source.splitlines():
@@ -188,241 +52,40 @@ def test_the_seam_names_no_core_internals_import():
             assert ".public" in stripped, line
 
 
-def test_unbound_owner_cannot_submit_counterexample(binding):
-    """The quickstart demands a counterexample: an owner that never bound
-    cannot submit — and it is the UNBOUND state that refuses, because the
-    same plan passes the moment an owner binds."""
-    snapshot_before = binding.snapshot()
-    assert (snapshot_before.contract_ids, snapshot_before.resource_provider_ids,
-            snapshot_before.execution_provider_ids) == ((), (), ())
-    with pytest.raises(ProviderNotRegisteredError):
-        binding.submit(plan_for("req-unbound"))
-    binding.bind_owner("owner.t015", payload())
-    result = binding.submit(plan_for("req-bound", DIGEST_B))
-    assert binding.query(result.execution_id).execution_state is not None
-
-
-def test_bind_owner_translates_the_plugin_payload_by_identity(binding):
-    """Binding rule (2): the C2 payload object's three fields go to the C1
-    constructor as-is; what lands in the registry is exactly the plugin's
-    own provider objects (identity, not a re-projection)."""
-    res, exe = ControlledResourceProvider(), ControlledExecutionProvider()
-    registration = binding.bind_owner("owner.identity", payload(res=res, exe=exe))
-    assert registration.owner == "owner.identity"
-    snap = binding.snapshot()
-    assert FragmentV1.contract_id in snap.contract_ids
-    assert "res.t015" in snap.resource_provider_ids
-    assert "exec.t015" in snap.execution_provider_ids
-    result = binding.submit(plan_for("req-identity"))
-    assert exe.start_calls, "dispatch did not reach the plugin's own provider"
-    # FR-007 busy refusal at the seam: an owner with an unresolved lease
-    # unbinds NEVER — the typed refusal is the honest answer, and a quiet
-    # destroy of the run would be the gate 「卸载/恢复」 forbids.
-    from pacthold.public import OwnerBusyError
-    with pytest.raises(OwnerBusyError):
-        binding.unbind_owner("owner.identity")
-    stop = binding.request_stop(result.execution_id, result.operation_key)
-    assert stop.execution_id == result.execution_id and exe.stop_calls
-    # an idle owner retires cleanly:
-    binding.bind_owner("owner.idle",
-                       SimpleNamespace(contracts=(), resource_providers=(),
-                                       execution_providers=()))
-    binding.unbind_owner("owner.idle")
-
-
-def test_a_raising_stage_aborts_with_zero_leaked_contributions(binding):
-    """Binding rule (3): failure inherits the T012/T013 transaction — a
-    rejected stage reserves nothing, leaves the snapshot unchanged and the
-    loser unbound, and never blocks a later honest rebind."""
-    binding.bind_owner("owner.a", payload())
-    before = binding.snapshot()
-    # Same contract id claimed twice: typed conflict, nothing reserved.
-    with pytest.raises(RegistrationConflictError):
-        binding.bind_owner("owner.b", payload())
-    assert binding.snapshot() == before
-    # A provider referencing a contract neither in its batch nor active.
-    orphan_res = ControlledResourceProvider(
-        provider_id="res.orphan", supported=frozenset({"sample.orphan@1"}))
-    with pytest.raises(MissingContractReferenceError):
-        binding.bind_owner("owner.c",
-                           SimpleNamespace(contracts=(), resource_providers=(orphan_res,),
-                                           execution_providers=()))
-    assert binding.snapshot() == before
-    from pacthold.public import OwnerNotRegisteredError
-    with pytest.raises(OwnerNotRegisteredError):
-        binding.unbind_owner("owner.b")
-    # The aborted rounds leaked nothing that would block the retry: owner.b
-    # can bind now (its conflicted claim was never reserved).
-    binding.bind_owner("owner.b",
-                       SimpleNamespace(contracts=(), resource_providers=(),
-                                       execution_providers=()))
-
-
-def test_close_surfaces_the_shutdown_report_and_store_facts_survive(tmp_path):
-    """The close contract: ``CoreRuntime.close()`` runs first (its store
-    closes inside it, last), the ShutdownReport is surfaced, an unresolved
-    execution is LISTED not killed, and after the composition's next round
-    the durable row — not process memory — answers."""
-    b = CoreBinding(tmp_path / "state" / "core.sqlite")
-    b.bind_owner("owner.close", payload())
-    result = b.submit(plan_for("req-close"))
-    report = b.close()
-    assert b.shutdown_report is report
-    assert b.close() is report  # re-close returns the same report
-    with pytest.raises(RuntimeClosedError):
-        b.snapshot()
-    # the composition restarts its round over the SAME server-owned file:
-    b.open()
-    view = b.query(result.execution_id)
-    assert view.execution_state is not None  # durable fact, new round's memory
-    b.close()
-
-
-# -- the 核心实例 gate: two live compositions, one process ----------------------
-
-
-def test_two_live_compositions_close_a_b_still_reads_and_writes(tmp_path):
-    """Quickstart 「核心实例」: 关闭 A 后 B 仍可读写 — with TWO real
-    ``build_runtime`` compositions in ONE process (single-instance cannot
-    pass this gate), each carrying its own CoreBinding over its own file."""
-    runtime_a = build_runtime(tmp_path / "core-a-instance")
-    runtime_b = build_runtime(tmp_path / "core-b-instance")
-    runtime_a.start()
-    runtime_b.start()
-    try:
-        a, b = runtime_a.core_binding, runtime_b.core_binding
-        assert a is not b
-        assert Path(a.store_path).resolve() != Path(b.store_path).resolve()
-        exe_a = ControlledExecutionProvider()
-        res_b = ControlledResourceProvider()
-        exe_b = ControlledExecutionProvider()
-        a.bind_owner("owner.a", payload(exe=exe_a))
-        b.bind_owner("owner.b", payload(res=res_b, exe=exe_b))
-        first_b = b.submit(plan_for("req-b-first"))
-        # Stop A's round completely through the composition lifecycle.
-        runtime_a.stop()
-        assert runtime_a.core_shutdown_report is not None  # surfaced, not dropped
-        with pytest.raises(RuntimeClosedError):
-            a.snapshot()
-        # B, still live, WRITES: a new submission through its own seam...
-        second_b = b.submit(plan_for("req-b-after", DIGEST_B))
-        # ...and READS both the pre-stop and the post-stop records.
-        assert b.query(first_b.execution_id).execution_state is not None
-        assert b.query(second_b.execution_id).execution_state is not None
-        # and B's store kept every row while A's round came and went.
-        assert Path(b.store_path).is_file()
-        for res in (first_b, second_b):
-            b.request_stop(res.execution_id, res.operation_key)
-    finally:
-        runtime_b.stop()
-
-
 def test_core_binding_is_per_composition_and_crosses_the_host_wall(tmp_path):
-    """The binding is handed to consumers through the existing wall, once per
-    composition — never a module global two compositions could share."""
-    runtime_a = build_runtime(tmp_path / "wall-a")
-    runtime_b = build_runtime(tmp_path / "wall-b")
+    """Two Agent Tools products expose their own Environment at the Host wall."""
+    a, _ = _runtime(tmp_path / "wall-a", plugin=_Plugin("wall.a"))
+    b, _ = _runtime(tmp_path / "wall-b", plugin=_Plugin("wall.b"))
     try:
-        assert runtime_a.core_binding is not runtime_b.core_binding
-        # Host wall, host side: the object a declaring plugin resolves from
-        # `context.ports` is the SAME instance a host-side consumer holds.
-        assert runtime_a.plugin_host.host_ports["core.binding"] is runtime_a.core_binding
-        assert runtime_b.plugin_host.host_ports["core.binding"] is runtime_b.core_binding
-        # the fixed core seam point is bound to THIS composition's handler.
-        point = runtime_a.plugin_host.contribution_points.point(
-            PACTHOLD_CONTRIBUTIONS_POINT_ID)
-        assert point is not None and point.handler is runtime_a.core_binding
+        assert a.core_binding is not b.core_binding
+        assert a.core_binding.environment is not b.core_binding.environment
+        assert a.plugin_host.host_ports["core.binding"] is a.core_binding
+        assert b.plugin_host.host_ports["core.binding"] is b.core_binding
+        point = a.plugin_host.contribution_points.point(PACTHOLD_CONTRIBUTIONS_POINT_ID)
+        assert point is not None and point.handler is a.core_binding
         assert point.api_version == PACTHOLD_CONTRIBUTIONS_API_VERSION
     finally:
-        runtime_a.stop()
-        runtime_b.stop()
-
-
-# -- the 联合注册 gate: a real plugin round into a real Core ---------------------
-
-
-def test_a_plugin_contribution_round_registers_into_the_composed_core(tmp_path):
-    """联合注册 proven with a real Core composition, not a substitute: the
-    plugin carries a C2 Contribution whose payload is a C1 contribution
-    shape; the host round stages it through the composed CoreBinding and a
-    submission dispatches to the plugin's own providers."""
-    res, exe = ControlledResourceProvider(), ControlledExecutionProvider()
-    plugin = ContribPlugin(
-        "t015.joint",
-        contributions=(contribution(
-            PACTHOLD_CONTRIBUTIONS_POINT_ID, PACTHOLD_CONTRIBUTIONS_API_VERSION,
-            payload(res=res, exe=exe)),),
-    )
-    runtime = build_runtime(tmp_path / "joint", server_plugins=(plugin,))
-    runtime.start()
-    try:
-        snap = runtime.core_binding.snapshot()
-        assert "exec.t015" in snap.execution_provider_ids
-        result = runtime.core_binding.submit(plan_for("req-joint"))
-        assert exe.start_calls and result.execution_id
-        assert runtime.core_binding.query(result.execution_id).execution_state is not None
-        # settle the run before retirement: teardown unbinds the owner
-        # through the seam (committed batch -> unregister), which stays
-        # busy-refused while a lease is unresolved (FR-007).
-        runtime.core_binding.request_stop(result.execution_id, result.operation_key)
-    finally:
-        runtime.stop()
-    assert runtime.core_shutdown_report is not None
+        a.stop()
+        b.stop()
 
 
 def test_a_refused_contribution_round_leaves_the_composition_rebindable(tmp_path):
-    """The round's zero-leak at composition scale: a plugin whose payload
-    fails C1 staging aborts activation with the typed C1 error, releases the
-    data root, and the SAME data root recomposes cleanly with a valid
-    plugin — an aborted round squats on no id."""
-    orphan = ControlledResourceProvider(supported=frozenset({"sample.orphan@1"}))
-    bad = ContribPlugin(
-        "t015.bad",
-        contributions=(contribution(
-            PACTHOLD_CONTRIBUTIONS_POINT_ID, PACTHOLD_CONTRIBUTIONS_API_VERSION,
-            SimpleNamespace(contracts=(), resource_providers=(orphan,),
-                            execution_providers=())),),
-    )
+    """A rejected Agent contribution releases the root; valid retry binds there."""
     root = tmp_path / "joint-abort"
-    with pytest.raises(MissingContractReferenceError):
-        build_runtime(root, server_plugins=(bad,))
-    good = ContribPlugin(
-        "t015.good",
-        contributions=(contribution(
-            PACTHOLD_CONTRIBUTIONS_POINT_ID, PACTHOLD_CONTRIBUTIONS_API_VERSION,
-            payload()),),
-    )
-    retry = build_runtime(root, server_plugins=(good,))
-    retry.start()
+    with pytest.raises(TypeError):
+        _deployment(root, plugin=_Plugin("joint.bad", bad_payload=True))
+    good = _Plugin("joint.good")
+    retry, _ = _runtime(root, plugin=good)
     try:
-        snap = retry.core_binding.snapshot()
-        assert "res.t015" in snap.resource_provider_ids
-        assert FragmentV1.contract_id in snap.contract_ids
+        env = retry.core_binding.environment
+        admitted = env.agent_runtime_contribution(_Provider.definition_ref(env.environment_id))
+        assert admitted.provider is good.provider
+        assert retry.plugin_host.is_active(good.owner)
+        run = _prepare(retry, _profile(retry), "joint-retry")
+        assert run.status == "published"
+        _release(retry, run, "joint-retry-release")
     finally:
         retry.stop()
-
-
-def test_request_stop_and_reconcile_reach_the_plugin_provider(tmp_path, binding):
-    """The last two verbs of the seam, exercised for real through the
-    composition-owned binding: request_stop delegates to the provider that
-    started the run; reconcile resolves a lease by the provider's evidence,
-    never by guessing."""
-    res, exe = ControlledResourceProvider(), ControlledExecutionProvider()
-    binding.bind_owner("owner.verbs", payload(res=res, exe=exe))
-    result = binding.submit(plan_for("req-verbs"))
-    stop = binding.request_stop(result.execution_id, result.operation_key)
-    assert exe.stop_calls, "stop never reached the plugin's provider"
-    assert stop.execution_id == result.execution_id
-    # reconcile: the lease this run resolved cleanly needs nothing — typed
-    # refusal or typed no-op; a fabricated disposition is what must NOT
-    # happen. (Full unknown-lease reconciliation is pinned kernel-side at
-    # A's checkpoint; here the seam's delegation is what is proven.)
-    from pacthold.public import CoreError
-    with pytest.raises(CoreError):
-        binding.reconcile(result.execution_id, result.operation_key)
-
-
-# -- S1c topology: the counterexample that decided the choice --------------------
 
 
 def test_shared_file_topology_counterexample_double_applies_a_write(tmp_path):
@@ -526,26 +189,511 @@ def test_shared_file_topology_counterexample_double_applies_a_write(tmp_path):
     legacy.close()
 
 
-def test_composition_core_file_is_its_own_and_never_the_legacy_file(tmp_path):
-    """The chosen topology at composition scale: after a real default
-    product composition has opened and used its Core round, the legacy
-    product database and the C1 store are two files inside one server-owned
-    data root; writing Core adds nothing to the legacy file's table set."""
-    runtime = build_runtime(tmp_path / "topology")
+def _source(provider, identity):
+    return {"environmentNamespace": provider["environmentNamespace"],
+            "ownerProviderRef": json.loads(safe_json(provider)),
+            "sourceRevision": "native-1", "ref": identity}
+
+
+class _Authority:
+    revision = "rev-1"
+    expiry = 4102444800
+
+    def __init__(self, environment_id):
+        self.issuer_ref = {"environmentNamespace": environment_id,
+                           "issuerId": "controlled-host-authority"}
+
+    def authorize(self, request, actions, target_ref, delegation_ref):
+        return InvocationGrant(principal_scope=request.principal_scope, actions=actions,
+                               target_ref=target_ref, delegation_ref=delegation_ref,
+                               authority_revision=self.revision, expires_at=self.expiry,
+                               issuer_ref=self.issuer_ref)
+
+    def revalidate(self, grant, request, actions, target_ref):
+        return self.authorize(request, actions, target_ref, grant.delegation_ref)
+
+
+class _State:
+    def __init__(self, environment_id):
+        self.environment_id = environment_id
+        self.directory = DirectoryBindingRef(environment_id, "directory", 1,
+                                             "sha256:" + "d" * 64)
+        self.provider_ref = None
+
+    def inspect(self, request, pinned_provider_ref, context_ref, target_ref, action):
+        acquired = None
+        acquisition_evidence = None
+        if action in {"stop", "release", "query"} and "instanceId" in target_ref:
+            node = decode_node_ref(target_ref)
+            # The controlled current-state port reads the same published Node
+            # and its original durable holds; it never echoes an unacquired target.
+            published = unit_services(self.environment).nodes.read(node)
+            usages = self.environment.store_port.read_usages(
+                self.environment_id,
+                node_holder(node.environment, node.instance_id, node.generation))
+            retained = {row["usageId"] for row in usages
+                        if row["state"] in {"active", "unknown"}}
+            original_refs = [] if published is None else [
+                ref for ref in published["resourceUsageRefs"]
+                if ref["environmentNamespace"] == self.environment_id
+                and ref["usageId"] in retained]
+            if original_refs:
+                acquired = target_ref
+                acquisition_evidence = original_refs[0]
+        return InvocationCurrentState(self.provider_ref, True, 0, self.directory,
+                                      True, acquired, acquisition_evidence)
+
+    def resolve(self, request, manifest, admitted, node, context, options):
+        return PreparationContext(self.directory,
+            {"installationRef": {"environmentNamespace": self.environment_id,
+                                  "installationId": "controlled", "sourceRevision": "rev-1"}},
+            {"nodeRef": node, "privateRootFacts": {"cwd": "/controlled/fixture"}})
+
+    def observe(self, operation, step, reply):
+        provider = step.pinned_provider_ref
+        if operation.intent.kind == "agent-preparation":
+            unit = _source(provider, "actual-unit")
+            holds = () if step.step_id == "start" else (
+                UsageMutation(operation.intent.operation_ref + ".unit", 0, None,
+                              operation_holder(operation.request, operation.intent.operation_ref),
+                              unit, ("use",), "active"),)
+            return PreparationObservation(
+                step.step_id, provider, step.input_digest, step.recovery_correlation,
+                _source(provider, step.step_id + "-receipt"), {"unitRef": unit}, holds)
+        action = operation.intent.context_ref["lifecycleRequest"]["action"]
+        if action in {"stop", "release"}:
+            termination = {"version": "harness-unit-termination/1", "action": action,
+                           "state": "confirmed",
+                           "identity": {"unitRef": reply["argument"],
+                                        "inputDigest": step.input_digest},
+                           "outcome": {"controlled": "confirmed"}}
+            return LifecycleObservation(step.step_id, provider, step.input_digest,
+                                        step.recovery_correlation,
+                                        _source(provider, action + "-receipt"),
+                                        termination=termination)
+        return LifecycleObservation(step.step_id, provider, step.input_digest,
+                                    step.recovery_correlation,
+                                    _source(provider, "recover-receipt"),
+                                    recovered_binding=reply["argument"])
+
+    def node_evidence(self, operation, steps):
+        provider = operation.intent.steps[0].pinned_provider_ref
+        unit = steps[0].evidence["preparedUnit"]["unitRef"]
+        return NodePublicationEvidence(
+            provider,
+            {"nodeRef": operation.intent.node_ref,
+             "operationRef": operation.intent.operation_ref,
+             "profileSnapshotRef": operation.intent.profile_snapshot_ref,
+             "preparationContextRef": operation.intent.context_ref,
+             "harnessProviderRef": provider,
+             "harnessDefinitionRef": _Provider.definition_ref(self.environment_id),
+             "harnessUnitRef": unit,
+             "configurationTargetRef": _source(provider, "target"),
+             "nativeSessionRefs": []},
+            tuple({"stepId": row.intent.step_id,
+                   "providerRef": row.intent.pinned_provider_ref,
+                   "inputDigest": row.intent.input_digest,
+                   "recoveryCorrelation": row.intent.recovery_correlation,
+                   "evidenceRef": row.evidence["evidenceRef"]} for row in steps),
+            (_source(provider, "access"),))
+
+    def issue_scope(self, provider_ref, node_ref, private_root_facts):
+        raise AssertionError("native scope is not used")
+
+    def verify_scope(self, scope_ref, private_root_facts):
+        return True
+
+    def map_legacy_scope(self, legacy_target):
+        return None
+
+    def verify_binding(self, unit, creation_correlation, evidence):
+        raise AssertionError("native binding is not used")
+
+    def current_epoch(self, node_ref):
+        return 0
+
+
+class _NodeEvidence:
+    def __init__(self, state): self.state = state
+    def inspect(self, operation, steps): return self.state.node_evidence(operation, steps)
+
+
+class _Policy:
+    def __init__(self, environment_id): self.environment_id = environment_id
+    def admit_invoke(self, principal, surface, guarantee):
+        return principal == "local" and guarantee == "reliable"
+    def admit_object_access(self, principal, object_ref, mode):
+        return principal == "local" and object_ref.startswith(self.environment_id + ":")
+
+
+class _Provider:
+    provider_id = "controlled.unit"
+
+    @staticmethod
+    def definition_ref(environment_id):
+        return {"environmentNamespace": environment_id, "definitionId": "controlled",
+                "revision": "1"}
+
+    def __init__(self, environment_id, owner_view, *, provider_id=None,
+                 definition_environment=None):
+        self.descriptor = RuntimeProviderDescriptor(
+            provider_id or self.provider_id, RUNTIME_PROVIDER_VERSION,
+            self.definition_ref(definition_environment or environment_id), "sha256:" + "a" * 64,
+            ("plan_preparation", "prepare", "start", "query_step",
+             "stop", "release", "recover"))
+        self.verifier = owner_view.verifier
+        self.records = owner_view.records
+        self.calls = []
+        self.fail = None
+
+    def plan_preparation(self, snapshot, context, correlation):
+        self.calls.append("plan")
+        return {"snapshot": snapshot, "context": context, "correlation": correlation}
+
+    def _invoke(self, action, argument, invocation):
+        self.calls.append(action)
+        facts = invocation.facts
+        self.verifier.verify_and_consume(invocation, action, facts["providerRef"],
+                                         facts["targetRef"], facts["inputDigest"])
+        if self.fail == action:
+            raise ConnectionError("controlled lost native reply")
+        return {"argument": argument}
+
+    def prepare(self, plan, invocation): return self._invoke("prepare", plan, invocation)
+    def start(self, prepared, invocation): return self._invoke("start", prepared, invocation)
+    def stop(self, unit, invocation): return self._invoke("stop", unit, invocation)
+    def release(self, unit, invocation): return self._invoke("release", unit, invocation)
+    def recover(self, binding, invocation): return self._invoke("recover", binding, invocation)
+    def query_step(self, correlation, invocation):
+        self.calls.append("query")
+        raise LookupError("original evidence intentionally absent")
+
+
+for _name in RUNTIME_METHODS:
+    if not hasattr(_Provider, _name):
+        setattr(_Provider, _name, lambda *args: None)
+
+
+class _Plugin:
+    def __init__(self, owner="controlled.owner", *, bad_payload=False,
+                 provider_id=None, definition_environment=None):
+        self.owner = owner
+        self.bad_payload = bad_payload
+        self.provider_id = provider_id
+        self.definition_environment = definition_environment
+        self.provider = None
+
+    def descriptor(self):
+        return ServerPluginDescriptor(self.owner, self.owner, "1")
+
+    def build(self, context):
+        environment = context.ports["core.binding"].environment
+        owner = environment.owner_ports
+        self.provider = _Provider(
+            environment.environment_id, owner.provider_view,
+            provider_id=self.provider_id,
+            definition_environment=self.definition_environment)
+        payload = ({"not": "a contribution"} if self.bad_payload else
+                   AgentContributionSet(agent_runtime_providers=(self.provider,)))
+        return ServerPluginRegistration(contributions=ContributionBatch((Contribution(
+            PACTHOLD_CONTRIBUTIONS_POINT_ID, PACTHOLD_CONTRIBUTIONS_API_VERSION,
+            payload, required=True),)))
+
+
+def _deployment(root, *, plugin=None):
+    states = {}
+
+    def state(environment):
+        return states.setdefault(environment.environment_id, _State(environment.environment_id))
+
+    def owner_ports(environment):
+        owned = state(environment)
+        owned.environment = environment
+        return OwnerPorts(authority=_Authority(environment.environment_id),
+                          current_state=owned, scope_authority=owned,
+                          native_session_evidence=owned, management_epoch=owned,
+                          node_evidence_port=_NodeEvidence(owned),
+                          preparation_context_port=owned,
+                          preparation_observation_port=owned,
+                          lifecycle_observation_port=owned)
+
+    selected = AgentToolsDeployment(
+        fingerprint_port=ProtectedFingerprintHmac({"fixture": b"host-agent-unit"},
+                                                  active_key_id="fixture"),
+        agent_contract_version="agent-assembly/3",
+        provider_plugins=() if plugin is None else (plugin,),
+        policy_factory=lambda identity: _Policy(identity.value),
+        owner_ports_factory=owner_ports)
+    runtime = selected.build_runtime(AgentServiceConfiguration(root, agent_contract_version="agent-assembly/3"))
+    return runtime, states
+
+
+def _runtime(root, *, plugin=None):
+    runtime, states = _deployment(root, plugin=plugin)
     runtime.start()
+    env = runtime.core_binding.environment
+    if plugin is not None:
+        states[env.environment_id].provider_ref = env.agent_runtime_contribution(
+            _Provider.definition_ref(env.environment_id)).provider_ref
+    return runtime, states[env.environment_id]
+
+
+def _profile(runtime):
+    env = runtime.core_binding.environment
+    return unit_services(env).profiles.create(
+        profile_id="controlled-profile", name="Controlled Profile",
+        content={"harnessDefinitionRef": _Provider.definition_ref(env.environment_id),
+                 "schemaVersion": "1", "declarations": []},
+        request=RequestKey(env.environment_id, "local", "create-profile"))
+
+
+def _prepare(runtime, profile, request_id):
+    env = runtime.core_binding.environment
+    return unit_services(env).assembly.prepare(
+        RequestKey(env.environment_id, "local", request_id),
+        profile.current_revision, {}, {})
+
+
+def _release(runtime, operation, request_id):
+    env = runtime.core_binding.environment
+    return unit_services(env).lifecycle.release(
+        RequestKey(env.environment_id, "local", request_id),
+        decode_node_ref(operation.result["nodeRef"]), {})
+
+
+def test_unselected_owner_refuses_before_provider_dispatch_then_selected_owner_runs(tmp_path):
+    runtime, state = _runtime(tmp_path / "one")
+    plugin = _Plugin()
     try:
-        runtime.core_binding.bind_owner("owner.topo", payload())
-        runtime.core_binding.submit(plan_for("req-topo"))
-        core_file = Path(runtime.core_binding.store_path)
-        assert core_file == runtime.data_root / "state" / "core.sqlite"
-        assert core_file != runtime.database.path
-        with sqlite3.connect(runtime.database.path) as conn:
-            legacy_tables = {r[0] for r in conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table'")}
-        assert "core_execution" not in legacy_tables  # C1 rows never entered it
-        with sqlite3.connect(core_file) as conn:
-            core_tables = {r[0] for r in conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table'")}
-        assert {"core_execution", "core_operation"} <= core_tables
+        profile = _profile(runtime)
+        env = runtime.core_binding.environment
+        before = env.registry_snapshot
+        with pytest.raises(UnitAdmissionRefused, match="RuntimeProvider unavailable"):
+            _prepare(runtime, profile, "unselected")
+        assert env.registry_snapshot == before
+        assert plugin.provider is None
+        runtime.plugin_host.activate(plugin)
+        state.provider_ref = env.agent_runtime_contribution(_Provider.definition_ref(env.environment_id)).provider_ref
+        run = _prepare(runtime, profile, "selected")
+        assert run.status == "published"
+        assert plugin.provider.calls.count("prepare") == 1
+        assert plugin.provider.calls.count("start") == 1
+        replay = _prepare(runtime, profile, "selected")
+        assert replay == run and plugin.provider.calls.count("start") == 1
+        _release(runtime, run, "release-selected")
+    finally:
+        runtime.stop()
+
+
+def test_selected_provider_identity_and_busy_retirement_are_exact(tmp_path):
+    plugin = _Plugin()
+    runtime, _ = _runtime(tmp_path / "identity", plugin=plugin)
+    try:
+        env = runtime.core_binding.environment
+        admitted = env.agent_runtime_contribution(_Provider.definition_ref(env.environment_id))
+        assert admitted.provider is plugin.provider
+        run = _prepare(runtime, _profile(runtime), "identity-run")
+        with pytest.raises(OwnerLifecycleError):
+            runtime.plugin_host.deactivate(plugin.owner)
+        assert runtime.plugin_host.is_active(plugin.owner)
+        _release(runtime, run, "identity-release")
+        runtime.plugin_host.deactivate(plugin.owner)
+        assert not runtime.plugin_host.is_active(plugin.owner)
+    finally:
+        runtime.stop()
+
+
+def test_raising_host_stage_has_zero_leak_and_same_root_retries(tmp_path):
+    root = tmp_path / "stage"
+    runtime, _ = _runtime(root)
+    try:
+        before = runtime.core_binding.environment.registry_snapshot
+        with pytest.raises(TypeError):
+            runtime.plugin_host.activate(_Plugin("bad.owner", bad_payload=True))
+        assert runtime.core_binding.environment.registry_snapshot == before
+        assert not runtime.plugin_host.is_active("bad.owner")
+        assert "bad.owner" not in runtime.core_binding.environment.enabled
+        good = _Plugin("good.owner")
+        runtime.plugin_host.activate(good)
+        assert good.provider is runtime.core_binding.environment.agent_runtime_contribution(
+            _Provider.definition_ref(runtime.core_binding.environment.environment_id)).provider
+        runtime.plugin_host.deactivate("good.owner")
+    finally:
+        runtime.stop()
+
+
+def test_joint_registration_conflict_preserves_registry_host_and_retry(tmp_path):
+    runtime, _ = _runtime(tmp_path / "joint-conflict")
+    winner = _Plugin("owner.winner")
+    loser = _Plugin("owner.loser")
+    try:
+        env = runtime.core_binding.environment
+        runtime.plugin_host.activate(winner)
+        before = env.registry_snapshot
+        assert runtime.plugin_host.is_active(winner.owner)
+        with pytest.raises(RegistrationConflictError):
+            runtime.plugin_host.activate(loser)
+        assert env.registry_snapshot == before
+        assert runtime.plugin_host.is_active(winner.owner)
+        assert not runtime.plugin_host.is_active(loser.owner)
+        assert loser.owner not in env.enabled
+        # Retire the actual owner of the collision, then retry the same plugin
+        # and root. A rejected C2/Environment registration must leave no stale
+        # reservation or host lifecycle token behind.
+        runtime.plugin_host.deactivate(winner.owner)
+        runtime.plugin_host.activate(loser)
+        admitted = env.agent_runtime_contribution(_Provider.definition_ref(env.environment_id))
+        assert admitted.provider is loser.provider
+        assert runtime.plugin_host.is_active(loser.owner)
+        runtime.plugin_host.deactivate(loser.owner)
+    finally:
+        runtime.stop()
+
+
+def test_joint_registration_bad_environment_reference_rolls_back_and_retries(tmp_path):
+    runtime, _ = _runtime(tmp_path / "joint-bad-reference")
+    plugin = _Plugin("owner.bad-reference", definition_environment="foreign-environment")
+    try:
+        env = runtime.core_binding.environment
+        before = env.registry_snapshot
+        with pytest.raises(CatalogIdentityConflict):
+            runtime.plugin_host.activate(plugin)
+        assert env.registry_snapshot == before
+        assert not runtime.plugin_host.is_active(plugin.owner)
+        assert plugin.owner not in env.enabled
+        # Correct only the malformed public provider definition and retry on
+        # the same host and Environment; no old C1 bind_owner route is used.
+        plugin.definition_environment = None
+        runtime.plugin_host.activate(plugin)
+        admitted = env.agent_runtime_contribution(_Provider.definition_ref(env.environment_id))
+        assert admitted.provider is plugin.provider
+        assert runtime.plugin_host.is_active(plugin.owner)
+        runtime.plugin_host.deactivate(plugin.owner)
+    finally:
+        runtime.stop()
+
+
+def test_two_live_compositions_a_close_does_not_steal_b_unit_requests(tmp_path):
+    a, _ = _runtime(tmp_path / "a", plugin=_Plugin("owner.a"))
+    b, _ = _runtime(tmp_path / "b", plugin=_Plugin("owner.b"))
+    try:
+        assert a.core_binding.environment is not b.core_binding.environment
+        a_path = Path(a.core_binding.store_path).resolve()
+        b_path = Path(b.core_binding.store_path).resolve()
+        assert a_path != b_path
+        assert a_path == (a.data_root / "state" / "core.sqlite").resolve()
+        assert b_path == (b.data_root / "state" / "core.sqlite").resolve()
+        profile = _profile(b)
+        first = _prepare(b, profile, "b-first")
+        _release(b, first, "b-release-first")
+        a.stop()
+        second = _prepare(b, profile, "b-second")
+        assert second.status == "published"
+        original = unit_services(b.core_binding.environment).assembly.query(
+            RequestKey(b.core_binding.environment.environment_id, "local", "b-first"))
+        assert original is not None and original.intent.operation_ref == first.intent.operation_ref
+        _release(b, second, "b-release-second")
+    finally:
+        b.stop()
+
+
+def test_stop_and_recover_use_original_unit_and_evidence(tmp_path):
+    plugin = _Plugin()
+    runtime, _ = _runtime(tmp_path / "lifecycle", plugin=plugin)
+    try:
+        run = _prepare(runtime, _profile(runtime), "life-run")
+        env = runtime.core_binding.environment
+        node = decode_node_ref(run.result["nodeRef"])
+        services = unit_services(env)
+        stop = services.lifecycle.stop(RequestKey(env.environment_id, "local", "life-stop"), node, {})
+        assert stop["operationRef"] and plugin.provider.calls.count("stop") == 1
+        assert services.lifecycle.stop(RequestKey(env.environment_id, "local", "life-stop"), node, {}) == stop
+        assert plugin.provider.calls.count("stop") == 1
+        recover = services.lifecycle.recover(RequestKey(env.environment_id, "local", "life-recover"), node, {})
+        assert recover["operationRef"] and plugin.provider.calls.count("recover") == 1
+        # A lost native reply has no invented reconciliation proof. Its exact
+        # request is durably unknown and replay cannot call the provider twice.
+        plugin.provider.fail = "recover"
+        unknown_key = RequestKey(env.environment_id, "local", "life-recover-unknown")
+        unknown = services.lifecycle.recover(unknown_key, node, {})
+        assert unknown["status"] == "unknown"
+        assert services.lifecycle.recover(unknown_key, node, {}) == unknown
+        assert plugin.provider.calls.count("recover") == 2
+        plugin.provider.fail = None
+        _release(runtime, run, "life-release")
+    finally:
+        runtime.stop()
+
+
+def test_product_core_file_contains_unit_facts_and_no_legacy_c1_tables(tmp_path):
+    plugin = _Plugin()
+    runtime, _ = _runtime(tmp_path / "topology", plugin=plugin)
+    try:
+        run = _prepare(runtime, _profile(runtime), "topology-run")
+        core = Path(runtime.core_binding.store_path)
+        assert core == runtime.data_root / "state" / "core.sqlite"
+        assert core != runtime.database.path
+        with sqlite3.connect(core) as connection:
+            tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            assert {"env_requests", "env_request_steps", "env_domain_records"} <= tables
+            assert {"core_execution", "core_operation"}.isdisjoint(tables)
+        with sqlite3.connect(runtime.database.path) as connection:
+            legacy_tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            assert "env_requests" not in legacy_tables
+        assert run.status == "published"
+        _release(runtime, run, "topology-release")
+    finally:
+        runtime.stop()
+
+
+def test_joint_host_round_reaches_original_unit_dispatch_and_query(tmp_path):
+    plugin = _Plugin()
+    runtime, _ = _runtime(tmp_path / "joint", plugin=plugin)
+    try:
+        env = runtime.core_binding.environment
+        assert runtime.plugin_host.is_active(plugin.owner)
+        assert env.agent_runtime_contribution(_Provider.definition_ref(env.environment_id)).provider is plugin.provider
+        request = RequestKey(env.environment_id, "local", "joint-run")
+        run = _prepare(runtime, _profile(runtime), request.request_id)
+        assert run.status == "published" and run.intent.operation_ref
+        assert plugin.provider.calls.count("prepare") == 1
+        assert plugin.provider.calls.count("start") == 1
+        observed = unit_services(env).assembly.query(request)
+        assert observed == run and plugin.provider.calls.count("start") == 1
+        _release(runtime, run, "joint-release")
+    finally:
+        runtime.stop()
+
+
+def test_successful_close_reports_same_ledger_and_reopen_reads_original_fact(tmp_path):
+    plugin = _Plugin()
+    runtime, _ = _runtime(tmp_path / "restart", plugin=plugin)
+    try:
+        env = runtime.core_binding.environment
+        original_id = env.environment_id
+        request = RequestKey(original_id, "local", "close-run")
+        run = _prepare(runtime, _profile(runtime), request.request_id)
+        before = unit_services(env).operations.unresolved_snapshot()
+        assert before.active_usage_ids  # the published Unit still holds exact Usages
+        with pytest.raises(RuntimeCompositionUnavailable, match="owner lifecycle retirement"):
+            runtime.stop()
+        assert runtime.owner.acquired and runtime.plugin_host.is_active(plugin.owner)
+        assert not env._closed
+        assert unit_services(env).operations.unresolved_snapshot() == before
+        _release(runtime, run, "close-release")
+        runtime.stop()
+        report = runtime.core_shutdown_report
+        assert report is runtime.core_binding.shutdown_report
+        assert runtime.core_binding.close() is report
+        assert runtime.core_binding.close() is report
+        assert report.unresolved_operation_refs == ()
+        assert report.active_usage_ids == ()
+        assert env._closed
+        with pytest.raises(RuntimeCompositionUnavailable):
+            runtime.core_binding.snapshot()  # read cannot silently reopen
+        runtime.start()
+        reopened = runtime.core_binding.environment
+        assert reopened is not env and reopened.environment_id == original_id
+        assert unit_services(reopened).assembly.query(request).intent.operation_ref == run.intent.operation_ref
     finally:
         runtime.stop()

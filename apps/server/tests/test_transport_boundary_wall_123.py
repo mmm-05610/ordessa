@@ -17,9 +17,9 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 import pytest
 
-from ordessa_server.bootstrap import build_runtime
-from ordessa_server.transport.http import app as app_module
-from ordessa_server.transport.http import create_app
+from ordessa_server.composition.runtime import build_runtime
+from ordessa_interfaces.http import runtime as app_module
+from ordessa_interfaces.http import create_app
 
 #: Text that must never reach a client: a host path and a credential locator.
 SECRET_MARKERS = ("/home/secret-user", "credential_e08793", ".dpapi")
@@ -65,7 +65,7 @@ def test_a_fault_inside_the_wire_dispatch_answers_as_a_full_envelope(server, mon
     crash inside a handler."""
     runtime, client, headers, _app = server
 
-    def crash(method, params):
+    def crash(method, params, *, caller):
         raise KeyError(f"/home/secret-user/ledger {SECRET_MARKERS[1]}")
 
     monkeypatch.setattr(runtime.wire, "dispatch", crash)
@@ -78,15 +78,25 @@ def test_a_fault_inside_the_wire_dispatch_answers_as_a_full_envelope(server, mon
 
 def test_a_fault_in_a_plain_rest_route_also_answers_in_json(server, monkeypatch):
     """The wall is registered on the application, so it covers the REST face too
-    — `GET /api/v1/sessions/{id}` has no route-level guard of any kind, which is
-    exactly where a pre-123 fault became plain text."""
-    runtime, client, headers, _app = server
+    — `GET /api/v1/workspaces` has no route-level guard of any kind, which is
+    exactly where a pre-123 fault became plain text.
 
-    def broken(session_id, **kwargs):
+    032: the old vehicle for this gate — the compat `product.repository`
+    port and `GET /api/v1/sessions/{id}` — retired with server-compat (the
+    sessions domain has no successor; migration-map 5-exec). The gate now
+    breaks the Workspace plugin's live `workspace.records` port behind its
+    plain `GET /api/v1/workspaces` route instead; the wall behaviour under
+    test is unchanged.
+    """
+    runtime, client, headers, _app = server
+    records = runtime.plugin_host.provided_port("workspace.records")
+    assert records is not None, "the Workspace plugin provides no records port"
+
+    def broken():
         raise RuntimeError(f"disk unreadable under /home/secret-user {SECRET_MARKERS[2]}")
 
-    monkeypatch.setattr(runtime.plugin_host.provided_port('product.repository'), "get_session", broken)
-    response = client.get("/api/v1/sessions/whatever", headers=headers)
+    monkeypatch.setattr(records, "list", broken)
+    response = client.get("/api/v1/workspaces", headers=headers)
     assert response.status_code == 500, response.text[:200]
     assert response.headers["content-type"].startswith("application/json"), (
         f"ct={response.headers.get('content-type')} body={response.text[:160]!r}")
@@ -140,9 +150,14 @@ def test_the_existing_wire_error_paths_are_unchanged(server):
 
 
 def test_the_authenticated_face_still_works_after_the_wall(server):
-    """A guard that turns healthy traffic into errors is not a wall."""
+    """A guard that turns healthy traffic into errors is not a wall.
+
+    032: `profiles.list` retired with server-compat (successor:
+    `profiles.v2.*`); the healthy-traffic probe is now `workspaces.list`,
+    served by the Workspace plugin in the default product.
+    """
     _runtime, client, headers, _app = server
-    listing = post_wire(client, headers)
+    listing = post_wire(client, headers, method="workspaces.list")
     assert listing.status_code == 200, listing.text[:200]
     assert "result" in listing.json(), listing.text[:200]
 
@@ -158,7 +173,7 @@ def test_counter_example_without_the_wall_the_plain_text_comes_back(monkeypatch,
     a revert (the first draft did exactly that, and the gate stayed green, which
     is how I found it proved nothing).
     """
-    from ordessa_server.bootstrap import build_runtime as build
+    from ordessa_server.composition.runtime import build_runtime as build
 
     runtime = build(tmp_path / "two")
     application = create_app(runtime)
@@ -179,7 +194,7 @@ def test_counter_example_without_the_wall_the_plain_text_comes_back(monkeypatch,
 
 def test_the_wall_is_registered_on_every_application_created_here(tmp_path):
     """The positive half of that: every app this transport builds carries it."""
-    from ordessa_server.bootstrap import build_runtime as build
+    from ordessa_server.composition.runtime import build_runtime as build
 
     runtime = build(tmp_path / "three")
     application = create_app(runtime)

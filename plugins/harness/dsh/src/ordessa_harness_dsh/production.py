@@ -47,15 +47,9 @@ import json
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-# P-B pilot (approvals/PB-dsh-pilot-release.md §三处改码①②):
-# ① brand-family code imports the brand-neutral core directly (direction:
-#    package -> core, which is the target shape itself);
-# ② PyYAML is imported lazily inside the two render functions below - not at
-#    module top - so importing this package needs no YAML anywhere and the
-#    redistribution closure stays exactly as wide as before (with-PyYAML
-#    environments behave byte-identically; reproduced pre-change as
-#    `ModuleNotFoundError: No module named 'yaml'` at top-level import).
-from ordessa_execution_agents.harness.definitions.harness_capabilities import CANONICAL_CAPABILITY_IDS
+# Pure offline production template; the SDK provider does not invoke this module.
+# Historical deployment document keys; not a live runtime capability registry.
+DEPLOYMENT_CAPABILITY_KEYS=('start','observe','finish','attach','steer','stream','permissions','native_continuation')
 
 DSH_PROVIDER = "deepseek-official"
 #: The product/ProviderModel model id the user confirmed. It must never change
@@ -138,10 +132,10 @@ def capability_claims(*, capabilities_for) -> dict[str, bool]:
     if not callable(capabilities_for):
         raise DshProductionTemplateError("DSH_CAPABILITY_SOURCE_REQUIRED")
     claims = capabilities_for("dsh")
-    if (not isinstance(claims, Mapping) or set(claims) != set(CANONICAL_CAPABILITY_IDS)
-            or any(type(claims[key]) is not bool for key in CANONICAL_CAPABILITY_IDS)):
+    if (not isinstance(claims, Mapping) or set(claims) != set(DEPLOYMENT_CAPABILITY_KEYS)
+            or any(type(claims[key]) is not bool for key in DEPLOYMENT_CAPABILITY_KEYS)):
         raise DshProductionTemplateError("DSH_CAPABILITY_CLAIMS_INVALID")
-    return {key: claims[key] for key in CANONICAL_CAPABILITY_IDS}
+    return {key: claims[key] for key in DEPLOYMENT_CAPABILITY_KEYS}
 
 
 def settings_document() -> dict[str, Any]:

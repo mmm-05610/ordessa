@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "proposal_id": "ordessa.source-choice-to-criterion-status",
+  "proposal_revision": 1,
+  "recorded_date": "2026-10-12",
+  "status": "formal_review_blocked_pending_original_engineering_rule_owner_contract",
+  "requested_by_thread": "01a12a84-1531-74bf-9457-0ac22a1c3093",
+  "immutable_input_method_ref": {
+    "method_id": "ordessa.incremental-engineering",
+    "release_version": "2.2.0",
+    "schema_version": 1,
+    "snapshot_digest": {
+      "algorithm": "sha256",
+      "hex": "fef3b88ea4db0336ab9a081960c092ada7b0550d1978e0be85fbf8680f0a39d4"
+    }
+  },
+  "source_criterion": {
+    "standard_id": "source-review",
+    "standard_revision": "2.2.0",
+    "criterion_id": "claim_support",
+    "resource_raw_sha256": "499cb9abe2b5f4d83c0c6bb700b72f2c5fd7bdb7f63e53b7ed13459f2af4697f"
+  },
+  "answer_definition": {
+    "question_set_id": "source-support",
+    "question_id": "support",
+    "from_criterion_field": "answer_vocabulary",
+    "option_ids": [
+      "supported",
+      "contradicted",
+      "insufficient"
+    ]
+  },
+  "current_public_api": {
+    "path": "packages/engineering/src/ordessa_engineering/application/usecases/reviews/admission.py",
+    "name": "review_observations(plan, standard, answers)",
+    "accepts": "CriterionAnswer.status in satisfied/violated/insufficient/unknown",
+    "limitation": "Consumes already semantic statuses; no selected choice resolver; rejects non-None criterion.decision_policy"
+  },
+  "resolver_ownership": {
+    "semantic_conversion": "original Engineering application engineering-rule owner",
+    "provenance_question_input_raw_response_and_reviewer_trust": "original configured provider and ReviewerSource owners",
+    "external_method": "versioned declaration only; not authentication or grant authority",
+    "product_integration": "invoke frozen public resolver; cannot invent mapping or change model vocabulary"
+  },
+  "unapproved_nominal_mapping_candidate": {
+    "supported": "satisfied",
+    "contradicted": "violated",
+    "insufficient": "insufficient"
+  },
+  "candidate_mapping_limitations": [
+    "This is a review proposal, not a frozen executable method declaration",
+    "No probability threshold or calibration profile is selected",
+    "Mapping does not attest true semantic support",
+    "Existing satisfied->manual and violated/insufficient->block, unknown->manual dispositions remain",
+    "Malformed/absent/duplicate/partial/truncated/stale/unknown provider answers need original owner typed failure rules; not a guessed fourth selected option"
+  ],
+  "needed_contract": [
+    "Public Engineering resolver validates exact method/standard/question/criterion/input/check binding and finite typed answer before semantic projection",
+    "Freeze complete nominal mapping and typed failure boundaries in a new independent method release, not in 2.1.0 or 2.2.0 snapshot",
+    "Retain exact per-target/per-claim completeness and no kind/link/missing-evidence exemption",
+    "Do not append DecisionPolicy with invented threshold solely to obtain OptionStatusMap",
+    "Original source verification and full answer collection remain necessary before ReviewRecord admission"
+  ],
+  "current_formal_usable": false,
+  "synthetic_results_reclassified_as_formal": false,
+  "models_called": 0,
+  "source_pins": [
+    {
+      "path": "methods/incremental-engineering/candidates/2.2.0/method.yaml",
+      "sha256": "4b4b98f7b4dd395c6603b9097256fed593a3080cb5f377c81951c3c55264497b"
+    },
+    {
+      "path": "methods/incremental-engineering/candidates/2.2.0/bundle-lock.json",
+      "sha256": "49b9f6b67516f473ccc84c90806f6d27ae5fbc247bdf35554d8687ea6268d7b3"
+    },
+    {
+      "path": "methods/incremental-engineering/candidates/2.2.0/candidate-lock.json",
+      "sha256": "6de4b81c7d36e64360390926a49b55d079bec3f9e3f7c4903f95824fddb6ddce"
+    },
+    {
+      "path": "methods/incremental-engineering/candidates/2.2.0/standards/source-review.yaml",
+      "sha256": "499cb9abe2b5f4d83c0c6bb700b72f2c5fd7bdb7f63e53b7ed13459f2af4697f"
+    },
+    {
+      "path": "methods/incremental-engineering/candidates/2.2.0/decisions/source-support.yaml",
+      "sha256": "9d570b1a8da4dbd7afae39d3b69061c692eb4bbbe7c681f3e535e3bba7a0cb4c"
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/methods/validation/policies.py",
+      "sha256": "82801c34a4d6c1471f494edbe18aa94e3e19bd24d09e3b6c012096d597921885"
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/usecases/reviews/admission.py",
+      "sha256": "96f635873870ced0ad7c3fdf5088251864b5b0bed6f575aeade2906d4e3f6355"
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/contracts/reviewer_admission.py",
+      "sha256": "34ec811d9297d70331169564b33ab42ea7a87eb6577f4027c47d16d4acecadab"
+    }
+  ]
+}

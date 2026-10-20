@@ -1,42 +1,149 @@
-# Pi Harness declarations and adapters
+# Independent Pi provider
 
-Distribution `ordessa-harness-pi`; import `ordessa_harness_pi`; family ID remains
-`pi`. Import performs no discovery, process creation or authority admission.
+Distribution `ordessa-harness-pi`; import `ordessa_harness_pi`. Provider/family ID
+remains `pi`. Registration is through the existing core AgentContributionSet,
+constructed by the host with a fixed definition reference and implementation
+SHA-256. Importing this package performs no launch or discovery.
 
-The public production preparation is `PiAcpHarnessPreparation`, with an explicit
-reviewed Go bridge digest, Pi executable and optional original resume identity.
-It returns a fixed ACP launch/configuration plan. A complete Run is the actual
-`ordessa_units.management.UnitInstance`: fixed Agent/ProfileRevision plus an
-explicit EnvironmentInstance/Use. Environment execution alone creates the
-process; Unit owns ACP attach, session, lifecycle and the original UnitRecords,
-OperationJournal, lease, unknown and fencing guarantees. There is no Pi provider,
-factory, lifecycle subclass, projection or termination authority.
+`PiRuntimeProvider` requires explicit trusted deployment ports for a live Unit,
+its canonical configuration lock, exact current native-session binding and
+managed RPC writer. Pass the **same core InvocationVerifier** used for that
+Unit's Environment. Each effect consumes that core context once and each setter
+rechecks the existing grant/current writer before dispatch. Owner `channel`
+returns an already bound PiRpcClient over LeaseBoundChannel; it never starts a
+replacement process. This private management channel is not returned by connect.
 
-`PiServerPlugin` accepts only a frozen `HarnessDefinitionDeclaration` and the
-original `HarnessCatalog` at `execution.harness.catalog`. It contributes only
-the definition declaration; Unit creation, native observation and user grants
-are outside this registration path. The Pi launch port remains explicitly
-unbound in the default product, with no legacy npx fallback. Default product
-assembly of the public Pi Unit preparation remains incomplete.
+Native configuration support is `pi.model@1` (`provider`, `model`) and
+`pi.thinking@1` (`level`), value actions only, live/session scoped. Model maps to
+native `set_model(provider, modelId)`. Readback comes from `get_state`; arbitrary
+model metadata and secrets are excluded. Version comparison is ownerSerialized,
+not a cross-external-writer native atomic CAS. An ACK alone, missing readback,
+failed native command or missing durable confirmation remains unknown. Unknown
+stops subsequent items; no rollback or resend occurs. Missing required kind or
+payload prevents all setters; optional unsupported declarations are explicit.
 
-Pure model compilation, native record codec/history, configuration declarations,
-material renderers and native RPC protocol diagnostics remain available. The
-native RPC consumer accepts a caller-supplied channel and has no launch method.
-The historical native RPC preparation is diagnostic metadata, is not a public
-production preparation and is rejected by the ACP Unit before spawning. The Pi
-profile artifact identity remains configuration metadata for installation
-verification; it does not select a Server launch route. The old npx launcher
-and mixed launch manifest have been removed.
+ConfirmationPort must be backed by the existing owner journal and original
+native attempt evidence. `record` durably binds the exact original invocation,
+Unit, declaration, before/after readback and returns a scoped reference. `read`
+returns only that original attempt receipt; equal current settings cannot settle
+an old unknown operation. The provider has no operation dictionary, configuration
+cache, additional database or daemon. No production ConfirmationPort is included
+in this slice: the host must compose the existing journal; absence is refused.
 
-Negotiated ACP options are temporary Run overrides and never silently revise the
-fixed Profile. The Go adapter currently reads its own option snapshot; this does
-not prove immediate native Pi setter effectiveness or native external-edit CAS.
-The retired native `get_state` / setter-effect tests and evidence remain in the
-Execution retirement archive as unfulfilled capabilities, not current passing
-coverage. Required unsupported behavior must refuse; there is no old native
-configuration fallback.
+Preparation/start now directly call the injected existing UnitRecords. A trusted
+UnitProjectionPort verifies the fixed core plan/root/digest, revalidates the
+original consumed start context and supplies current journal/publication/native
+owner evidence. Preparation reserves only; start fixes opening before the
+channel factory opens the pinned isolated installation. Pi initializes by native
+get_state and re-reads the same sessionId before confirmation. Every native
+creation edge rechecks current authority. Unknown keeps the original live handle,
+records unknown and never launches a replacement, kills it or sends a prompt.
 
-Current source/noneditable-wheel and actual Go/controlled-Pi evidence is in
-`docs/implementation/execution-unit-environment-20261011/evidence/codex-takeover/pi-retirement/`.
-Tests do not establish real Pi model quality. The old
-`tests/runtime-process-evidence.md` is historical retired-provider evidence.
+query_step only reads the original creation through the projection after core
+query verification. describe_access requires a confirmed existing session and
+live handle. connect requires a trusted explicit lease port, which binds native
+payloads behind per-write revoke/expiry/drain/epoch cuts; no unrestricted client
+is returned. Absent ports leave these capabilities out of supportedMethods.
+Current configuration ports are still independently injected and remain required
+for configuration management. stop/release/recover remain unavailable until
+original journal settlement and cold native evidence are composed. Production
+plan/owner/factory/lease/confirmation composition and Pi P/M remain PARTIAL; no
+fixture port is a default production implementation.
+
+Tests are controlled C, including real Python fixture subprocesses for framing.
+Native Pi process P and authorized model task M are separate and not claimed by
+these tests. No third-party install/update or model call is required for tests.
+
+
+Unit identity uses only the original UnitReservation.public_ref: exact
+`environmentNamespace/unitId/ownerProviderRef/sourceRevision`. Prepare returns
+that immutable original reference; every lifecycle/configuration use verifies
+the complete received identity against the trusted original journal projection.
+Raw two-field handles, altered owner/generation/source/environment and extra or
+missing fields are rejected before native effects. Configuration UnitOwnerPort
+must expose read_unit from that same authorized journal, not a caller field
+copy. Unit publication also binds that same Unit and canonical configuration
+scope/current epoch. Tests' explicit controlled public_ref is C proof only,
+not production provenance or native readiness evidence.
+
+Configuration targets now come directly from the original authorized
+UnitReservation.configuration_target_ref, retaining environment/scopeId/revision
+and ownerProviderRef/sourceRevision. Publication and configuration owner
+inspection must match that exact property; apply/query verification, snapshots
+and original result confirmations retain the same full target. Comparisons use
+type-sensitive safe_json so boolean generation cannot impersonate an integer.
+The target's fixed sourceRevision is distinct from the native snapshot revision.
+The Pi package does not generate target provenance or strip it to raw scope.
+
+
+PiRpcClient.prepare_request(command, fields) freezes the actual native req-N,
+same-level Pi payload, UTF-8 LF bytes and digest without sending or marking a
+pending request. dispatch_prepared consumes that client-local handle once and
+passes the frozen bytes through the shared transport write barrier and explicit
+`before_write(actual_wire_bytes)` guard. The trusted owner verifies the actual
+immutable bytes against the original capture, native ID and Core context. Copies, another client, tampering and reuse are refused;
+a failed guard spends the handle. This is framing only, not input authority or
+a durable native receipt. The deployment must bind original capture/claim and
+persist the original request/receipt in its existing owner journal. Missing
+receipt fences the original transport writer and remains unknown; prompt, steer
+and follow_up cannot bypass that state via generic command or another prepared
+frame. A successful prompt receipt proves acceptance only. Closing revokes
+unused frames. Tests use controlled peers, including a temporary Python pipe;
+production owner/lease/receipt assembly and native Pi P/M remain unverified.
+
+Only a validated original receipt acknowledges live IO metadata. Revocation
+while awaiting that receipt prevents replacement writers; late ACK/settled
+events cannot clear unknown. A callback throwing PiCommandError does not supply
+a native receipt. ACK and bare channels remain trusted owner internals.
+
+## Optional Server host binding
+
+`ordessa_harness_pi.server_plugin.PiServerPlugin(provider_factory)` is an explicit
+optional binding to the existing `pacthold.contributions` point. The factory
+receives the host's unique `EnvironmentId` and returns this package's provider
+with matching definition namespace and explicit implementation digest/ports.
+The host supplies owner activation; the wrapper does not install, activate,
+issue authority, create a store or launch a native process. Owner ID remains
+`pi`. Server API imports are lazy and the dependency is in the `server`
+extra; base provider imports and wheel conversion need no Server API.
+
+This proves contribution wiring only. In the optional Agent Tools deployment,
+select wrappers through `AgentToolsDeployment(..., agent_contract_version=
+"agent-assembly/2", provider_plugins=(... ,))`; the default tuple is empty.
+Current deployment refuses provider publication on an existing root because
+durable cold activation generations are not yet composed. Native production
+ports, task readiness and successful cold recovery remain unverified.
+
+
+## SDK runtime cutover (2026-10-19)
+
+The actual `PiHarnessProvider` plus `ordessa.harness_providers` factory now
+replace the Unit RuntimeProvider/direct-client path. The SDK is the only imported
+execution contract. Preparation validates the exact Profile harness pin, explicit
+approved command and private HOME/XDG/PI_CODING_AGENT_DIR, with no executable discovery,
+ambient credential inheritance, resource acquisition, automatic approval or native
+process write. It emits a frozen native LaunchPlan only.
+
+The protocol remains `pi-rpc/1`, **not ACP**. Its original Agent-owned guarded
+bootstrap/interaction is unavailable. `open_session` explicitly raises
+`NATIVE_PROTOCOL_BOOTSTRAP_UNAVAILABLE`; composition must refuse unsupported native
+protocol before launch. ACP wrappers/artifact resources are retained as packaged
+knowledge, never selected as a fallback by this provider. Credential materialization,
+resume, live configuration and previous Unit state are not automatically adopted.
+
+The exact retired Python execution modules are listed in SDK-RETIRED-SOURCE.txt.
+This includes direct client/channel/lease, Unit projection/lifecycle/configuration
+executors and old registration/server-plugin paths. Native configuration compiler
+facts, native_channel planning/refusal reasons, production deployment data and
+packaged build assets remain. Original tests retain their assertions and native
+peer scripts, but old-API tests are unported/RED requirements, not a green runtime
+claim. Historical observed matrix values refer to the original recorded probe,
+not this SDK path. The new SDK tests cover only pure preparation, explicit refusals
+and ProfileService/SQLite validation. No tests, installs, builds or models ran in
+this leaf worker. Real native protocol L1/L2 acceptance remains incomplete.
+
+Known consumers requiring coordinated migration include product/server's Codex
+server-plugin composition and live-model-service adapters (Pi configuration service
+and Codex live runtime), Agent/Unit owner tests and historical model/credential
+acceptance tests. This leaf removal does not establish their consumer switch or
+complete Units retirement.

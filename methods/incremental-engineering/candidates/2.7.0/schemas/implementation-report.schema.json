@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Candidate external report proposal; no claim of existing persistence or admission behavior.",
+  "type": "object", "additionalProperties": false,
+  "required": ["package_digest", "profile_ref", "changed_paths", "verification", "status"],
+  "properties": {
+    "package_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "profile_ref": {"type": "object", "additionalProperties": false,
+      "required": ["environmentNamespace", "profileId", "manifestRevision", "contentDigest"],
+      "properties": {"environmentNamespace": {"type": "string", "minLength": 1}, "profileId": {"type": "string", "minLength": 1},
+        "manifestRevision": {"type": "integer", "minimum": 1}, "contentDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}},
+    "changed_paths": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "verification": {"type": "array", "items": {"type": "object", "additionalProperties": false,
+      "required": ["check", "result"], "properties": {"check": {"type": "string", "minLength": 1}, "result": {"enum": ["passed", "failed", "not_run"]}}}},
+    "status": {"enum": ["completed", "cancelled", "unknown"]}
+  }
+}

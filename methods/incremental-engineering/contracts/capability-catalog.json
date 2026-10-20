@@ -1,0 +1,561 @@
+{
+  "schema_version": 1,
+  "catalog_id": "ordessa.design-fixture.catalog",
+  "fixture_only": true,
+  "capabilities": [
+    {
+      "capability_id": "engineering.artifacts.create",
+      "kind": "operation",
+      "interface_version": "2",
+      "contract_digest": "0bc02e9e5a17ada14fc47a3da92abd6c360247768ab0ab1debfc6ec444b213f4",
+      "contract": {
+        "input_schema": {
+          "$id": "urn:ordessa:engineering:operations:engineering.artifacts.create:input:2",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "claims": {
+              "maxItems": 4096,
+              "type": "array"
+            },
+            "evidence_links": {
+              "maxItems": 4096,
+              "type": "array"
+            },
+            "generation_origin": {
+              "type": [
+                "object",
+                "null"
+              ]
+            },
+            "initial": {
+              "type": "object"
+            },
+            "kind": {
+              "enum": [
+                "design",
+                "evidence",
+                "implementation_package",
+                "other",
+                "plan",
+                "review_body",
+                "specification",
+                "task_list"
+              ]
+            },
+            "method_refs": {
+              "maxItems": 4096,
+              "type": "array"
+            },
+            "sources": {
+              "maxItems": 4096,
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        "workflow_outcomes": [
+          "completed",
+          "rejected"
+        ],
+        "effect": "engineering_transaction",
+        "idempotency": "command_context_request_id_and_request_digest"
+      }
+    },
+    {
+      "capability_id": "engineering.artifacts.append_revision",
+      "kind": "operation",
+      "interface_version": "2",
+      "contract_digest": "9124b5ae338d56a7ac12b6ec39141125b1664d2e4cdd5649f096954c87edaf7b",
+      "contract": {
+        "input_schema": {
+          "$id": "urn:ordessa:engineering:operations:engineering.artifacts.append_revision:input:2",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "artifact_id": {
+              "maxLength": 512,
+              "minLength": 1,
+              "type": "string"
+            },
+            "claims": {
+              "maxItems": 4096,
+              "type": "array"
+            },
+            "evidence_links": {
+              "maxItems": 4096,
+              "type": "array"
+            },
+            "expected_version": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "generation_origin": {
+              "type": [
+                "object",
+                "null"
+              ]
+            },
+            "method_refs": {
+              "maxItems": 4096,
+              "type": "array"
+            },
+            "parents": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "artifact_id": {
+                    "maxLength": 512,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "digest": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "algorithm": {
+                        "const": "sha256"
+                      },
+                      "hex": {
+                        "pattern": "^[a-f0-9]{64}$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "algorithm",
+                      "hex"
+                    ],
+                    "type": "object"
+                  },
+                  "kind": {
+                    "const": "artifact_revision"
+                  },
+                  "project_id": {
+                    "maxLength": 512,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "realm_id": {
+                    "maxLength": 512,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "revision_id": {
+                    "maxLength": 512,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "realm_id",
+                  "project_id",
+                  "artifact_id",
+                  "revision_id",
+                  "digest"
+                ],
+                "type": "object"
+              },
+              "maxItems": 4096,
+              "type": "array"
+            },
+            "payload": {
+              "type": "object"
+            },
+            "sources": {
+              "maxItems": 4096,
+              "type": "array"
+            }
+          },
+          "required": [
+            "artifact_id",
+            "expected_version",
+            "parents",
+            "payload"
+          ],
+          "type": "object"
+        },
+        "workflow_outcomes": [
+          "completed",
+          "rejected"
+        ],
+        "effect": "engineering_transaction",
+        "idempotency": "command_context_request_id_and_request_digest"
+      }
+    },
+    {
+      "capability_id": "engineering.proposals.create",
+      "kind": "operation",
+      "interface_version": "1",
+      "contract_digest": "10c0bdbb3e27e13b91f53a8438d375b6201ceb85e43fe1c1253da586458afe69",
+      "contract": {
+        "input_schema": {
+          "$id": "urn:ordessa:engineering:operations:engineering.proposals.create:input:1",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "change_id": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "draft": {
+              "type": "object"
+            },
+            "expected_version": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "change_id",
+            "expected_version",
+            "draft"
+          ],
+          "type": "object"
+        },
+        "workflow_outcomes": [
+          "completed",
+          "rejected"
+        ],
+        "effect": "engineering_transaction",
+        "idempotency": "command_context_request_id_and_request_digest"
+      }
+    },
+    {
+      "capability_id": "engineering.reviews.request",
+      "kind": "operation",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "RequestReview",
+        "output_type": "ReviewRequestRef",
+        "effects": "write",
+        "idempotency": "request_id_and_payload_digest",
+        "workflow_outcomes": [
+          "passed",
+          "blocked",
+          "manual",
+          "unknown"
+        ],
+        "trusted_ingress": "authenticated-system-access",
+        "workflow_outcome_source": "typed-application-completion"
+      },
+      "contract_digest": "4b4fac6228c274742241f9652dcdd6a01cfe223b2a4f087fe81290470dd27bd5"
+    },
+    {
+      "capability_id": "engineering.approvals.prepare_intent",
+      "kind": "operation",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "PrepareIntent",
+        "output_type": "IntentRef",
+        "effects": "write",
+        "idempotency": "request_id_and_payload_digest",
+        "workflow_outcomes": [
+          "prepared",
+          "blocked"
+        ],
+        "trusted_ingress": "authenticated-system-access",
+        "workflow_outcome_source": "typed-application-completion"
+      },
+      "contract_digest": "d02d2ea9b29f5764462136b4e320f3d18b2f08f9391a93bd5a7b3bddac7c5542"
+    },
+    {
+      "capability_id": "engineering.approvals.request",
+      "kind": "operation",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "RequestConsent",
+        "output_type": "ChallengeRef",
+        "effects": "write",
+        "idempotency": "request_id_and_payload_digest",
+        "workflow_outcomes": [
+          "granted",
+          "denied",
+          "pending",
+          "unknown"
+        ],
+        "trusted_ingress": "authenticated-system-access",
+        "workflow_outcome_source": "trusted-provider-event"
+      },
+      "contract_digest": "a21b324ad3cad9d6ea970f5d804595a62f8e9f53703a69b3455111944229bc90"
+    },
+    {
+      "capability_id": "engineering.packages.derive",
+      "kind": "operation",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "DerivePackage",
+        "output_type": "PackageDerivationResult",
+        "effects": "write",
+        "idempotency": "request_id_and_payload_digest",
+        "workflow_outcomes": [
+          "derived",
+          "out_of_scope"
+        ],
+        "trusted_ingress": "authenticated-system-access",
+        "workflow_outcome_source": "typed-application-completion"
+      },
+      "contract_digest": "500e925e82ac30f7ced2f525d7b8ac5bebbaf5c14ab7818075c1421d22352723"
+    },
+    {
+      "capability_id": "engineering.executions.dispatch",
+      "kind": "operation",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "RequestDispatch",
+        "output_type": "DispatchRef",
+        "effects": "external_effect",
+        "idempotency": "request_id_and_payload_digest",
+        "workflow_outcomes": [
+          "dispatched",
+          "blocked",
+          "unknown"
+        ],
+        "trusted_ingress": "authenticated-system-access",
+        "workflow_outcome_source": "typed-application-completion"
+      },
+      "contract_digest": "cf88bf160ccc43e858addcc6caa7b3856103c3964129402cd03ed9ae5acca6e2"
+    },
+    {
+      "capability_id": "engineering.submissions.record",
+      "kind": "operation",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "RecordSubmission",
+        "output_type": "SubmissionRef",
+        "effects": "write",
+        "idempotency": "request_id_and_payload_digest",
+        "workflow_outcomes": [
+          "recorded"
+        ],
+        "trusted_ingress": "authenticated-system-access",
+        "workflow_outcome_source": "typed-application-completion"
+      },
+      "contract_digest": "bfe468d17d5d6f384d64d7c7ecb528ad302cc3881fddb64d697ccb313990e55d"
+    },
+    {
+      "capability_id": "engineering.acceptance.request",
+      "kind": "operation",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "RequestAcceptance",
+        "output_type": "ReviewRequestRef",
+        "effects": "write",
+        "idempotency": "request_id_and_payload_digest",
+        "workflow_outcomes": [
+          "passed",
+          "blocked",
+          "manual",
+          "unknown"
+        ],
+        "trusted_ingress": "authenticated-system-access",
+        "workflow_outcome_source": "typed-application-completion"
+      },
+      "contract_digest": "7f86dc4143c10de0c66858dcbea5e56f17a54199a3f5c95bf633214c94c28f14"
+    },
+    {
+      "capability_id": "engineering.acceptance.adopt",
+      "kind": "operation",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "AdoptSubmission",
+        "output_type": "AdoptionRecordRef",
+        "effects": "write",
+        "idempotency": "request_id_and_payload_digest",
+        "workflow_outcomes": [
+          "adopted",
+          "conflict"
+        ],
+        "trusted_ingress": "authenticated-system-access",
+        "workflow_outcome_source": "typed-application-completion"
+      },
+      "contract_digest": "092f20beb48f31481c59aea6c40578255db4d1ea5d8d87a458d74ae070f69398"
+    },
+    {
+      "capability_id": "ordessa.schema.validate",
+      "kind": "check",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "DocumentSchemaCheck",
+        "output_type": "StructuralCheckResult",
+        "effects": "read_only",
+        "idempotency": "input_and_target_digest",
+        "outcomes": [
+          "satisfied",
+          "violated",
+          "insufficient",
+          "unknown"
+        ],
+        "trusted_ingress": "registered-review-scheduler"
+      },
+      "contract_digest": "0f9c544a13bf8813f517079f1009357f80029efda921f2de22f0e4c98cbb3be1"
+    },
+    {
+      "capability_id": "ordessa.sources.integrity",
+      "kind": "check",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "SourceIntegrityCheck",
+        "output_type": "EvidenceCheckResult",
+        "effects": "read_only",
+        "idempotency": "input_and_target_digest",
+        "outcomes": [
+          "satisfied",
+          "violated",
+          "insufficient",
+          "unknown"
+        ],
+        "trusted_ingress": "registered-review-scheduler"
+      },
+      "contract_digest": "b9b03291d8566da6b17e57693d5f7113c84bca29c8a18129c2c92d8e79076af3"
+    },
+    {
+      "capability_id": "ordessa.claims.coverage",
+      "kind": "check",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "ClaimCoverageCheck",
+        "output_type": "EvidenceCheckResult",
+        "effects": "read_only",
+        "idempotency": "input_and_target_digest",
+        "outcomes": [
+          "satisfied",
+          "violated",
+          "insufficient",
+          "unknown"
+        ],
+        "trusted_ingress": "registered-review-scheduler"
+      },
+      "contract_digest": "160be566e11310e1f47f6187cbb400e13eaaced843d95216c781101b18ca8641"
+    },
+    {
+      "capability_id": "ordessa.proposal.consistency",
+      "kind": "check",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "ProposalConsistencyCheck",
+        "output_type": "ConsistencyCheckResult",
+        "effects": "read_only",
+        "idempotency": "input_and_target_digest",
+        "outcomes": [
+          "satisfied",
+          "violated",
+          "insufficient",
+          "unknown"
+        ],
+        "trusted_ingress": "registered-review-scheduler"
+      },
+      "contract_digest": "3c5bfb80579b46ec30f76174a6327768620cb5eda05fb7cab8f6fdf230769cea"
+    },
+    {
+      "capability_id": "ordessa.submission.binding",
+      "kind": "check",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "SubmissionBindingCheck",
+        "output_type": "BindingCheckResult",
+        "effects": "read_only",
+        "idempotency": "input_and_target_digest",
+        "outcomes": [
+          "satisfied",
+          "violated",
+          "insufficient",
+          "unknown"
+        ],
+        "trusted_ingress": "registered-review-scheduler"
+      },
+      "contract_digest": "a6941bd1756c943b5f99ac46717ed08c53e5c5caf92c47edd65b3cb3299d2933"
+    },
+    {
+      "capability_id": "ordessa.tests.evidence",
+      "kind": "check",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "TestEvidenceCheck",
+        "output_type": "EvidenceCheckResult",
+        "effects": "read_only",
+        "idempotency": "input_and_target_digest",
+        "outcomes": [
+          "satisfied",
+          "violated",
+          "insufficient",
+          "unknown"
+        ],
+        "trusted_ingress": "registered-review-scheduler"
+      },
+      "contract_digest": "e6bc661774ff5dc3d9e82f4789edef3dced2a736c04626b219084ba824a23e1f"
+    },
+    {
+      "capability_id": "ordessa.outputs.scope",
+      "kind": "check",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "OutputScopeCheck",
+        "output_type": "ScopeCheckResult",
+        "effects": "read_only",
+        "idempotency": "input_and_target_digest",
+        "outcomes": [
+          "satisfied",
+          "violated",
+          "insufficient",
+          "unknown"
+        ],
+        "trusted_ingress": "registered-review-scheduler"
+      },
+      "contract_digest": "e3a14e193ddddc271885c89160941aabfe2c164a34a5f400e3927ede383a3497"
+    },
+    {
+      "capability_id": "ordessa.decision.evaluate",
+      "kind": "check",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "DecisionCriterionCheck",
+        "output_type": "DecisionCheckResult",
+        "effects": "read_only",
+        "idempotency": "input_and_target_digest",
+        "outcomes": [
+          "satisfied",
+          "violated",
+          "insufficient",
+          "unknown"
+        ],
+        "trusted_ingress": "registered-review-scheduler"
+      },
+      "contract_digest": "70661659910b318e789177aac7656318e22a5082e33e0916798f6dd9b8a1d3b7"
+    }
+  ],
+  "model_evaluations": [
+    {
+      "profile_id": "source-support.choice.demo-v1",
+      "status": "fixture_only",
+      "provider_id": "fixture.decision",
+      "model_id": "fixture-fixed-v1",
+      "question_resource": "decision.source_support"
+    },
+    {
+      "profile_id": "change-consistency.mixed.demo-v1",
+      "status": "fixture_only",
+      "provider_id": "fixture.decision",
+      "model_id": "fixture-fixed-v1",
+      "question_resource": "decision.change_consistency"
+    }
+  ],
+  "actual_handler_copies": [
+    "engineering.artifacts.create",
+    "engineering.artifacts.append_revision",
+    "engineering.proposals.create"
+  ],
+  "activation": "fixture-only; all other descriptors and required owner events remain pending"
+}

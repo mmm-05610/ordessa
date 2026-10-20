@@ -1,0 +1,18 @@
+{
+  "name": "@ordessa/extension-host",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Independent extension host leaf (032): activation runtime, shell, platform services, main-process protocol.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./main": "./src/main/index.ts",
+    "./platform": "./src/platform.ts",
+    "./services": "./src/services/index.ts",
+    "./services/surface": "./src/services/surface.ts"
+  },
+  "dependencies": {
+    "@ordessa/extension-runtime": "0.1.0",
+    "@ordessa/interface-contracts": "0.1.0"
+  }
+}

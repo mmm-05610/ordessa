@@ -1,0 +1,50 @@
+{
+  "fixture_only": true,
+  "before": {
+    "proposal_ref": {
+      "kind": "proposal",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "P1",
+      "digest": "dbe12cd8f1232dbaba379a1bdfe9cd735162b02fa3877c9760ebd49485b9f450"
+    },
+    "review_set_ref": {
+      "kind": "review_set",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "R1",
+      "digest": "84caf24a5d8bcb053b20b82db0901714dbe74588bd5bf217abe6c4e222ea2311"
+    },
+    "approval_ref": {
+      "kind": "approval",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "G1",
+      "digest": "411f31d4c761f7885443beb85a7660a8f63f698b34184ddbc58114b6a1ae059d"
+    }
+  },
+  "after": {
+    "selected_proposal_ref": {
+      "kind": "proposal",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "P2",
+      "digest": "ff53bb14dbfd5cf98d0a9e5d6c0f2c620e08bd5bf86e4711d16e9649ae93a4b4"
+    },
+    "new_did_ref": {
+      "kind": "artifact_revision",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "D2",
+      "digest": "b62625e09445f8be37b59226fa818dd8e15c43a68205064d1ae81c8b3996f423"
+    }
+  },
+  "expected": {
+    "old_grant_control": "granted",
+    "old_grant_applies_to_new_proposal": false,
+    "old_review_covers_new_proposal": false,
+    "new_epoch_required": true,
+    "new_target_error": "APPROVAL_TARGET_MISMATCH",
+    "dispatch_count": 0
+  }
+}

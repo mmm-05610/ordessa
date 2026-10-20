@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Candidate external-contract proposal. Current Engineering ReviewRecord cannot express external-only targets and this is not a persisted production review.",
+  "type": "object", "additionalProperties": false,
+  "required": ["review_id", "revision", "baseline", "candidate", "scope", "method_pin", "completion", "conclusion", "findings"],
+  "properties": {
+    "review_id": {"type": "string", "minLength": 1}, "revision": {"type": "integer", "minimum": 1},
+    "baseline": {"$ref": "source-ref.schema.json"}, "candidate": {"$ref": "source-ref.schema.json"},
+    "scope": {"$ref": "scope.schema.json"},
+    "method_pin": {"$ref": "method-ref.schema.json"},
+    "completion": {"enum": ["completed", "cancelled", "unknown"]},
+    "conclusion": {"enum": ["passed", "not_passed", "unknown"]},
+    "findings": {"type": "array", "items": {"type": "object", "additionalProperties": false,
+      "required": ["claim", "evidence", "status"], "properties": {
+        "claim": {"type": "string", "minLength": 1}, "evidence": {"type": "array", "items": {"type": "string"}},
+        "status": {"enum": ["supported", "gap", "uncertain"]}}}}
+  }
+}

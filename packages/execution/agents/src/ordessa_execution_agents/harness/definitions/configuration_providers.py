@@ -11,8 +11,8 @@ import re
 from types import MappingProxyType
 from typing import Mapping
 
-from ordessa_execution_api.environment.identity import ActivationRef, EnvironmentId
-from ordessa_execution_api.environment.operations import sealed_mapping
+from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
+from .activation import HarnessActivationRef, validate_namespace
 
 
 CONFIGURATION_PROVIDER_VERSION = "agent-configuration-provider/1"
@@ -107,7 +107,7 @@ def _definition_ref(value: object) -> Mapping[str, str]:
         _invalid()
     environment = _label(raw_environment, maximum=64)
     try:
-        EnvironmentId(environment)
+        validate_namespace(environment)
     except (TypeError, ValueError):
         _invalid()
     definition_id = _definition_label(raw_id)
@@ -127,11 +127,11 @@ def _definition_dict(value: Mapping[str, str]) -> dict[str, str]:
             "revision": value["revision"]}
 
 
-def _activation(value: object) -> ActivationRef:
-    if type(value) is not ActivationRef:
+def _activation(value: object) -> HarnessActivationRef:
+    if type(value) is not HarnessActivationRef:
         _invalid()
     try:
-        return ActivationRef(value.environment, value.plugin_id, value.generation)
+        return HarnessActivationRef(value.environment, value.plugin_id, value.generation)
     except (TypeError, ValueError):
         _invalid()
 
@@ -275,7 +275,7 @@ class ConfigurationProviderPin:
     provider_id: str
     contract_version: str
     implementation_digest: str
-    owner_activation: ActivationRef
+    owner_activation: HarnessActivationRef
 
     def __post_init__(self) -> None:
         provider_id = _provider_id(self.provider_id)
@@ -329,7 +329,7 @@ class ConfigurationProviderPin:
         owner = value["ownerActivationRef"]
         owner = _closed_dict(owner, {"environmentNamespace", "pluginId", "generation"})
         try:
-            activation = ActivationRef(owner["environmentNamespace"], owner["pluginId"], owner["generation"])
+            activation = HarnessActivationRef(owner["environmentNamespace"], owner["pluginId"], owner["generation"])
             pin = cls(value["providerId"], value["contractVersion"],
                       value["implementationDigest"], activation)
         except (TypeError, ValueError):
@@ -355,15 +355,15 @@ class AdmittedConfigurationProviderMetadata:
     RuntimeProvider identity — never the admitted instance itself.
     """
 
-    owner_activation: ActivationRef
+    owner_activation: HarnessActivationRef
     descriptor: ConfigurationProviderDescriptor
     recognized_definitions: tuple[Mapping[str, str], ...]
     runtime_provider_ref: Mapping[str, object]
 
     def __post_init__(self) -> None:
-        if not isinstance(self.owner_activation, ActivationRef):
+        if not isinstance(self.owner_activation, HarnessActivationRef):
             raise ValueError("host owner activation is required")
-        object.__setattr__(self, "owner_activation", ActivationRef(
+        object.__setattr__(self, "owner_activation", HarnessActivationRef(
             self.owner_activation.environment,
             self.owner_activation.plugin_id,
             self.owner_activation.generation,
@@ -404,7 +404,7 @@ class AdmittedConfigurationProviderMetadata:
         if set(owner_source) != {"environmentNamespace", "pluginId", "generation"}:
             raise ValueError("runtime provider reference must carry its owner activation")
         try:
-            activation = ActivationRef(owner_source["environmentNamespace"],
+            activation = HarnessActivationRef(owner_source["environmentNamespace"],
                                        owner_source["pluginId"], owner_source["generation"])
         except (TypeError, ValueError):
             raise ValueError("runtime provider reference owner activation is invalid") from None

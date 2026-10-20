@@ -49,13 +49,16 @@ from test_proposal_usecases import SyntheticAccess
 from submission_wait_native_fixture import persist_historical_dispatch
 
 
-def _frozen_method(tmp_path, library):
+def _frozen_method(tmp_path, library, *, report_phase=False, authorship_policy=None):
     root = tmp_path / 'submission-wait-method'
     root.mkdir()
     check = CapabilityDescriptor('test.bridge.check', 'check', '1.0.0', method_digest('capability-contract', {}), {})
     request = next(d for d in EngineeringService.operation_capabilities().capabilities if d.capability_id == 'engineering.reviews.request')
+    report = (next(d for d in EngineeringService.operation_capabilities().capabilities
+                   if d.capability_id == 'engineering.submissions.record_report')
+              if report_phase else None)
     dispatch = next(d for d in owner_capabilities() if d.capability_id == 'engineering.executions.dispatch')
-    caps = CompilationCapabilities((check, request, dispatch), trust_class='host')
+    caps = CompilationCapabilities((check, request, dispatch, *((report,) if report_phase else ())), trust_class='host')
     review_config = lambda purpose, standard: {'purpose': purpose, 'standards': [{'resource': standard}]}
     workflow = {'schema_version': 1, 'workflow_id': 'submission-wait-fixture', 'entry': 'await_proposal',
         'resume_contract': 'ordessa.engineering.current-work/1',
@@ -68,7 +71,14 @@ def _frozen_method(tmp_path, library):
              'config':{'package_slot':'package_ref'}, 'outcomes':{'completed':{'next':'await_acceptance'},'failed':{'stop':'finished'},'unknown':{'stop':'finished'}}},
             {'id':'await_acceptance','kind':'wait','event':'engineering.work.current_condition','next':'acceptance_review'},
             {'id':'acceptance_review','kind':'operation','operation':'engineering.reviews.request',
-             'config':review_config('acceptance','standard.acceptance'), 'outcomes':{'completed':{'next':'done'},'rejected':{'stop':'finished'}}},
+             'config':{**review_config('acceptance','standard.acceptance'),
+                 **({'unit_submission_review_strategy':{'roles':{'identity_constraint':authorship_policy}}}
+                    if authorship_policy is not None else {})},
+             'outcomes':{'completed':{'next':'record_report' if report_phase else 'done'},'rejected':{'stop':'finished'}}},
+            *([{'id':'record_report','kind':'operation','operation':'engineering.submissions.record_report',
+                'config':{'report_mode_boundary':{'method_content_schema':'schema.test'}},
+                'outcomes':{'completed':{'next':'done'},'rejected':{'stop':'finished'}}}]
+              if report_phase else []),
             {'id':'done','kind':'stop','outcome':'finished'},
         ]}
     def standard(purpose):
@@ -98,7 +108,8 @@ def _frozen_method(tmp_path, library):
             'input_document_slot':'work_inputs','input_document_type':'test-work-inputs','waits':{
                 'await_proposal':{'family':'object_exists','refs':['proposal_ref'],'event_slots':{}},
                 'await_acceptance':{'family':'review_gate','plan_slot':'acceptance_plan','phase_key':'acceptance_review','event_slots':{}}}}},
-        'requires':[{k:getattr(d,k) for k in ('capability_id','kind','interface_version','contract_digest')} for d in (check,request,dispatch)]}
+        'requires':[{k:getattr(d,k) for k in ('capability_id','kind','interface_version','contract_digest')}
+                    for d in ((check,request,dispatch,report) if report_phase else (check,request,dispatch))]}
     (root/'method.yaml').write_bytes(canonical_bytes(manifest))
     loaded=load_method(MethodSource(root),FileResourceReader());assert loaded.ok,loaded.error
     compiled=compile_method(loaded.value,caps,'test.submission-wait/1');assert compiled.ok,compiled.error
@@ -109,7 +120,8 @@ def _frozen_method(tmp_path, library):
     return snapshot,MethodRef(r.method_id,r.release_version,r.schema_version,Digest('sha256',r.snapshot_digest)),store
 
 
-def build_submission_wait_fixture(tmp_path):
+def build_submission_wait_fixture(tmp_path, *, report_phase=False, authorship_policy=None,
+                                 native_dispatch_phase='completed'):
     domain_fixture=runpy.run_path(str(Path(__file__).parents[1]/'domain/test_submission_binding.py'))
     original_submission, original_package, original_grant, before, after=domain_fixture['fixture']()
     scope=original_submission.scope;actor=original_submission.created_by;now=original_submission.created_at
@@ -126,7 +138,8 @@ def build_submission_wait_fixture(tmp_path):
             tuple(RepositoryFile(file.path,actual_blob(file.blob_ref)) for file in record.files))
     before=tuple(baseline(record) for record in before)
     after=tuple(baseline(record) for record in after)
-    snapshot,method_ref,store=_frozen_method(tmp_path,library)
+    snapshot,method_ref,store=_frozen_method(tmp_path,library,report_phase=report_phase,
+        authorship_policy=authorship_policy)
     context=CommandContext(scope,'synthetic-fixture-principal',actor,'submission-wait-test',now,'submission-wait-test')
     MethodUseCases(factory,SyntheticAccess(),store,TestManagement()).adopt(method_ref,context,expected_version=0)
     controls=SQLiteMethodControl(factory,store)
@@ -188,10 +201,18 @@ def build_submission_wait_fixture(tmp_path):
     raw=b'Explicitly synthetic completed native observation.'
     blob=blobs.put_verified(raw,Digest('sha256',hashlib.sha256(raw).hexdigest()),'application/octet-stream')
     execution=replace(original_submission.execution_ref,captured_observation_ref=blob)
+    report_content = None
+    if report_phase:
+        report_spec=document_spec(snapshot,'test-document')
+        report_resource=next(r for r in snapshot.resources if r.resource_id==report_spec.schema_ref.resource_id)
+        report_exact=ExactMethodResourceRef(method_ref,report_resource.logical_path,
+            Digest('sha256',report_resource.digest),report_resource.resource_id)
+        report_content=MethodContent.from_value(report_exact,{'statement':'Explicit method report fixture.'})
     submission=replace(original_submission,change_set=change_set,authorization_refs=(grant.ref,),package_ref=package.ref,
         execution_ref=execution,file_changes=tuple(replace(f,proposal_refs=(proposal.ref,)) for f in original_submission.file_changes),
         baseline_snapshots=tuple(r.ref for r in before),resulting_snapshots=tuple(r.ref for r in after),
-        output_refs=(output.ref,),coverage=(SubmissionCoverage(proposal.ref,(output.ref,),tuple(f.change_id for f in original_submission.file_changes),(),'implemented'),))
+        output_refs=(output.ref,),coverage=(SubmissionCoverage(proposal.ref,(output.ref,),tuple(f.change_id for f in original_submission.file_changes),(),'implemented'),),
+        method_content=report_content)
     with factory.begin(scope) as uow:
         uow.authorization.put_notice(notice);uow.authorization.put_intent(intent);uow.authorization.put_challenge(challenge)
         uow.authorization.put_receipt(challenge,evidence);uow.authorization.put_grant(grant)
@@ -201,7 +222,8 @@ def build_submission_wait_fixture(tmp_path):
           'ownerProviderRef':json.loads(execution.owner_provider_ref_bytes),'sourceRevision':execution.source_revision}
     native=persist_historical_dispatch({'factory':factory,'run_id':'work-source-run','created_at':now},snapshot=snapshot,
         package=package,grant=grant,submission_execution_ref=execution,unit_ref=unit,prompt_ref=blob,
-        prompt_digest=execution.prompt_input_digest,query_digest='sha256:'+'b'*64)
+        prompt_digest=execution.prompt_input_digest,query_digest='sha256:'+'b'*64,
+        dispatch_phase=native_dispatch_phase)
     phases=(ConfiguredReviewPhase('quality_review',('reviewer',),workflow_node_id='quality_review'),
         ConfiguredReviewPhase('acceptance_review',('reviewer',),workflow_node_id='acceptance_review',
                              submission_ref=submission.ref,review_purpose='acceptance'))

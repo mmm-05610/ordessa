@@ -1,0 +1,2774 @@
+{
+  "sourceRef": "a23cadf5724a494bac08037ffdddffed6914adef",
+  "physicalOwnerBase": "verified actual nightly snapshot",
+  "files": [
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_bindings/__init__.py",
+      "sha256": "b280d4d40fc2a5d79341ad61ec022e2f50f48ef91f5141d09dc371a877c48865"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_bindings/authentication.py",
+      "sha256": "148dbf6671865909ee878b0a5a3b73350b26bdb2ede7360f824ff80827354941"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_bindings/endpoints.py",
+      "sha256": "cc3a66b5f9d3ab394e82af2125b2786de1010d96615ac8443a36fb981dbcaf09"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_bindings/instance_capability.py",
+      "sha256": "a141060645421b2451f5bde557141e3c0b0058818a2a24a7abcb86f37c26869a"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_bindings/native_access.py",
+      "sha256": "6452e11653f4094c6c4e2145bf5633705e8b528655650f80955fb90bdb4a3f2e"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_bindings/native_capability.py",
+      "sha256": "be8a259564396a987663de274f4bbd05146912b3f014637d477427cd254e5eb7"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_bindings/profile_access.py",
+      "sha256": "8dac048ca53b60bdefb9da3b5653f49ec46ebdfd88158fe5f80b5dfc708ce664"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_bindings/profile_capability.py",
+      "sha256": "0ef81eaf35a4938fa87eac1f57cdac108dcde063a6bf4d9d1a0daa73bf2a054d"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/product_unit_admission.py",
+      "sha256": "20f7c8df26d7035b9c23553c7742255c68c029b1f422f14ad47037c9cc4349a5"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/unit_admission.py",
+      "sha256": "6a28f27aab77c74a32f270800138a6906ae5bb4f20fed48dd92a7ba2679e9788"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/unit_runtime.py",
+      "sha256": "e282f670b124dff68af133d0271f2aabf8d29fa439f8203e726007da810e9724"
+    },
+    {
+      "path": "apps/server/tests/agent_tools/test_core_method_lifecycle.py",
+      "sha256": "17eb5f81b91bdcbd964ae9a12f991efb64ac31bd3918a074d4cd943794583bae"
+    },
+    {
+      "path": "apps/server/tests/agent_tools/test_operation_read_wire.py",
+      "sha256": "bb29712d67ecb15ac938d39f099831e38081ab0f9974327eab68e96c155e7e5d"
+    },
+    {
+      "path": "apps/server/tests/decision/test_core_read_seam.py",
+      "sha256": "8ffb8fd298d15bc1986ea54f769835f78fac43b9c2d7b5dc0c5004db5075354b"
+    },
+    {
+      "path": "apps/server/tests/integration/harness/test_generic_profile_store.py",
+      "sha256": "4f833cc93586a79b425d0c92816c0ea14227a58c924f205e9b39534df7ef653a"
+    },
+    {
+      "path": "apps/server/tests/platform/test_closeout_core_binding_environment.py",
+      "sha256": "01bca0f9d62afa00042952dd2e8fb1ad89364a4a30e84582d8f708165a1fda1e"
+    },
+    {
+      "path": "apps/server/tests/platform/test_closeout_host_environment_owner_lifecycle.py",
+      "sha256": "419b2feb566e485c14fcd17e8adbe0844d5a9fdc188441c20d2735d8e2faeb59"
+    },
+    {
+      "path": "apps/server/tests/platform/test_platform_core_instance.py",
+      "sha256": "60bed13e4c2a65395ccbc46118f9dfdbb939802a43a77f9fc19bc592d4a01120"
+    },
+    {
+      "path": "apps/server/tests/test_request_integrity_configuration.py",
+      "sha256": "a5408c1a9045be0e9c45e9a9f42fd3453bc8f11b21aa5d637032de94b72483cf"
+    },
+    {
+      "path": "apps/server/tests/test_unit_governance_product.py",
+      "sha256": "4094086e40c92b3f0f1eff20b7a6850c1f38f2e5f38538db1fc7c33b936c3a41"
+    },
+    {
+      "path": "apps/server/tests/test_units_material_product_binding.py",
+      "sha256": "02184efbdd0066bdceea500138517465ca2f518801bc92aba127708713be3de1"
+    },
+    {
+      "path": "packages/execution/agents/README.md",
+      "sha256": "c8b5e07ce80971c2ef78dc36aea2e3dba8e76f2436955337c2146917917950bb"
+    },
+    {
+      "path": "packages/execution/agents/pyproject.toml",
+      "sha256": "31b1676618c6eabfec982887c3639e5fb1e0424b83a3da7a8e47e9d0b9007d65"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/definitions/ACP.md",
+      "sha256": "86c0db4dd203ca9222ba3eda4c90ec526cd6f98c8403834c86bb52dd77fff787"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/definitions/__init__.py",
+      "sha256": "392fdd1df6262962e693b9b978565a90cae3f2faecacda38d816cc8c11e9862a"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/definitions/activation.py",
+      "sha256": "1bfe4b79a3852651c98e605bcb9a38407971b833e9130fdd18777f8af3dd4cf7"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/definitions/command_projection.py",
+      "sha256": "0fced37a2578238f9ff722a887e53f551adabccff571a2e09a8cf38aca645457"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/definitions/configuration_providers.py",
+      "sha256": "a5e1e035ccf555cf73f88861baf129dddbe48ba93f9f2489b9bf7a679b53763b"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/definitions/credentials.py",
+      "sha256": "af7fd4c6dbfef65a8ce74fd8e246d0d8e73414beeb70fec3fd0c3f077dd6c7db"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/definitions/runtime_providers.py",
+      "sha256": "299189509c8b9d63663f648b1d696cbbf127b91f4fb190954d784b16c7467469"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/providers/catalog.py",
+      "sha256": "dea72def7fa559698224e5ada7ba7c9a0ff944683637148128ff1d12a7b5aeb7"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/providers/registry/__init__.py",
+      "sha256": "006c95e56aa4710bb7bf87d3d7d745bff66c59aa2684a3437efc6f2b9ff8fa31"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/providers/registry/catalog.py",
+      "sha256": "be9c2f4a0752b36fd49e6068c3888f7a46c3e3865734c76c64437236354c7897"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/providers/registry/contributions.py",
+      "sha256": "b81c0bba17248e4403ed4d727012bbd847c97d7fead8a035a24998408fd2f7a4"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/providers/registry/definition_admission.py",
+      "sha256": "8144415b18327d267b7462a29340f6ca22ad8e4a3ead300efde8c33b573b6f3a"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/providers/registry/errors.py",
+      "sha256": "bf8d4425143926a25e652602b455bba6902c9a30df576bb8a47eb54da6e1fd62"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/providers/registry/registration.py",
+      "sha256": "59107dd82154e05a179ae4269920bf3a90ef3fc451a10f74b8e1c5341fa3f657"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/providers/resolution/sandbox_resolution.py",
+      "sha256": null
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/providers/resolution/source_declaration.py",
+      "sha256": "d44ed93a761c6792afd60fe20d6866215bc30f49de2774619ee7900bbba0d915"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/transport/__init__.py",
+      "sha256": "c5f333dd8327f6224cf0f9dffd19272c2160164ccd150daf235394f7d8cdb6e1"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/transport/channel.py",
+      "sha256": "c2b85e1ff302d5af52fb98ccef7fde7eac3cb563400a8fc8f00ebbcd78cf6a69"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/transport/effect_guard.py",
+      "sha256": "3442e3664f56fb15c6bbc1d57494bd890739416580057bcfaa8b43557af2b17f"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/transport/environment_channel.py",
+      "sha256": null
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/transport/vendor/harness_remote/PATCHES.md",
+      "sha256": "8afa3ae036065d179b9b1865a8b26504e94a069b4ead428e10c2c5d786046091"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/transport/write_diagnostic.py",
+      "sha256": "6a0b47ad784243414a1cf34a7ad555476c4283b0545f234b2ca6cf8c84bbe6d4"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/instances/__init__.py",
+      "sha256": "f5396cb1f3f7ccb69300a7123eea1924833f199db2148e9151f16679fb397d12"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/instances/contracts.py",
+      "sha256": "c006149d77d4249c84892e0fcdc3f1b0ef0151aa269524a3dfb74b10b1f24e76"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/instances/lifecycle.py",
+      "sha256": "f2554af1489a3f06be653f3934244c4e42d9ff1c73cff37bb5b3785c90960bd5"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/README.md",
+      "sha256": "83cbb8f300da757b902604cef21e73453ecc6ab37152a6b77a6c6eab4d720292"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/__init__.py",
+      "sha256": "8b5fc425672087d1993d73d43cc672affffe64431a9f3acaf96e0ca2057a8618"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/definitions/README.md",
+      "sha256": "f031f51ead0503531804a2b098afefa42d641a983f72348ae82675305ccf19b7"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/definitions/__init__.py",
+      "sha256": "f418bdcb143e530a5054a77a48c7346f193a8a19cfcdf15a0ee5bb834136e11f"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/definitions/errors.py",
+      "sha256": "b8c252b40016f9cc73a4fedc807052613b67a7f89f6ead8ceef9fc322e2ff1e9"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/definitions/historical_projection.py",
+      "sha256": "6bed8fe51d00349481b36aa58f4a649db6d5b7c365e9c634318f7e36cf6773e8"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/definitions/secret_refs.py",
+      "sha256": "3a166adc9f9ee3b86b3ce0faea44a4e5b88284ccd0f4c5942ed5a7be8844fa0b"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/definitions/validation.py",
+      "sha256": "3fd618b3f0e8dc95c5b765467fcfbb096438607721840311147b6335f2442494"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/management/README.md",
+      "sha256": "39b8da6fa99571155ec14b6da15942bb7d5e35c0aa60fa7fd09ad77ed4112701"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/management/historical_projection.py",
+      "sha256": "0f35348f5cd48bfdde96ea82a9a9d639dab1f3fcd26ca14765adfd9c0a87dfc1"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/management/ports.py",
+      "sha256": "cb66e7f2989f3f50dcd09e012b37927f6463ab57264c2a793e0bebc8bfac7cf0"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/management/record_store.py",
+      "sha256": "cc976981f3130d78e1c2da6ed9ea77d70b098fdac4c50a938a11324e2b9e88aa"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/management/service.py",
+      "sha256": "08f4fc049009f560c0d594354aaf05447c9d193a0479636bc8ccb9e7d7d49dce"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/management/sqlite_store.py",
+      "sha256": "da7fec6dafd35167587aaa484b400490cc38f94a4525fd2277d66c46582eadf5"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/public.py",
+      "sha256": "0fac8afb8f9fb9b51bc86cabe6fc2c7be6b5cf2a6eafb0267659c1d78edcdd2a"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/sdk/__init__.py",
+      "sha256": "891c9267dbcdb6b5379c22192f05c32fbcba3dae272ca170e385a4f911d38fa4"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/sdk/acp.py",
+      "sha256": "7ffabc4992a2fd71882d4571521f07928b5531f5bc59764a7c2a1324555f41a7"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/sdk/contract_catalog.py",
+      "sha256": "8469045c7f6973c4bd05c4115cd36ca788ceedfb08b248a3dae931b78488fc1c"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/sdk/endpoint.py",
+      "sha256": "1b9a60f8a9cb7b0c6d414dd3d22f49b91fb169c95f69ea442de47f4050b79b46"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/sdk/harness.py",
+      "sha256": "4aa72e33717c24b518dda0994573f0c70153ee641b6b537b881bc22b2f8f0c5c"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/sdk/instances.py",
+      "sha256": "3b72b502a43c34d716c371a9daaf04c0a6eee045b543c86c6e9169810918e016"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/sdk/interactions.py",
+      "sha256": "95510984c478cf5d5a7640f51bd458270c380c2fb2e7df8be9e4bcfdd6cf5d58"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/sdk/manager.py",
+      "sha256": "247b14ff91fb74b8d59e7f17b5baeaf9b8e482f3db94a0f1a76a0d8200bea1cc"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/sdk/native_contracts.py",
+      "sha256": "cea3654638f7ed3a1d65c215d688ed1bc8b5d010b7c0e249c4c9762db543fb49"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/sdk/native_operations.py",
+      "sha256": "ebc7bcbb889665c4080a035a4f801eaa86bedc56d188e8a25799c08d7dc87946"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/sdk/native_schemas.py",
+      "sha256": "0040f2f904f67efa74af98cec4a0e6d0561f12a45145a34537dcca63c748dcc2"
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/sdk/prepare.py",
+      "sha256": "c79e35835a9226a5b121445f52e2d40fdffe8dc45621c26255a905a160351bbf"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_activation_generation.py",
+      "sha256": "edfd9a2a73d787d246ba96810b83f56026a301d29cfdb9909a3385c186f8f4f7"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_agent_unresolved_snapshot.py",
+      "sha256": "d10e80d4c1f51cc2337676d0112b2c43775959189ae1d4fca6c5643030b3ce94"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_apply_profile.py",
+      "sha256": "d366bec45f78c2fff5aae180d634530c04de3f83c9f3eda7591a6469ffe06e69"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_assembly.py",
+      "sha256": "673be4ef0045d1338c25f1f1c556a49bca0576c0aa26945f585c11e362cb3ae2"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_bca_longitudinal.py",
+      "sha256": "9021d7997e02829b694894b1e9ce5f92d3234bb396176e8090cdcf945eb993f5"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_cleanup_hold_fence.py",
+      "sha256": "af8b1d87e3d407f9e540a49c8f8dfb71ef97fb3284ccb49b93aba705705eab8b"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_cleanup_integrity_root.py",
+      "sha256": "cadd20a76e5bb940de99f3cb095779559470c28f209a26cb6b322d3d87f4c8e6"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_codex_assembly.py",
+      "sha256": "0e3a87f2237acf7dc2468c2574d0cb66a7c78f438ae3f26d3b03f4c71919cca1"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_codex_configuration_barrier.py",
+      "sha256": "e32805d0951c59445c78640ca8fab4b5728e7753b60a8cb37e1daa8f56237361"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_configuration_provider_admission.py",
+      "sha256": "7b1abd2e515103ab2e4cdb1e2beab9c6e4e54998221ac35220218d6ab4061ef2"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_configuration_provider_contract.py",
+      "sha256": "84e400547e8145b9d0e4527f17bd1aabce8b820365a852eb551b33ad7d6ac2d9"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_configuration_unresolved_secrets.py",
+      "sha256": "f952fb522180415df7fe63b82d6ce419afd24ccec9f3a571b06a89a350f211e5"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_core_harness_independence.py",
+      "sha256": "44fd81b567a52de664707df465cb560012d09ba4c73a153e3bb39e748b0e137c"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_core_profile_catalog.py",
+      "sha256": "6ae0da5ef88c001f5c8456f2db3d997de92df0870a1e9764ce490eab9f912917"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_core_profile_semantics.py",
+      "sha256": "b55acc1cd5679913ab991704fd3f16fdd565c24b30b2267e5cdfa3c3a85e5e4c"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_core_profile_wire_v3.py",
+      "sha256": "df9d6c09e707221b9c839ea36564d00a654a0dd55bacf3ca96402e91c8482e82"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_dispatch_owner_sources.py",
+      "sha256": "acb1635657476b420e5d60e7290c121112dc552a8112efe491c96fb154d761e6"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_first_input_journal_publication.py",
+      "sha256": "0786510f921c876348ddc71d8f7e85d52259fc6b115759f2229863e5c4150a8c"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_first_input_publication.py",
+      "sha256": "98ff8b9b5f9d41758d07f44ff7cc808a861eaa84da01e0a6675ff4b27daa5725"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_fresh_unit_owner.py",
+      "sha256": "bd3c064b555bbd3af470b58f9eb14fbf11317aea5dad208733ea3c5d28fac185"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_independent_provider_registry.py",
+      "sha256": "5e87cd3a287b3f01611b0d1a7c619298ba5a488429c6f73cc9162e5907cac0f1"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_input_issuer_binding.py",
+      "sha256": "a32efd0939a992fd9049e60ed25007dc1fcfaf3fd7e061402140247e9582072d"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_input_session_association.py",
+      "sha256": "3dd1d6d42e0f365f9b60542ca349b42f8fcd715d6878a229d54c29f166045c15"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_invocation_authority.py",
+      "sha256": "17103816c850aa6c70fb9adf02923c2a369c57db1774b7af08f9f05340aa0444"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_invocation_continuation.py",
+      "sha256": "a4275b7ea089e87f234707962625ad05d69cedb58d8a2f1592cf3521df7a28b3"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_lifecycle.py",
+      "sha256": "4745be5cbd10d4c7dbaa0dde2d5c2f387d8091b02674e223c23a87ee24b2ed8c"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_live_source_snapshot.py",
+      "sha256": "66de3e4d064b19b051b78baa3995cbe61b0ae12ea9e0b53d4b9d1548abd3936d"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_managed_input_reservations.py",
+      "sha256": "9a14abc4d823ba8b4c6256cfcf1752274413910ffe6e3bbd07edd2a5dc8ff12f"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_management.py",
+      "sha256": "170694ca1b7baa760e3197ab80356c99193c13b0cad6414ad1b017e2512964d1"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_manager_node_joint.py",
+      "sha256": "7e21cf42c0f623a0b6f06d0b7a9cf2c68a906329b3ada19e5a01398f70083494"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_manager_release_reconciliation.py",
+      "sha256": "28e29da385054a393185e0291131b20d820911d0bf426c67f68508185eacd595"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_manager_stop_admission.py",
+      "sha256": "ea6f16b776d396b15c7f2f46f82b25def8b8f916f05872b63b23759f31cdd7f4"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_material_contract.py",
+      "sha256": "8658a4605c9d72488cdc3b54d2dab1b6156d5ce86e1cb9c5f120ee22b90aaa82"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_material_provider_admission.py",
+      "sha256": "3dfb48f0faab8577c230d9e4c08361335f57634d71d4378230aa3d9132a2005f"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_node_publication.py",
+      "sha256": "df7e1d2d978737d864c6d8493ff8bb8eb0c77c3b170915d3a20e08d6e2925807"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_operation_claim_integrity.py",
+      "sha256": "43b5c6e189aed556d3693a7b943611a72135b50c165d2e8ffcc678e597390f03"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_operation_read.py",
+      "sha256": "5cc08591b6ff2302bd34959bf985b7d06eff460215618b80f24b9ae9ab503bde"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_pre_dispatch_refusal.py",
+      "sha256": "971c7abe696e51b0b8c7e95154bdf5665ecd4403c2c952d4e933373dfdfd7486"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_preparation_effect_intent.py",
+      "sha256": "7c5ae761238057980a3dd1738008a69de881c40abda54092c1d7da37b72bf3e9"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_preparation_holds.py",
+      "sha256": "a3fe5803c959a00b9d992b6363249b55c48fbefa1a14a8f1cfb4f89e0c520f58"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_prepared_input_claim.py",
+      "sha256": "7afcb4749c6f21e93bb9e7fc7b5ae1bfd5748cad800a2183e2fa4261cb111d9b"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_provider_discovery.py",
+      "sha256": "e71ffa4f8a3915cc7e8f396d61bb017e903f3a7421205c157791dfe1ad195e6f"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_public_input_composition.py",
+      "sha256": "6988d2079fdf318b295deeff29435ce292bfb2f3cc3b9b93024016c1918db4cd"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_recover_hold_fence_root.py",
+      "sha256": "5f3e4c763ea390d8e3c4d4a2051ffaf7db0f9d685b26cc1737fdc489992a6a09"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_resource_provider_admission_view.py",
+      "sha256": "9c14b0665e80a9ce844b2ab363083416fe97919aa745b963b4bb134c64da9a44"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_runtime_admission.py",
+      "sha256": "9a7d806a02e02bf439699eeb87f221113497622d423056bb68bdfb08c4033f38"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_sessionless_input.py",
+      "sha256": "fe2e2926ac14f1fa2439eabe49cac28028e26ce062aa828a3ddda778b38c0b50"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_staged_agent_assembly.py",
+      "sha256": "1405caea814b195eb34d621207ecb6f7d89e6eb54e6b69455316bc269422b26b"
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_staged_operations.py",
+      "sha256": "f3a46fef3d5b6f7e61b4c3e6be6f4ce3a9817ba976481488e618b866d220d168"
+    },
+    {
+      "path": "packages/execution/agents/tests/agents/harness_records/test_records_distribution.py",
+      "sha256": "d616d9e61c23967965dd1b1f310d30961f205ba74202906c22f2e5b15b057bb2"
+    },
+    {
+      "path": "packages/execution/agents/tests/agents/harness_transport/acceptance_install.py",
+      "sha256": "eb880bcf7d48cd045c5d8b1708e336df4cce85ab7a814a7229c90848100abb24"
+    },
+    {
+      "path": "packages/execution/agents/tests/agents/harness_transport/test_acceptance_evidence.py",
+      "sha256": "5c72713fd4716ad5ffb3757c5c92ebbae734b02800d9b362effc8f1ff9d7b45a"
+    },
+    {
+      "path": "packages/execution/agents/tests/agents/test_profile_catalog_lifecycle.py",
+      "sha256": "00bf6dbe396c116f878c422e830f24055f5c466bdb9898cf5a4c8535bdf725be"
+    },
+    {
+      "path": "packages/execution/agents/tests/harness/test_credential_ref_contract.py",
+      "sha256": "9e33583e016ee55f827a37578921b5b252636885f9c564597d940bd094f1be73"
+    },
+    {
+      "path": "packages/execution/agents/tests/harness/test_registry_retained_guarantees.py",
+      "sha256": "60cdab9416767d0f48822031a577e975ca23a8ca117dcc116213b3a4330067a5"
+    },
+    {
+      "path": "packages/execution/agents/tests/instances/test_lifecycle_control.py",
+      "sha256": "0c6014721aeee695ebea88b7096a01a48f25316568756c5c3b1458b874555b1b"
+    },
+    {
+      "path": "packages/execution/agents/tests/instances/test_lifecycle_observations.py",
+      "sha256": "5c17159bb3e43291c9b861989e4d61b0ddb31245581ea2b510b998806a08c469"
+    },
+    {
+      "path": "packages/execution/agents/tests/profiles/profile_owner_fixtures.py",
+      "sha256": "3689b95272e3cb379a12c737f6b97bfa70832875ca481a7487d69c68fa1a7974"
+    },
+    {
+      "path": "packages/execution/agents/tests/profiles/test_historical_projection_contract.py",
+      "sha256": "b351cc0fc9a7039068bfd13498cb6c6bfde502ebffa960b8cffdf4c5b40068b0"
+    },
+    {
+      "path": "packages/execution/agents/tests/profiles/test_management_boundary.py",
+      "sha256": "6c30b777f9725ee78a0aa0757a072930ea7aa4fc62a571b5d2e23af11c88012e"
+    },
+    {
+      "path": "packages/execution/agents/tests/profiles/test_public_contract_surface.py",
+      "sha256": "0e9a26d01c5cff7934235a079e7d10f4fe283a75a7e169aeca487f183930d639"
+    },
+    {
+      "path": "packages/execution/agents/tests/profiles/test_storage_port.py",
+      "sha256": "4cb77f3ded45dcd2ce78788d2608b632509f9c33ae3ed488c17fa6c5a7c3f43d"
+    },
+    {
+      "path": "packages/execution/agents/tests/sdk/interaction_fixtures.py",
+      "sha256": "c9af6bd0225498037969b686f0d47a7d6daa489366d40b516af19863969a0c5a"
+    },
+    {
+      "path": "packages/execution/agents/tests/sdk/test_acp_recorded_response.py",
+      "sha256": "3d6c61e2f3f0077288a5955f2af5bbd540a6c398d1e988c1d4baddbd1525a381"
+    },
+    {
+      "path": "packages/execution/agents/tests/sdk/test_endpoint.py",
+      "sha256": "b1b42d8822c716ee48a64b5b4f111c3fe3d6b0e99780556c2f2b74a9b0596a27"
+    },
+    {
+      "path": "packages/execution/agents/tests/sdk/test_instance_binding_material.py",
+      "sha256": "ea40ec7e722d49a688d812d7b53cca62a65b912493bf4ad850b4f701629a72ab"
+    },
+    {
+      "path": "packages/execution/agents/tests/sdk/test_instance_writer_epoch.py",
+      "sha256": "39647d3c0ca62242c4e771179f5ac0ab46976b77f84c011acc4fbb1dc55703d4"
+    },
+    {
+      "path": "packages/execution/agents/tests/sdk/test_instances.py",
+      "sha256": "b9945ba529072d5ac4d07648e284c1775be414e2f320597b3f2d1ff918b008f0"
+    },
+    {
+      "path": "packages/execution/agents/tests/sdk/test_interactions.py",
+      "sha256": "135012082f79a2d594ec7bff325b4399b00985e0d4463740619f1efaa2cdc902"
+    },
+    {
+      "path": "packages/execution/agents/tests/sdk/test_manager.py",
+      "sha256": "027b073a4837af7591e98881a699a49851036f2a86b9825913ee546e5e039ef0"
+    },
+    {
+      "path": "packages/execution/agents/tests/sdk/test_manager_endpoint_fixture.py",
+      "sha256": "89718ee76f2406a487a68d41816194dfd50842bc982a52eaf7e7ec885ed183d2"
+    },
+    {
+      "path": "packages/execution/agents/tests/sdk/test_prepare_dtos.py",
+      "sha256": "6f60b0f754b15a391a91963082d6706f855d4d3fbf8812e70de2840710156c96"
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/assembly.py",
+      "sha256": "6498370cd5aec0954bcb4664896d0ebcbc594a5d1a4ad8104c184b6c0fa0500a"
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/configuration_records.py",
+      "sha256": "56e4aff53e98fbcd003d1f542adc3f8ec3538b05ce47cd60b2197d67077e961d"
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/invocation_authority.py",
+      "sha256": "cfbfd6ca503692444ee727bd42911aff71856ef16746574ed80ef87922338789"
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/lifecycle.py",
+      "sha256": "dc9a3916ebb65a5e9689c46711be0606c54be1e6216ff18ad98f06288f0c0dbb"
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/management.py",
+      "sha256": "8f336685feabf5539df272e485d3ea8fa0e4ae84c696933b487096903d5c7f82"
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/manager_joint.py",
+      "sha256": "08be71697e6a65e893d7133b20937c2c0bd54d322bc79a7eae2a20ac21d10100"
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/native_evidence.py",
+      "sha256": "166ccfb440cb736359b2302e4266580b4bc4ef5b8366385c70dd6e823cd39e24"
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/node_publication.py",
+      "sha256": "2c62f661f779fa8b8b1d19723269dc0661371b18c85f2ef91c339b4d5dc700a4"
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/runtime_admission.py",
+      "sha256": "a6e2e67d3bb84c99302c20c26602797dd84027fc3b5355bfb6acbd295c108ae6"
+    },
+    {
+      "path": "packages/execution/agents/tests/test_harness_catalog_consumer.py",
+      "sha256": "36d9d33d9c8a0eae89eab049f760dc48dd56641eab1c85ea3917ebd633a08020"
+    },
+    {
+      "path": "packages/execution/agents/tests/test_harness_definition_admission.py",
+      "sha256": "f5f35b1d234d8720183187bd0070256ffe5921cbca82c0d03bcba6bd1af07059"
+    },
+    {
+      "path": "packages/execution/agents/tests/test_owner_cutover.py",
+      "sha256": "9a0d126ff220e6565281040d49fd2abb4492a42353972b85387d1465ce881a7b"
+    },
+    {
+      "path": "packages/execution/agents/tests/test_zero_environment_dependency.py",
+      "sha256": "ab54e16b769996b68239414cd6edb37788425ccf9efbf98a6f9cd89c25d8fc9f"
+    },
+    {
+      "path": "packages/execution/decision/README.md",
+      "sha256": "707affb0781dc00bcb5263e56f019e559b75e2fbe27e897297c09523c7d94639"
+    },
+    {
+      "path": "packages/execution/decision/examples/manager_roundtrip.py",
+      "sha256": "10e09271f6988c43cef2955cb8ca67a75236d027cab596945a75f8ce364cb72d"
+    },
+    {
+      "path": "packages/execution/decision/pyproject.toml",
+      "sha256": "c6d4b28b92797448419883c4533a1b27c8b426a3a65f9a7f783711a71a418242"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/__init__.py",
+      "sha256": "bc29cf81367d95e24900db93ec3f92a74119e486003c785ba9b159b2b784281f"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/capability.py",
+      "sha256": "f900ca3fe6a6e180bfd7f0a7103d6986090597e3f49cae3375549b47ad9d949e"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/definitions/__init__.py",
+      "sha256": "386703e8a5e2e7ce3618dfa5c11022cf3fe6cbc3ba91a7a9eea67db4d811787a"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/definitions/models.py",
+      "sha256": "6e388c4d701b8ab0ef165bade6adfc2e5d04fce7b212c4c1959c79ec4f7b08c6"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/definitions/values.py",
+      "sha256": "249182fe07050ca96fee7b5282d2811ce14a87693c9e2c753dd1964bc5c67edd"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/evidence.py",
+      "sha256": "3de3a24b1401d1a3aae3c2550b2f0511054a0e95f5c596fb42f4b8867aadbc17"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/job.py",
+      "sha256": "817a893ae6de0bd4b2090348a0eb51207eeea17f4e6fd7683caef0fe2420b261"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/ports.py",
+      "sha256": "ff60ea4dff847307412219e6b3f1255eb940a3148b42ea35fe030f7a8362abb9"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/predicate.py",
+      "sha256": "c57a42d0e40f39b10e007f92f7ab16b155a4c689573882b59b71bcc96eaa550f"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/rules.py",
+      "sha256": "9e4da472d756e164304939c577b6717d5fc13d12a26bc1dfc731305bc90bf10e"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/runner.py",
+      "sha256": "ea40a25ad83cb42a409fa9b686966be7ae2cac18132fae75338557f59a183d09"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/runtime/manager.py",
+      "sha256": "0248cd2e2246a76de6d6547e155d569d1b81c18feecfe7ce99c002544419b0c9"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/settings.py",
+      "sha256": "799ebf6f702063cecdfd7f304872a1f01f11f0ebecb6e752ed95999689983476"
+    },
+    {
+      "path": "packages/execution/decision/tests/acceptance/test_release.py",
+      "sha256": "6389453760d8e48cc6a7f04bd923bb9ec59d5d60075d4c8897de240a160c32f8"
+    },
+    {
+      "path": "packages/execution/decision/tests/acceptance/test_two_domain_runtime.py",
+      "sha256": "30659f1431d941334d8f3cb61c956346a372e5a1c4e632076609e071c3bb272d"
+    },
+    {
+      "path": "packages/execution/decision/tests/compatibility/test_upstream.py",
+      "sha256": "740174b337cd1685c166d4983969cb75e36e9abaca36b317446db8d7fb052cf8"
+    },
+    {
+      "path": "packages/execution/decision/tests/contracts/test_canonical_vectors.py",
+      "sha256": "bbe946153994c0b12644fde68792a925b74c507c22e54f36d70a075770073921"
+    },
+    {
+      "path": "packages/execution/decision/tests/contracts/test_decision_contracts.py",
+      "sha256": "c7ef15ca441ba16f7f6ae34d3a749507405285a6626c67f9d8149f60af917d1f"
+    },
+    {
+      "path": "packages/execution/decision/tests/contracts/test_public_surface.py",
+      "sha256": "96175e665cbcb21d6a2dadf7db54fc174388095fdf95c44f37426b2bfecab3f2"
+    },
+    {
+      "path": "packages/execution/decision/tests/contracts/test_schema_declaration.py",
+      "sha256": "f2c77459caa9cddd92f71771f4f47d50ece40cfd6f4c91ad43e99cffcfc9fca9"
+    },
+    {
+      "path": "packages/execution/decision/tests/evidence/test_evidence.py",
+      "sha256": "e02af41f1fdd7abc438bd15bfeb5cc3db346bd3990bf1983366f38ee4d496946"
+    },
+    {
+      "path": "packages/execution/decision/tests/evidence/test_evidence_attacks.py",
+      "sha256": "433eab7ad929969058fe0175084bbfc19122ac20acb8b58d7d2d108a99d7dce1"
+    },
+    {
+      "path": "packages/execution/decision/tests/evidence/test_historical_reader.py",
+      "sha256": "393aa146090c058eea276b9c966d900ca46ceee5f040f8fb1d84c0b6d548ab1b"
+    },
+    {
+      "path": "packages/execution/decision/tests/runtime/test_adversarial_runtime.py",
+      "sha256": "a0f6c0932bfb2db428de721007d3c0e2985d37c76b983e1fbe89b9ce04958034"
+    },
+    {
+      "path": "packages/execution/decision/tests/runtime/test_manager.py",
+      "sha256": "65493d076bedbcee600cc2ee81822fa7ead4f96518ee4a33bd98d765d4aa39a2"
+    },
+    {
+      "path": "packages/execution/decision/tests/runtime/test_runtime.py",
+      "sha256": "ae9ef1edff523eccd0b6bc58783a3b46d8b04bb159634bb7ea03a7dff96b833c"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_answer_validation.py",
+      "sha256": "01cff0d4eb78020461ab5bbae526e921883fb2e471f186547f8a8ba2515da3c1"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_capability.py",
+      "sha256": "edf948900ecf2d63c8e85fb71ff329d09d1f45de513f66709c82b88efa09d6c7"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_definitions.py",
+      "sha256": "6065254be3cbe85cf66e4f6e990c01cb9b594ae47e659c1f7d38c982b5c1c459"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_digest_redaction.py",
+      "sha256": "cdd0bf9ac2d0b21182aaa33fd9cab0d0b2f08bdd4e6ad65ca9212c815a286ed7"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_engine_discovery.py",
+      "sha256": "23f7c2a6474697561de84c9606e89324350df31db176e8b1a61bcf7d5247cd5d"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_evidence_durability.py",
+      "sha256": "74f86e1465612e16ed2ae682ca5ccb174a6fee2b3fe77b46c5cd358e2abf7ac5"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_job.py",
+      "sha256": "1bcb49f680bda513e19dc8adf9680c05974ca01c70162ba7f07358e8de976506"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_migrated_assertions.py",
+      "sha256": "9a9dedf365150408bbb9fc432241bccee00d5e0d9b1f5bd04bb6a56279925c32"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_migration_source.py",
+      "sha256": "f5fe20b27039867582b678c58b05c6d0680368b2bf161ed313bdcd1d6351f85a"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_ports.py",
+      "sha256": "964eb6046db81105fffb33813c49edc4777095d0b1e2725f020c1177ffbcee01"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_predicate.py",
+      "sha256": "479669f7abccf9032971c49c6d9c4822124db617b8551106db381d75621755eb"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_request_replay.py",
+      "sha256": "c5da318a836b834a95993725bfc6c5fdb1296ef608daad0d4813a1cbe7a667c3"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_runner.py",
+      "sha256": "c0846a792f5350a68d7592fa122909fb8bd919fcac75a39211d909994d738467"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_scoped_evidence.py",
+      "sha256": "148e7f22b2463db045f4881d5d352486df700cb5651b3564781c5707848e9cf1"
+    },
+    {
+      "path": "packages/execution/environments/README.md",
+      "sha256": "fed5c3049bac0e8e1ff7b9f213d91acb5efa0945fdb70bb7324b5307ce99f8de"
+    },
+    {
+      "path": "packages/execution/environments/examples/ACCEPTANCE.md",
+      "sha256": "79c17832bbde4b4b40b664fe0df17ea8920f1568ecef5cdedd84806099835250"
+    },
+    {
+      "path": "packages/execution/environments/examples/envctl.py",
+      "sha256": "eaae7f9bc2a71bc46ef39687ab8f91ca6658b1c943c6acc1bcbd13e02f1bf56b"
+    },
+    {
+      "path": "packages/execution/environments/examples/local_roundtrip.py",
+      "sha256": "1ad6e35a5ccc0956ab204ce2a24369fd844205f5d9830096e9f600d567ec11c0"
+    },
+    {
+      "path": "packages/execution/environments/pyproject.toml",
+      "sha256": "6a534b3bbc5523e3205f6088494e4192730c33dac9bc9013b500bdb61c1d4812"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/__init__.py",
+      "sha256": "481e01a95e46c3db25ebde143733fb1fcc27460377be3fc51b6cfe658c8e71a1"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/capability.py",
+      "sha256": "4c247d9c4f746d6c78fe6d71725d39fad14b0eacab234e380a081e8acbf931e0"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/composition/__init__.py",
+      "sha256": "59b1696a08ed4dcce227ab648bd20514861166797f67fd20271d6f519c39e172"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/definitions/__init__.py",
+      "sha256": "a46286f47b5d2f869e7f3899899dddedab087fa5e86786f435df2c9daf160d2a"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/definitions/capabilities.py",
+      "sha256": "b158d6a6b26b03c751551997e746f208e814a0cc6b63b32fc3439a1887826211"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/definitions/composition_values.py",
+      "sha256": "5d80e49f65fd2f50f6332283d0650cef14c2d1ba129384274c5da2dee49c28d5"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/definitions/contracts.py",
+      "sha256": "b9e03cd4307771af0f03d08d7acc4ba04cab34c3aeadd5ab45e2c3d3f6ec5ddb"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/definitions/models.py",
+      "sha256": "9f16302652c9929c08c5a59fd1489d896157be729179ee45a3e44a1d104e9b5d"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/definitions/runtime_ports.py",
+      "sha256": "82cdcc4d3d6035c0762c3578e5825750cfa00ea000c897e5d3bbe71a4005cd5c"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/definitions/runtime_resources.py",
+      "sha256": "b5e3ce58d0b30aa90233f60e79a849609cc8ddaccaacaae7843bb0565b420ed8"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/management/__init__.py",
+      "sha256": "b7545c73a640393ac4efcafb7093a7140b76fd3ce8eae50c048568a77f741413"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/management/endpoints.py",
+      "sha256": "711223b365b0ab28c534c41bca4e709afc9e9d82df02c20c9b66745a6003f682"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/management/ownership.py",
+      "sha256": "a4b4f75e0c77115ad6d641d28cf9be87e4f126d98afa04daf9daa01866942ead"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/management/resources.py",
+      "sha256": "5bb0b96802ee2682dfd7b44a0351e51bfa081225a57b266a2a8341dc206e3469"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/management/store.py",
+      "sha256": "599a6d089951131ebc8238f11e67083093b713135758cdeb63a6c0eb86214b50"
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/management/usages.py",
+      "sha256": "7f7de0f22c976a6a7045fdc31a13081da9db12a190caecee65cd2d861279dcf0"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_capability_report.py",
+      "sha256": "44b689df9eb6309b60ecdf5854c7d8ebe3b83e1e8619c88cfba7b9c9a700e396"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_composition_contract.py",
+      "sha256": "34f9752e04030f2bf1a07f8666cdeb475ccd3bb9dbec146d5ddbe6da061d21a8"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_contract_surface.py",
+      "sha256": "df36db68ebe09dfb4c1a99591ba6a15003e87f05c440c4e053739aeec10972fe"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_envctl.py",
+      "sha256": "300530eaa2bdfd4ed4f1ace55c4de49670b4eadf7106bc3fcc643965dca158de"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_environment_capability.py",
+      "sha256": "761a59502787104c2f40c5859922f01d2db179550a20a42aa09a37c4bd5c3471"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_explicit_use_ownership.py",
+      "sha256": "d02ebfe447685e23c8210d58e873448e7d79be32643a7ec64b135d9255c25e4e"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_external_endpoint_binding.py",
+      "sha256": "78fd9c125f8b43afee560b67c64b7bc628add82019a369b18e9112d5dc9e84a7"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_guarded_endpoint_lifecycle.py",
+      "sha256": "188c1d0e42b872fbcbc1efff13591a0428fffc6815faa2126090c323b62f96fb"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_guarded_endpoint_send.py",
+      "sha256": "f30097bec8a4ec5a10e3637704c8298805a137926b8050a361491b12d202f9d2"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_instance_validation.py",
+      "sha256": "96ea57b23909526eacfbfa4dd7bd40d56aca80db8c99eb5cbe289d3de4858e16"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_management.py",
+      "sha256": "83ed33053528e2c95abd92acc610c5f7f5d45148fcc59ab6ac61fcf2c16818f0"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_package_boundaries.py",
+      "sha256": "01f5bfbe99c1b89db123e02b11225025117e43f3f54bf9210aefd70e426b6e4d"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_runtime_ports.py",
+      "sha256": "79d4080cf2700e8a8af5a046a9677de295f3ff63cb1ad3425ba185b999d0660a"
+    },
+    {
+      "path": "packages/execution/environments/tests/test_runtime_resources.py",
+      "sha256": "d1de270c77f7649803a104e7fbf56855f09cae66fd73ead7734992feba28c994"
+    },
+    {
+      "path": "packages/execution/units/README.md",
+      "sha256": "2554163c42e8fcbd3627c63c960ea6db568ef1536a37ebbcfc12fd1778858e7c"
+    },
+    {
+      "path": "packages/execution/units/pyproject.toml",
+      "sha256": "bfedce187a75877776408994a64f90e14a717ebbb4fcc2dfaea97b7e1c0ed220"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/__init__.py",
+      "sha256": "bbc2ce1098ba0f322fc81dd0176a75cd43658297dadd1dd515f61d8fa7f308dd"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/__init__.py",
+      "sha256": "c28cea0b721c7552a78fceb83739ee18037ce8122f460af2171739e10e8476d8"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/connection.py",
+      "sha256": "019e4d4fd652b62d0a2d6982ce63b958c6355860ba6e699d631f6b78e1b4db43"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/context.py",
+      "sha256": "568942c193e9615087a7aaac775b193706dcdfa0c21dd050e413be578536eeb6"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/fingerprint.py",
+      "sha256": "e6b6305a7c932b38764bd18c4bbd681e3cf0654c6d4a25075382293fc08e4abb"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/generation.py",
+      "sha256": "b06730d8e294cd9ba7b6cc2c090a3da9c404794fb0043ffa764928e7c7534c11"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/invocation.py",
+      "sha256": "19f393f0982cfb35832ac6615e9d54d274066d554807ef7306e10e21d418450e"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/local_state.py",
+      "sha256": "36b8812efc92a1f2286a45d09a6f7ca33e0da466ca09c379f961cf9c4e5b839e"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/material_admission.py",
+      "sha256": "d172c746dbb4dd96c819b89e7baf518138eb3cbb1c2a1e70db5541318d8170a3"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/material_contracts.py",
+      "sha256": "3856ca3b0319db8b09ffdb3d89e661f8d355214870778d68eb8857edce196482"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/material_registration.py",
+      "sha256": "0e5baae89756cddd447aa262da12524a3680c52322947650e5ce431022c27149"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/operations.py",
+      "sha256": "7172e080f887cd9ce14a538e88f57fc71b447390958efd3466d4946e4cd1a82f"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/owner_ports.py",
+      "sha256": "b163cf87d29d69e8be25056cc68ddcc08aa067e5ab5f49e1ff9753ed83aedf94"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/owner_selection.py",
+      "sha256": "8d875244be062601f4437ed5c5e92a6d1092b0039361719dc2180550f4e75e3f"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/run_permission.py",
+      "sha256": "fefbf6e5e1b7d069048e0bd9467438de085bfac13f1be43cfc387a5fd244c10a"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/wire.py",
+      "sha256": "64df3c846ed84bb4757066144831f9e70db35d1372cb77426fd5977ef4d33238"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/api/__init__.py",
+      "sha256": "cae75f4c8b12faf51ce8e718f714312f0d923251b43a41a43c36c2a695a12659"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/api/interaction.py",
+      "sha256": "4e7d673fc6ff8d6efbcf919c5c82133ef43568c0dd9d913fc23e8a120fc48309"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/api/manager.py",
+      "sha256": "703df6258412f25f04ab7611468cfbd9ab293d62c919ba78653b29bd821ef234"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/api/unit.py",
+      "sha256": "e3103921b7606dc7f999d3f32d18554ac7a57abed623cb0c40263e94fe30e503"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/__init__.py",
+      "sha256": "8d13b28ba2d69b08bf64b435918b2d6c8bf026ee65a113c9cc7321541d06ca23"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/fresh_factory.py",
+      "sha256": "186ee77d3270d7f9c8e197a647db211e486f3850879ab226dc9bfb9c5b222fcf"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/instance.py",
+      "sha256": "7cf4ec1fee116ca238a52bfdafdfa2005777095dd97dc79b44f2bd3fd94b2162"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/local_owner.py",
+      "sha256": "1a23f01abe5e0a293a8325a9818c5447033191e36915e39659dea5cb4f8f59d8"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/owner.py",
+      "sha256": "79b97e715bef8ac68758692e9c03f2cae9999fd369b349a8696cd9678e344551"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/process_input.py",
+      "sha256": "efb07b343ab53f90b7dddf9d8332cd8f5c77f571a5861c08e9563a5b5cfb9950"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/profile_selection.py",
+      "sha256": "bd46eecd4f9032aa3a25094ab98df2f717c79c228c24037c650a73dd5b859ea3"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/runtime/__init__.py",
+      "sha256": "a4ef96b54abf055f5ab767ff209bebaa85091f0bb43b2d014932908b6d357c5c"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/runtime/assembler.py",
+      "sha256": "6a12971185cd20ebf6021735adc69c515c41dbbdeb6783dc1b9a5f9a28f08ba4"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/runtime/coordinator.py",
+      "sha256": "24e07794812d974b42c8e9eac934665f25cde8201e97b13d33b36c075dbd1bd6"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/service.py",
+      "sha256": "38dff580b786dd36ab601f32898b24e1e3b17c9cbf103b0d9552c36828478934"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/__init__.py",
+      "sha256": "2d56b07c9515857ce36cc94bd81fcc74e0fc560cf921961c2979191d1c77279a"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/assembly.py",
+      "sha256": "c9092c0027655257a3b5e8430e4b99210b97ec3488b83f4b7d6848bb85779e1b"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/contracts.py",
+      "sha256": "0b2905477310d4f40df500ac1e7146806b265f8c1377f56c2eef24e04e22c9e7"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/dispatch_selection.py",
+      "sha256": "8e55374796cf7565fb506fd0aa86a9b91919542831bd62e2331d359dd1e6e935"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/harness_admission.py",
+      "sha256": "c0498a915870eca92112bbc0f8e8b0225aba2523017c1e9b145b97373411b88d"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/manager_evidence.py",
+      "sha256": "e1c8eb321409c77fd8757e340ef3e301d361931c116ab38ab25fe2283cc64c95"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/material_consumption.py",
+      "sha256": "cc1ad1eaae7696ced47f236dbe2055101755917f1b5576a35bc17d46e6d82575"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/material_operations.py",
+      "sha256": "bbce065646d8979041147490d911e7c09b9489057a9e89144f89b0860abee0a9"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/materials.py",
+      "sha256": "9c257a24f78e1424c163150e06b413d48c5e90df9a5224b0278ac5ed32e9c37e"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/preparation_effects.py",
+      "sha256": "0b159263bbc905d2408b77016eb34ff2743a428d5cdf1f7813eb05cbf81d1383"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/profile_admission.py",
+      "sha256": "d922a5ced29b09dc0463e809ec35655370ead2554783939abb6bb08bbfaf9ee0"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/publication.py",
+      "sha256": "caaf0e075571e0916771beed201497479aacc4e15a316ed5d615fca4fc049c48"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/staged_assembly.py",
+      "sha256": "284fcf970f68479643d3c87153fa7e4c0d2a297e19355c853c677b2d58356f53"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/wire.py",
+      "sha256": "aa02eb7d8bc0e8bc9847e8d906edf53acd63d12230377972f5d0c5740ec60edc"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/channels/__init__.py",
+      "sha256": "fbf8bc323021f6c43700ceae140fc146604118be0050fed810fd2470e35153c4"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/channels/acp_input.py",
+      "sha256": "6ce47f0090bca5d56d13d0469d40087632d493293eb9588eaacb54ea49e635b5"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/channels/contracts.py",
+      "sha256": "96444862cd2f82929bfcd44a0b7d628cd422600c5f2645a3f1fe3022afc4062b"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/channels/reservations.py",
+      "sha256": "77c42eef5fba6db05911367b48691a77828bd784c7c451fb052a3126bb33b109"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/channels/wire.py",
+      "sha256": "8ac3384b052456a9471e7baaaefa9334c6629d3a338dc3c45b3d49e480b07d66"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/__init__.py",
+      "sha256": "368eecc8332a71305e9707099dba043c9f609ff32f474df39480257f24f00e1e"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/acp_options.py",
+      "sha256": "44bf6168ac729d44dad814fbc9c3d5bfe7bec2e90633d095eee3d1478339d78d"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/actions.py",
+      "sha256": "682e1cd35f4ed3787366a25917a2a508ff9d0d566adbfaca257bee40eeea7a01"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/contracts.py",
+      "sha256": "fefb9bea7723bc3d66a2b783faf380c4d15dcada0fc8e49d9a1b8e26d642e171"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/offers.py",
+      "sha256": "4aa928c3381acac5e63886212093daacbfd9df485096bfbdbf0c4667ae61adf3"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/references.py",
+      "sha256": "269bf94f65b984d43b4c5adf8767c6d2232f7ef7c650e48dbc9fb14ad16dba96"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/service.py",
+      "sha256": "39610a89968a486760e8dffd1663757e6f27463d0521d4bbf868b2bd236787bf"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/wire.py",
+      "sha256": "52b966042cd4c6bb73a125de3f21220b07de474cc1c1b2fb0e622499533d2041"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/__init__.py",
+      "sha256": "72a4ea5eab20855e578781853553a90da26ac23aeabf7f0602b82ae00fbef588"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/admission_identity.py",
+      "sha256": "387bc47b101c23c4a9291eae06a8e2174150f23f8755dc90ad68bd76e2cc62d7"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/execution.py",
+      "sha256": "f49305aa3ab0c3eee09c69769b4084f8217f6394b32f59d10b54909449f13c6d"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/fingerprints.py",
+      "sha256": "0f81c6268721c024b3f60ec71c6df2f31036eb039aac46fae700113c06b63680"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/material_delivery.py",
+      "sha256": "ee4c7a7a37dc781dcb9621e2271075a122182856bed76363fa60889d14f30d52"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/materials.py",
+      "sha256": "2cf39b976b845cf759d95448d425919e5fa909e1ff5fab9fa5ff971f2f2b2fde"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/operations.py",
+      "sha256": "58adb770321614e03a5d6823609f5b06a8125c0b0e8a05bc385ed5ace4c3c426"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/secret_mounts.py",
+      "sha256": "8ade0a58201c8d7565b7f0f226f2d8b9ead837a6318520d000667d41a3560b0a"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/spec.py",
+      "sha256": "c09521e064f25977ebc8352533946cb2f9914842f1d2b30d2a0c64e0a284127f"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/staged_operations.py",
+      "sha256": "0bacc0fe670418fb4d23b1ca5181790f2d9efaa1b9fdd952af081c5151744e97"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/unit.py",
+      "sha256": "9e55087d3d4ba5aec5f91899ea5ff467fd912e01c058af2e7f53dec7ced56b25"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/errors.py",
+      "sha256": "f7cb072280901ef3e609ca7e48174150a11a0a02400db8f900b56c851929fc07"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/legacy/__init__.py",
+      "sha256": "f21176ded962c6db2f06b68fc732b5265ba8d5732127be322a3b95403405a852"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/legacy/read_only/__init__.py",
+      "sha256": "8eaada09b812cbb6024f7280188014f38b6763fcbf90f35a7cf755c5b2d728f6"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/legacy/read_only/history.py",
+      "sha256": "e54472f55cbb084e4790b5e54d3dd3deda56e592aff47eb9fb5f6af4af93a5ef"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/lifecycle/__init__.py",
+      "sha256": "dd28419475acbe1862a528776b4f1d3385873c6d326c350e8dc6b59496cc8e64"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/lifecycle/service.py",
+      "sha256": "b5472cee761dcd2749f1bc4206f08d132f90082e19cbe2e1858b8fdc37f7a10b"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/lifecycle/unit_lifecycle.py",
+      "sha256": "3100b3a95b3f5e774ef17e9f476167c3f8dcad3fb1f5d767f9390378d493af8e"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/lifecycle/wire.py",
+      "sha256": "7a91b68fd82ba925bde556341c2057c5f1bc43335060b739f57e93867a886941"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/management/__init__.py",
+      "sha256": "4449c7cf17ccd603840e5d8c7809323042206139a7d438ff4e779f3fc634beeb"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/management/instance.py",
+      "sha256": "a7434685d348a9ca2d042f7031a4a8dadd4663e83e5ebf119c79e572afb69af6"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/management/manager.py",
+      "sha256": "d6c41722af85907c91dc3412db3f67ff2ded05dc50138c612a0384a28dc1a62d"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/management/planning.py",
+      "sha256": "a1863535f7606c03b26c8535affadcb622baba5ca8be140ea9347384d39e901c"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/persistence/__init__.py",
+      "sha256": "2ed9d2a2d5a19d64fdc3d21b83a5dde4205971bcfa9b29c0349524c2c459c547"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/persistence/sqlite/__init__.py",
+      "sha256": "561437cc0c6112012df94975da37b2ff4984bfa3b9dc224962a8ba137dcd04d7"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/persistence/sqlite/operation_records.py",
+      "sha256": "be3b93d2ae8b4bb3f5b071d273a57475a37f44b2d6a0b26a058ecd41c0c1538f"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/persistence/sqlite/store.py",
+      "sha256": "1cbb0a99892c69362a534a319a6918a6f9c114d62762c4b619d5924196310142"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/public.py",
+      "sha256": "738669f16ed9527c0255f1818725d7580aef65619276bf55fc6fe8f4e34df172"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/records/README.md",
+      "sha256": "39cd0e1a19d0d4772bfa5d3ce06174375509565eca477c787593366ba0d89a26"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/records/__init__.py",
+      "sha256": "992a87b2d1950b04787e5e2122d454ad3538c8eeffa36cbb3987ff07e82e25d2"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/records/acp_turns.py",
+      "sha256": "3528545c7a69612ba1d4beb847b449d340a9c75ab8890629122c04676ba73bf2"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/records/native_evidence.py",
+      "sha256": "f44c1744585b67c1b5768c6bd9b98e90149eadd39730b71617ba5c8cb63d9c38"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/records/operation_journal.py",
+      "sha256": "0c39f87cdb98d1337d0353bf5169c4cfe2f31ecee07d5bee78813db2c353e928"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/records/reopen.py",
+      "sha256": "2c9d9c3a850c81d998b90e135aa6806d8cfe6a5233e1fcd0bf939bd935391683"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/records/unit_records.py",
+      "sha256": "dc1bd4aead4df70e35de31a7a1029e56926b12eaa41706384c38b2bfe5018931"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/sessions/__init__.py",
+      "sha256": "12d97ebe6d1e0449916208a73f506fc63f41b4068127be4766f689cb80233176"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/sessions/acp_factory.py",
+      "sha256": "44d048867a1aa630f05d835b9925d8b5c0ea71348e7d28c493ef7a5c8fee7d14"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/sessions/callbacks.py",
+      "sha256": "9742bd2ff2ee16f126e5d0d85a9b67d90097c2013470910008f4c45bed2b285f"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/sessions/environment_channel.py",
+      "sha256": "7cbd6d7f18f783210d79b637bbd4ed4f6d4b8a716804610a24a921afd7d394fb"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/sessions/evidence.py",
+      "sha256": "540615bd3b34a9a9715451a2325d26c2e195fc73700e574c187d0bc6ed03a86d"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/sessions/prompt.py",
+      "sha256": "86cc8e2c5f1de0e98ce118d907a52f61820ab87fdcb0934b7c44620265600273"
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/sessions/sdk_client.py",
+      "sha256": "73be08730d7dcc0c0fdcb6fa8bdf71017cabf3353b5199d2aa665440158648c5"
+    },
+    {
+      "path": "packages/execution/units/tests/definitions/test_admission_identity_and_operation_contracts.py",
+      "sha256": "f0d0607219e49b418f054077a422c82ec1a78f34b5528bd3bc2de84beed46293"
+    },
+    {
+      "path": "packages/execution/units/tests/materials/test_authorized_material_consumption.py",
+      "sha256": "076d6cdf7d1cd7a1ba9e75866c3f8759398814b654561fc374448728238ddada"
+    },
+    {
+      "path": "packages/execution/units/tests/materials/test_material_admission_owner.py",
+      "sha256": "3a4034b1b08ed86f30f5b908c5586cdc61d7569deaedbcc37581efba9d57294c"
+    },
+    {
+      "path": "packages/execution/units/tests/materials/test_material_catalog.py",
+      "sha256": "083f1ab40faeeb22e2bdf0ecd6887ccfc4b85481a899d1c1135e423baa54d33e"
+    },
+    {
+      "path": "packages/execution/units/tests/materials/test_material_descriptor_owner.py",
+      "sha256": "23249b5fc7c299baef44adba0d45897a1bd593c93054142f7d410a55bbe7e620"
+    },
+    {
+      "path": "packages/execution/units/tests/materials/test_material_operations.py",
+      "sha256": "784c8af8ab1c841abe118911031c04c46f9a0434e478f394ad070ab84820fc67"
+    },
+    {
+      "path": "packages/execution/units/tests/materials/test_registration_claims.py",
+      "sha256": "6a93e78200a61402f87aecaa2680f718d9199e49ce586281e22983d442698ad2"
+    },
+    {
+      "path": "packages/execution/units/tests/persistence/test_domain_records.py",
+      "sha256": "b5131a5f9efebf68be74071fab36ccc570ad2f5dfeeb4debd3623ba1a202d07a"
+    },
+    {
+      "path": "packages/execution/units/tests/persistence/test_operation_store.py",
+      "sha256": "f06781b6b9d9406d94bcbad9f78e834371e1cfed54da7788e86132c81ca66af5"
+    },
+    {
+      "path": "packages/execution/units/tests/persistence/test_store_close_release_retry.py",
+      "sha256": "a64c17b47ed2402e33884e903d1708359bef109223ce44269794caa322206c01"
+    },
+    {
+      "path": "packages/execution/units/tests/persistence/test_usage_release.py",
+      "sha256": "fd7c2d945ede01e90d066cc7c8d4e2f44b629c11c04255f87061c08ff46ebd1a"
+    },
+    {
+      "path": "packages/execution/units/tests/profiles/test_profile_catalog_owner_regression.py",
+      "sha256": "a41519d69e8d8039fcbe89e93bf4dcf2d1099d428b6a72bee4ec2605ed3d262e"
+    },
+    {
+      "path": "packages/execution/units/tests/records/conftest.py",
+      "sha256": "70827025bb9489c4c43cca6e1e7429e097e846c9d5265bc4c4b9963e3bc9a1aa"
+    },
+    {
+      "path": "packages/execution/units/tests/records/test_operation_journal.py",
+      "sha256": "fe54a18e2897b8981e462f2f2643146d2a3c8c7eab178eb6e17b252c83581fed"
+    },
+    {
+      "path": "packages/execution/units/tests/records/test_unit_records.py",
+      "sha256": "c9b428cf18fc59f1db28084db17ec110a3b11c179f92c41181c2b7f8fe673ca6"
+    },
+    {
+      "path": "packages/execution/units/tests/records/test_work_retirement_guarantees.py",
+      "sha256": "db574c1f4e39b142e79f44c955d9fe53eab471c0d7827ef976a8c4a12a0844ee"
+    },
+    {
+      "path": "packages/execution/units/tests/runtime/__init__.py",
+      "sha256": "f0f6bc8ed0825a24af8fd352c35bf011f9fa5c4b7ebea8959229129ade2ce71f"
+    },
+    {
+      "path": "packages/execution/units/tests/runtime/peers.py",
+      "sha256": "d8a62dd6860c180ee520e27e321da9a74f64a78f53c9ce01a6dd6616eeff10c8"
+    },
+    {
+      "path": "packages/execution/units/tests/runtime/test_local_composition_integration.py",
+      "sha256": "d258071efed699687b6d6770485f73d2237f068286fd493d4e89f5d3c56b7313"
+    },
+    {
+      "path": "packages/execution/units/tests/runtime/test_runtime_assembly.py",
+      "sha256": "70e0061f41b9e39181820096c3d3b50a92614b547f6e7f451b6a6964bf046577"
+    },
+    {
+      "path": "packages/execution/units/tests/runtime/test_runtime_composition_protocol.py",
+      "sha256": "9a0b073655679bb36231b9b3d7e8b90a811bf74b8c18818c34503356cd4d1292"
+    },
+    {
+      "path": "packages/execution/units/tests/runtime/test_runtime_verbs_pins.py",
+      "sha256": "671b86c62545989957135db52aec18c1e36e2410ec9ee7765c8bdbaddc341be2"
+    },
+    {
+      "path": "packages/execution/units/tests/test_acp_durable_turn.py",
+      "sha256": "c15ab3dabb0111abdfa5d56656fd0efd3832423c00501674f41b3a1ed4acc59e"
+    },
+    {
+      "path": "packages/execution/units/tests/test_acp_evidence_capacity.py",
+      "sha256": "2028eb5b8f57493e4ed13c3d427197a3703ab1887c1586bd43cd3c6f9502e4bf"
+    },
+    {
+      "path": "packages/execution/units/tests/test_acp_observation_cache.py",
+      "sha256": "bac9bb9dd1dc4847476f231575aa2b00c8f258a5abc1aa9d441d131b5352f792"
+    },
+    {
+      "path": "packages/execution/units/tests/test_acp_preparation_owner.py",
+      "sha256": "797c7e82f8dd43fb0a67f726f972a9d961ade064ee841e2fb7b5cba49ccac2e2"
+    },
+    {
+      "path": "packages/execution/units/tests/test_async_environment_channel.py",
+      "sha256": "da855eb5ff76af290c4abdb8db3404ade014f3a39b5b99acfe9cd196aecdab55"
+    },
+    {
+      "path": "packages/execution/units/tests/test_async_rpc_unit.py",
+      "sha256": "cf2899a530dabdf01c9f0b3b4b3c4649a1ff4a3c96415bba20448f677074c361"
+    },
+    {
+      "path": "packages/execution/units/tests/test_configuration_owner_retirement.py",
+      "sha256": "d1455a429438a1d882f2c904dbe25df1a883542d65cfa2859063cd67fe98047d"
+    },
+    {
+      "path": "packages/execution/units/tests/test_effect_factory_finalization.py",
+      "sha256": "759d9d3013a26518558fa5b9167816c6086ed0fb23adc459af9e041f35b97602"
+    },
+    {
+      "path": "packages/execution/units/tests/test_effect_write_guard_configuration.py",
+      "sha256": "1ecfa876c78ce53ddfb6f8870ee73d87eded66b44430e983b9e3e6d5e6adfc72"
+    },
+    {
+      "path": "packages/execution/units/tests/test_effect_write_thread_binding.py",
+      "sha256": "86ac41316fb5c939652b194aec2373fe178ed44e996bc1839df938e9798d0ccb"
+    },
+    {
+      "path": "packages/execution/units/tests/test_execution_handoff_definitions.py",
+      "sha256": "af51e4cf392f4785a5c58f4a675f08b76f4d444af3691cbbe83357d4e852a424"
+    },
+    {
+      "path": "packages/execution/units/tests/test_fingerprint_migration.py",
+      "sha256": "1108abdfb41139212a3bf28475f4879228202ba652ecd0b099fa717a0e96c464"
+    },
+    {
+      "path": "packages/execution/units/tests/test_fresh_public_factory.py",
+      "sha256": "0e91448ac75d819985559155662eaa152ed9cb5370808eba0f66cca5f71b004c"
+    },
+    {
+      "path": "packages/execution/units/tests/test_guarded_prompt_capacity.py",
+      "sha256": "aca12ebb7105cf1e9c0aa4954293ac171dea5fb17e40bfe00cef5b1290359ec9"
+    },
+    {
+      "path": "packages/execution/units/tests/test_import_order.py",
+      "sha256": "60154f281cd1217582fa3ae73778f006dbb55f382829c6e470b934018b6b3d5c"
+    },
+    {
+      "path": "packages/execution/units/tests/test_invocation_admission_preflight.py",
+      "sha256": "6fe1e8cfc43407468d9b99d544cae5a9b4260a4f72581a0dcba00cc6bededb31"
+    },
+    {
+      "path": "packages/execution/units/tests/test_legacy_execution_history_read_only.py",
+      "sha256": "852ce725b0f8c23d9549e53a04e8c4f4b8a63acc3a58d8c3132dc21b902820af"
+    },
+    {
+      "path": "packages/execution/units/tests/test_local_owner.py",
+      "sha256": "7e1e5776dd0ba8c39a7edceade1a14499988f13cea851b5c3b3c44806689af16"
+    },
+    {
+      "path": "packages/execution/units/tests/test_local_owner_recorded_query.py",
+      "sha256": "635ebda3d876f320fa915e817b8103d8085d1e9c898c0f7c5c4a636749f50c3f"
+    },
+    {
+      "path": "packages/execution/units/tests/test_local_unit_state.py",
+      "sha256": "0b6af628cb67fe29bbbab4cc0fc33d3d321ea4137e16b8e62781e45515b8ae5f"
+    },
+    {
+      "path": "packages/execution/units/tests/test_low_level_quiescence.py",
+      "sha256": "e938a7138051c9062ebae5dec1cb75657d112c56f9ecb7c0ef42d92016c31ced"
+    },
+    {
+      "path": "packages/execution/units/tests/test_managed_acp_input.py",
+      "sha256": "048d77c243c250a6ed7fc143ef3a09e6eca795dfb01bb9a06b3a481d07746e5f"
+    },
+    {
+      "path": "packages/execution/units/tests/test_manager_close_authority.py",
+      "sha256": "6a1fe32366cab1c5d4d75c566b601aaba7c458657a8b0d2805952d154570ac1e"
+    },
+    {
+      "path": "packages/execution/units/tests/test_manager_quiescence.py",
+      "sha256": "0b4922e83fe38ea08c5893b3675c886f9cc08ac2309d3f698c383a6489d11d21"
+    },
+    {
+      "path": "packages/execution/units/tests/test_native_write_failure_diagnostics.py",
+      "sha256": "473f2548e29904adab854e02981f1d34a2d04184358dd83e60c025c8334afc0e"
+    },
+    {
+      "path": "packages/execution/units/tests/test_operation_effect_write_guard.py",
+      "sha256": "87fd7f5a2894bb6ec8dd34788fb35e714dd29bbdcf54b491eab4891570f723d3"
+    },
+    {
+      "path": "packages/execution/units/tests/test_partial_open_cleanup.py",
+      "sha256": "fe0c533930be573a8a09f5ed812590ede8c7ae3dc1965c909986900054d88efb"
+    },
+    {
+      "path": "packages/execution/units/tests/test_process_input.py",
+      "sha256": "cede5b9fc2612930fea501260bdb41fe860f0b7b58ddae57caff9bfc0f3aa523"
+    },
+    {
+      "path": "packages/execution/units/tests/test_profile_admission.py",
+      "sha256": "7a2e8ff82f7a810edb6ad3827559ca1e5c98c020ff79083e8aef46b539a01b0f"
+    },
+    {
+      "path": "packages/execution/units/tests/test_profile_selection.py",
+      "sha256": "267b8adf7e85796091218686c5d754d1603292e21992ad0901bdf999b758723a"
+    },
+    {
+      "path": "packages/execution/units/tests/test_prompt_timeout_cleanup.py",
+      "sha256": "d819327c5a7846204a27ac55d23a7320d6121b9a83b532a769c244b5e496010a"
+    },
+    {
+      "path": "packages/execution/units/tests/test_prompt_timeout_quiescence_race.py",
+      "sha256": "e93f67194f7fc49893f6e06baf98aed0f8854b261152c98bfd98431fa98b9c81"
+    },
+    {
+      "path": "packages/execution/units/tests/test_public_unit_api.py",
+      "sha256": "f0681f970ac492b0d9e0593d27d2eb25bc40087c008d87c52ce13618a7d3e63f"
+    },
+    {
+      "path": "packages/execution/units/tests/test_sdk_environment_attach.py",
+      "sha256": "effe820d80b91a1d2b1807d2a21029b013de6feeb5fe76fba141e7dc0463990e"
+    },
+    {
+      "path": "packages/execution/units/tests/test_sdk_open_start_boundary.py",
+      "sha256": "058448feb0e1cdd1954435bec7a7e6e4f00eb6cc30788209a5fb4b051bb6a8e5"
+    },
+    {
+      "path": "packages/execution/units/tests/test_sdk_quiescence.py",
+      "sha256": "da1c31b264f8755eec4d1e1916d9e60fdc6ccbdc8baffab11a04db950f014b5e"
+    },
+    {
+      "path": "packages/execution/units/tests/test_selection_fence.py",
+      "sha256": "71efaa51e2994f9bf7c41543dda5fe369dbb30b2abdd6aa8b8a4f17326169391"
+    },
+    {
+      "path": "packages/execution/units/tests/test_standalone_assembly.py",
+      "sha256": "30961dae9292d6aa9b04d575d6b6d91e7f643e190a078e048798b0f1e753a022"
+    },
+    {
+      "path": "packages/execution/units/tests/test_start_dispatch_retirement.py",
+      "sha256": "795553908f5096d087343a120e925166b01a409c2c64cdc6b9fc20806d1d3d0d"
+    },
+    {
+      "path": "packages/execution/units/tests/test_start_write_authority.py",
+      "sha256": "5029050e9146d4eaf8eb3fc0721fe1196cc4c33ebd556c35031a7358c2ede4a6"
+    },
+    {
+      "path": "packages/execution/units/tests/test_unit_admission_context.py",
+      "sha256": "6de60e5da834d8e0d6c8543127452eccfa7a425b92a362266c8c33612ed1bd72"
+    },
+    {
+      "path": "packages/execution/units/tests/test_unit_instance.py",
+      "sha256": "efdfb3c7535ef205507d7d60863aa6229eed5f962bd3f2db256da10dee6c1659"
+    },
+    {
+      "path": "packages/execution/units/tests/test_unit_interaction_lifecycle.py",
+      "sha256": "5d5ac3fd8e7cc9e60fa2b6a2f56f819ffafdd0b646eef952c7f176ef3cadf42b"
+    },
+    {
+      "path": "packages/execution/units/tests/test_unit_manager.py",
+      "sha256": "1c415c61ee172d7f4f3bc15cd7815696c1f7681e9deae9f756dd4661c2ef643a"
+    },
+    {
+      "path": "packages/execution/units/tests/test_work_native_bootstrap.py",
+      "sha256": "e223512f0afd2d2c8b199532bcb61d20097121bdf0af7724b69b835990dbf1d1"
+    },
+    {
+      "path": "packages/infrastructure/src/ordessa_infrastructure/encoding/content_identity.py",
+      "sha256": "0ee5ba396434e11129d513f0c2a780028c25820bed4dcf09baa5362004a7e3f5"
+    },
+    {
+      "path": "packages/infrastructure/src/ordessa_infrastructure/encoding/immutable_json.py",
+      "sha256": "6258a7f4bde166fb6b5ef63a2f39f09755fff080d71800cd7ce43be00a187e4b"
+    },
+    {
+      "path": "packages/infrastructure/src/ordessa_infrastructure/filesystem/content_digest.py",
+      "sha256": "3da6f45994bbeda8282773d46a246fb738fc4051c2a86bc0e5b6cbefbe1202e6"
+    },
+    {
+      "path": "packages/infrastructure/src/ordessa_infrastructure/security/fingerprints.py",
+      "sha256": "f439e0874e599bf022d283855c671800e87ad9c2f57054207de31c0525e37b68"
+    },
+    {
+      "path": "packages/infrastructure/tests/encoding/test_immutable_json.py",
+      "sha256": "ca747d342995dc0588169e5e284303fd4ea518e6ff978551ba58b6f6b8f41348"
+    },
+    {
+      "path": "packages/interfaces/ACCEPTANCE.md",
+      "sha256": "f8912d6614e25676f47d07b544728ac72c2fdf9251705473cb7854cb083bd82c"
+    },
+    {
+      "path": "packages/interfaces/README.md",
+      "sha256": "198d1d1697293b5602dcf4da1e1775977c30debb76d92e3df729036d13bdded3"
+    },
+    {
+      "path": "packages/interfaces/channels/cli/src/ordessa_interfaces/channels/cli/__init__.py",
+      "sha256": "b5521c70626bce7158e18eb113f1956bf2b0ca884d7b558b8de0edec5523364e"
+    },
+    {
+      "path": "packages/interfaces/channels/mcp/src/ordessa_interfaces/channels/mcp/__init__.py",
+      "sha256": "f62abdeeea20516f7c67d8182c3c45dd063d99b49cae3691af9bbc7bfca65590"
+    },
+    {
+      "path": "packages/interfaces/channels/src/ordessa_interfaces/channels/__init__.py",
+      "sha256": "9ec3971d9d14d81315c531849d6d509f9a0617945c2ad149ee1b5608463c2539"
+    },
+    {
+      "path": "packages/interfaces/contracts/pyproject.toml",
+      "sha256": "524e716868a82d143b2fd352030ea5ac21d083545dc6d61d881002b4bd10a47b"
+    },
+    {
+      "path": "packages/interfaces/contracts/src/ordessa_interfaces/system_access/contracts/results.py",
+      "sha256": "102d767f13a33457c9fba24d8b16813f246ef9783c039f8bcfee1d473e8abdee"
+    },
+    {
+      "path": "packages/interfaces/contracts/src/ordessa_interfaces_contracts/__init__.py",
+      "sha256": "6c2cef82f79504f7b884d95141c1719cc7c4a52431cb73e5762370f5c256dffb"
+    },
+    {
+      "path": "packages/interfaces/contracts/src/ordessa_interfaces_contracts/capability.py",
+      "sha256": "4571a8aff2b63227a144637ba4927f3b287b2df24959eabbb5ee539e5531377a"
+    },
+    {
+      "path": "packages/interfaces/contracts/src/ordessa_interfaces_contracts/envelopes.py",
+      "sha256": "3b57c0b4ef03e2e301fbc8b2e797c1f8d624dac860a50a774d37790354b3e86e"
+    },
+    {
+      "path": "packages/interfaces/contracts/tests/test_contracts.py",
+      "sha256": "ddba5bd9c2830711f5b33cf8b8a158ee19843fc31553660ba5601bbc85b032f7"
+    },
+    {
+      "path": "packages/interfaces/pyproject.toml",
+      "sha256": "bd70f5dd668f342db268e9954ea79a127d0408ae53e66792c2cd0af921906a76"
+    },
+    {
+      "path": "packages/interfaces/src/ordessa_interfaces/transport/__init__.py",
+      "sha256": "141ea6af1c0f3546052a3e25b03029bf3b609ccb5849fe3c8156c15148ff502e"
+    },
+    {
+      "path": "packages/interfaces/src/ordessa_interfaces/transport/loopback.py",
+      "sha256": "309223fa2d9033461aa9e6a781bf771101cecb46282f8eeecae81c3ff1fda60b"
+    },
+    {
+      "path": "packages/interfaces/src/ordessa_interfaces/transport/mcp_http.py",
+      "sha256": "850c415af9eb34ad42b442f167653ea80a7148df90ad22cdf4285e9832a3004e"
+    },
+    {
+      "path": "packages/interfaces/src/ordessa_interfaces/transport/mcp_stdio.py",
+      "sha256": "3b0d5ebe6286a17e65a8788655af035451fef4e3d70a2e8d1e601d86fd94e183"
+    },
+    {
+      "path": "packages/interfaces/system-access/bindings/src/ordessa_system_access_bindings/agents.py",
+      "sha256": "aa497e561232e00448ed1e53474efac253dbfe1ca97c404131a78626079d02ae"
+    },
+    {
+      "path": "packages/interfaces/system-access/bindings/tests/test_agent_error_mapping.py",
+      "sha256": "188970f08054347ec851426e916929470ea151d7db906c854d6e7f3e785d0f8a"
+    },
+    {
+      "path": "packages/interfaces/system-access/src/ordessa_interfaces/system_access/__init__.py",
+      "sha256": "96198b1751551a1c5c97a9e896b6438c8a43c3612152ac94feb274265ce436ff"
+    },
+    {
+      "path": "packages/interfaces/system-access/src/ordessa_interfaces/system_access/access_control/authentication.py",
+      "sha256": "f5e07150fe34f9550c83b85182afa323c306fbf41cc603ad377cae4967bc23b7"
+    },
+    {
+      "path": "packages/interfaces/system-access/src/ordessa_interfaces/system_access/assembly.py",
+      "sha256": "3f2ff29886e08f547818b585f299beb3e6e1105934cc85ed5dafb6987bb843e3"
+    },
+    {
+      "path": "packages/interfaces/system-access/src/ordessa_interfaces/system_access/discovery.py",
+      "sha256": "2fb75ec4ca7d776fb819c60b0a20cdd76662a641aa360fa02c221871c18cde99"
+    },
+    {
+      "path": "packages/interfaces/system-access/src/ordessa_interfaces/system_access/operations.py",
+      "sha256": "ad4d55e59afdf0bb07b4ffc6c64b8257f6aefd72c66516f17eb96d159382789a"
+    },
+    {
+      "path": "packages/interfaces/system-access/src/ordessa_interfaces/system_access/projections.py",
+      "sha256": "a3a039bea7bcf32698d139eb14c1548c93fe347cf915f229353819274ebfce5b"
+    },
+    {
+      "path": "packages/interfaces/system-access/src/ordessa_interfaces/system_access/queries.py",
+      "sha256": "b0a4ab16b8cdb4e269543b79550959765ac9acdc7914c32576527e1d31d43939"
+    },
+    {
+      "path": "packages/interfaces/system-access/src/ordessa_interfaces/system_access/registry.py",
+      "sha256": "a201543c24273f96ffe1b4806f8089394d9a7a1d7d3bfcd980eadc1d4ac31da9"
+    },
+    {
+      "path": "packages/interfaces/tests/host_fake_module.py",
+      "sha256": "fee04abb8c5f67154ee3c87e73a69dd1215727fbc62a8e04f09ad60af170d81a"
+    },
+    {
+      "path": "packages/interfaces/tests/host_fakes.py",
+      "sha256": "a1c3a1c91a13e8a237e26da3944946d46e049a25becb221112487f351eb79b3c"
+    },
+    {
+      "path": "packages/interfaces/tests/mcp_stdio_server.py",
+      "sha256": "b2cbc000185d5149fadb29217457f36185c82432d2dddb5389b8e41675f1a471"
+    },
+    {
+      "path": "packages/interfaces/tests/test_cli_foreground.py",
+      "sha256": "099d1ed7e6f0225807ab8174996caf1e3aa7edc96a5ae4c9a079eb77626badef"
+    },
+    {
+      "path": "packages/interfaces/tests/test_environments_cli.py",
+      "sha256": "d5fe5fa07b94f03af61ff085f24c2aafd326aa607e239bec75b16e3770e8512d"
+    },
+    {
+      "path": "packages/interfaces/tests/test_host_boundaries.py",
+      "sha256": "db93aab273058389216a1715c5bd0d8474bfc5c2fb8ebee6be640c219b0cd04e"
+    },
+    {
+      "path": "packages/interfaces/tests/test_host_cli.py",
+      "sha256": "67106db26f1e457729b4723dbeedbe2ac0759497c9eb52b76bc81538b52aad2d"
+    },
+    {
+      "path": "packages/interfaces/tests/test_host_dispatch.py",
+      "sha256": "f210b263f84a29439bed4d6306f1dd9100c4a3461c01c1036a479bccfeb8bd9a"
+    },
+    {
+      "path": "packages/interfaces/tests/test_host_env_descriptor.py",
+      "sha256": "dfa553b0bb7be03234a89073e69d12b8ee1447d63ca187b22de6fa9de0638c95"
+    },
+    {
+      "path": "packages/interfaces/tests/test_host_mcp.py",
+      "sha256": "d828288c1f1548078a9a5305716420031e6771168a3a9b9316c6e1a8b44e8481"
+    },
+    {
+      "path": "packages/interfaces/tests/test_host_projections.py",
+      "sha256": "11a038ff1d7df3e6fb972470b9c8b634aef679cfb4d3aac9251fa70e1e741c01"
+    },
+    {
+      "path": "packages/interfaces/tests/test_host_registry.py",
+      "sha256": "b213a6a7c1add7897cf2d753bfa6a1e9c912d87c3ef16087cd0fdae4d0bb3f45"
+    },
+    {
+      "path": "packages/interfaces/tests/test_mcp_transport.py",
+      "sha256": "07ed67bbd433385aa2fe56881e35b95d615c95a67737e074fc6bd0f467145e09"
+    },
+    {
+      "path": "plugins/agents/profiles/ui/api/src/contract.ts",
+      "sha256": "730fa0bcacc7fec940f34d3927fe28578195ba48dfe019d7bc108b670c0f612e"
+    },
+    {
+      "path": "plugins/agents/profiles/ui/api/src/index.ts",
+      "sha256": "14886cbaf69ea0e77074416db4b188bf18c1f809c865f7a90f40b76ae4ff9b25"
+    },
+    {
+      "path": "plugins/agents/profiles/ui/api/src/schema-mirror.ts",
+      "sha256": "a7301a8e4c45d7c8c09fe46585f68b673626a4026a569631876faa19f31dd5fd"
+    },
+    {
+      "path": "plugins/agents/profiles/ui/api/tests/contract.test.ts",
+      "sha256": "45f3924236552f57adc4455f2008ca289d9fcfb2b393d70cc37eedc6c1cb9cfc"
+    },
+    {
+      "path": "plugins/decision/jev/pyproject.toml",
+      "sha256": "eee50015d923f3f1a5e190e245d5b1ff0e82251091b4f7e15fba4d71ed8bb9fc"
+    },
+    {
+      "path": "plugins/decision/jev/src/ordessa_decision_jev/provider.py",
+      "sha256": "b47c6336675dbe1ab73570ce4fd28e14a876453a3a0fe8544ddbf7c55dc30b4d"
+    },
+    {
+      "path": "plugins/decision/jev/tests/test_jev.py",
+      "sha256": "e37e786e667f95e0beea2154f6db73fb36b6d407f6a0b0768f8cce79bd64b250"
+    },
+    {
+      "path": "plugins/decision/rules-cel/README.md",
+      "sha256": "41148513f503324cb9e3503be3c26f0c482798d630f6d3b49eae68d93c5aa82b"
+    },
+    {
+      "path": "plugins/decision/rules-cel/pyproject.toml",
+      "sha256": "0f6a43744601132e6dbe64870bee2e0e7b5c6906cedbdc751a646868d2ded5d8"
+    },
+    {
+      "path": "plugins/decision/rules-cel/src/ordessa_decision_rules_cel/__init__.py",
+      "sha256": "005fd868aab502231f00f1595dbd686f287ef9f5925a33a095e675e989b0af1d"
+    },
+    {
+      "path": "plugins/decision/rules-cel/src/ordessa_decision_rules_cel/engine.py",
+      "sha256": "be4f62d796fdd10f9a18a0603a09e28b08d867a23cefb8583c3ff5367fc36a97"
+    },
+    {
+      "path": "plugins/decision/rules-cel/tests/test_engine.py",
+      "sha256": "2da35c5fefa632cab3617888b6836082b174aed43b43b45764ce1cb9e8697c0d"
+    },
+    {
+      "path": "plugins/environments/local/src/ordessa_environments_local/__init__.py",
+      "sha256": "02110af75c9467c93f555992ce8bb3bf3a2a87219ad255acee13b3c9dc68b980"
+    },
+    {
+      "path": "plugins/environments/local/src/ordessa_environments_local/composition.py",
+      "sha256": "9decf40f2db4d4e206ba3f21a24015b95ff4e7bcd383aae6c5988365be73a423"
+    },
+    {
+      "path": "plugins/environments/local/src/ordessa_environments_local/files.py",
+      "sha256": "a5f4f8a91895f33b3e0089e459ed9d44739c597d92c7a796883499191cd6180f"
+    },
+    {
+      "path": "plugins/environments/local/src/ordessa_environments_local/process.py",
+      "sha256": "c5c54296a0d8e70d68ddcfbf3e4be3131eccf6fbbe0f4161a904bc52cc24a5f7"
+    },
+    {
+      "path": "plugins/environments/local/src/ordessa_environments_local/provider.py",
+      "sha256": "cc91ce3cb3de58a9eb7ca903892321352efbf767d0cc1b6d59ee4a0b008ea358"
+    },
+    {
+      "path": "plugins/environments/local/tests/test_composition.py",
+      "sha256": "625d58e78be1f14b3baf52304ad52fc2e512be70da68a6de13b253c6bd5e49c6"
+    },
+    {
+      "path": "plugins/environments/local/tests/test_local_environment.py",
+      "sha256": "8d97e7c04eda1d7d8ca95a31a82ebedffa0b000863d6818a4a28e9acbe3cea5f"
+    },
+    {
+      "path": "plugins/environments/local/tests/test_managed_local.py",
+      "sha256": "0f8f4e9f40ae9e7da00d15fb61f7677929a19ad000c8915e23eb7ee54a3f10a1"
+    },
+    {
+      "path": "plugins/environments/openshell/src/ordessa_environments_openshell/descriptor.py",
+      "sha256": "2b42d98272d85c4d8b633e611cacca8efa36e0555ff1a7f32a9e8994778f700f"
+    },
+    {
+      "path": "plugins/environments/openshell/src/ordessa_environments_openshell/mapping.py",
+      "sha256": "f89753cf87fad9da90e4ec85bcf190945f6ecd6aebddebe58389382ba84693a7"
+    },
+    {
+      "path": "plugins/environments/openshell/tests/test_rpc.py",
+      "sha256": "1523cf3878d6fa8ac3618d330416061fbdb7e6e14437d317ebee6eb030b1c9a3"
+    },
+    {
+      "path": "plugins/harness/claude-code/README.md",
+      "sha256": "60614ab57650523e6be484135ea304630450496e7f089fed09740532ce2b91b9"
+    },
+    {
+      "path": "plugins/harness/claude-code/owner-ports.md",
+      "sha256": "ec0a8ecfc594d1685b807b35a1346a1533e76f3982e370a62466dc3bb167d7db"
+    },
+    {
+      "path": "plugins/harness/claude-code/pyproject.toml",
+      "sha256": "57c2b2f4bfc4f147b934a86be76b1d904869d58e64eeb019a46ca1a10a47c81e"
+    },
+    {
+      "path": "plugins/harness/claude-code/reuse-comparison.md",
+      "sha256": "868666a485174c7185c4af195aa85a7edcb0ad99aa796be9850c9906a309b0c7"
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/__init__.py",
+      "sha256": "86b7b3692b6c0ed562f791f42865f607c19174146a95459a0468f14c8b2580d4"
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/client.py",
+      "sha256": "89341383d760fcfe39fc7bd09e370006dc62010c48bc3a5e9061c9687e795069"
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/composition.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/configuration_face.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/native_channel.py",
+      "sha256": "c046d198e0ad47f145e04279b10b3efafb78f2bc6f94aa4509b31a29212228fd"
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/native_evidence.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/owner_projection.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/ownership.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/production.py",
+      "sha256": "48281414ca9e35a6c5832447ab8a6a18951df77237ad2a163cb088ba5cbd7fe1"
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/profile.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/provider.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/runtime_channel.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/server_plugin.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/termination.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/unit_lifecycle.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/claude-code/tests/test_sdk_provider.py",
+      "sha256": "1eda833158a510485441f5769edad1700aedc78f229ecc2c1a677751082abc20"
+    },
+    {
+      "path": "plugins/harness/codex/README.md",
+      "sha256": "ca9138f4c33a34720cf4e52976b4c22f0575d09c01971719a7ebee08d7322bc3"
+    },
+    {
+      "path": "plugins/harness/codex/SDK-RETIRED-SOURCE.txt",
+      "sha256": "561859557c02345ffd61d5f05b3be8a475920a4aee896e37508e8631e5f7f142"
+    },
+    {
+      "path": "plugins/harness/codex/pyproject.toml",
+      "sha256": "dc929cb4062eebca288b3201c282b51be2b2b710df28f95b3dc7a20e03f894d3"
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/__init__.py",
+      "sha256": "37e8c5e7ff50dda1af9a57daa0656743de0af4495968530f7610d00b5f203d2d"
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/composition.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/control.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/credentials.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/executable.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/launch.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/lease.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/managed_input.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/native.py",
+      "sha256": "4e4f31e9770c069abfac48d0e763a86316164b8673a9e7b76f0cfca0688729a5"
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/native_channel.py",
+      "sha256": "83b88380ea64e4cfb463644684c81b82478211ba173605988b7a9a588eedc83e"
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/production.py",
+      "sha256": "aff650eb4bb4fc7f80c4e69b7daa9f1ff0a2e4998a51ccd1eed10732d58c0537"
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/projection.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/provider.py",
+      "sha256": "8a0afc11e1e1c490f05f96c2888c293d69cb58ab1f979bee6fa45e768087619c"
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/remote.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/runtime_channel.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/server_plugin.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/termination.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/codex/tests/test_codex_native_channel.py",
+      "sha256": "be3adeaa37cfab199406c4872ebd288e3756f6996ae122539fe9a80764ff104c"
+    },
+    {
+      "path": "plugins/harness/codex/tests/test_managed_input.py",
+      "sha256": "0a2ff8dd58df915ba559d8c0f6c76d068d369d6a05cdb01875d8cf3cecf4ce5f"
+    },
+    {
+      "path": "plugins/harness/codex/tests/test_pure_read.py",
+      "sha256": "8c52f8b36ea15e064502f0628f5f8808bde4be46838e8966bf3ae443b811ad77"
+    },
+    {
+      "path": "plugins/harness/codex/tests/test_sdk_provider.py",
+      "sha256": "82519bff2e1868a6d736f26c0c3a599e1a42ab1a76dd50dd1208b092685bfe1e"
+    },
+    {
+      "path": "plugins/harness/copilot/README.md",
+      "sha256": "326fc54b3b98a8bc4d1f8ce52a2206dae0070139ef3b954a88669365cff7ed78"
+    },
+    {
+      "path": "plugins/harness/copilot/pyproject.toml",
+      "sha256": "0947badbc771c1d8a7758b917148857de63c8054f9800542e7a1669fdbad10fd"
+    },
+    {
+      "path": "plugins/harness/copilot/src/ordessa_harness_copilot/__init__.py",
+      "sha256": "57f62a1f7b2353d55380b1d91865df1eabeab26def4274492dfdfeffb37e0727"
+    },
+    {
+      "path": "plugins/harness/copilot/src/ordessa_harness_copilot/client.py",
+      "sha256": "feb76c11b1bb5f0759a5fde64bc7180d1d389e224ac0e1c5ae0b3da3c837b85d"
+    },
+    {
+      "path": "plugins/harness/copilot/src/ordessa_harness_copilot/native_channel.py",
+      "sha256": "d04a63938f72b1226113fe97da3a69ac27f78f6c0555d5ccdf617bc501444c62"
+    },
+    {
+      "path": "plugins/harness/copilot/tests/test_copilot_native_channel.py",
+      "sha256": "5d8be957cdd028bd5b32422e51f819e8cc0befd7a5053c449f99949652a225a5"
+    },
+    {
+      "path": "plugins/harness/copilot/tests/test_sdk_provider.py",
+      "sha256": "56276b42ff606fe94f6aa35b4e17f2522b034d45582fa9047c8625494912710d"
+    },
+    {
+      "path": "plugins/harness/dsh/README.md",
+      "sha256": "a8770db09565ade903ec545b9fcd58855709d1018bc1f7a2fcac8893ff3c39c7"
+    },
+    {
+      "path": "plugins/harness/dsh/REUSE.md",
+      "sha256": "75b5335188287beef8150efc82f7a18d14c1a3bdabb77776839108d5f3a8d957"
+    },
+    {
+      "path": "plugins/harness/dsh/pyproject.toml",
+      "sha256": "a148f875bb81f3302278640ab8dcc2d6cc754d61cf753f5ca7bacf74ace0536e"
+    },
+    {
+      "path": "plugins/harness/dsh/src/ordessa_harness_dsh/__init__.py",
+      "sha256": "c7b88e36607c8ef787cb6549412ca12586e76372b088eea32809a07d6f48c23a"
+    },
+    {
+      "path": "plugins/harness/dsh/src/ordessa_harness_dsh/acp_model_configuration.py",
+      "sha256": "6639fe284823d2a03ca2d19597c2f767335b1ace7db5c1dac190edccfce5a82e"
+    },
+    {
+      "path": "plugins/harness/dsh/src/ordessa_harness_dsh/acp_model_facts.py",
+      "sha256": "eeae247625405375ca317bdffff3b4e27bcf55344d4393e2149b7c2b15d061b9"
+    },
+    {
+      "path": "plugins/harness/dsh/src/ordessa_harness_dsh/command_declarations.py",
+      "sha256": "76500582d1581527ae9bbbdd58f7294a29906a189bc4a2e78def6e14bc52742f"
+    },
+    {
+      "path": "plugins/harness/dsh/src/ordessa_harness_dsh/lease.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/dsh/src/ordessa_harness_dsh/production.py",
+      "sha256": "19d615b9afcd2d45805eef71dd7e96e23c67dd94de606ec37d1ea6902c892ebe"
+    },
+    {
+      "path": "plugins/harness/dsh/src/ordessa_harness_dsh/projection.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/dsh/src/ordessa_harness_dsh/provider.py",
+      "sha256": "59dddb4a84cf3bd732001a6de54b00c315236eeb11a92d177e49452717f94b60"
+    },
+    {
+      "path": "plugins/harness/dsh/src/ordessa_harness_dsh/runtime_channel.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/dsh/src/ordessa_harness_dsh/server_plugin.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/dsh/src/ordessa_harness_dsh/termination.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/dsh/tests/test_sdk_provider.py",
+      "sha256": "b1acbb9c705b4278bf1dd504ba8334e1dce8a5ba8f242d684e8f17f8eaba4412"
+    },
+    {
+      "path": "plugins/harness/gemini_cli/README.md",
+      "sha256": "de6532583896166703a8341c4084063859204d728f393706905d3b47e4d67ffb"
+    },
+    {
+      "path": "plugins/harness/gemini_cli/pyproject.toml",
+      "sha256": "585bc4e9e04bc94bbbd5be5456b8d52e478aa4076004c66a02cbc0180bfed258"
+    },
+    {
+      "path": "plugins/harness/gemini_cli/src/ordessa_harness_gemini_cli/__init__.py",
+      "sha256": "452179d6ad2fb17235605506b542d592fed366d27455b0e0276774fecb7a3cd2"
+    },
+    {
+      "path": "plugins/harness/gemini_cli/src/ordessa_harness_gemini_cli/client.py",
+      "sha256": "9cb7311fc3a39da036425717bd61e7019dd364a57373acc294450e9c2623d4ac"
+    },
+    {
+      "path": "plugins/harness/gemini_cli/src/ordessa_harness_gemini_cli/native_channel.py",
+      "sha256": "41d4958c6e7875076aa3d9648b677c9cf50921f7387d691508e7906923ddcf92"
+    },
+    {
+      "path": "plugins/harness/gemini_cli/tests/test_sdk_provider.py",
+      "sha256": "c2555b1b18def4404f51758b0a554d5c56b806ffa078424977be7f2cb23ac7ae"
+    },
+    {
+      "path": "plugins/harness/goose/README.md",
+      "sha256": "0c2b206154ac9a9ab071c6627bf9631653da055f8e1c74fd8ee8f77ebfd2d33c"
+    },
+    {
+      "path": "plugins/harness/goose/pyproject.toml",
+      "sha256": "6866252f09109fd3289afd8ae9f0ded76b8a7655ecb8bfd9943c35c01369b88e"
+    },
+    {
+      "path": "plugins/harness/goose/src/ordessa_harness_goose/__init__.py",
+      "sha256": "212bb3be0a3b840deef0d939621b78b2793f0f041af43f523936d5fbff7bd4e2"
+    },
+    {
+      "path": "plugins/harness/goose/src/ordessa_harness_goose/client.py",
+      "sha256": "0c09c1f2de42d7332b0d0ba34d57e5f16647505ff717ba921f29718a1d586d47"
+    },
+    {
+      "path": "plugins/harness/goose/src/ordessa_harness_goose/native_channel.py",
+      "sha256": "33f04b7bcf48cc119c0b593279427c729e435e848eef36d2cd96311947f72ea9"
+    },
+    {
+      "path": "plugins/harness/goose/tests/test_sdk_provider.py",
+      "sha256": "39817275f3c97a33806645eafbcd9cb403bb21a0b4ebd4ad53a9f72786c31437"
+    },
+    {
+      "path": "plugins/harness/grok-build/README.md",
+      "sha256": "d4ebb7d3a35cb180607efff74a69ad2bfcf08e808e5f4c1c5375d49fbe4222ad"
+    },
+    {
+      "path": "plugins/harness/grok-build/REUSE.md",
+      "sha256": "13bbbb5fa8de7c766fe63175534188554b15920fce2ec1a17fbab97e9edd5f56"
+    },
+    {
+      "path": "plugins/harness/grok-build/pyproject.toml",
+      "sha256": "848cd4fc48a74aa7a6c41fc64e145c6cd53b9aa3b56e33d45b4f25575761fff0"
+    },
+    {
+      "path": "plugins/harness/grok-build/src/ordessa_harness_grok_build/__init__.py",
+      "sha256": "7d86aa55a9701f2cfdde10dafd04187c6c80a32f3a64cea601a0ec509d705163"
+    },
+    {
+      "path": "plugins/harness/grok-build/src/ordessa_harness_grok_build/acp_model_configuration.py",
+      "sha256": "cd9603fe4f3f6ea252021f73184a3526b731ac337b9069490043120a32df9bd5"
+    },
+    {
+      "path": "plugins/harness/grok-build/src/ordessa_harness_grok_build/acp_model_facts.py",
+      "sha256": "97401e44935bc7d92c7e50e412eb85dc89c948d1a97d8eb4ec13cfeddac31735"
+    },
+    {
+      "path": "plugins/harness/grok-build/src/ordessa_harness_grok_build/lease.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/grok-build/src/ordessa_harness_grok_build/projection.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/grok-build/src/ordessa_harness_grok_build/provider.py",
+      "sha256": "3eb0599bd9e0e4ef6dd204e1f040345212e47873dd91077c7c6649de3087bd39"
+    },
+    {
+      "path": "plugins/harness/grok-build/src/ordessa_harness_grok_build/runtime_channel.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/grok-build/src/ordessa_harness_grok_build/server_plugin.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/grok-build/src/ordessa_harness_grok_build/termination.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/grok-build/tests/test_sdk_provider.py",
+      "sha256": "6010e2aea4681cb1b2c81c8567dff7ef0b53a1c1f6bd5c8b4cc9f81d4ba6bc54"
+    },
+    {
+      "path": "plugins/harness/hermes/README.md",
+      "sha256": "99982816707cdb0b99f8dc00713f2ed1bdc9191ed56e924c63e59397f22913bb"
+    },
+    {
+      "path": "plugins/harness/hermes/pyproject.toml",
+      "sha256": "634421fdc886321ba801b8b944ec7bde8a8e37da77f0c3d85bc5c2f12a626df8"
+    },
+    {
+      "path": "plugins/harness/hermes/src/ordessa_harness_hermes/__init__.py",
+      "sha256": "24c9ce5eeace34621fd41985348a0903295b6b869ea1b041b2fc579954ad16ef"
+    },
+    {
+      "path": "plugins/harness/hermes/src/ordessa_harness_hermes/composition.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/hermes/src/ordessa_harness_hermes/production.py",
+      "sha256": "376764cf5a68189d7550a42885ed440b85f07e6f25c7cc29d3fae4d044de6dac"
+    },
+    {
+      "path": "plugins/harness/hermes/src/ordessa_harness_hermes/projection.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/hermes/src/ordessa_harness_hermes/provider.py",
+      "sha256": "d8cc5f45b9eced868e6793fdfe7f1c343234366083048712e3aad8e938750309"
+    },
+    {
+      "path": "plugins/harness/hermes/tests/test_sdk_provider.py",
+      "sha256": "a1b40a38a1dfc6b2dfab5bf13122c2d620ee6f82ca22186578729945bdb1c0d3"
+    },
+    {
+      "path": "plugins/harness/kilo/README.md",
+      "sha256": "33777ce3adbb7224860e791dcbdc6126e4daa18eb729d6a59840b79b23897718"
+    },
+    {
+      "path": "plugins/harness/kilo/pyproject.toml",
+      "sha256": "cda1dee88561fbe33250cce22cd28a791e84ec99fd401a4bfa69241ed2886bbd"
+    },
+    {
+      "path": "plugins/harness/kilo/src/ordessa_harness_kilo/__init__.py",
+      "sha256": "df7db4d3b807bf8d3303be3a12ee89f64d8450cfca51fa9cf52d1edcba4cf4a6"
+    },
+    {
+      "path": "plugins/harness/kilo/src/ordessa_harness_kilo/production.py",
+      "sha256": "e2a3d6b21d614a8657dba0741d5d4ca3c765f3617c2175a0451ed52759ce8003"
+    },
+    {
+      "path": "plugins/harness/kilo/src/ordessa_harness_kilo/provider.py",
+      "sha256": "e72736301294d60540cc13baecd7fc57464ad8327c47c98595a7b853fd8a8d8b"
+    },
+    {
+      "path": "plugins/harness/kilo/tests/test_sdk_provider.py",
+      "sha256": "ef4146399209ba01a945bdfbfa381db045e1223fe1b02746514168dc80d9d05d"
+    },
+    {
+      "path": "plugins/harness/kimi/README.md",
+      "sha256": "d424dc9bae7075c75407ef48d4bd40a85cb94be42b1941dd795e4f2a811deb80"
+    },
+    {
+      "path": "plugins/harness/kimi/pyproject.toml",
+      "sha256": "2793143e1dd25048bb9195e23eb5101c9dc3f2884830fdec93bd83dbf44bfa58"
+    },
+    {
+      "path": "plugins/harness/kimi/src/ordessa_harness_kimi/__init__.py",
+      "sha256": "78d8eb2a839302d1a5765501e4b6bace216735d2a5885d8006445b6ce76e06f9"
+    },
+    {
+      "path": "plugins/harness/kimi/src/ordessa_harness_kimi/client.py",
+      "sha256": "cbc96a10ec5875be19214c76b8b1cb57930f56030cdcf92cbb8fd477bf4da3db"
+    },
+    {
+      "path": "plugins/harness/kimi/src/ordessa_harness_kimi/native_channel.py",
+      "sha256": "bfe0b3f82aee40eb053e2beb628dcc84a08c6670fdd3d92ef96ebad57913bc7a"
+    },
+    {
+      "path": "plugins/harness/kimi/tests/test_sdk_provider.py",
+      "sha256": "91d9bf47563d13aff0d59c0989d03c8747b558f66df53190627bd124d6e1d9e7"
+    },
+    {
+      "path": "plugins/harness/opencode/README.md",
+      "sha256": "2db06c37b5074aa8584f48f96641dd0a0bf0e00da0c22620e5b65f48e20dedf1"
+    },
+    {
+      "path": "plugins/harness/opencode/pyproject.toml",
+      "sha256": "fd065809ad08b8d2264d110d6a3417f9ed415b2475a57c02df98f7a31fc40c24"
+    },
+    {
+      "path": "plugins/harness/opencode/src/ordessa_harness_opencode/__init__.py",
+      "sha256": "9c42533c286fcd4e79a5187c1f173b17f618d8a48e0d54852fd51480253fc30d"
+    },
+    {
+      "path": "plugins/harness/opencode/src/ordessa_harness_opencode/client.py",
+      "sha256": "4d14c8b710177e7304fce4f1bc44ba0fa74a39a0f37b3e5046e4da17270c2c60"
+    },
+    {
+      "path": "plugins/harness/opencode/src/ordessa_harness_opencode/command_declarations.py",
+      "sha256": "3e917024e10dd3448fa8060f68aac000948612518411b24b8635352d7bd3f3a5"
+    },
+    {
+      "path": "plugins/harness/opencode/src/ordessa_harness_opencode/historical.py",
+      "sha256": "d7b9e0059e9dbebfa29bc21d057e5b1205a1daccdc7b6c20d510dd23e5b511e9"
+    },
+    {
+      "path": "plugins/harness/opencode/src/ordessa_harness_opencode/native_channel.py",
+      "sha256": "9495b6e0456b6e176eb9fb2306ea9ba2aabd30d63e2c4332d0454b6d2d7d877a"
+    },
+    {
+      "path": "plugins/harness/opencode/src/ordessa_harness_opencode/production.py",
+      "sha256": "94cf9cb90a214cb0f1f5866d014d643e51a78bb692c73781ead98708f40596ce"
+    },
+    {
+      "path": "plugins/harness/opencode/src/ordessa_harness_opencode/projection.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/opencode/tests/test_sdk_provider.py",
+      "sha256": "669a31587e9bbdd08d31ced759093d2be663485953395d1a0db381e72e0892c0"
+    },
+    {
+      "path": "plugins/harness/pi/README.md",
+      "sha256": "8023095c9aacaeb6eed8d445ef968835451d6df688901a39038c04a5a55f3e00"
+    },
+    {
+      "path": "plugins/harness/pi/SDK-RETIRED-SOURCE.txt",
+      "sha256": "2c7dcc11215cecb5e6bfb87809822591dc906ba0050047ed909188e71c3f6b59"
+    },
+    {
+      "path": "plugins/harness/pi/pyproject.toml",
+      "sha256": "99f4efb2b824ecc867c4fd327aa8cf79f511426617fec22e087722411b432c65"
+    },
+    {
+      "path": "plugins/harness/pi/src/ordessa_harness_pi/__init__.py",
+      "sha256": "0baf17e9fd22c9176f9b31e0865b12eb6251e1604af6017876fa62f78ba7a45b"
+    },
+    {
+      "path": "plugins/harness/pi/src/ordessa_harness_pi/acp_preparation.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/pi/src/ordessa_harness_pi/command_projection.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/pi/src/ordessa_harness_pi/launch_validation.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/pi/src/ordessa_harness_pi/native.py",
+      "sha256": "1d13285b3472674594feddf31a143f7b1a9e7cf4e81309ca897c207e3cb67795"
+    },
+    {
+      "path": "plugins/harness/pi/src/ordessa_harness_pi/native_channel.py",
+      "sha256": "048cd02191164224151ecd1c5b4b5eee2b6878ce4fd254460113483785705c64"
+    },
+    {
+      "path": "plugins/harness/pi/src/ordessa_harness_pi/production.py",
+      "sha256": "90eedd5d5ae9d768a1c9e85084c17fd1b12c58aeef4c24100357a557209cbed6"
+    },
+    {
+      "path": "plugins/harness/pi/src/ordessa_harness_pi/provider.py",
+      "sha256": "fc190ebd54bccc6a591cb4ddfdad12f5ca93bf36377f518c561452b603543f8e"
+    },
+    {
+      "path": "plugins/harness/pi/src/ordessa_harness_pi/rpc_frames.py",
+      "sha256": "32555f4daf71a6c7aad40a86cfe55c783a8a1f35ea97e68b48236d1437de1afd"
+    },
+    {
+      "path": "plugins/harness/pi/src/ordessa_harness_pi/server_plugin.py",
+      "sha256": null
+    },
+    {
+      "path": "plugins/harness/pi/tests/test_rpc_frames.py",
+      "sha256": "577b7a10f93eb0d7e94e7564117fdf258b80d283a37e1c9d0c52b9ee8d5696f0"
+    },
+    {
+      "path": "plugins/harness/pi/tests/test_sdk_provider.py",
+      "sha256": "1a540e6b9e3024d6f414945aa6d65eeac2d24668d49333117c26ae0d9acac654"
+    },
+    {
+      "path": "plugins/harness/qoder/README.md",
+      "sha256": "365d0501d5f3124f1b60afb87263fed8cbfa274ecffbb643f4183da451dc0753"
+    },
+    {
+      "path": "plugins/harness/qoder/pyproject.toml",
+      "sha256": "1b4813f4eda0e258b6a1be5742536588f458f54fd208df292abb9d6cf5937d6c"
+    },
+    {
+      "path": "plugins/harness/qoder/src/ordessa_harness_qoder/__init__.py",
+      "sha256": "85c53a63505ad7165beceae27ccb742983c0c48b9326bfd136d66294f9354a51"
+    },
+    {
+      "path": "plugins/harness/qoder/src/ordessa_harness_qoder/provider.py",
+      "sha256": "e542df0fae87aca2795e0b6b5c572eccd7bfda695b19c047405343754af8f959"
+    },
+    {
+      "path": "plugins/harness/qoder/tests/test_sdk_provider.py",
+      "sha256": "1af36eb3522307d98121052090e636dcc743dbcf092343070cfc924be10b6413"
+    },
+    {
+      "path": "plugins/harness/qwen/README.md",
+      "sha256": "e5917bcfa55b919c11fde2190729b75ab2ec5f0bc9e3b922f4d1b02c21247d9f"
+    },
+    {
+      "path": "plugins/harness/qwen/pyproject.toml",
+      "sha256": "79f62cbf2b753cab2c48c37c87004ecf4b5fb38080827680fc936da26f1c377d"
+    },
+    {
+      "path": "plugins/harness/qwen/src/ordessa_harness_qwen/__init__.py",
+      "sha256": "5eafffb47411994c2ee0cbddf33211556fb431275d58e23745aff112875225de"
+    },
+    {
+      "path": "plugins/harness/qwen/src/ordessa_harness_qwen/client.py",
+      "sha256": "54292de74778b67e7063e9bdfd5da26d15061df56d844bd4571db3f107542972"
+    },
+    {
+      "path": "plugins/harness/qwen/src/ordessa_harness_qwen/command_declarations.py",
+      "sha256": "c495f2c22b68e6fcfec086c56920e9171ceb1f5f2d5551851196f661be557ebc"
+    },
+    {
+      "path": "plugins/harness/qwen/src/ordessa_harness_qwen/native_channel.py",
+      "sha256": "cd0abccab4e55148570fa2f044a911375522e2acf7b23192e1095f4164f7620c"
+    },
+    {
+      "path": "plugins/harness/qwen/src/ordessa_harness_qwen/production.py",
+      "sha256": "e8f601b1364e15ef27544d0a114083886c06479bd49125accd9f3b7ae737bf5b"
+    },
+    {
+      "path": "plugins/harness/qwen/tests/test_sdk_provider.py",
+      "sha256": "fb83f0bfdaefffff5177a77fc6ca22ea648b517d3f4820d085d650b354fb4419"
+    },
+    {
+      "path": "plugins/harness/vibe/README.md",
+      "sha256": "a8b0092414e1aadb4e2ff4e57766a6946afb5ced0852f372f702fce8a5cb0652"
+    },
+    {
+      "path": "plugins/harness/vibe/pyproject.toml",
+      "sha256": "55d1ac00276814475c53b9003db91608d34766c9c006a54ff3ea4508c466753b"
+    },
+    {
+      "path": "plugins/harness/vibe/src/ordessa_harness_vibe/__init__.py",
+      "sha256": "4e83b4db56e29f741d52dacfccaff84ee82fc6b968836b66a2f299690deb74ea"
+    },
+    {
+      "path": "plugins/harness/vibe/src/ordessa_harness_vibe/client.py",
+      "sha256": "1b511f4fd76640bc1e636d801362cda035990f1d078f7a3b437500d3af7c2b2b"
+    },
+    {
+      "path": "plugins/harness/vibe/src/ordessa_harness_vibe/native_channel.py",
+      "sha256": "8c34c859994dade968cc54e97dfde02f0db60df3a545562cfed4febffc4df58b"
+    },
+    {
+      "path": "plugins/harness/vibe/tests/test_sdk_provider.py",
+      "sha256": "9148723a06461e4fcced0bc55238b76f169a8ecf78841ddff1d645491ad6d031"
+    },
+    {
+      "path": "python-workspace.json",
+      "sha256": "495d467bbd840c3a3b3583b2e6a40824a2ebddf1df2295fd5e4294b4bfa6c139"
+    },
+    {
+      "path": "tests/integration/decision/test_core_read_counterexamples.py",
+      "sha256": "140652db15c383d221c4a007a7a0ceff6a1e25d39a1e4303b28d610fd039099e"
+    },
+    {
+      "path": "tests/integration/harness/test_codex_owner_attacks.py",
+      "sha256": "bd7def4bce8dd77ce72d9f91e2213d5389f259d38121b282fde6f13b6e9f729e"
+    },
+    {
+      "path": "tests/integration/packages_convergence/cli_acceptance.py",
+      "sha256": "1663fc4c3ddaf2d68838da023eaa48f581572a2f7d1522705c22c44616120d98"
+    },
+    {
+      "path": "tests/integration/packages_convergence/endpoint_fixture.py",
+      "sha256": "579265edb8025a5bd8164684a4c957e7fc6b321b05f57da1fea1ab2923966d09"
+    },
+    {
+      "path": "tests/integration/packages_convergence/f12_adapter_acceptance.py",
+      "sha256": "a31a842a6a2d54503f25f7fcc6be4c142783be1559e0170eca4ac953f7733cc1"
+    },
+    {
+      "path": "tests/integration/packages_convergence/online_unit_inventory.py",
+      "sha256": "0b08a346f91d88faea1ee008d4a16dc564db35145cd6cb4e58c3b49852f1798d"
+    },
+    {
+      "path": "tests/integration/packages_convergence/retirement_scan.py",
+      "sha256": "1f55d9c3aa7e8ac59168a0c281d3094517ccd6aff9f8bd0680c6d3f45d6ccb6c"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_agent_endpoint_adapter.py",
+      "sha256": "18bb0622ddb6c52d171db8eefea4094cd7af32c6a5b650030085dab6db92afdb"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_agent_engineering_handoff_binding.py",
+      "sha256": "7269dd72192b685a928608f0077b844ee337ef32acd33b4b1c4b335764cf90c1"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_agent_guarded_bootstrap.py",
+      "sha256": "f4b63523ad7dc1e026058408005cd8d6169e2174a0715ef97c00ed4c9b947f51"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_agent_instance_lifecycle_os.py",
+      "sha256": "062cd0311e5520fd276badacbb92af514c57dc16355407875e728a75ede0a31c"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_agent_lifecycle_credentials.py",
+      "sha256": "323fb8f3959c31bb38811a11e625178f97079a282854592bd7d2fb285295a90a"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_agent_lifecycle_physical_cut.py",
+      "sha256": "f32e2d6b8a46b9562fbe74b37c6f12b7ff044e9751b0b25a551461921a545311"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_agent_lifecycle_process_clients.py",
+      "sha256": "a66241dcf86de853c6284ec7f877ed835f0569d39ccd230be39f3a5b7c3b2404"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_agent_registry_source_cut.py",
+      "sha256": "3ade1a2c02ef597225d0eb26122e5c75c1feaecd6164ee4f7c7839bb508da33d"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_agent_reviewer_issuer_boundaries.py",
+      "sha256": "d705ce7f2c63b36e7a06285b3841a74e4e49fb91025cfecfe81d136658011e5e"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_agent_submission_capture.py",
+      "sha256": "894e0e19774c9148bedd457519e4364917aedcdbe67ab5968083cc1f8d6d48b5"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_agent_tools_capability_consumer.py",
+      "sha256": "152343161b06a7e4d6e3f1c83a60b29e8a2fc85aa988226ef39097b3e6a09962"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_c09_runtime_retirement.py",
+      "sha256": "a2cef3ea935379c741f1c2a3f34848d772d34f5e5ab69b0d3ece0a8d79475e06"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_decision_admission.py",
+      "sha256": "ac031854a3e1a06317737ab0900881403735d1178e8950a1e5e157ca53894825"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_default_agent_registry.py",
+      "sha256": "98e310221d8fd8486373bd4839c697e72e1c0c28d205b8c9da0bf2d225ee729f"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_endpoint_fixture.py",
+      "sha256": "cc3cdf66521c7644bff9f6e9242d433f5e8ed05b8d7de476a01c75ef9fa5ac67"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_engineering_job_review.py",
+      "sha256": "23f480f7faefe508d3c1f8470f71ebd59ba53eb0efc522628ea7635c14c5bb11"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_f12_child_outcomes.py",
+      "sha256": "f4f2e1180d05c4ff920d7762e6b5f8de5f007ddeb0458032ff77e8441d630401"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_f2_dispatch_cold_query.py",
+      "sha256": "903c6206a715187f606b11b1a91f37159b1e649ca2329db05fbd79716ae85e39"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_harness_catalog.py",
+      "sha256": "fa5a142efe0d3590bf32d0c67d8e97848a693f210b3c144533ef5949a8b814d3"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_l1_agent_protocol_assertions.py",
+      "sha256": "c1b5b5ee5bd68b2e3890421e0edd16ff37d40451ba27e291631c490069e820bd"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_local_cli_lifetime_boundary.py",
+      "sha256": "6645d64bd43ab03c4df9fff5266e979e22b144f32495406731ce3665417e4ced"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_original_access_handoff.py",
+      "sha256": "cf4ea8f4edbc448223f0f5079b3823a7794c54c8ff4efdacb3b9a31362658021"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_original_agent_engineering_source.py",
+      "sha256": "5375384a1448b856f0b1a4587ccbb01413a28d89802e86e66ac669739093b175"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_product_agent_foreground_cli.py",
+      "sha256": "99119464d0f746790b1d9ffd7eaba14179bc1b79b4464d641448989507e8310e"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_product_c4_retirement_boundary.py",
+      "sha256": "7222ba3aa8524b4e4e361b60c59a662f2fd7c790493440386eafde50e3fab024"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_product_foreground_cli.py",
+      "sha256": "621656f08920841a47a28da070c113b1b9d23ca40a29f40233ace824ecdbf452"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_product_historical_native_read.py",
+      "sha256": "e4824032373f8c1e87420a04838dc0a3f1f0a824a7e7e42a420954de8a55bbea"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_product_profile_owner.py",
+      "sha256": "a45ce1d4c6d813b2e6e9765738ed9a0cd079879a641921dfbcea9abbceb12467"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_product_registry_root_cut.py",
+      "sha256": "474f2b36d5555499a524d92f69a679075f592c0e9a5d6589b7fe8b9165851742"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_recorded_agent_dispatch_adapter.py",
+      "sha256": "ff6efaeb67269444fa5144eb08f82042e748352ab4145e8f67a1f40b22b8d530"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_recorded_native_configuration.py",
+      "sha256": "b11074994405527b1c7d522bb813c82031cce0d32d939b4e1bf4350551f5803f"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_registry_http_unblocked.py",
+      "sha256": "90ea8ffe43896ad46ae1212516966a09ef523b1974aaee864731b007230f73ba"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_sdk_product_owner.py",
+      "sha256": "34cf3f1c7538a622df276c4c1c1a65cc6e68617994c2ebbc1fa99e575624d45d"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_workspace_binding_ref_owner.py",
+      "sha256": "07b9ac0d8ab9350b6c80370b72d862fd2aca7f77cabc9e25f48bf2e3b327c14a"
+    },
+    {
+      "path": "tests/integration/packages_convergence/wheel_acceptance.py",
+      "sha256": "f5b4304338deb18ee735083f4d55fc798a208dd9fc2452d0c67f52110c4afc2e"
+    },
+    {
+      "path": "tests/integration/persistence/test_store_port.py",
+      "sha256": "67281e3eaddfbe9f9be347629bcc117e1e023060c1a02f7fc5d9fa86feaf53b2"
+    },
+    {
+      "path": "tooling/checks/decision-runtime/evaluation/codex_flow_probe.py",
+      "sha256": "3c39358c6d71f98e3d3de353c8f0013cf50118b6d0ce715123d951ac3583f82c"
+    },
+    {
+      "path": "tooling/generation/generate-agent-profile-schema.py",
+      "sha256": "a8afbc8bff153ad1c1f523d735adcb8cf5969e921bfefd597e0c26f9cb3c3dda"
+    }
+  ],
+  "retainedOriginalTests": [
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_owner_wiring.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/agents/tests/agents/harness_records/test_operation_store.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/agents/tests/harness_records/test_records_distribution.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/agents/tests/test_harness_discovery_consumer.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/decision/tests/acceptance/test_release.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/decision/tests/acceptance/test_two_domain_runtime.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/decision/tests/compatibility/test_upstream.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/decision/tests/contracts/test_canonical_vectors.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/decision/tests/contracts/test_decision_contracts.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/decision/tests/contracts/test_public_surface.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/decision/tests/contracts/test_schema_declaration.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/decision/tests/evidence/test_evidence.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/decision/tests/evidence/test_evidence_attacks.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/decision/tests/evidence/test_historical_reader.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/decision/tests/runtime/test_adversarial_runtime.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    },
+    {
+      "path": "packages/execution/decision/tests/runtime/test_runtime.py",
+      "reason": "original assertion-bearing test removal withheld until equivalent migration is demonstrated"
+    }
+  ],
+  "engineeringBusinessChanged": false,
+  "restorationCorrection": "114 source files were recovered to complete the original nightly baseline before independently applying lower deltas; their original bytes and recoverable source are retained in the private recovery manifest"
+}

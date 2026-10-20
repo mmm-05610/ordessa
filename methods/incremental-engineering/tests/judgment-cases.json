@@ -1,0 +1,453 @@
+{
+  "fixture_only": true,
+  "truth_status": "clarified_synthetic_label_candidates_for_frozen_first_run",
+  "quality_validation": "not_run",
+  "cases": [
+    {
+      "case_id": "complete-support",
+      "source": "主控正常退出后保留当前运行的子Agent。",
+      "change": "主控正常退出后保留当前运行的子Agent。",
+      "boundary": "source_semantics",
+      "synthetic": true,
+      "label_origin": "rule_based_synthetic_candidate; independently_audited_clarification; not_a_user_decision_or_model_result",
+      "evaluation_group": "source_semantics",
+      "include_in_source_judgment_metrics": true,
+      "expected": {
+        "jev_choice": "supported",
+        "review_opinion": "SUPPORTED",
+        "automatic_pass": false
+      },
+      "context": {
+        "fixture_current": true,
+        "fixture_applicable": true,
+        "version": "synthetic-v1",
+        "scope": "normal main-agent exit in this fixture",
+        "known_counter_sources": [],
+        "fact_status": "synthetic precondition, not observed production fact",
+        "source_id": "synthetic.DEC-KEEP/r1",
+        "validity": "valid",
+        "no_counter_evidence_precondition": true,
+        "not_decided": [
+          "retention duration",
+          "crash recovery",
+          "permanent retention"
+        ]
+      }
+    },
+    {
+      "case_id": "reference-is-not-support",
+      "source": "主控正常退出后保留当前运行的子Agent。本决定没有规定保留期限，也未决定自动终止策略；这些事项尚未裁定。",
+      "change": "新增主控退出十分钟后自动终止子Agent的期限。",
+      "boundary": "source_semantics",
+      "synthetic": true,
+      "label_origin": "rule_based_synthetic_candidate; independently_audited_clarification; not_a_user_decision_or_model_result",
+      "evaluation_group": "source_semantics",
+      "include_in_source_judgment_metrics": true,
+      "expected": {
+        "jev_choice": "insufficient",
+        "review_opinion": "NEEDS_EVIDENCE",
+        "automatic_pass": false
+      },
+      "context": {
+        "fixture_current": true,
+        "fixture_applicable": true,
+        "version": "synthetic-v1",
+        "scope": "retention on normal main exit only",
+        "known_counter_sources": [],
+        "fact_status": "synthetic precondition, not observed production fact",
+        "source_id": "synthetic.DEC-KEEP/r1",
+        "duration_explicitly_unspecified": true,
+        "no_independent_prohibition_on_auto_termination": true,
+        "question_scope": "Does the provided basis authorize this new ten-minute rule, rather than assuming an unspecified promise of indefinite retention?"
+      }
+    },
+    {
+      "case_id": "valid-conflict",
+      "source": "不得因主控退出而自动终止子Agent，包括立即或延迟计时终止。",
+      "change": "新增主控退出十分钟后自动终止子Agent。",
+      "boundary": "source_semantics",
+      "synthetic": true,
+      "label_origin": "rule_based_synthetic_candidate; independently_audited_clarification; not_a_user_decision_or_model_result",
+      "evaluation_group": "source_semantics",
+      "include_in_source_judgment_metrics": true,
+      "expected": {
+        "jev_choice": "contradicted",
+        "review_opinion": "CONFLICT",
+        "automatic_pass": false
+      },
+      "context": {
+        "fixture_current": true,
+        "fixture_applicable": true,
+        "version": "synthetic-v1",
+        "scope": "all termination triggered by main exit in this fixture",
+        "known_counter_sources": [],
+        "fact_status": "synthetic precondition, not observed production fact",
+        "source_id": "synthetic.CONVENTION-NO-AUTO/r1",
+        "validity": "valid",
+        "prohibition_is_synthetic": true,
+        "actual_project_decision": false
+      }
+    },
+    {
+      "case_id": "missing-source",
+      "source": null,
+      "change": "删除权限约束。",
+      "boundary": "source_integrity",
+      "synthetic": true,
+      "label_origin": "rule_based_synthetic_candidate; independently_audited_clarification; not_a_user_decision_or_model_result",
+      "evaluation_group": "mechanical_gate",
+      "include_in_source_judgment_metrics": false,
+      "expected": {
+        "gate_result": "DO_NOT_INVOKE",
+        "jev_invocation_allowed_for_this_gate": false
+      },
+      "context": {
+        "fixture_current": true,
+        "fixture_applicable": true,
+        "version": "synthetic-v1",
+        "scope": "only the scenario explicitly described in this vector",
+        "known_counter_sources": [],
+        "fact_status": "synthetic precondition, not observed production fact",
+        "required_source_capture": null,
+        "stage": "source-input completeness before model dispatch",
+        "expected_side_effects": {
+          "jev_calls": 0,
+          "DID_writes": 0
+        }
+      }
+    },
+    {
+      "case_id": "delete-reviewed",
+      "source": "只批准主控正常退出后保留子Agent；本来源未讨论DID确认规则的修改或删除。",
+      "change": "提议删除测试DID中CONF-01/r1整条确认依据要求。",
+      "boundary": "source_semantics",
+      "synthetic": true,
+      "label_origin": "rule_based_synthetic_candidate; independently_audited_clarification; not_a_user_decision_or_model_result",
+      "evaluation_group": "source_semantics",
+      "include_in_source_judgment_metrics": true,
+      "expected": {
+        "jev_choice": "insufficient",
+        "review_opinion": "NEEDS_EVIDENCE",
+        "automatic_pass": false
+      },
+      "context": {
+        "fixture_current": true,
+        "fixture_applicable": true,
+        "version": "synthetic-v1",
+        "scope": "only the scenario explicitly described in this vector",
+        "known_counter_sources": [],
+        "fact_status": "synthetic precondition, not observed production fact",
+        "baseline_role": "revisable patch target; not an independent prohibition on proposing a revision",
+        "question_scope": "Is this proposed deletion supported by the lifecycle source? This is not a test of immediate runtime application or of conformance to the unchanged old clause.",
+        "no_separate_change_authorization_in_input": true,
+        "actual_product_policy_change": false,
+        "confirmation_rule_is_synthetic_test_clause": true
+      },
+      "before": {
+        "document_id": "synthetic.DID-CONF",
+        "revision": "1",
+        "clause_id": "CONF-01",
+        "text": "DID生效前应具有符合选定v1策略、覆盖精确目标版本与DID_WRITE范围的明确用户问答确认依据及正式记录。允许获准主Agent如实转交问答，等级为agent-attested；不要求独立验签或再次点浮窗。"
+      },
+      "after": {
+        "document_id": "synthetic.DID-CONF",
+        "revision": "2-draft",
+        "clause_id": "CONF-01",
+        "text": ""
+      }
+    },
+    {
+      "case_id": "ordinary-freedom",
+      "source": "私有函数的内部命名可自行选择。",
+      "change": "将仅由本模块静态调用的私有函数 _normalize_local 改名为 _normalize_private，并同步私有调用。",
+      "boundary": "source_semantics",
+      "synthetic": true,
+      "label_origin": "rule_based_synthetic_candidate; independently_audited_clarification; not_a_user_decision_or_model_result",
+      "evaluation_group": "source_semantics",
+      "include_in_source_judgment_metrics": true,
+      "expected": {
+        "jev_choice": "supported",
+        "review_opinion": "SUPPORTED",
+        "automatic_pass": false
+      },
+      "context": {
+        "fixture_current": true,
+        "fixture_applicable": true,
+        "version": "synthetic-v1",
+        "scope": "only the scenario explicitly described in this vector",
+        "known_counter_sources": [],
+        "fact_status": "synthetic precondition, not observed production fact",
+        "source_id": "synthetic.DELEGATION-PRIVATE-NAME/r1",
+        "public_api_changed": false,
+        "reflection_or_string_lookup_present": false,
+        "persisted_identifiers_changed": false,
+        "observable_behavior_changed": false,
+        "facts_are_fixture_preconditions": true
+      }
+    },
+    {
+      "case_id": "important-unknown",
+      "source": "授权把配置存储的唯一owner统一到配置模块。公开API和持久格式如何变化尚未决定，本次授权没有覆盖这些选择。",
+      "change": "除了统一owner，提议改变公开调用签名与持久格式。",
+      "boundary": "source_semantics",
+      "synthetic": true,
+      "label_origin": "rule_based_synthetic_candidate; independently_audited_clarification; not_a_user_decision_or_model_result",
+      "evaluation_group": "source_semantics",
+      "include_in_source_judgment_metrics": true,
+      "expected": {
+        "jev_choice": "insufficient",
+        "review_opinion": "NEEDS_EVIDENCE",
+        "automatic_pass": false
+      },
+      "context": {
+        "fixture_current": true,
+        "fixture_applicable": true,
+        "version": "synthetic-v1",
+        "scope": "only the scenario explicitly described in this vector",
+        "known_counter_sources": [],
+        "fact_status": "synthetic precondition, not observed production fact",
+        "source_id": "synthetic.DELEGATION-CONFIG-OWNER/r1",
+        "authorized_scope": [
+          "storage owner consolidation"
+        ],
+        "new_choices": [
+          "public argument/return contract",
+          "on-disk schema version and shape"
+        ],
+        "question_scope": "Does the owner-only delegation support the proposed public and persisted contract changes?",
+        "known_consumers": [
+          "synthetic caller expects str/dict",
+          "synthetic reader expects config field"
+        ],
+        "important_choices_unresolved": true
+      },
+      "before": {
+        "public_api": "get_config(project: str) -> dict",
+        "stored_format": {
+          "project": "p1",
+          "config": {
+            "x": 1
+          }
+        }
+      },
+      "after": {
+        "public_api": "get_config(project: ProjectId) -> ConfigEnvelope",
+        "stored_format": {
+          "schema_version": 2,
+          "project_id": "p1",
+          "payload": {
+            "x": 1
+          }
+        }
+      }
+    },
+    {
+      "case_id": "summary-hides-deletion",
+      "source": "合成提案P-SUM/r1与其实际摘要，作为摘要忠实度输入。",
+      "change": "摘要遗漏提案删除的确认依据承诺及风险。",
+      "boundary": "summary_fidelity",
+      "synthetic": true,
+      "label_origin": "rule_based_synthetic_candidate; independently_audited_clarification; not_a_user_decision_or_model_result",
+      "evaluation_group": "summary_fidelity",
+      "include_in_source_judgment_metrics": false,
+      "expected": {
+        "jev_choice": "contradicted",
+        "review_disposition": "REVISION_REQUIRED",
+        "automatic_pass": false
+      },
+      "context": {
+        "fixture_current": true,
+        "fixture_applicable": true,
+        "version": "synthetic-v1",
+        "scope": "only the scenario explicitly described in this vector",
+        "known_counter_sources": [],
+        "fact_status": "synthetic precondition, not observed production fact",
+        "question_contract": "SummaryFidelityInput.v1",
+        "question_scope": "Does this actual summary disclose the important deletion and its risk?",
+        "source_support_question": false,
+        "no_actual_policy_change": true
+      },
+      "proposal": {
+        "id": "synthetic.P-SUM",
+        "revision": "1",
+        "changes": [
+          {
+            "change_id": "SUM-C1",
+            "operation": "delete",
+            "before": "DID生效前记录覆盖精确对象版本和动作范围的明确用户确认依据。",
+            "after": ""
+          }
+        ],
+        "retained": [
+          "对象版本检查仍保留"
+        ],
+        "risks": [
+          "删除确认依据要求可能使未经用户许可的变更生效。"
+        ],
+        "status": "synthetic_unapproved_proposal"
+      },
+      "summary": {
+        "proposal_id": "synthetic.P-SUM",
+        "revision": "1",
+        "text": "这次简化流程，版本检查仍保留。"
+      }
+    },
+    {
+      "case_id": "quality-headings-only",
+      "source": "所选标准配置有标识，但其条款原文尚未取得。",
+      "change": "材料缺失时申请工程合规通过。",
+      "boundary": "engineering_quality",
+      "synthetic": true,
+      "label_origin": "rule_based_synthetic_candidate; independently_audited_clarification; not_a_user_decision_or_model_result",
+      "evaluation_group": "mechanical_gate",
+      "include_in_source_judgment_metrics": false,
+      "expected": {
+        "gate_result": "BLOCKED",
+        "jev_invocation_allowed_for_this_gate": false
+      },
+      "context": {
+        "fixture_current": true,
+        "fixture_applicable": true,
+        "version": "synthetic-v1",
+        "scope": "only the scenario explicitly described in this vector",
+        "known_counter_sources": [],
+        "fact_status": "synthetic precondition, not observed production fact",
+        "actual_case_purpose": "missing standard clause source; not semantic quality of headings",
+        "selected_standard_source_capture": null,
+        "stage": "engineering input completeness",
+        "expected_side_effects": {
+          "jev_calls_for_this_gate": 0,
+          "compliance_pass": false
+        }
+      }
+    },
+    {
+      "case_id": "stale-confirmation",
+      "source": "合成确认记录绑定P1/r1、D1/r1、M1及其DID_WRITE动作范围。",
+      "change": "将该记录用于实质变化后的P2/r2、D2/r2、M2。",
+      "boundary": "version_authority",
+      "synthetic": true,
+      "label_origin": "rule_based_synthetic_candidate; independently_audited_clarification; not_a_user_decision_or_model_result",
+      "evaluation_group": "mechanical_gate",
+      "include_in_source_judgment_metrics": false,
+      "expected": {
+        "gate_result": "REJECTED",
+        "jev_invocation_allowed_for_this_gate": false
+      },
+      "context": {
+        "fixture_current": true,
+        "fixture_applicable": true,
+        "version": "synthetic-v1",
+        "scope": "only the scenario explicitly described in this vector",
+        "known_counter_sources": [],
+        "fact_status": "synthetic precondition, not observed production fact",
+        "confirmation_scope": [
+          "synthetic.P1/r1 DID_WRITE"
+        ],
+        "attempted_scope": [
+          "synthetic.P2/r2 DID_WRITE"
+        ],
+        "substantive_revision": true,
+        "bounded_derivation_exception_applies": false,
+        "old_confirmation_revoked_by_this_case": false,
+        "rejection_scope": "only the mismatched reuse attempt"
+      }
+    },
+    {
+      "case_id": "judgment-not-grant",
+      "source": "合成前提：有JEV来源支持意见，但没有满足产品选定v1策略、覆盖本次对象版本和动作范围的用户确认依据及正式接受/授权记录。",
+      "change": "仅凭JEV意见请求应用DID。",
+      "boundary": "authority",
+      "synthetic": true,
+      "label_origin": "rule_based_synthetic_candidate; independently_audited_clarification; not_a_user_decision_or_model_result",
+      "evaluation_group": "mechanical_gate",
+      "include_in_source_judgment_metrics": false,
+      "expected": {
+        "gate_result": "REJECTED",
+        "jev_invocation_allowed_for_this_gate": false
+      },
+      "context": {
+        "fixture_current": true,
+        "fixture_applicable": true,
+        "version": "synthetic-v1",
+        "scope": "only the scenario explicitly described in this vector",
+        "known_counter_sources": [],
+        "fact_status": "synthetic precondition, not observed production fact",
+        "selected_policy_id": "ordessa.product.v1.chat-attested-confirmation",
+        "selected_policy_revision": 1,
+        "explicit_question_answer_evidence": null,
+        "formal_acceptance_or_authorization_record": null,
+        "independent_signature_required": false,
+        "floating_window_required": false,
+        "agent_attested_chat_is_allowed_if_complete": true,
+        "jev_result_is_synthetic_precondition_not_a_real_call": true
+      }
+    },
+    {
+      "case_id": "unsupported-real-provider",
+      "source": "合成输入仅含offline JEV结果和fake Pi回执，缺真实运行来源证据。",
+      "change": "据此申请真实JEV与Pi最终验收通过。",
+      "boundary": "real_provider",
+      "synthetic": true,
+      "label_origin": "rule_based_synthetic_candidate; independently_audited_clarification; not_a_user_decision_or_model_result",
+      "evaluation_group": "mechanical_gate",
+      "include_in_source_judgment_metrics": false,
+      "expected": {
+        "gate_result": "BLOCKED",
+        "jev_invocation_allowed_for_this_gate": false
+      },
+      "context": {
+        "fixture_current": true,
+        "fixture_applicable": true,
+        "version": "synthetic-v1",
+        "scope": "only the scenario explicitly described in this vector",
+        "known_counter_sources": [],
+        "fact_status": "synthetic precondition, not observed production fact",
+        "jev_run_evidence": {
+          "origin": "synthetic_offline",
+          "real_call": false
+        },
+        "pi_run_evidence": {
+          "origin": "synthetic_fake",
+          "real_native_run": false
+        },
+        "actual_system_capability_claim": false,
+        "stage": "result provenance completeness"
+      }
+    }
+  ],
+  "schema_version": 2,
+  "corpus_revision": 2,
+  "independent_review_ref": "review-evidence/independent-audit-20261011.json",
+  "previous_corpus": {
+    "path": "history/judgment-cases.pre-audit-v1.json",
+    "sha256": "aa1d6f879109c1c05ac4d82a98e09e25b64b13f52e01fc4c4c315b3dd4091b99"
+  },
+  "label_policy": {
+    "source_model_answer_vocabulary": [
+      "supported",
+      "contradicted",
+      "insufficient"
+    ],
+    "source_answer_to_review_opinion": {
+      "supported": "SUPPORTED",
+      "contradicted": "CONFLICT",
+      "insufficient": "NEEDS_EVIDENCE"
+    },
+    "mapping_is": "test expectation vocabulary alignment, not approved probability threshold or runtime auto-classification",
+    "review_opinion_to_method_disposition": {
+      "SUPPORTED": "manual_review",
+      "CONFLICT": "block",
+      "NEEDS_EVIDENCE": "block",
+      "INDETERMINATE": "manual_review_or_pending"
+    },
+    "summary_answers_are_separate": "summary-fidelity choice vocabulary; this negative case expects contradicted and revision_required",
+    "mechanical_results_are_not_model_answers": [
+      "DO_NOT_INVOKE",
+      "BLOCKED",
+      "REJECTED"
+    ],
+    "unknown_truncation_network_or_parse_failure": "INDETERMINATE; never pass",
+    "automatic_approval": "forbidden"
+  }
+}

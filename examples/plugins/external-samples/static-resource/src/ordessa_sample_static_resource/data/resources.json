@@ -1,0 +1,18 @@
+{
+  "schema": "ordessa.sample-static-resource/1",
+  "note": "Frozen sample content. Editing this file requires updating FROZEN_RESOURCES_SHA256 in plugin.py; the plugin refuses to activate over a digest mismatch.",
+  "resources": [
+    {
+      "id": "sample-wire-notes",
+      "title": "Wire/1 notes (sample)",
+      "kind": "text/markdown",
+      "body": "# Wire/1 notes\n\nThis resource is frozen inside the sample package.\nIt is served read-only through `sample.resources.list` and\n`sample.resources.get`; neither method writes anywhere.\n"
+    },
+    {
+      "id": "sample-round-glossary",
+      "title": "Sample round glossary",
+      "kind": "text/plain",
+      "body": "data-root: the single storage root a Server round owns.\nround: one started/stopped lifecycle of a Server runtime.\n"
+    }
+  ]
+}

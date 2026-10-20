@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "report_id": "synthetic-nospec-screening-01",
+  "phase": "spec_screening",
+  "reported_at": "2025-01-01T12:00:00Z",
+  "reporter": {"actor_id": "example-contributor", "role_claim": "contributor", "reported_at": "2025-01-01T12:00:00Z"},
+  "cycle": "synthetic-cycle",
+  "blueprint": {"id": "synthetic-blueprint", "url": "https://blueprints.launchpad.net/nova/+spec/synthetic-blueprint", "status": "New", "cycle": "synthetic-cycle"},
+  "spec_required": false,
+  "spec": null,
+  "decision": "Spec not required; single bounded change with no API change, design discussion, or material operator/documentation impact identified.",
+  "decision_record": {"actor_id": "example-driver", "role_claim": "Nova driver (synthetic claim)", "decided_at": "2025-01-01T12:00:00Z", "authority_ref": "https://wiki.openstack.org/wiki/Meetings/Nova", "rationale_summary": "Synthetic example only; actual decision must be confirmed upstream."},
+  "result": "recorded",
+  "summary": "Synthetic example preserving the no-spec branch.",
+  "blockers": [],
+  "predecessors": [],
+  "evidence_urls": ["https://docs.openstack.org/nova/latest/contributor/blueprints.html"],
+  "limitations": ["Synthetic schema example; upstream decision not verified."]
+}

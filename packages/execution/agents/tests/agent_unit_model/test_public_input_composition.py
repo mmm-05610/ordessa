@@ -19,8 +19,8 @@ from test_managed_input_reservations import Capture, Native, managed
 from test_sessionless_input import first_input
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import GuaranteeUnavailableError, UnknownResultError
-from ordessa_execution_api.environment.operations import node_holder
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitOperationUnknown
+from ordessa_units.definitions.operations import node_holder
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from ordessa_units.channels import reservations as input_contracts
 from ordessa_execution_agents import public as agent_public
@@ -116,7 +116,7 @@ def _assert_single_claim(parts, services, operation, request, expected_target, n
     assert facts["targetRef"] == expected_target
     first_step = store.read_operation_step(request, "native-input")
     assert first_step is not None and first_step.outcome == "possibly-dispatched"
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         services.managed_inputs.claim_dispatch(request, issuer)
     assert store.read_operation_step(request, "native-input") == first_step
     assert native.dispatch_calls == 0
@@ -197,7 +197,7 @@ def test_unassembled_public_input_is_unavailable_without_request_step_or_usage(m
     holder = node_holder("env", node.instance_id, node.generation)
     usages_before = store.read_usages("env", holder)
     capture_calls, native_calls = capture.calls, native.calls
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         services.managed_inputs.reserve(request, node, captured_ref, correlation)
     assert store.read_operation(request) is None
     assert store.read_operation_step(request, "native-input") is None
@@ -221,7 +221,7 @@ def test_sessionless_reconcile_without_observation_port_issues_no_query_or_mutat
     step_before = store.read_operation_step(request, "native-input")
     assert step_before is None
 
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         services.managed_inputs.reconcile_first_input(request, observerless_issuer)
 
     assert observerless_issuer.query_calls == 0
@@ -276,9 +276,9 @@ def test_wrong_store_issuer_is_refused_by_original_public_claim_and_reconcile_ga
     foreign = SqliteStorePort(tmp_path / "foreign-input-store.sqlite")
     try:
         foreign_issuer = type(parts[8])(foreign, parts[6], parts[7], clock=lambda: 50)
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             services.managed_inputs.claim_dispatch(request, foreign_issuer)
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             services.managed_inputs.reconcile_first_input(request, foreign_issuer)
         assert parts[0].read_operation(request) == operation
         assert parts[0].read_operation_step(request, "native-input") is None

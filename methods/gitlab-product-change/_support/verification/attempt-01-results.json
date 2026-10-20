@@ -1,0 +1,220 @@
+{
+  "method_root": "methods/gitlab-product-change",
+  "core_index_sha256": "c825c329a83775685bd048c144068ca31e0a5369d68e317bee3d95f0f79b40f5",
+  "compiled_bundle_root": "methods/gitlab-product-change/projection",
+  "cases": [
+    {
+      "case": "baseline",
+      "exception": "Traceback (most recent call last):\n  File \"/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009/methods/nova-feature-delivery/_support/verification/verify_both.py\", line 251, in child_case\n    value, code = inspect_method(root, case)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009/methods/nova-feature-delivery/_support/verification/verify_both.py\", line 218, in inspect_method\n    decoded = decode_payload(payload)\n              ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009/packages/engineering/src/ordessa_engineering/domain/artifacts/codec.py\", line 60, in decode_payload\n    method_content = MethodContent.from_value(\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009/packages/engineering/src/ordessa_engineering/domain/artifacts/models.py\", line 81, in from_value\n    return cls(schema_ref, canonical_bytes(value), rendered_body_ref)\n                           ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009/packages/infrastructure/src/ordessa_infrastructure/encoding/canonical_json.py\", line 67, in canonical_bytes\n    return canonical_text(value, profile=profile).encode(\"utf-8\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009/packages/infrastructure/src/ordessa_infrastructure/encoding/canonical_json.py\", line 56, in canonical_text\n    _validate(value, profile=profile)\n  File \"/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009/packages/infrastructure/src/ordessa_infrastructure/encoding/canonical_json.py\", line 51, in _validate\n    _validate(item, depth + 1, profile=profile)\n  File \"/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009/packages/infrastructure/src/ordessa_infrastructure/encoding/canonical_json.py\", line 51, in _validate\n    _validate(item, depth + 1, profile=profile)\n  File \"/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009/packages/infrastructure/src/ordessa_infrastructure/encoding/canonical_json.py\", line 45, in _validate\n    _validate(item, depth + 1, profile=profile)\n  File \"/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009/packages/infrastructure/src/ordessa_infrastructure/encoding/canonical_json.py\", line 51, in _validate\n    _validate(item, depth + 1, profile=profile)\n  File \"/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009/packages/infrastructure/src/ordessa_infrastructure/encoding/canonical_json.py\", line 53, in _validate\n    raise CanonicalJSONError(\"type\")\nordessa_infrastructure.encoding.canonical_json.CanonicalJSONError: noncanonical_json_value\n",
+      "process_exit_code": 2,
+      "expected_refusal_observed": false
+    },
+    {
+      "case": "unknown-operation",
+      "compiler_error": {
+        "code": "UNKNOWN_CAPABILITY",
+        "column": null,
+        "line": null,
+        "message": "operation capability unavailable: external.verification.unregistered_operation",
+        "path": "workflows/report-capture.yaml",
+        "pointer": "/steps/capture_report/operation",
+        "resource_id": "workflow.product_change_report"
+      },
+      "compiler_ok": false,
+      "diagnostics": [
+        {
+          "code": "UNKNOWN_CAPABILITY",
+          "message": "operation capability unavailable: external.verification.unregistered_operation",
+          "path": "workflows/report-capture.yaml",
+          "pointer": "/steps/capture_report/operation",
+          "related_refs": [],
+          "resource_id": "workflow.product_change_report",
+          "severity": "error"
+        }
+      ],
+      "loader_ok": true,
+      "production_activation": "not_attempted",
+      "reader_paths": [
+        "method.yaml",
+        "documents/product-change-report.schema.json",
+        "documents/product-change-report.template.md",
+        "workflows/report-capture.yaml",
+        "bundle-lock.json"
+      ],
+      "runtime_execution": "not_attempted",
+      "support_area_read": false,
+      "validation_valid": false,
+      "process_exit_code": 1,
+      "expected_refusal_observed": true
+    },
+    {
+      "case": "business-outcomes",
+      "compiler_error": {
+        "code": "UNHANDLED_OUTCOME",
+        "column": null,
+        "line": null,
+        "message": "operation outcomes must exactly cover its registered contract",
+        "path": "workflows/report-capture.yaml",
+        "pointer": "/steps/capture_report/outcomes",
+        "resource_id": "workflow.product_change_report"
+      },
+      "compiler_ok": false,
+      "diagnostics": [
+        {
+          "code": "UNHANDLED_OUTCOME",
+          "message": "operation outcomes must exactly cover its registered contract",
+          "path": "workflows/report-capture.yaml",
+          "pointer": "/steps/capture_report/outcomes",
+          "related_refs": [],
+          "resource_id": "workflow.product_change_report",
+          "severity": "error"
+        },
+        {
+          "code": "UNREACHABLE_STEP",
+          "message": "workflow step is unreachable: stop_created",
+          "path": "workflows/report-capture.yaml",
+          "pointer": "/steps/stop_created",
+          "related_refs": [],
+          "resource_id": "workflow.product_change_report",
+          "severity": "error"
+        },
+        {
+          "code": "UNREACHABLE_STEP",
+          "message": "workflow step is unreachable: stop_rejected",
+          "path": "workflows/report-capture.yaml",
+          "pointer": "/steps/stop_rejected",
+          "related_refs": [],
+          "resource_id": "workflow.product_change_report",
+          "severity": "error"
+        }
+      ],
+      "loader_ok": true,
+      "production_activation": "not_attempted",
+      "reader_paths": [
+        "method.yaml",
+        "documents/product-change-report.schema.json",
+        "documents/product-change-report.template.md",
+        "workflows/report-capture.yaml",
+        "bundle-lock.json"
+      ],
+      "runtime_execution": "not_attempted",
+      "support_area_read": false,
+      "validation_valid": false,
+      "process_exit_code": 1,
+      "expected_refusal_observed": true
+    },
+    {
+      "case": "unsupported-control-node",
+      "compiler_error": {
+        "code": "METHOD_STRUCTURE_INVALID",
+        "column": null,
+        "line": null,
+        "message": "method declaration violates the supported structure",
+        "path": "workflows/report-capture.yaml",
+        "pointer": "/steps/0",
+        "resource_id": "workflow.product_change_report"
+      },
+      "compiler_ok": false,
+      "diagnostics": [
+        {
+          "code": "METHOD_STRUCTURE_INVALID",
+          "message": "method declaration violates the supported structure",
+          "path": "workflows/report-capture.yaml",
+          "pointer": "/steps/0",
+          "related_refs": [],
+          "resource_id": "workflow.product_change_report",
+          "severity": "error"
+        }
+      ],
+      "loader_ok": true,
+      "production_activation": "not_attempted",
+      "reader_paths": [
+        "method.yaml",
+        "documents/product-change-report.schema.json",
+        "documents/product-change-report.template.md",
+        "workflows/report-capture.yaml",
+        "bundle-lock.json"
+      ],
+      "runtime_execution": "not_attempted",
+      "support_area_read": false,
+      "validation_valid": false,
+      "process_exit_code": 1,
+      "expected_refusal_observed": true
+    },
+    {
+      "case": "cycle",
+      "compiler_error": {
+        "code": "UNREACHABLE_STEP",
+        "column": null,
+        "line": null,
+        "message": "workflow step is unreachable: stop_created",
+        "path": "workflows/report-capture.yaml",
+        "pointer": "/steps/stop_created",
+        "resource_id": "workflow.product_change_report"
+      },
+      "compiler_ok": false,
+      "diagnostics": [
+        {
+          "code": "UNREACHABLE_STEP",
+          "message": "workflow step is unreachable: stop_created",
+          "path": "workflows/report-capture.yaml",
+          "pointer": "/steps/stop_created",
+          "related_refs": [],
+          "resource_id": "workflow.product_change_report",
+          "severity": "error"
+        },
+        {
+          "code": "UNSUPPORTED_FLOW_CYCLE",
+          "message": "workflow contains a cycle at capture_report",
+          "path": "workflows/report-capture.yaml",
+          "pointer": "/steps/capture_report",
+          "related_refs": [],
+          "resource_id": "workflow.product_change_report",
+          "severity": "error"
+        }
+      ],
+      "loader_ok": true,
+      "production_activation": "not_attempted",
+      "reader_paths": [
+        "method.yaml",
+        "documents/product-change-report.schema.json",
+        "documents/product-change-report.template.md",
+        "workflows/report-capture.yaml",
+        "bundle-lock.json"
+      ],
+      "runtime_execution": "not_attempted",
+      "support_area_read": false,
+      "validation_valid": false,
+      "process_exit_code": 1,
+      "expected_refusal_observed": true
+    },
+    {
+      "case": "digest-mismatch",
+      "loader_error": {
+        "code": "RESOURCE_DIGEST_MISMATCH",
+        "column": null,
+        "line": null,
+        "message": "resource bytes do not match manifest digest",
+        "path": "workflows/report-capture.yaml",
+        "pointer": null,
+        "resource_id": "workflow.product_change_report"
+      },
+      "loader_ok": false,
+      "production_activation": "not_attempted",
+      "reader_paths": [
+        "method.yaml",
+        "documents/product-change-report.schema.json",
+        "documents/product-change-report.template.md",
+        "workflows/report-capture.yaml"
+      ],
+      "runtime_execution": "not_attempted",
+      "support_area_read": false,
+      "process_exit_code": 1,
+      "expected_refusal_observed": true
+    }
+  ],
+  "verification_expectations_passed": false,
+  "process_exit_code": 1,
+  "runtime_execution": "not_attempted",
+  "complete_external_flow_execution": "not_supported"
+}

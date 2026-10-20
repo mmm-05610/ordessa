@@ -1,0 +1,354 @@
+{
+  "status": "PARTIAL",
+  "rootDir": ".",
+  "filesScanned": 729,
+  "importsScanned": 2723,
+  "errors": [],
+  "violations": [],
+  "unresolvedDynamic": [
+    {
+      "file": "apps/desktop/electron/main.ts",
+      "line": 256,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(driverPath).href"
+    },
+    {
+      "file": "apps/desktop/electron/native-bridge/src/index.ts",
+      "line": 26,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(filename).href"
+    },
+    {
+      "file": "apps/desktop/packaging/product/scripts/initialize-existing-data-root.mjs",
+      "line": 16,
+      "kind": "non-literal-dynamic-import",
+      "expression": "'data:text/javascript;base64,' + Buffer.from(result.outputFiles[0].text).toString('base64')"
+    },
+    {
+      "file": "apps/desktop/renderer/shared/ui-components-api.test.ts",
+      "line": 34,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(root, 'api.js')).href"
+    },
+    {
+      "file": "apps/desktop/renderer/shared/ui-components-api.test.ts",
+      "line": 35,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(uiEntry).href"
+    },
+    {
+      "file": "apps/desktop/renderer/shared/ui-components-api.test.ts",
+      "line": 53,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(carrierFile).href"
+    },
+    {
+      "file": "apps/desktop/tests/product/connections-platform-isolation.test.mjs",
+      "line": 141,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(carrierFile).href"
+    },
+    {
+      "file": "apps/desktop/tests/product/contract-ownership.test.mjs",
+      "line": 315,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(carrierFile).href"
+    },
+    {
+      "file": "apps/desktop/tests/product/index.js",
+      "line": 10,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(import.meta.dirname, entry)).href"
+    },
+    {
+      "file": "apps/desktop/tests/product/model-selector-assembly.test.mjs",
+      "line": 60,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(outfile).href"
+    },
+    {
+      "file": "apps/desktop/tests/product/product-bundles.test.mjs",
+      "line": 75,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(moduleFile).href"
+    },
+    {
+      "file": "apps/desktop/tests/product/ui-components-platform.test.mjs",
+      "line": 128,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(carrierDir, 'contract.js')).href"
+    },
+    {
+      "file": "apps/desktop/tests/product/ui-components-platform.test.mjs",
+      "line": 129,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(sharedRoot, 'ui-components-api.js')).href"
+    },
+    {
+      "file": "apps/desktop/tests/smoke/test-ordessa-event-stream.mjs",
+      "line": 22,
+      "kind": "non-literal-dynamic-import",
+      "expression": "`data:text/javascript;base64,${Buffer.from(bundled.outputFiles[0].text).toString('base64')}`"
+    },
+    {
+      "file": "apps/desktop/tests/smoke/test-wire-redirect.mjs",
+      "line": 10,
+      "kind": "non-literal-dynamic-import",
+      "expression": "`data:text/javascript;base64,${Buffer.from(compiled.code).toString('base64')}`"
+    },
+    {
+      "file": "apps/server/tests/fixtures/artifact_probe_acp_peer.mjs",
+      "line": 31,
+      "kind": "non-literal-dynamic-import",
+      "expression": "path.join(directory, \"dep.mjs\")"
+    },
+    {
+      "file": "packages/execution/agents/tests/agents/harness_transport/frame_buffer_lifecycle.test.mjs",
+      "line": 28,
+      "kind": "non-literal-dynamic-import",
+      "expression": "`file://${src(\"acp-client.js\")}`"
+    },
+    {
+      "file": "packages/interfaces/channels/workbench/extension-api/contracts/foundation/open-environment-f5.test.mjs",
+      "line": 20,
+      "kind": "non-literal-dynamic-import",
+      "expression": "`file://${outfile}`"
+    },
+    {
+      "file": "packages/interfaces/channels/workbench/extension-api/contracts/foundation/open-environment.test.mjs",
+      "line": 25,
+      "kind": "non-literal-dynamic-import",
+      "expression": "`file://${outfile}`"
+    },
+    {
+      "file": "packages/interfaces/channels/workbench/extension-runtime/host/tests/loader-provenance.test.ts",
+      "line": 82,
+      "kind": "non-literal-dynamic-import",
+      "expression": "dataUrl"
+    },
+    {
+      "file": "packages/interfaces/channels/workbench/extension-runtime/loader/src/index.ts",
+      "line": 5,
+      "kind": "non-literal-dynamic-import",
+      "expression": "url"
+    },
+    {
+      "file": "packages/interfaces/channels/workbench/shell/workbench/tests/index.js",
+      "line": 10,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(import.meta.dirname, entry)).href"
+    },
+    {
+      "file": "packages/interfaces/channels/workbench/shell/workbench/tests/token-single-instance.test.mjs",
+      "line": 253,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(extensionsRoot, 'ordessa.contracts', 'contract.js')).href"
+    },
+    {
+      "file": "packages/interfaces/channels/workbench/shell/workbench/tests/token-single-instance.test.mjs",
+      "line": 254,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(sharedRoot, 'api.js')).href"
+    },
+    {
+      "file": "packages/interfaces/channels/workbench/shell/workbench/tests/token-single-instance.test.mjs",
+      "line": 257,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(sharedRoot, 'ui-components-api.js')).href"
+    },
+    {
+      "file": "packages/interfaces/channels/workbench/shell/workbench/tests/token-single-instance.test.mjs",
+      "line": 261,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(extensionsRoot, 'ordessa.agent-contracts', 'contract.js')).href"
+    },
+    {
+      "file": "packages/interfaces/channels/workbench/shell/workbench/tests/token-single-instance.test.mjs",
+      "line": 275,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(extensionsRoot, 'ordessa.agent-contracts', 'contract.js')).href"
+    },
+    {
+      "file": "packages/interfaces/channels/workbench/shell/workbench/tests/token-single-instance.test.mjs",
+      "line": 281,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(extensionsRoot, 'ordessa.contracts', 'contract.js')).href"
+    },
+    {
+      "file": "packages/interfaces/channels/workbench/shell/workbench/tests/token-single-instance.test.mjs",
+      "line": 282,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(extensionsRoot, 'ordessa.harness-contracts', 'contract.js')).href"
+    },
+    {
+      "file": "plugins/harness/claude-code/tests/packaging/provider-session.test.mjs",
+      "line": 10,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(\n  requireLocked.resolve(\"@agentclientprotocol/claude-agent-acp/dist/acp-agent.js\")).href"
+    },
+    {
+      "file": "plugins/harness/opencode/tests/opencode_abort_outcome_halfb.test.mjs",
+      "line": 29,
+      "kind": "non-literal-dynamic-import",
+      "expression": "DRIVER"
+    },
+    {
+      "file": "plugins/harness/opencode/tests/opencode_control_leg_audit.test.mjs",
+      "line": 67,
+      "kind": "non-literal-dynamic-import",
+      "expression": "DRIVER"
+    },
+    {
+      "file": "plugins/harness/opencode/tests/opencode_driver_tail.test.mjs",
+      "line": 24,
+      "kind": "non-literal-dynamic-import",
+      "expression": "DRIVER.href"
+    },
+    {
+      "file": "plugins/harness/opencode/tests/opencode_pump_attribution_x20.test.mjs",
+      "line": 98,
+      "kind": "non-literal-dynamic-import",
+      "expression": "DRIVER"
+    },
+    {
+      "file": "plugins/harness/opencode/tests/opencode_stream_framing.test.mjs",
+      "line": 117,
+      "kind": "non-literal-dynamic-import",
+      "expression": "DRIVER"
+    },
+    {
+      "file": "plugins/harness/opencode/tests/opencode_subscriber_attribution.test.mjs",
+      "line": 108,
+      "kind": "non-literal-dynamic-import",
+      "expression": "DRIVER"
+    },
+    {
+      "file": "plugins/harness/pi/src/ordessa_harness_pi/acp/request-budget.mjs",
+      "line": 221,
+      "kind": "non-literal-dynamic-import",
+      "expression": "config.piAiModuleUrl"
+    },
+    {
+      "file": "plugins/harness/pi/tests/acp/configuration-operation.test.mjs",
+      "line": 367,
+      "kind": "non-literal-dynamic-import",
+      "expression": "data(server)"
+    },
+    {
+      "file": "plugins/workbench/chat/api/tests/component-key-runtime.test.ts",
+      "line": 40,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(root, 'ui-components-api.js')).href"
+    },
+    {
+      "file": "plugins/workbench/chat/api/tests/component-key-runtime.test.ts",
+      "line": 41,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(root, 'foundation.js')).href"
+    },
+    {
+      "file": "plugins/workbench/chat/api/tests/component-key-runtime.test.ts",
+      "line": 42,
+      "kind": "non-literal-dynamic-import",
+      "expression": "pathToFileURL(path.join(root, 'chat.js')).href"
+    }
+  ],
+  "artifactEdges": [
+    {
+      "source": "plugins/harness/claude-code/src/ordessa_harness_claude_code/acp/profile/entry.mjs",
+      "sourceSha256": "5a86db6e2eab470dc1710c0cf49b178e3647bb193891a8443b753bd4199de63c",
+      "specifier": "./index.js",
+      "emittedModule": "dist/ordessa-profile.mjs",
+      "upstreamMember": "dist/index.js",
+      "upstreamFile": "protected-evidence/formal-artifact-inputs/claude-agent-acp-0.81.2/dist/index.js",
+      "sha256": "ecfa6ff948a4241090934979179a5ba035bb0a7c3ef543752f4a304d44a267fb",
+      "ownerId": "claude-code",
+      "packageName": "@agentclientprotocol/claude-agent-acp",
+      "packageVersion": "0.81.2",
+      "lockIntegrity": "sha512-/yvpesq8e6Jv8kl5PHEhwbKRVvzVudXD+ujC0q6PZFmrZK0+xPtiVQYtZIdlUtdhgNKBgBTsGwZkbb2Iw+rbjA==",
+      "line": 4,
+      "kind": "dynamic-import"
+    },
+    {
+      "source": "plugins/harness/codex/src/ordessa_harness_codex/acp/profile/entry.mjs",
+      "sourceSha256": "d4a8aa0c7049094673eef20daba3024acc62ac0bb7da3775b60890d9dd99ceb6",
+      "specifier": "./index.js",
+      "emittedModule": "dist/ordessa-profile.mjs",
+      "upstreamMember": "dist/index.js",
+      "upstreamFile": "protected-evidence/formal-artifact-inputs/codex-acp-1.1.14/dist/index.js",
+      "sha256": "9634b5457e44d55471d0969bcc5a2a1d4cbb83ba637eaf023d34d2e975fd7db8",
+      "ownerId": "codex",
+      "packageName": "@agentclientprotocol/codex-acp",
+      "packageVersion": "1.1.14",
+      "lockIntegrity": "sha512-6JKLbGYH0/Gcz788U6KnljwSdNvUnXOyjJDOgsWsbwmXbxn/BXH+urF5AciACdgq13+KgAP9O96Kp6h33BgyKg==",
+      "line": 4,
+      "kind": "dynamic-import"
+    },
+    {
+      "source": "plugins/harness/pi/src/ordessa_harness_pi/acp/profile/server.mjs",
+      "sourceSha256": "caecbba94ba6fda97bd9c8f568e9c5b73c0885fc67f5506b624003f94ba12f82",
+      "specifier": "./agent.js",
+      "emittedModule": "dist/ordessa-profile-server.mjs",
+      "upstreamMember": "dist/agent.js",
+      "upstreamFile": "protected-evidence/formal-artifact-inputs/pi-acp-0.5.0/dist/agent.js",
+      "sha256": "93eeaf889a5a65bfcc19ccff036c953e5bae5df892f61720cec20e39547275a7",
+      "ownerId": "pi",
+      "packageName": "@automatalabs/pi-acp",
+      "packageVersion": "0.5.0",
+      "lockIntegrity": "sha512-dyG1EBgY9SXjvYzu8fZieAYNnuXZGkXCUI0skKSzLDWNpW08mFnOEbWcZ+PPpoC8nUfcSXbtic2ceYUuv6vjIg==",
+      "line": 5,
+      "kind": "import"
+    },
+    {
+      "source": "plugins/harness/pi/src/ordessa_harness_pi/acp/profile/server.mjs",
+      "sourceSha256": "caecbba94ba6fda97bd9c8f568e9c5b73c0885fc67f5506b624003f94ba12f82",
+      "specifier": "./deps.js",
+      "emittedModule": "dist/ordessa-profile-server.mjs",
+      "upstreamMember": "dist/deps.js",
+      "upstreamFile": "protected-evidence/formal-artifact-inputs/pi-acp-0.5.0/dist/deps.js",
+      "sha256": "7dc511ec43c445f8c466a83e8ddf2edfffe79811cf178e6cfd9312c8d7494eae",
+      "ownerId": "pi",
+      "packageName": "@automatalabs/pi-acp",
+      "packageVersion": "0.5.0",
+      "lockIntegrity": "sha512-dyG1EBgY9SXjvYzu8fZieAYNnuXZGkXCUI0skKSzLDWNpW08mFnOEbWcZ+PPpoC8nUfcSXbtic2ceYUuv6vjIg==",
+      "line": 6,
+      "kind": "import"
+    },
+    {
+      "source": "plugins/harness/pi/src/ordessa_harness_pi/acp/profile/server.mjs",
+      "sourceSha256": "caecbba94ba6fda97bd9c8f568e9c5b73c0885fc67f5506b624003f94ba12f82",
+      "specifier": "./steering.js",
+      "emittedModule": "dist/ordessa-profile-server.mjs",
+      "upstreamMember": "dist/steering.js",
+      "upstreamFile": "protected-evidence/formal-artifact-inputs/pi-acp-0.5.0/dist/steering.js",
+      "sha256": "d002584de8a29258dd642a1a6d83a18ee2ed44c57bdb755d261e1d50aba86258",
+      "ownerId": "pi",
+      "packageName": "@automatalabs/pi-acp",
+      "packageVersion": "0.5.0",
+      "lockIntegrity": "sha512-dyG1EBgY9SXjvYzu8fZieAYNnuXZGkXCUI0skKSzLDWNpW08mFnOEbWcZ+PPpoC8nUfcSXbtic2ceYUuv6vjIg==",
+      "line": 7,
+      "kind": "import"
+    },
+    {
+      "source": "plugins/harness/pi/src/ordessa_harness_pi/acp/profile/server.mjs",
+      "sourceSha256": "caecbba94ba6fda97bd9c8f568e9c5b73c0885fc67f5506b624003f94ba12f82",
+      "specifier": "./loaded-turn.js",
+      "emittedModule": "dist/ordessa-profile-server.mjs",
+      "upstreamMember": "dist/loaded-turn.js",
+      "upstreamFile": "protected-evidence/formal-artifact-inputs/pi-acp-0.5.0/dist/loaded-turn.js",
+      "sha256": "85bda0d593324a0d544e782e9bfe0f6e1650d5a0872b31f70aee1df33572259a",
+      "ownerId": "pi",
+      "packageName": "@automatalabs/pi-acp",
+      "packageVersion": "0.5.0",
+      "lockIntegrity": "sha512-dyG1EBgY9SXjvYzu8fZieAYNnuXZGkXCUI0skKSzLDWNpW08mFnOEbWcZ+PPpoC8nUfcSXbtic2ceYUuv6vjIg==",
+      "line": 8,
+      "kind": "import"
+    }
+  ],
+  "limitations": [
+    "Non-literal dynamic import/require targets are listed as unresolvedDynamic; runtime-selected edges are not statically classified.",
+    "External dependency bodies and their transitive imports are outside the scan; unresolved bare non-workspace imports are treated as external.",
+    "TypeScript config paths and compiler resolution are used; workspace exports fallback supports exact/subpath wildcard targets and types/import/require/node/default conditions. typesVersions, arbitrary custom conditions, and runtime/bundler plugin resolvers are not fully modeled; unresolved local workspace targets fail closed. Manifest dependency checks resolve direct workspace names and npm aliases whose target names match an enumerated workspace; file/link/portal/patch protocols fail closed because their content targets are not modeled.",
+    "This is a bounded source-import check, not an isolated build, emitted-package audit, or complete runtime dependency proof."
+  ]
+}

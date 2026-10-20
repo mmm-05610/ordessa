@@ -11,7 +11,7 @@ from ordessa_engineering.domain.artifacts.method_codec import decode_method_ref
 from ordessa_engineering.domain.common.models.identity import Scope
 from ordessa_engineering.domain.common.models.values import Digest, validate_id, validate_version
 from ordessa_engineering.domain.reviews.assignments import (
-    ReviewerAssignment,
+    ReviewerAssignment, HistoricalReviewerAssignment,
     ReviewerAssignmentControl,
     ReviewerAssignmentRef,
     _unit_ref,
@@ -27,36 +27,19 @@ def _json(raw: bytes) -> str:
     return raw.decode("utf-8")
 
 
-def _record_bytes(record: ReviewerAssignment) -> bytes:
+from ordessa_engineering.domain.reviews.assignment_codec import (encode_reviewer_assignment,
+    decode_reviewer_assignment)
+from ordessa_engineering.domain.common.outcomes.diagnostics import ReferenceError
+
+
+def _record_bytes(record):
     return canonical_bytes({**record.hash_payload(), "digest": asdict(record.digest)})
 
 
-def _decode_record(raw: bytes) -> ReviewerAssignment:
+def _decode_record(raw):
     try:
-        value = json.loads(raw)
-        required = {
-            "scope", "assignment_id", "review_id", "plan_digest", "request_version", "fence",
-            "method_ref", "reviewer_unit_ref", "author_unit_ref", "roles", "issuer_principal_id",
-            "issuer_credential_epoch", "assigned_at", "digest",
-        }
-        if type(value) is not dict or set(value) != required or canonical_bytes(value) != raw:
-            raise ValueError("invalid assignment record")
-        plan_digest = decode_digest(value["plan_digest"])
-        method_ref = decode_method_ref(value["method_ref"])
-        digest = decode_digest(value["digest"])
-        reviewer_bytes = canonical_bytes(value["reviewer_unit_ref"])
-        author_bytes = (None if value["author_unit_ref"] is None
-                        else canonical_bytes(value["author_unit_ref"]))
-        record = ReviewerAssignment(
-            decode_scope(value["scope"]), value["assignment_id"], value["review_id"],
-            plan_digest, value["request_version"], value["fence"], method_ref,
-            reviewer_bytes, author_bytes, tuple(value["roles"]), value["issuer_principal_id"],
-            value["issuer_credential_epoch"], value["assigned_at"],
-        )
-        if record.digest != digest or _record_bytes(record) != raw:
-            raise ValueError("assignment digest differs")
-        return record
-    except (KeyError, TypeError, ValueError, UnicodeError) as exc:
+        return decode_reviewer_assignment(raw)
+    except (ReferenceError, KeyError, TypeError, ValueError, UnicodeError) as exc:
         raise ApplicationError("REVIEWER_ASSIGNMENT_CORRUPT") from exc
 
 
@@ -76,7 +59,7 @@ class SQLiteReviewerAssignmentRepository:
     def _ref(record):
         return ReviewerAssignmentRef(record.scope, record.assignment_id, record.digest)
 
-    def get(self, ref: ReviewerAssignmentRef) -> ReviewerAssignment:
+    def get(self, ref: ReviewerAssignmentRef) -> ReviewerAssignment | HistoricalReviewerAssignment:
         self._require_schema()
         if type(ref) is not ReviewerAssignmentRef or ref.scope != self.access.scope:
             raise ApplicationError("SCOPE_MISMATCH")
@@ -91,14 +74,16 @@ class SQLiteReviewerAssignmentRepository:
         if row is None:
             raise ApplicationError("NOT_FOUND")
         record = _decode_record(bytes(row[15]))
+        reviewer_bytes = record.reviewer_agent_ref_bytes if type(record) is ReviewerAssignment else record.reviewer_unit_ref_bytes
+        author_bytes = record.author_agent_ref_bytes if type(record) is ReviewerAssignment else record.author_unit_ref_bytes
         expected = (record.scope.realm_id, record.scope.project_id, record.assignment_id,
             record.review_id, record.plan_digest.hex, record.request_version, record.fence,
             _json(canonical_bytes({"method_id": record.method_ref.method_id,
                 "release_version": record.method_ref.release_version,
                 "schema_version": record.method_ref.schema_version,
                 "snapshot_digest": asdict(record.method_ref.snapshot_digest)})),
-            _json(record.reviewer_unit_ref_bytes),
-            None if record.author_unit_ref_bytes is None else _json(record.author_unit_ref_bytes),
+            _json(reviewer_bytes),
+            None if author_bytes is None else _json(author_bytes),
             _json(canonical_bytes(list(record.roles))), record.issuer_principal_id,
             record.issuer_credential_epoch, record.assigned_at, record.digest.hex)
         if (record.ref != ref or tuple(row[:15]) != expected
@@ -121,6 +106,8 @@ class SQLiteReviewerAssignmentRepository:
         assignment_id, state, version, revoked_at, reason = row[0]
         assignment = self.get(ReviewerAssignmentRef(
             self.access.scope, assignment_id, self._assignment_digest(assignment_id)))
+        if type(assignment) is not ReviewerAssignment:
+            raise ApplicationError("AGENT_REVIEWER_ASSIGNMENT_REQUIRED")
         control = ReviewerAssignmentControl(assignment.ref, state, version, revoked_at, reason)
         self._validate_plan_binding(assignment)
         return assignment, control
@@ -161,7 +148,9 @@ class SQLiteReviewerAssignmentRepository:
     def insert(self, assignment: ReviewerAssignment) -> ReviewerAssignmentRef:
         self._require_schema()
         self.access.require_write()
-        if type(assignment) is not ReviewerAssignment or assignment.scope != self.access.scope:
+        if type(assignment) is not ReviewerAssignment:
+            raise ApplicationError("AGENT_REVIEWER_ASSIGNMENT_REQUIRED")
+        if assignment.scope != self.access.scope:
             raise ApplicationError("SCOPE_MISMATCH")
         self._validate_plan_binding(assignment, allow_recorded=False)
         active = self.access.execute(
@@ -173,7 +162,11 @@ class SQLiteReviewerAssignmentRepository:
             raise ApplicationError("REVIEWER_ASSIGNMENT_CORRUPT")
         if active:
             raise ApplicationError("REVIEWER_ASSIGNMENT_ALREADY_ACTIVE")
-        raw = _record_bytes(assignment)
+        try:
+            assignment.require_distinct_author()
+        except ReferenceError as exc:
+            raise ApplicationError(exc.code) from exc
+        raw = encode_reviewer_assignment(assignment)
         if len(raw) > 262144:
             raise ApplicationError("REVIEWER_ASSIGNMENT_BOUND_EXCEEDED")
         prefix = self._prefix()
@@ -186,8 +179,8 @@ class SQLiteReviewerAssignmentRepository:
                     "schema_version": assignment.method_ref.schema_version,
                     "snapshot_digest": asdict(assignment.method_ref.snapshot_digest),
                 })),
-                _json(assignment.reviewer_unit_ref_bytes),
-                None if assignment.author_unit_ref_bytes is None else _json(assignment.author_unit_ref_bytes),
+                _json(assignment.reviewer_agent_ref_bytes),
+                None if assignment.author_agent_ref_bytes is None else _json(assignment.author_agent_ref_bytes),
                 _json(canonical_bytes(list(assignment.roles))), assignment.issuer_principal_id,
                 assignment.issuer_credential_epoch, assignment.assigned_at, assignment.digest.hex, raw))
         self.access.execute(
@@ -219,6 +212,8 @@ class SQLiteReviewerAssignmentRepository:
         self._require_schema()
         self.access.require_write()
         assignment = self.get(ref)
+        if type(assignment) is not ReviewerAssignment:
+            raise ApplicationError("AGENT_REVIEWER_ASSIGNMENT_REQUIRED")
         validate_version(expected_version)
         validate_id(event_id)
         if type(revoked_at) is not str or not revoked_at or type(reason) is not str or not reason:
@@ -255,6 +250,8 @@ class SQLiteReviewerAssignmentRepository:
             raise ApplicationError("REVIEWER_ASSIGNMENT_CHANGED")
         digest = self._assignment_digest(assignment_id)
         assignment = self.get(ReviewerAssignmentRef(self.access.scope, assignment_id, digest))
+        if type(assignment) is not ReviewerAssignment:
+            raise ApplicationError("AGENT_REVIEWER_ASSIGNMENT_REQUIRED")
         self._validate_plan_binding(assignment)
 
 

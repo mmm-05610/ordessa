@@ -10,23 +10,32 @@
     "jsx": "react-jsx",
     "strict": true,
     "paths": {
+      "@extensions/ordessa.model-provider/contract.js": [
+        "../../plugins/agents/resources/model-provider/desktop/src/contract.ts"
+      ],
+      "@extensions/ordessa.profile-api/contract.js": [
+        "../../plugins/agents/profiles/ui/api/src/index.ts"
+      ],
       "@extensions/ordessa.contracts/contract.js": [
-        "../../packages/desktop-platform/contracts/foundation/src/contract.ts"
+        "../../packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/contract.ts"
       ],
       "@extensions/ordessa.agent-contracts/contract.js": [
-        "../../plugins/agent/contracts/src/contract.ts"
+        "../../plugins/agents/ui/contracts/src/contract.ts"
       ],
       "@extensions/example.contracts/contract.js": [
-        "../../examples/service-contract/src/contract.ts"
+        "../../examples/workbench/service-contract/src/contract.ts"
       ],
       "@extensions/example.ui-contracts/contract.js": [
-        "../../examples/ui-contracts/src/contract.ts"
+        "../../examples/workbench/ui-contracts/src/contract.ts"
       ],
       "@extensions/ordessa.chat-api/contract.js": [
-        "../../plugins/chat/api/src/contract.ts"
+        "../../plugins/workbench/chat/api/src/contract.ts"
       ],
       "@ordessa/ui-components/api": [
-        "../../packages/desktop-platform/ui-components/api/ui-components.ts"
+        "../../packages/interfaces/channels/workbench/extension-runtime/ui-components/api/ui-components.ts"
+      ],
+      "@extensions/ordessa.harness-contracts/contract.js": [
+        "../../packages/interfaces/channels/workbench/extension-api/contracts/harness/src/contract.ts"
       ]
     },
     "skipLibCheck": true,
@@ -40,20 +49,26 @@
   "include": [
     "renderer",
     "electron",
-    "../../packages/desktop-platform/*/src",
-    "../../packages/desktop-platform/*/api",
-    "../../packages/desktop-platform/ui-components/react",
-    "../../packages/desktop-platform/ui-components/tests",
-    "../../packages/desktop-platform/ui/tests",
-    "../../packages/desktop-platform/contracts/*/src",
-    "../../packages/workbench/api",
-    "../../packages/workbench/src",
+    "../../packages/frontend/*/src",
+    "../../packages/frontend/*/api",
+    "../../packages/interfaces/channels/workbench/extension-runtime/ui-components/react",
+    "../../packages/interfaces/channels/workbench/extension-runtime/ui-components/tests",
+    "../../packages/interfaces/channels/workbench/ui/tests",
+    "../../packages/interfaces/channels/workbench/extension-api/contracts/*/src",
+    "../../packages/interfaces/channels/workbench/shell/workbench/api",
+    "../../packages/interfaces/channels/workbench/shell/workbench/src",
     "../../plugins/**/src",
     "../../plugins/*/tests",
     "../../plugins/*/*/tests",
-    "../../products/desktop/ui-tests",
+    "tests/product-ui",
     "../../examples/*/src",
     "tests",
     "fixtures"
+  ],
+  "exclude": [
+    "../../plugins/agents/resources/model-provider/desktop/tests",
+    "../../plugins/agents/resources/model-provider/chat-contribution/tests",
+    "../../plugins/agents/resources/skills/desktop/tests",
+    "../../plugins/agents/resources/sandbox/frontend/tests"
   ]
 }

@@ -175,9 +175,10 @@ type piPendingApproval struct {
 }
 
 type sessionApprovalRule struct {
-	Kind    codex.ApprovalKind
-	Command string
-	Files   []string
+	Kind          codex.ApprovalKind
+	Command       string
+	Files         []string
+	FileOperation string
 }
 
 func (s *rpcSession) nextRequestID() string {
@@ -672,7 +673,11 @@ func (s *rpcSession) handleExtensionUIRequest(line []byte) {
 	if strings.TrimSpace(request.Title) == gateExtensionTitle {
 		var payload gateRequestPayload
 		if err := json.Unmarshal([]byte(request.Message), &payload); err == nil && payload.Gate == "acp-adapter" {
-			approval := approvalFromGatePayload(payload)
+			approval, valid := approvalFromGatePayload(payload)
+			if !valid {
+				_ = s.respondExtensionUI(request.ID, nil, true)
+				return
+			}
 			approval.ApprovalID = approvalKey(s.threadID, request.ID)
 			approval.ThreadID = s.threadID
 			if s.client.shouldAutoApprove(s.threadID, approval) {
@@ -1883,21 +1888,42 @@ func rpcImageFromInput(item codex.UserInput) (*rpcImageContent, string, error) {
 	}, "", nil
 }
 
-func approvalFromGatePayload(payload gateRequestPayload) codex.ApprovalRequest {
-	kind := codex.ApprovalKindCommand
+func approvalFromGatePayload(payload gateRequestPayload) (codex.ApprovalRequest, bool) {
+	kind := codex.ApprovalKind("")
 	switch strings.ToLower(strings.TrimSpace(payload.Approval)) {
+	case "command":
+		kind = codex.ApprovalKindCommand
 	case "file":
 		kind = codex.ApprovalKindFile
 	case "network":
 		kind = codex.ApprovalKindNetwork
+	default:
+		return codex.ApprovalRequest{}, false
+	}
+	toolName := strings.ToLower(strings.TrimSpace(payload.ToolName))
+	fileOperation := ""
+	if kind == codex.ApprovalKindFile {
+		switch toolName {
+		case "":
+			// Older adapter-gate payloads did not include a tool name. Preserve
+			// their established file-edit approval meaning only.
+			fileOperation = "edit"
+		case "read", "write", "edit":
+			fileOperation = toolName
+		default:
+			return codex.ApprovalRequest{}, false
+		}
+	} else if toolName != "" && toolName != "bash" {
+		return codex.ApprovalRequest{}, false
 	}
 	return codex.ApprovalRequest{
-		ToolCallID: payload.ToolCallID,
-		Kind:       kind,
-		Command:    strings.TrimSpace(payload.Command),
-		Files:      append([]string(nil), payload.Files...),
-		Message:    strings.TrimSpace(payload.Message),
-	}
+		ToolCallID:    payload.ToolCallID,
+		Kind:          kind,
+		Command:       strings.TrimSpace(payload.Command),
+		Files:         append([]string(nil), payload.Files...),
+		FileOperation: fileOperation,
+		Message:       strings.TrimSpace(payload.Message),
+	}, true
 }
 
 func sessionApprovalRuleFromApproval(approval codex.ApprovalRequest) (sessionApprovalRule, bool) {
@@ -1916,9 +1942,22 @@ func sessionApprovalRuleFromApproval(approval codex.ApprovalRequest) (sessionApp
 		if len(files) == 0 {
 			return sessionApprovalRule{}, false
 		}
+		operation := approval.FileOperation
+		if operation == "" {
+			// Codex's historical file approvals had no operation field and were
+			// treated as edit approvals. Keep that meaning without allowing a
+			// session approval to cross between read and write/edit.
+			operation = "edit"
+		}
+		switch operation {
+		case "read", "write", "edit":
+		default:
+			return sessionApprovalRule{}, false
+		}
 		return sessionApprovalRule{
-			Kind:  approval.Kind,
-			Files: files,
+			Kind:          approval.Kind,
+			Files:         files,
+			FileOperation: operation,
 		}, true
 	default:
 		return sessionApprovalRule{}, false
@@ -1957,6 +1996,9 @@ func (r sessionApprovalRule) matches(other sessionApprovalRule) bool {
 		return strings.TrimSpace(r.Command) == strings.TrimSpace(other.Command)
 	}
 	if len(r.Files) != len(other.Files) {
+		return false
+	}
+	if r.FileOperation != other.FileOperation {
 		return false
 	}
 	for i := range r.Files {

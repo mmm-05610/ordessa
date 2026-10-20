@@ -1,7 +1,7 @@
-"""Real schema15 assignments with real capability auth and explicit Unit test peers.
+"""Real schema15 assignments with real capability auth and explicit Agent test peers.
 
-Unit query records below are synthetic native-identity peers: this covers the
-Engineering assignment/source boundary, not a production UnitRecords provider.
+Agent query records below are synthetic native-identity peers: this covers the
+Engineering assignment/source boundary, not a production original Agent service.
 """
 from contextlib import contextmanager
 from dataclasses import asdict, replace
@@ -31,7 +31,7 @@ from ordessa_engineering.adapters.persistence.sqlite.engineering_library import 
 from ordessa_engineering.adapters.persistence.sqlite.method_control import SQLiteMethodControl
 from ordessa_engineering.adapters.persistence.sqlite.snapshot_store import SQLiteSnapshotStore
 from ordessa_engineering.adapters.persistence.sqlite.unit_of_work import SQLiteUoWFactory
-from ordessa_engineering.adapters.review_sources import SQLiteUnitReviewerAuthority
+from ordessa_engineering.adapters.review_sources import SQLiteAgentReviewerAuthority
 from ordessa_engineering.application.assembly import build_reviewer_assignment_usecases
 from ordessa_engineering.application.api import EngineeringService
 from ordessa_engineering.application.contracts.errors import ApplicationError
@@ -43,27 +43,29 @@ from ordessa_engineering.domain.artifacts.method_binding import MethodRef
 from ordessa_engineering.domain.common.models.identity import Scope
 from ordessa_engineering.domain.common.models.values import Digest
 from ordessa_engineering.domain.reviews.targets import Target, TargetSet
-from ordessa_engineering.application.contracts.unit_review import UnitReviewBinding
+from ordessa_engineering.application.contracts.agent_review import AgentReviewBinding
+from ordessa_engineering.domain.changes.agent_execution_ref import AgentExecutionRecordRef
 from ordessa_engineering.application.contracts.commands import ReadSet
 from ordessa_engineering.domain.common.models.refs import BlobRef
 from ordessa_engineering.methods import load_method, compile_method
 from ordessa_engineering.methods.definitions.models import MethodSource, CompilationCapabilities, CapabilityDescriptor
 from ordessa_engineering.methods.definitions.models.identity import method_digest
 from ordessa_infrastructure.encoding import canonical_bytes
+from ordessa_infrastructure.encoding.immutable_json import sealed_mapping, safe_json
 from test_proposal_usecases import SCOPE as DOMAIN_SCOPE, SyntheticAccess, _artifact_graph, _ctx
 
 
 WIRE_SCOPE = WireScope(DOMAIN_SCOPE.realm_id, DOMAIN_SCOPE.project_id)
 ASSIGN = "engineering.reviews.assign_reviewer"
 REVOKE = "engineering.reviews.revoke_reviewer"
-IDENTITY_CONSTRAINT = "original_author_unit_identity_must_differ_from_original_reviewer_unit_identity"
+IDENTITY_CONSTRAINT = "original_author_agent_identity_must_differ_from_original_reviewer_agent_identity"
 TOKEN = "reviewer-assignment-test-token"
 CAPS = (ASSIGN, REVOKE)
 
 
 def _unit(unit_id):
-    return {"environmentNamespace": "test-native", "unitId": unit_id,
-            "ownerProviderRef": {"provider": "explicit-test-peer"}, "sourceRevision": "unit-rev-1"}
+    return {'schemaVersion':'agent-instance/1','namespace':'test-native','instanceId':unit_id,
+            'bindingDigest':'sha256:'+'b'*64}
 
 
 class _TestManagement:
@@ -74,14 +76,15 @@ class _TestManagement:
 
 class _SyntheticUnitRecords:
     """Identity echo for the declared fixture query; never a production auth source."""
-    def resolve_unit_reference(self, ref, invocation, *, input_digest):
-        assert invocation == {"test_query": ref["unitId"], "purpose": invocation["purpose"]}
-        assert invocation["purpose"] in {"reviewer", "author"}
-        assert input_digest == "fixture-input:" + ref["unitId"]
-        return SimpleNamespace(public_ref=ref)
+    sealed = False
+
+    def read_agent_reference(self, ref, *, read_invocation):
+        assert read_invocation == {"test_query": ref["instanceId"], "purpose": read_invocation["purpose"]}
+        assert read_invocation["purpose"] in {"reviewer", "author"}
+        return canonical_bytes(json.loads(safe_json(sealed_mapping(ref))) if self.sealed else ref)
 
 
-def _publish_with_identity_constraint(lib, root):
+def _publish_with_identity_constraint(lib, root, *, identity_constraint=IDENTITY_CONSTRAINT):
     root.mkdir()
     workflow = {
         "schema_version": 1, "entry": "review", "context_slots": ["proposal_ref"],
@@ -91,7 +94,7 @@ def _publish_with_identity_constraint(lib, root):
                          "review_source": {"response_document_type": "test-document",
                                            "response_schema": {"resource": "schema.test"},
                                            "response_codec": "exact_check_key_status/1"},
-                         "unit_submission_review_strategy": {"roles": {"identity_constraint": IDENTITY_CONSTRAINT}}},
+                         "unit_submission_review_strategy": {"roles": {"identity_constraint": identity_constraint}}},
              "outcomes": {"completed": {"next": "done"}, "rejected": {"stop": "finished"}}},
             {"id": "done", "kind": "stop", "outcome": "finished"}],
         "stop_outcomes": ["finished"], "wait_kinds": []}
@@ -165,11 +168,11 @@ def env(tmp_path):
         author = _unit("author-unit")
         records = _SyntheticUnitRecords()
         def query(_ctx, unit_ref, _plan, _request, *, purpose):
-            return {"test_query": unit_ref["unitId"], "purpose": purpose}, "fixture-input:" + unit_ref["unitId"]
+            return {"test_query": unit_ref["instanceId"], "purpose": purpose}
         author_resolver = lambda _ctx, _plan: author
         assignments = build_reviewer_assignment_usecases(factory, method_control=control, records=records,
-            expected_access=access, expected_scope=WIRE_SCOPE, unit_query_factory=query,
-            author_unit_resolver=author_resolver)
+            expected_access=access, expected_scope=WIRE_SCOPE, agent_query_factory=query,
+            author_agent_resolver=author_resolver)
         service = EngineeringService(factory, access, reviewer_assignments=assignments)
         def command(operation, request_id):
             with access.admit(caller, WIRE_SCOPE, operation, request_id=request_id, trace_id="test") as ctx:
@@ -179,14 +182,14 @@ def env(tmp_path):
         lib.close()
 
 
-def _assign(e, reviewer, request_id, author_unit_ref=None):
+def _assign(e, reviewer, request_id, author_agent_ref=None):
     with e["access"].admit(e["caller"], WIRE_SCOPE, ASSIGN, request_id=request_id, trace_id="test") as ctx:
         parameters = {"review_id": e["plan"].review_id,
             "expected_plan_digest": asdict(e["plan"].plan_digest),
             "request_version": e["request"].version, "fence": e["request"].fence,
-            "reviewer_unit_ref": reviewer}
-        if author_unit_ref is not None:
-            parameters["author_unit_ref"] = author_unit_ref
+            "reviewer_agent_ref": reviewer}
+        if author_agent_ref is not None:
+            parameters["author_agent_ref"] = author_agent_ref
         expected_digest = e["service"].command_request_digest(ASSIGN, parameters, ctx, ReadSet(ctx.scope, ()))
         result = asyncio.run(e["service"].execute(ASSIGN, parameters, ctx))
         with e["factory"].begin(DOMAIN_SCOPE, "read") as uow:
@@ -211,15 +214,16 @@ def _revoke(e, assignment_ref, request_id, reason):
         return result
 
 
-def test_schema15_assignment_authenticates_issuer_and_enforces_frozen_author_identity(env):
+@pytest.mark.parametrize('sealed', [False, True])
+def test_schema15_assignment_authenticates_issuer_and_enforces_frozen_author_identity(env, sealed):
     e = env
+    e['records'].sealed = sealed
     without_owner = EngineeringService(e["factory"], e["access"])
     assert ASSIGN not in {d.capability_id for d in without_owner.bound_operation_capabilities().capabilities}
     assert REVOKE not in {d.capability_id for d in without_owner.bound_operation_capabilities().capabilities}
     with pytest.raises(ApplicationError, match="UNTRUSTED_REVIEWER"):
         _assign(e, e["author"], "same-unit")
-    same_underlying_unit = {**e["author"], "ownerProviderRef": {"provider": "other-representation"},
-                            "sourceRevision": "different-revision"}
+    same_underlying_unit = {**e["author"], "bindingDigest": "sha256:" + "c" * 64}
     with pytest.raises(ApplicationError, match="UNTRUSTED_REVIEWER"):
         _assign(e, same_underlying_unit, "same-unit-identity-different-ref")
     with pytest.raises(ApplicationError, match="UNIT_REVIEW_AUTHOR_BINDING_UNAVAILABLE"):
@@ -235,10 +239,28 @@ def test_schema15_assignment_authenticates_issuer_and_enforces_frozen_author_ide
     assert asdict(ref) == ref_data
     assert record.issuer_principal_id == "review-assignment-issuer"
     assert record.issuer_credential_epoch == e["caller"].credential_epoch
-    assert record.author_unit_ref_bytes == canonical_bytes(e["author"])
+    assert record.author_agent_ref_bytes == canonical_bytes(e["author"])
     assert control.state == "active" and control.version == 0
     with pytest.raises(ApplicationError, match="REVIEWER_ASSIGNMENT_ALREADY_ACTIVE"):
         _assign(e, _unit("second-reviewer"), "duplicate-active")
+
+
+@pytest.mark.parametrize('field,value', [
+    ('schemaVersion', 'agent-instance/other'), ('namespace', 'other-namespace'),
+    ('instanceId', 'other-agent'), ('bindingDigest', 'sha256:' + 'e' * 64),
+])
+def test_schema15_sealed_record_cannot_substitute_any_reference_field(env, monkeypatch, field, value):
+    records = env['records']
+    original = records.read_agent_reference
+    def substitute(ref, *, read_invocation):
+        resolved = json.loads(original(ref, read_invocation=read_invocation))
+        return canonical_bytes(json.loads(safe_json(sealed_mapping({**resolved, field: value}))))
+    monkeypatch.setattr(records, 'read_agent_reference', substitute)
+    with pytest.raises(ApplicationError, match='UNTRUSTED_REVIEWER'):
+        _assign(env, _unit('reviewer-unit'), 'substituted-' + field)
+    with env['factory'].begin(DOMAIN_SCOPE, 'read') as uow:
+        with pytest.raises(ApplicationError):
+            uow.reviewer_assignments.active_for_review(env['plan'].review_id)
 
 
 def test_schema15_assignment_capability_revocation_and_reopen_persistence(env, tmp_path):
@@ -252,7 +274,7 @@ def test_schema15_assignment_capability_revocation_and_reopen_persistence(env, t
         with e["access"].admit(stale, WIRE_SCOPE, ASSIGN, request_id="denied", trace_id="test") as ctx:
             e["assignments"].assign_reviewer(ctx, review_id=e["plan"].review_id,
                 expected_plan_digest=e["plan"].plan_digest, request_version=e["request"].version,
-                fence=e["request"].fence, reviewer_unit_ref=_unit("reviewer-unit"))
+                fence=e["request"].fence, reviewer_agent_ref=_unit("reviewer-unit"))
     e["caller"] = stale
     revoke_result = _revoke(e, assignment.ref, "revoke", "end assigned role")
     e["authority"].replace_grants((AccessGrant(WIRE_SCOPE, CAPS),))
@@ -285,17 +307,25 @@ def test_schema15_assignment_capability_revocation_and_reopen_persistence(env, t
             build_reviewer_assignment_usecases(factory14,
                 method_control=SimpleNamespace(factory=factory14, guard_method=lambda *a, **k: None),
                 records=e["records"], expected_access=e["access"], expected_scope=WIRE_SCOPE,
-                unit_query_factory=e["query"])
+                agent_query_factory=e["query"])
     finally:
         schema14.close()
 
 
 def _unit_binding(e, reviewer, author):
-    return UnitReviewBinding(e["plan"].plan_digest, e["request"].version, e["request"].fence,
-        reviewer, "test-operation", "prompt-digest", {"query": "immutable-fixture"}, (),
-        None, "test-document", b"{}", Digest("sha256", "a" * 64),
-        {"identity_constraint": IDENTITY_CONSTRAINT, "authorUnitRef": author, "reviewerUnitRef": reviewer},
-        e["plan"].check_keys)
+    from ordessa_engineering.domain.changes.agent_execution_ref import AgentExecutionRecordRef
+    prompt = Digest('sha256', 'e' * 64)
+    turn = {'schemaVersion': 'agent-turn-ref/1', 'instanceRef': reviewer, 'turnId': 'review-turn'}
+    query = 'sha256:' + hashlib.sha256(canonical_bytes({'schemaVersion': 'agent-turn-query/1',
+        'turnRef': turn, 'expectedInputDigest': 'sha256:' + prompt.hex})).hexdigest()
+    captured = BlobRef(Digest('sha256', 'a' * 64), 2, 'application/json', 'test-capture')
+    execution = AgentExecutionRecordRef(canonical_bytes(reviewer), canonical_bytes(turn), 'test-source',
+        'test-operation', 'test-attempt', prompt, query, captured)
+    return AgentReviewBinding(e['plan'].plan_digest, e['request'].version, e['request'].fence,
+        execution, 'sha256:' + prompt.hex, {'query': 'immutable-fixture'}, (),
+        None, 'test-document', b'{}', Digest('sha256', 'a' * 64),
+        {'identity_constraint': IDENTITY_CONSTRAINT, 'authorAgentRef': author, 'reviewerAgentRef': reviewer},
+        e['plan'].check_keys)
 
 
 def test_original_reviewer_guard_rejects_author_mismatch_and_rolls_back_same_tx_revoke(env):
@@ -304,23 +334,23 @@ def test_original_reviewer_guard_rejects_author_mismatch_and_rolls_back_same_tx_
     assigned = _assign(e, reviewer, "guard-assignment")
     with e["factory"].begin(DOMAIN_SCOPE, "read") as uow:
         assignment, _control = uow.reviewer_assignments.active_for_review(e["plan"].review_id)
-    reviewer_authority = SQLiteUnitReviewerAuthority(e["factory"], expected_access=e["access"],
+    reviewer_authority = SQLiteAgentReviewerAuthority(e["factory"], expected_access=e["access"],
         expected_scope=WIRE_SCOPE, assignments=e["assignments"],
-        method_control=e["control"], unit_records=e["records"], unit_query_factory=e["query"],
-        author_unit_resolver=e["author_resolver"])
+        method_control=e["control"], agent_records=e["records"], agent_query_factory=e["query"],
+        author_agent_resolver=e["author_resolver"])
     with pytest.raises(ApplicationError, match="UNIT_REVIEW_AUTHORITY_UNAVAILABLE"):
-        SQLiteUnitReviewerAuthority(e["factory"], expected_access=e["access"],
+        SQLiteAgentReviewerAuthority(e["factory"], expected_access=e["access"],
             expected_scope=WireScope("foreign-realm", "foreign-project"), assignments=e["assignments"],
-            method_control=e["control"], unit_records=e["records"], unit_query_factory=e["query"],
-            author_unit_resolver=e["author_resolver"])
+            method_control=e["control"], agent_records=e["records"], agent_query_factory=e["query"],
+            author_agent_resolver=e["author_resolver"])
     foreign_lib = EngineeringLibrary.create((e["tmp_path"] / "foreign.sqlite").resolve(),
         library_id="foreign-reviewer-authority", schema_version=15)
     try:
         with pytest.raises(ApplicationError, match="UNIT_REVIEW_AUTHORITY_UNAVAILABLE"):
-            SQLiteUnitReviewerAuthority(SQLiteUoWFactory(foreign_lib), expected_access=e["access"],
+            SQLiteAgentReviewerAuthority(SQLiteUoWFactory(foreign_lib), expected_access=e["access"],
                 expected_scope=WIRE_SCOPE, assignments=e["assignments"], method_control=e["control"],
-                unit_records=e["records"], unit_query_factory=e["query"],
-                author_unit_resolver=e["author_resolver"])
+                agent_records=e["records"], agent_query_factory=e["query"],
+                author_agent_resolver=e["author_resolver"])
     finally:
         foreign_lib.close()
     raw_ref = BlobRef(Digest("sha256", "c" * 64), 4, "application/octet-stream", "test-raw-response")
@@ -328,13 +358,13 @@ def test_original_reviewer_guard_rejects_author_mismatch_and_rolls_back_same_tx_
     bad_binding = _unit_binding(e, reviewer, _unit("unrelated-author"))
     with e["access"].admit(e["caller"], WIRE_SCOPE, ASSIGN, request_id="author-mismatch", trace_id="test") as ctx:
         with pytest.raises(ApplicationError, match="UNIT_REVIEW_AUTHOR_BINDING_UNAVAILABLE"):
-            with reviewer_authority.guard_unit_reviewer(ctx, e["plan"], e["request"], bad_binding,
+            with reviewer_authority.guard_agent_reviewer(ctx, e["plan"], e["request"], bad_binding,
                     raw_ref, obs_digest):
                 pytest.fail("mismatched author must never yield evidence")
 
     binding = _unit_binding(e, reviewer, e["author"])
     with e["access"].admit(e["caller"], WIRE_SCOPE, ASSIGN, request_id="same-tx-fence", trace_id="test") as ctx:
-        with reviewer_authority.guard_unit_reviewer(ctx, e["plan"], e["request"], binding,
+        with reviewer_authority.guard_agent_reviewer(ctx, e["plan"], e["request"], binding,
                 raw_ref, obs_digest) as evidence:
             assert evidence.roles == tuple(sorted(e["plan"].reviewer_requirements))
             with e["factory"].begin(DOMAIN_SCOPE, "write") as uow:
@@ -352,6 +382,67 @@ def test_original_reviewer_guard_rejects_author_mismatch_and_rolls_back_same_tx_
     with e["access"].admit(new_epoch_caller, WIRE_SCOPE, ASSIGN,
                            request_id="new-issuer-epoch", trace_id="test") as new_ctx:
         with pytest.raises(ApplicationError, match="UNTRUSTED_REVIEWER"):
-            with reviewer_authority.guard_unit_reviewer(new_ctx, e["plan"], e["request"], binding,
+            with reviewer_authority.guard_agent_reviewer(new_ctx, e["plan"], e["request"], binding,
                     raw_ref, obs_digest):
                 pytest.fail("assignment from an older issuer epoch must be refused")
+
+
+def test_original_assignment_same_key_replay_and_conflict_do_not_requery_owner(env, monkeypatch):
+    first = _assign(env, _unit("reviewer"), "fixed-request")
+    def no_lookup(*args, **kwargs):
+        raise AssertionError("replay/conflict must use the original command record")
+    monkeypatch.setattr(env["records"], "read_agent_reference", no_lookup)
+    replay = _assign(env, _unit("reviewer"), "fixed-request")
+    assert replay.operation_id == first.operation_id and replay.result_bytes == first.result_bytes
+    with pytest.raises(ApplicationError, match="REQUEST_IDENTITY_CONFLICT"):
+        _assign(env, _unit("different-reviewer"), "fixed-request")
+    with env["factory"].begin(DOMAIN_SCOPE, "read") as uow:
+        record, control = uow.reviewer_assignments.active_for_review(env["plan"].review_id)
+        assert record.reviewer_agent_ref == _unit("reviewer") and control.version == 0
+
+
+def test_business_assignment_uses_actual_agent_binding_reads_and_live_read_revocation(env):
+    """Original issuer + real Engineering UoW + original Agent read owner.
+
+    Agent preparation is explicitly test-owned; no provider launch/send occurs.
+    """
+    import importlib.util
+    from ordessa_engineering.adapters.native_records.agent_execution import AgentExecutionConsumer
+    from ordessa_engineering.adapters.persistence.sqlite.blob_store import SQLiteBlobStore
+    from ordessa_execution_agents.public import AgentInstanceRef
+    path=Path(__file__).resolve().parents[3]/'execution/agents/tests/sdk/interaction_fixtures.py'
+    spec=importlib.util.spec_from_file_location('original_assignment_read_fixture',path)
+    fixture=importlib.util.module_from_spec(spec);spec.loader.exec_module(fixture)
+    source,native_authority,_sender,reader=fixture.original_service(env['tmp_path']/'original-agent.sqlite')
+    try:
+        reviewer=AgentInstanceRef(fixture.INSTANCE.namespace,'actual-reviewer',fixture.MATERIAL.digest)
+        observed=fixture.provenance(reviewer)
+        source.records.publish_instance_binding(observed,'session-1',principal_scope='principal:test',protocol_id='acp')
+        source.records.publish_instance_control(observed,SimpleNamespace(operation_ref='fixture-reviewer-start'),
+            'principal:test',binding_material=fixture.MATERIAL)
+        author=fixture.INSTANCE.projection()
+        consumer=AgentExecutionConsumer(source,SQLiteBlobStore(env['lib']))
+        def query(context,ref,plan,request,*,purpose):return reader
+        def author_resolver(context,plan):return author
+        assignments=build_reviewer_assignment_usecases(env['factory'],method_control=env['control'],
+            records=consumer,expected_access=env['access'],expected_scope=WIRE_SCOPE,
+            agent_query_factory=query,author_agent_resolver=author_resolver)
+        case={**env,'assignments':assignments,'service':EngineeringService(env['factory'],env['access'],
+            reviewer_assignments=assignments)}
+        before=source.records._db.total_changes
+        with pytest.raises(ApplicationError,match='UNTRUSTED_REVIEWER'):
+            _assign(case,author,'actual-source-self-review')
+        native_authority.denied.add('read')
+        with pytest.raises(ApplicationError,match='AGENT_REVIEW_AUTHORITY_UNAVAILABLE'):
+            _assign(case,reviewer.projection(),'actual-source-read-revoked')
+        native_authority.denied.remove('read')
+        result=_assign(case,reviewer.projection(),'actual-source-assigned')
+        assert result.status=='completed'
+        with env['factory'].begin(DOMAIN_SCOPE,'read') as uow:
+            stored,control=uow.reviewer_assignments.active_for_review(env['plan'].review_id)
+            assert stored.reviewer_agent_ref==reviewer.projection()
+            assert stored.author_agent_ref==author and control.state=='active'
+            assert stored.issuer_principal_id=='review-assignment-issuer'
+        assert source.records._db.total_changes==before
+        assert source.records._db.execute("SELECT count(*) FROM operations WHERE operation='turn'").fetchone()==(0,)
+    finally:source.records.close()

@@ -5,6 +5,7 @@ receipt is an ACP fact only; it says nothing about package correctness.
 """
 from collections.abc import Mapping
 from contextlib import contextmanager
+import hashlib
 import json
 import math
 from threading import current_thread
@@ -24,7 +25,7 @@ from ...domain.common.models.values import Digest
 
 _UNIT_FIELDS = {'environmentNamespace', 'unitId', 'ownerProviderRef', 'sourceRevision'}
 _CALLBACK_KEYS = {'on_request', 'before_write', 'on_observation'}
-_MAX_PROMPT_BYTES = 262144
+_MAX_PROMPT_BYTES = 589824
 
 
 def _raise_capacity_error(error):
@@ -85,6 +86,47 @@ def _decode_prompt(raw):
         return value
     except (UnicodeError, ValueError, TypeError, RecursionError, OverflowError) as exc:
         raise ApplicationError('RECORDED_DISPATCH_INPUT_NOT_CANONICAL') from exc
+
+
+def effect_write_timeout(binding):
+    """The host-selected effect-write budget from the binding's classification.
+
+    A declared frozen-package Work re-reads the Grant/facts, rebuilds the task
+    and re-enters admission/gates/selection/scope inside its effect cut; that
+    prefix is measured at ~1.5 s, so this one branch selects the host's bounded
+    8 s budget (the transport's existing legal range is (0, 10] s). Acquisition
+    and the byte write still share ONE deadline. Every other binding returns
+    ``None`` and keeps the transport default; the choice never comes from
+    caller text or request params.
+    """
+    if (type(binding) is DispatchBinding and binding.binding_version == 2
+            and type(binding.subject) is dict
+            and binding.subject.get('subject_kind') == 'frozen_package'):
+        return 8.0
+    return None
+
+
+def failure_diagnostic(binding, error, stage):
+    """Bind trusted SDK seam facts to this exact original operation.
+
+    A pure read of the recorded binding and the exception: it opens no store,
+    consults no Unit/owner/factory state, and grants no permission. The snapshot
+    is accepted only while it still names this binding's operation, input and
+    Unit; anything else is reported without the write evidence.
+    """
+    from ordessa_execution_agents.harness.transport import native_write_failure
+    from ...application.contracts.failure_diagnostic import FailureDiagnostic
+    from ordessa_infrastructure.encoding.immutable_json import safe_json
+    native = native_write_failure(error)
+    if native is not None:
+        expected_unit = 'sha256:' + hashlib.sha256(
+            safe_json(decode_json(binding.unit_ref_bytes)).encode()).hexdigest()
+        if (native['operation_ref'] != binding.execution_operation_ref
+                or native['input_digest'] != 'sha256:' + binding.prompt_input_digest.hex
+                or native['unit_ref_digest'] != expected_unit):
+            return FailureDiagnostic.capture(error, stage).with_recording_failure(
+                ApplicationError('NATIVE_WRITE_BOUNDARY_BINDING_MISMATCH'))
+    return FailureDiagnostic.capture(error, stage, native_write=native)
 
 
 class RecordedDispatchExecution:
@@ -270,6 +312,10 @@ class RecordedDispatchExecution:
             _raise_capacity_error(exc)
             raise
 
+    def failure_diagnostic(self, binding, error, stage):
+        """Same bounded facts as the module extractor; kept for existing callers."""
+        return failure_diagnostic(binding, error, stage)
+
     @contextmanager
     def guard_effect_handoff(self, context, binding, *, access, timeout=60):
         """Suspend the caller admission only across the original SDK send wait."""
@@ -363,7 +409,7 @@ class _EngineeringEffectWriteGuardFactory:
             owner._access(context, EXECUTION_DISPATCH)
             with owner.factory.begin(context.scope,'read') as uow:
                 row=(uow.work_dispatch.get(binding.run_id,binding.step_id,binding.attempt,binding.scope)
-                     if generation else
+                     if binding.work is not None else
                      uow.dispatch.get(binding.run_id,binding.step_id,binding.attempt,binding.scope))
                 if (row['binding_bytes']!=encode_dispatch(binding)
                         or row['dispatch_phase']!='possibly_written'
@@ -409,7 +455,11 @@ class _EngineeringEffectWriteGuardFactory:
         def acquire(identity,deadline):
             return owner.acquire_effect_write(
                 context,binding,identity,deadline,handoff=handoff)
-        return EffectWriteGuard(unit,operation_ref,input_digest,fixed,acquire)
+        timeout = effect_write_timeout(binding)
+        if timeout is None:
+            return EffectWriteGuard(unit,operation_ref,input_digest,fixed,acquire)
+        return EffectWriteGuard(unit,operation_ref,input_digest,fixed,acquire,
+                                timeout=timeout)
 
 
 def engineering_effect_write_guard_factory(dispatch_owner, context, records, blobs, *, generation_dispatch=None):
@@ -522,3 +572,212 @@ class NativeDispatchSources:
 
 
 __all__ = ['RecordedDispatchExecution', 'engineering_effect_write_guard_factory', 'NativeDispatchSources']
+
+
+# ------------------------------------------------------- continuation evidence
+
+class NativeContinuationEvidenceReader:
+    """Read one origin attempt's affirmative pre-write evidence, read-only.
+
+    This is the C-segment adapter over the original owners: the Engineering UoW
+    row, the original UnitRecords ACP turn and the owner-read stop/release
+    records, plus the Blob authority for the linked failure diagnostic. It
+    returns evidence, never authority: no Grant, consumption, journal write or
+    Unit selection happens here, and the caller cannot supply a root binding to
+    inherit someone else's consumption.
+
+    Refusals are explicit. An owner that cannot produce a verifiable
+    termination proof, a diagnostic that does not prove the frame stayed before
+    ``write_stdin``, or an ACP state that is not the unconfirmed one all raise
+    instead of returning an optimistic record. Empty events, an operator JSON
+    or a boolean "closed" claim are never accepted as proof.
+    """
+
+    def __init__(self, factory, records, blobs, query_factory):
+        if (factory is None or records is None or blobs is None
+                or not callable(query_factory)
+                or not callable(getattr(records, 'query_acp_turn', None))
+                or not callable(getattr(records, 'acp_turn_query_digest', None))
+                or not callable(getattr(records, 'owner_read_termination', None))):
+            raise ApplicationError('CONTINUATION_EVIDENCE_AUTHORITY_UNAVAILABLE')
+        # The row and every blob this reader verifies must come from ONE
+        # authority; a factory from another library would let a row and a
+        # diagnostic be read across two graphs.
+        if (getattr(factory, 'authority_id', None) is None
+                or getattr(factory, 'authority_id', None) != getattr(blobs, 'authority_id', None)):
+            raise ApplicationError('CONTINUATION_EVIDENCE_AUTHORITY_UNAVAILABLE')
+        self.factory, self.records, self.blobs = factory, records, blobs
+        self.query = query_factory
+
+    def _row(self, context, origin):
+        from ...application.contracts.commands import CommandContext
+        from ...domain.changes.dispatch import DispatchOriginRef
+        if type(context) is not CommandContext or type(origin) is not DispatchOriginRef:
+            raise ApplicationError('CONTINUATION_ORIGIN_UNAVAILABLE')
+        if ((context.scope.realm_id, context.scope.project_id)
+                != (origin.scope.realm_id, origin.scope.project_id)):
+            raise ApplicationError('CONTINUATION_ORIGIN_UNAVAILABLE')
+        try:
+            with self.factory.begin(context.scope, 'read') as uow:
+                return uow.work_dispatch.get(origin.dispatch_key, origin.step_id,
+                                             origin.attempt, context.scope)
+        except ApplicationError:
+            raise
+        except Exception as exc:
+            raise ApplicationError('CONTINUATION_ORIGIN_UNAVAILABLE') from exc
+
+    @staticmethod
+    def _identity(row, origin):
+        digest = hashlib.sha256(row['binding_bytes']).hexdigest()
+        if (digest != origin.binding_bytes_digest.hex
+                or row['execution_operation_ref'] != origin.execution_operation_ref):
+            raise ApplicationError('CONTINUATION_ORIGIN_IDENTITY_MISMATCH')
+        binding = decode_dispatch(row['binding_bytes'])
+        if binding.digest != origin.binding_record_digest:
+            # The bytes digest and the record digest are different facts; a
+            # continuation may not swap one for the other.
+            raise ApplicationError('CONTINUATION_ORIGIN_IDENTITY_MISMATCH')
+        if row['dispatch_phase'] != 'unknown':
+            raise ApplicationError('CONTINUATION_ORIGIN_NOT_PREWRITE')
+        if row['dispatch_version'] != origin.expected_dispatch_version:
+            raise ApplicationError('CONTINUATION_ORIGIN_IDENTITY_MISMATCH')
+        if ((binding.scope.realm_id, binding.scope.project_id)
+                != (origin.scope.realm_id, origin.scope.project_id)
+                or binding.run_id != origin.dispatch_key
+                or binding.step_id != origin.step_id
+                or binding.attempt != origin.attempt
+                or binding.execution_operation_ref != origin.execution_operation_ref):
+            # The stored binding must name exactly the attempt the origin
+            # reference pins: scope, dispatch key, step, attempt, operation.
+            raise ApplicationError('CONTINUATION_ORIGIN_IDENTITY_MISMATCH')
+        if (binding.binding_version != 2 or type(binding.subject) is not dict
+                or binding.subject.get('subject_kind') != 'frozen_package'):
+            # Only a frozen-package Work attempt is eligible; the value layer
+            # never widens this by itself.
+            raise ApplicationError('CONTINUATION_BINDING_NOT_ELIGIBLE')
+        return binding
+
+    def _diagnostic(self, row, binding):
+        from ordessa_infrastructure.encoding.immutable_json import safe_json
+        from ...domain.common.mechanisms.codec import decode_blob_ref
+        from ...application.contracts.failure_diagnostic import (
+            FAILURE_MEDIA_TYPE, FailureDiagnostic)
+        if row.get('result_blob_json') is None:
+            raise ApplicationError('CONTINUATION_DIAGNOSTIC_UNAVAILABLE')
+        try:
+            reference = decode_blob_ref(decode_json(row['result_blob_json']))
+        except Exception as exc:
+            raise ApplicationError('CONTINUATION_DIAGNOSTIC_UNAVAILABLE') from exc
+        if reference.media_type != FAILURE_MEDIA_TYPE:
+            raise ApplicationError('CONTINUATION_DIAGNOSTIC_UNAVAILABLE')
+        try:
+            raw = self.blobs.read_verified(reference)
+            value = FailureDiagnostic.from_record(decode_json(raw)).to_dict()
+        except ApplicationError:
+            raise
+        except Exception as exc:
+            raise ApplicationError('CONTINUATION_DIAGNOSTIC_UNAVAILABLE') from exc
+        native = value.get('native_write')
+        expected_unit_digest = 'sha256:' + hashlib.sha256(
+            safe_json(decode_json(binding.unit_ref_bytes)).encode()).hexdigest()
+        if (type(native) is not dict
+                or native.get('phase') != 'effect_guard_acquire'
+                or native.get('before_write') != 'not_entered'
+                or native.get('write_stdin') != 'not_entered'
+                or native.get('acknowledged_bytes') is not None
+                or native.get('operation_ref') != binding.execution_operation_ref
+                or native.get('input_digest') != 'sha256:' + binding.prompt_input_digest.hex
+                or native.get('unit_ref_digest') != expected_unit_digest):
+            raise ApplicationError('CONTINUATION_ORIGIN_NOT_PREWRITE')
+        if value.get('recording_failure') is not None:
+            # A diagnostic that could not be fully recorded cannot prove the
+            # frame stayed before the write.
+            raise ApplicationError('CONTINUATION_DIAGNOSTIC_INCOMPLETE')
+        return value
+
+    def _observation(self, binding, origin):
+        from ...application.contracts.execution_observations import ExecutionObservationRef
+        unit = decode_json(binding.unit_ref_bytes)
+        expected_prompt = 'sha256:' + binding.prompt_input_digest.hex
+        invocation = self.query(binding)
+        if invocation is None:
+            raise ApplicationError('CONTINUATION_OBSERVATION_UNAVAILABLE')
+        try:
+            observation = capture_execution_observation(
+                self.records, self.blobs, authority_id=self.blobs.authority_id,
+                unit_ref=unit, operation_ref=binding.execution_operation_ref,
+                expected_prompt_digest=expected_prompt, query_invocation=invocation,
+                max_receipt_bytes=self.records.acp_turn_evidence_max_bytes)
+        except ApplicationError:
+            raise
+        except Exception as exc:
+            raise ApplicationError('CONTINUATION_OBSERVATION_UNAVAILABLE') from exc
+        if (type(observation) is not ExecutionObservationRef
+                or observation.state != 'unknown'
+                or observation.operation_ref != binding.execution_operation_ref
+                or observation.unit_ref != unit
+                or observation.revision != origin.expected_acp_revision
+                or observation.query_digest != binding.expected_query_digest):
+            raise ApplicationError('CONTINUATION_OBSERVATION_UNAVAILABLE')
+        try:
+            receipt = decode_json(self.blobs.read_verified(observation.blob_ref))
+        except ApplicationError:
+            raise
+        except Exception as exc:
+            raise ApplicationError('CONTINUATION_OBSERVATION_UNAVAILABLE') from exc
+        if (not isinstance(receipt, Mapping)
+                or receipt.get('state') != 'unknown'
+                or receipt.get('revision') != origin.expected_acp_revision
+                or receipt.get('request') is not None
+                or receipt.get('response') is not None
+                or receipt.get('events') != []):
+            # The captured receipt must contradict a delivered frame: no
+            # request, no response and no events. This check only carries weight
+            # together with the affirmative pre-write diagnostic; empty events
+            # alone never qualify an attempt.
+            raise ApplicationError('CONTINUATION_OBSERVATION_UNAVAILABLE')
+        return observation
+
+    def _termination(self, binding, action):
+        contract_version, projection = 'harness-unit-termination/1', 'owner-read'
+        unit = decode_json(binding.unit_ref_bytes)
+        try:
+            record = self.records.owner_read_termination(unit['unitId'], action)
+        except Exception as exc:
+            # Owner refusal (including a fenced historical Unit) is an explicit
+            # unavailability; no proof is synthesised from process state.
+            raise ApplicationError('CONTINUATION_TERMINATION_UNAVAILABLE') from exc
+        if (not isinstance(record, Mapping)
+                or set(record) != {'version', 'projection', 'action', 'state',
+                                   'sourceRevision', 'identity', 'outcome'}
+                or record.get('version') != contract_version
+                or record.get('projection') != projection
+                or record.get('action') != action
+                or record.get('state') != 'confirmed'
+                or type(record.get('sourceRevision')) is not int
+                or record.get('sourceRevision') < 1):
+            # The owner-read record has one closed shape; an older or invented
+            # version is refused rather than read as proof.
+            raise ApplicationError('CONTINUATION_TERMINATION_UNAVAILABLE')
+        outcome = record.get('outcome')
+        if (not isinstance(outcome, Mapping) or not outcome
+                or any(type(key) is not str or not key or type(value) is not str or not value
+                       for key, value in outcome.items())):
+            raise ApplicationError('CONTINUATION_TERMINATION_UNAVAILABLE')
+        identity = record.get('identity')
+        unit_ref = identity.get('unitRef') if isinstance(identity, Mapping) else None
+        if not isinstance(unit_ref, Mapping) or dict(unit_ref) != unit:
+            raise ApplicationError('CONTINUATION_TERMINATION_UNAVAILABLE')
+        return dict(record)
+
+    def read_origin(self, context, origin):
+        """Return only the original owners' own evidence for this exact attempt."""
+        from ...application.contracts.execution_observations import OriginPrewriteEvidence
+        row = self._row(context, origin)
+        binding = self._identity(row, origin)
+        self._diagnostic(row, binding)
+        observation = self._observation(binding, origin)
+        stop = self._termination(binding, 'stop')
+        release = self._termination(binding, 'release')
+        return OriginPrewriteEvidence(acp_observation=observation,
+                                     stop_record=stop, release_record=release)

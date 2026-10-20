@@ -4,12 +4,15 @@ import hashlib
 from ordessa_infrastructure.encoding import canonical_bytes
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.domain.approvals.consent import (
-    ConversationNotice, AuthorizationIntent, ChangeAuthorizationIntent, ConsentChallenge, ConversationEvidence, ApprovalGrant,
+    ConversationNotice, WorkPackageNotice, AuthorizationIntent, ChangeAuthorizationIntent, ConsentChallenge,
+    ConversationEvidence, CapturedInstructionEvidence, ApprovalGrant,
 )
 from ordessa_engineering.domain.approvals.consent_codec import encode_record, decode_record
 from ordessa_engineering.domain.common.models.values import validate_id
 from ordessa_engineering.domain.changes.application_plan import ChangeApplicationReceipt, decode_application_receipt
-from ordessa_engineering.domain.approvals.implementation import ImplementationAuthorizationIntent
+from ordessa_engineering.domain.approvals.implementation import (
+    ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent,
+)
 from ordessa_engineering.domain.common.models.values import Digest
 from .apply_schema import APPLY_SCHEMA_VERSION
 from .method_schema import METHOD_SCHEMA_VERSION, METHOD_DDL
@@ -50,6 +53,8 @@ class SQLiteAuthorizationRepository:
     def put_notice(self, notice):
         self.access.require_write()
         self._scope(notice)
+        if type(notice) is WorkPackageNotice:
+            self.require_work_package_authorization_schema()
         self.access.execute('INSERT INTO eng_notices VALUES (?,?,?,?,?)',
             self._prefix() + (notice.notice_id, notice.digest.hex, encode_record(notice)))
 
@@ -67,6 +72,8 @@ class SQLiteAuthorizationRepository:
         self.get_notice(intent.notice_ref)
         if type(intent) is ImplementationAuthorizationIntent:
             self.require_implementation_authorization_schema()
+        elif type(intent) is WorkPackageAuthorizationIntent:
+            self.require_work_package_authorization_schema()
         self.access.execute('INSERT INTO eng_authorization_intents VALUES (?,?,?,?,?,?,?)',
             self._prefix() + (intent.intent_id, intent.digest.hex, intent.notice_ref.notice_id,
                             intent.method_ref.snapshot_digest.hex, encode_record(intent)))
@@ -136,11 +143,22 @@ class SQLiteAuthorizationRepository:
         # evidence_id. When message refs are absent, honestly use captured
         # question/context/answer plus locator/time; no platform ID is invented.
         source = evidence.source
-        identity = {'locator': source.locator, 'message_refs': list(source.message_refs),
-                    'captured_at': source.captured_at}
-        if not source.message_refs:
-            identity.update(question=evidence.question, necessary_context=evidence.necessary_context,
-                            user_answer=evidence.user_answer)
+        if type(evidence) is CapturedInstructionEvidence:
+            # One actual instruction can authorize one exact Grant here. A new
+            # capture time, intent, context or evidence id cannot turn the same
+            # source messages into another authorization event. Without message
+            # refs, use the unchanged instruction bytes conservatively.
+            identity = {'kind': 'captured_instruction', 'locator': source.locator,
+                        'message_refs': sorted(set(source.message_refs))}
+            if not source.message_refs:
+                identity['instruction'] = evidence.instruction
+        else:
+            # Preserve historical Q&A source keys and their canonical bytes.
+            identity = {'locator': source.locator, 'message_refs': list(source.message_refs),
+                        'captured_at': source.captured_at}
+            if not source.message_refs:
+                identity.update(question=evidence.question, necessary_context=evidence.necessary_context,
+                                user_answer=evidence.user_answer)
         event_key = hashlib.sha256(canonical_bytes(identity)).hexdigest()
         existing = self.access.execute('SELECT realm_id,project_id,challenge_id,evidence_bytes FROM eng_consent_receipts WHERE issuer=? AND external_event_id=?',
             (source.attestor_id, event_key)).fetchone()
@@ -190,6 +208,60 @@ class SQLiteAuthorizationRepository:
             raise ApplicationError('STORAGE_CONSTRAINT')
         return {'state': row[0], 'version': row[1], 'revoked_at': row[2]}
 
+    def find_work_package_grants(self, *, work_id, work_revision, work_digest,
+                                 action_id, step_id, package_ref, method_ref, now):
+        """Exact current subject lookup; ambiguity is returned, never ranked.
+
+        The Work is frozen before a grant exists, so adding the resulting Grant
+        ref to its associations would invalidate the very digest it authorizes.
+        Selection stays on the original grant/control tables in this UoW.
+        """
+        self.require_work_package_authorization_schema()
+        for value in (work_id, action_id, step_id):
+            validate_id(value)
+        if (type(work_revision) is not int or work_revision < 1
+                or type(work_digest) is not Digest
+                or (package_ref.realm_id, package_ref.project_id) != self._prefix()):
+            raise ApplicationError('CONSENT_BINDING_MISMATCH')
+        rows = self.access.execute(
+            'SELECT g.approval_id FROM eng_approval_grants g '
+            'JOIN eng_authorization_intents i ON i.realm_id=g.realm_id '
+            'AND i.project_id=g.project_id AND i.intent_id=g.intent_id '
+            'JOIN eng_approval_controls c ON c.realm_id=g.realm_id '
+            'AND c.project_id=g.project_id AND c.approval_id=g.approval_id '
+            'WHERE g.realm_id=? AND g.project_id=? AND c.state=? '
+            "AND json_extract(CAST(i.canonical_bytes AS TEXT),'$.schema_version')=2 "
+            "AND json_extract(CAST(i.canonical_bytes AS TEXT),'$.authorization.work_id')=? "
+            "AND json_extract(CAST(i.canonical_bytes AS TEXT),'$.authorization.work_revision')=? "
+            "AND json_extract(CAST(i.canonical_bytes AS TEXT),'$.authorization.work_digest.hex')=? "
+            "AND json_extract(CAST(i.canonical_bytes AS TEXT),'$.authorization.action_id')=? "
+            "AND json_extract(CAST(i.canonical_bytes AS TEXT),'$.authorization.step_id')=? "
+            "AND json_extract(CAST(i.canonical_bytes AS TEXT),'$.authorization.package_ref')=? "
+            "AND json_extract(CAST(i.canonical_bytes AS TEXT),'$.authorization.method_ref')=? "
+            "AND json_extract(CAST(i.canonical_bytes AS TEXT),'$.authorization.not_before')<=? "
+            "AND json_extract(CAST(i.canonical_bytes AS TEXT),'$.authorization.expires_at')>? LIMIT 2",
+            self._prefix() + ('granted', work_id, work_revision, work_digest.hex,
+                action_id, step_id, canonical_bytes(asdict(package_ref)).decode('utf-8'),
+                canonical_bytes(asdict(method_ref)).decode('utf-8'), now, now)).fetchall()
+        grants = []
+        for (identifier,) in rows:
+            grant = self._get('eng_approval_grants', 'approval_id', identifier, ApprovalGrant)
+            intent = grant.intent
+            if type(intent) is not WorkPackageAuthorizationIntent:
+                raise ApplicationError('CONSENT_BINDING_MISMATCH')
+            authorization = intent.authorization
+            if ((authorization.work_id, authorization.work_revision,
+                 authorization.work_digest, authorization.action_id,
+                 authorization.step_id, authorization.package_ref, authorization.method_ref)
+                    != (work_id, work_revision, work_digest, action_id, step_id,
+                        package_ref, method_ref)
+                    or intent != self.get_intent(intent.intent_id)
+                    or self.get_control(grant.ref)['state'] != 'granted'
+                    or not intent.not_before <= now < intent.expires_at):
+                raise ApplicationError('CONSENT_BINDING_MISMATCH')
+            grants.append(grant)
+        return tuple(grants)
+
     def revoke(self, ref, expected_version, occurred_at, reason, event_id):
         self.access.require_write()
         self.get_grant(ref)
@@ -211,6 +283,11 @@ class SQLiteAuthorizationRepository:
         self.access.check_active()
         if getattr(self.access._connection, '_ordessa_schema_version', None) not in (SUBMISSION_SCHEMA_VERSION, DISPATCH_SCHEMA_VERSION, ACCEPTANCE_SCHEMA_VERSION, REVIEWER_ASSIGNMENT_SCHEMA_VERSION, EXTERNAL_RECORD_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION):
             raise ApplicationError('IMPLEMENTATION_AUTHORIZATION_SCHEMA_REQUIRED')
+
+    def require_work_package_authorization_schema(self):
+        self.access.check_active()
+        if getattr(self.access._connection, '_ordessa_schema_version', None) != WORK_DISPATCH_SCHEMA_VERSION:
+            raise ApplicationError('WORK_DISPATCH_SCHEMA_REQUIRED')
 
     def consume_action(self, ref, *, action, action_instance_id, target_digest, now):
         """Called only inside the original application's effect transaction."""
@@ -236,6 +313,12 @@ class SQLiteAuthorizationRepository:
             if action not in intent.actions or type(target_digest) is not Digest:
                 raise ApplicationError('ACTION_NOT_AUTHORIZED')
             limit = next(slot.limit for slot in intent.action_budgets if slot.action == action)
+        elif type(intent) is WorkPackageAuthorizationIntent:
+            self.require_work_package_authorization_schema()
+            if action not in intent.actions or type(target_digest) is not Digest:
+                raise ApplicationError('ACTION_NOT_AUTHORIZED')
+            limit = next(slot.limit for slot in intent.authorization.action_budgets
+                         if slot.action == action)
         else:
             raise ApplicationError('ACTION_NOT_AUTHORIZED')
         if self.get_control(ref)['state'] != 'granted':
@@ -255,10 +338,15 @@ class SQLiteAuthorizationRepository:
         self.access.require_write()
         self.require_implementation_authorization_schema()
         grant = self.get_grant(ref)
-        if (type(grant.intent) is not ImplementationAuthorizationIntent
+        if (type(grant.intent) not in (ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent)
                 or grant.intent.digest != intent_digest or type(target_digest) is not Digest):
             raise ApplicationError('CONSENT_BINDING_MISMATCH')
-        limits = {slot.action: slot.limit for slot in grant.intent.action_budgets}
+        if type(grant.intent) is WorkPackageAuthorizationIntent:
+            self.require_work_package_authorization_schema()
+            slots = grant.intent.authorization.action_budgets
+        else:
+            slots = grant.intent.action_budgets
+        limits = {slot.action: slot.limit for slot in slots}
         for action, instance in action_instances:
             if action not in limits:
                 raise ApplicationError('ACTION_NOT_AUTHORIZED')
@@ -276,12 +364,17 @@ class SQLiteAuthorizationRepository:
     def action_budget(self, ref):
         self.require_apply_schema()
         grant = self.get_grant(ref)
-        if type(grant.intent) is ImplementationAuthorizationIntent:
+        if type(grant.intent) in (ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent):
             self.require_implementation_authorization_schema()
+            if type(grant.intent) is WorkPackageAuthorizationIntent:
+                self.require_work_package_authorization_schema()
+                slots = grant.intent.authorization.action_budgets
+            else:
+                slots = grant.intent.action_budgets
             return {'actions': [{'action': slot.action, 'limit': slot.limit, 'consumed':
                 self.access.execute('SELECT count(*) FROM eng_action_consumptions WHERE realm_id=? AND project_id=? AND approval_id=? AND action=?',
                     self._prefix() + (ref.approval_id, slot.action)).fetchone()[0]}
-                for slot in grant.intent.action_budgets], 'control': self.get_control(ref)}
+                for slot in slots], 'control': self.get_control(ref)}
         if type(grant.intent) is ChangeAuthorizationIntent:
             action = 'apply_change'
         elif (type(grant.intent) is AuthorizationIntent

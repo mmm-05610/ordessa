@@ -1,0 +1,32 @@
+{
+ "enabled": [
+  "ordessa.contracts",
+  "ordessa.agent-contracts",
+  "ordessa.harness-contracts",
+  "ordessa.commands",
+  "ordessa.workbench",
+  "ordessa.workbench-interactions",
+  "ordessa.ui-components",
+  "ordessa.connections",
+  "ordessa.agent-connections",
+  "ordessa.agent-sessions",
+  "ordessa.agent-acp",
+  "ordessa.chat-api",
+  "ordessa.chat",
+  "ordessa.profile-api",
+  "ordessa.profile-frontend",
+  "ordessa.skills",
+  "ordessa.asset-mcp",
+  "ordessa.model-provider",
+  "ordessa.model-provider-chat"
+ ],
+ "config": {
+  "ordessa.ui-components": [
+    {
+    "componentId": "ordessa.chat.model-selector",
+    "major": 1,
+    "providerId": "ordessa.model-provider-chat"
+   }
+  ]
+ }
+}

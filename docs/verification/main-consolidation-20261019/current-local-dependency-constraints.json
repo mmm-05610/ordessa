@@ -1,0 +1,702 @@
+{
+  "head": "c3dc16add92590829d0cb8830aff8087a33a982a",
+  "projects": 53,
+  "activeLocalEdges": [
+    {
+      "from": "ordessa-agent-tools",
+      "requirement": "ordessa-system-access-client==0.1.0",
+      "to": "ordessa-system-access-client",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-agent-tools",
+      "requirement": "ordessa-cli-runtime==0.1.0",
+      "to": "ordessa-cli-runtime",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server",
+      "requirement": "ordessa-infrastructure==0.1.0",
+      "to": "ordessa-infrastructure",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server",
+      "requirement": "ordessa-units==0.1.0",
+      "to": "ordessa-units",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server",
+      "requirement": "ordessa-environments==0.1.0",
+      "to": "ordessa-environments",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server",
+      "requirement": "ordessa-server-plugin-api>=0.1.0,<1",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server",
+      "requirement": "ordessa-interfaces==0.1.0",
+      "to": "ordessa-interfaces",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server",
+      "requirement": "ordessa-interfaces-contracts==0.1.0",
+      "to": "ordessa-interfaces-contracts",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server",
+      "requirement": "ordessa-environments-local==0.1.0",
+      "to": "ordessa-environments-local",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server",
+      "requirement": "ordessa-system-access-bindings==0.1.0",
+      "to": "ordessa-system-access-bindings",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server",
+      "requirement": "ordessa-engineering==0.1.0",
+      "to": "ordessa-engineering",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server",
+      "requirement": "decision-runtime==0.2.0",
+      "to": "decision-runtime",
+      "version": "0.2.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server",
+      "requirement": "ordessa-harness-pi==0.1.0a1",
+      "to": "ordessa-harness-pi",
+      "version": "0.1.0a1",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server-product",
+      "requirement": "ordessa-infrastructure==0.1.0",
+      "to": "ordessa-infrastructure",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server-product",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server-product",
+      "requirement": "ordessa-server==2.0.0a1",
+      "to": "ordessa-server",
+      "version": "2.0.0a1",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server-product",
+      "requirement": "ordessa-server-plugin-api>=0.1.0,<1",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server-product",
+      "requirement": "ordessa-harness-pi==0.1.0a1",
+      "to": "ordessa-harness-pi",
+      "version": "0.1.0a1",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-server-product",
+      "requirement": "ordessa-interfaces-contracts==0.1.0",
+      "to": "ordessa-interfaces-contracts",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-engineering",
+      "requirement": "decision-runtime==0.2.0",
+      "to": "decision-runtime",
+      "version": "0.2.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-engineering",
+      "requirement": "ordessa-infrastructure==0.1.0",
+      "to": "ordessa-infrastructure",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-interfaces",
+      "requirement": "ordessa-interfaces-contracts==0.1.0",
+      "to": "ordessa-interfaces-contracts",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-interfaces",
+      "requirement": "ordessa-infrastructure==0.1.0",
+      "to": "ordessa-infrastructure",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-interfaces",
+      "requirement": "ordessa-server-plugin-api>=0.1.0,<1",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-system-access-bindings",
+      "requirement": "ordessa-infrastructure==0.1.0",
+      "to": "ordessa-infrastructure",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-system-access-bindings",
+      "requirement": "ordessa-interfaces==0.1.0",
+      "to": "ordessa-interfaces",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-system-access-bindings",
+      "requirement": "ordessa-engineering==0.1.0",
+      "to": "ordessa-engineering",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-system-access-bindings",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-system-access-bindings",
+      "requirement": "ordessa-units==0.1.0",
+      "to": "ordessa-units",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-system-access-bindings",
+      "requirement": "decision-runtime==0.2.0",
+      "to": "decision-runtime",
+      "version": "0.2.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-system-access-bindings",
+      "requirement": "ordessa-server-plugin-api>=0.1.0,<1",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-cli-runtime",
+      "requirement": "ordessa-system-access-client==0.1.0",
+      "to": "ordessa-system-access-client",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-mcp-server",
+      "requirement": "ordessa-system-access-client==0.1.0",
+      "to": "ordessa-system-access-client",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-execution-agents",
+      "requirement": "ordessa-infrastructure==0.1.0",
+      "to": "ordessa-infrastructure",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-environments",
+      "requirement": "ordessa-infrastructure==0.1.0",
+      "to": "ordessa-infrastructure",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-environments",
+      "requirement": "ordessa-interfaces-contracts==0.1.0",
+      "to": "ordessa-interfaces-contracts",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-units",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-units",
+      "requirement": "ordessa-environments==0.1.0",
+      "to": "ordessa-environments",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-units",
+      "requirement": "ordessa-infrastructure==0.1.0",
+      "to": "ordessa-infrastructure",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "decision-runtime",
+      "requirement": "ordessa-interfaces-contracts==0.1.0",
+      "to": "ordessa-interfaces-contracts",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-decision-rules-cel",
+      "requirement": "decision-runtime>=0.2.0",
+      "to": "decision-runtime",
+      "version": "0.2.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-decision-jev",
+      "requirement": "decision-runtime>=0.2.0",
+      "to": "decision-runtime",
+      "version": "0.2.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-lsp-adapters",
+      "requirement": "ordessa-lsp-api",
+      "to": "ordessa-lsp-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-lsp-adapters",
+      "requirement": "ordessa-server-plugin-api",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-lsp-adapters",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-environments-local",
+      "requirement": "ordessa-environments==0.1.0",
+      "to": "ordessa-environments",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-environments-local",
+      "requirement": "ordessa-infrastructure==0.1.0",
+      "to": "ordessa-infrastructure",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-environments-openshell",
+      "requirement": "ordessa-environments==0.1.0",
+      "to": "ordessa-environments",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-qwen",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-kimi",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-copilot",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-grok-build",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-hermes",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-goose",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-kilo",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-qoder",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-pi",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-codex",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-claude-code",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-opencode",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-vibe",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-gemini-cli",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-harness-dsh",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-runtime-preferences-adapters",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-runtime-preferences-adapters",
+      "requirement": "ordessa-server-plugin-api>=0.1.0,<1",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-workspace",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-workspace",
+      "requirement": "ordessa-interfaces==0.1.0",
+      "to": "ordessa-interfaces",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-workspace",
+      "requirement": "ordessa-infrastructure==0.1.0",
+      "to": "ordessa-infrastructure",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-workspace",
+      "requirement": "ordessa-server-plugin-api>=0.1.0,<1",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-memory",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-memory",
+      "requirement": "ordessa-server-plugin-api>=0.1.0,<1",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-assets-subagents",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-assets-subagents",
+      "requirement": "ordessa-permissions-api",
+      "to": "ordessa-permissions-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-assets-subagents",
+      "requirement": "ordessa-server-plugin-api",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-extensions",
+      "requirement": "ordessa-server-plugin-api>=0.1.0,<1",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-extensions",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-permissions-backend",
+      "requirement": "ordessa-permissions-api>=0.1.0,<1",
+      "to": "ordessa-permissions-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-permissions-backend",
+      "requirement": "ordessa-server-plugin-api>=0.1.0,<1",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-permissions-adapters",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-permissions-adapters",
+      "requirement": "ordessa-permissions-api",
+      "to": "ordessa-permissions-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-permissions-adapters",
+      "requirement": "ordessa-server-plugin-api",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-prompts",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-prompts",
+      "requirement": "ordessa-server-plugin-api>=0.1.0,<1",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-mcp",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-skills",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-skills",
+      "requirement": "ordessa-interfaces==0.1.0",
+      "to": "ordessa-interfaces",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-skills",
+      "requirement": "ordessa-permissions-api==0.1.0",
+      "to": "ordessa-permissions-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-skills",
+      "requirement": "ordessa-server-plugin-api>=0.1.0,<1",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-model-provider",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-model-provider",
+      "requirement": "ordessa-interfaces==0.1.0",
+      "to": "ordessa-interfaces",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-model-provider",
+      "requirement": "ordessa-infrastructure==0.1.0",
+      "to": "ordessa-infrastructure",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-model-provider",
+      "requirement": "ordessa-server-plugin-api>=0.1.0,<1",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-sandbox-backend",
+      "requirement": "ordessa-sandbox-api",
+      "to": "ordessa-sandbox-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-sandbox-backend",
+      "requirement": "ordessa-server-plugin-api",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-sandbox-adapters",
+      "requirement": "ordessa-sandbox-api",
+      "to": "ordessa-sandbox-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-sandbox-adapters",
+      "requirement": "ordessa-sandbox-backend",
+      "to": "ordessa-sandbox-backend",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-sandbox-adapters",
+      "requirement": "ordessa-server-plugin-api",
+      "to": "ordessa-server-plugin-api",
+      "version": "0.1.0",
+      "satisfied": true
+    },
+    {
+      "from": "ordessa-sandbox-adapters",
+      "requirement": "ordessa-execution-agents==0.1.0",
+      "to": "ordessa-execution-agents",
+      "version": "0.1.0",
+      "satisfied": true
+    }
+  ],
+  "localConflicts": [],
+  "qualification": "Current pyproject local direct constraints only; not installed thirdparty resolver or runtime acceptance. Includes uncommitted Engineering/bindings metadata edits.",
+  "externalInstallRetried": false
+}

@@ -1,0 +1,30 @@
+schema_version: 1
+standard_id: bounded-note
+revision: 1.0.0
+purpose: quality
+criteria:
+- criterion_id: note_shape
+  statement: Maintenance note freezes its edit and preserved behavior.
+  applies_to:
+  - maintenance-note
+  required_inputs:
+  - method_content
+  checks:
+  - capability_id: ordessa.schema.validate
+    interface_version: 1.0.0
+    bindings:
+      schema_by_document_type:
+        maintenance-note:
+          resource: document.note.schema
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+reduction:
+  required_criteria: all_applicable
+  empty_applicable_set: error
+  priority:
+  - block
+  - manual
+  - pass

@@ -9,22 +9,51 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable, Mapping
 from itertools import islice
+from dataclasses import dataclass, field
 from typing import Any
 
-from decision_runtime import DecisionAnswer, DecisionQuestion, PolicyRef, TaskBrief
+from decision_runtime import DecisionAnswer, DecisionQuestion, PolicyRef
 from ordessa_execution_agents.profiles import (
     ProfileRevisionRef,
     ProfileService,
     encode_content,
 )
-from ordessa_units.api import UnitManager, UnitSpec
-from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
+from ordessa_infrastructure.encoding.immutable_json import sealed_mapping, safe_json
 
 from ordessa_engineering.domain.common.outcomes.library_failures import EngineeringError
 
 
 _MAX_DESCRIPTION_BYTES = 16 * 1024
 _MAX_OPTION_ID_BYTES = 512
+
+
+@dataclass(frozen=True)
+class ProfileTaskInput:
+    """Finite immutable Engineering task data, never a Decision permission."""
+    task_id: str
+    task_revision: str
+    goal: str
+    inputs: tuple = ()
+    boundaries: tuple = ()
+    acceptance_criteria: tuple = ()
+    context_refs: tuple = ()
+    continuation_ref: object = None
+    _snapshot: Mapping = field(init=False, repr=False, compare=False)
+
+    def __post_init__(self):
+        for value in (self.task_id, self.task_revision):
+            if (type(value) is not str or not value or len(value) > 256
+                    or value.strip() != value or any(ord(char) < 32 for char in value)):
+                raise EngineeringError("native_task_input_required")
+        if type(self.goal) is not str:
+            raise EngineeringError("native_task_input_required")
+        value = {name: getattr(self, name) for name in (
+            'task_id', 'task_revision', 'goal', 'inputs', 'boundaries',
+            'acceptance_criteria', 'context_refs', 'continuation_ref')}
+        object.__setattr__(self, '_snapshot', sealed_mapping(value, max_bytes=262144))
+
+    def to_dict(self):
+        return json.loads(safe_json(self._snapshot, max_bytes=262144))
 
 
 def _ref_key(ref: ProfileRevisionRef) -> str:
@@ -120,8 +149,8 @@ class NativeProfileChoice:
         question_text: str,
         options: Mapping[str, str],
     ) -> object:
-        if type(task) is not TaskBrief:
-            raise EngineeringError("native_task_brief_required")
+        if type(task) is not ProfileTaskInput:
+            raise EngineeringError("native_task_input_required")
         if not isinstance(request_id, str) or not request_id.strip():
             raise EngineeringError("decision_request_id_required")
         if not isinstance(options, Mapping) or not 2 <= len(options) <= 65:
@@ -154,7 +183,9 @@ class NativeProfileChoice:
 class NativeProfileUnitCreator:
     """Create through the original public UnitManager using the fixed ref."""
 
-    def __init__(self, manager: UnitManager, *, agent_id: str, environment_reference: Mapping):
+    def __init__(self, manager: Any, *, agent_id: str, environment_reference: Mapping):
+        from ordessa_units.api import UnitManager
+
         if type(manager) is not UnitManager:
             raise EngineeringError("original_public_unit_manager_required")
         if not isinstance(agent_id, str) or not agent_id.strip() or not isinstance(environment_reference, Mapping):
@@ -166,6 +197,8 @@ class NativeProfileUnitCreator:
         self._environment_reference = sealed_mapping(environment_reference)
 
     def create(self, profile_ref: object, authorization: Any) -> object:
+        from ordessa_units.api import UnitSpec
+
         if type(profile_ref) is not ProfileRevisionRef:
             raise EngineeringError("fixed_profile_revision_required")
         return self._manager.create(
@@ -174,8 +207,49 @@ class NativeProfileUnitCreator:
         )
 
 
+class NativeProfileAgentCreator:
+    """Delegate one fixed Profile start to the original current Agent owner.
+
+    The process root supplies an already bound endpoint, the exact start-request
+    factory and original invocation resolver. Neither profile choice nor an
+    opaque authorization value is converted into permission by this adapter.
+    Stable request identity and replay/UNKNOWN handling remain their owners'.
+    """
+
+    def __init__(self, manager, *, endpoint, request_factory, invocation_resolver):
+        from ordessa_execution_agents.public import AgentManager
+        from ordessa_execution_agents.sdk.endpoint import BoundEndpoint
+
+        if type(manager) is not AgentManager:
+            raise EngineeringError("original_public_agent_manager_required")
+        if (type(endpoint) is not BoundEndpoint or not callable(request_factory)
+                or not callable(invocation_resolver)):
+            raise EngineeringError("fixed_agent_context_required")
+        self._manager = manager
+        self._endpoint = endpoint
+        self._request_factory = request_factory
+        self._invocation_resolver = invocation_resolver
+
+    async def create(self, profile_ref: object, authorization: Any) -> object:
+        from ordessa_execution_agents.public import AgentStartRequest
+
+        if type(profile_ref) is not ProfileRevisionRef:
+            raise EngineeringError("fixed_profile_revision_required")
+        request = self._request_factory(profile_ref, self._endpoint.ref, authorization)
+        if (type(request) is not AgentStartRequest
+                or request.profile_revision_ref != profile_ref
+                or request.endpoint_ref != self._endpoint.ref):
+            raise EngineeringError("fixed_agent_start_request_required")
+        invocation = self._invocation_resolver(authorization)
+        # No retry or key rewrite: original Manager admission and durable ledger
+        # own both a fresh start and its completed/UNKNOWN replay.
+        return await self._manager.start(request, self._endpoint, invocation)
+
+
 __all__ = [
+    "ProfileTaskInput",
     "NativeProfileSelectionSource",
     "NativeProfileChoice",
     "NativeProfileUnitCreator",
+    "NativeProfileAgentCreator",
 ]

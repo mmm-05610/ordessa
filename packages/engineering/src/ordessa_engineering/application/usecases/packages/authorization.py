@@ -1,10 +1,13 @@
 """Implementation intent closure on the original Proposal/baseline/method owners."""
 from contextlib import contextmanager
-from dataclasses import asdict, replace
+from dataclasses import asdict, dataclass, replace
 from ordessa_infrastructure.encoding import canonical_bytes
 from ...contracts.errors import ApplicationError
 from ...contracts.snapshots import EngineeringTargetBindings
-from ....domain.approvals.implementation import ImplementationAuthorizationIntent
+from ....domain.approvals.implementation import (
+    ImplementationAuthorizationIntent, WorkPackageAuthorization,
+    WorkPackageAuthorizationIntent,
+)
 from ....domain.changes.models import ChangeSet
 from ...orchestration.method_bridge import MethodBridge
 from ..proposal_closure import resolve_record
@@ -14,8 +17,80 @@ def _requirements(values):
     return sorted(canonical_bytes(asdict(value)) for value in values)
 
 
+@dataclass(frozen=True)
+class WorkPackageAuthorizationFacts:
+    work: object
+    package: object
+    requirements: tuple
+    review_refs: tuple
+    reviews: tuple
+    method_control: object
+
+
+def resolve_work_package_authorization(uow, authorization):
+    """Re-read the exact v2 subject; this resolves facts, never grants access.
+
+    The Work is frozen before the notice, so its full digest does not include
+    the later Grant. A dispatch selects that Grant from its original authority,
+    rather than revising this Work and invalidating its own authorization.
+    """
+    from ...contracts.work_context import (
+        WORK_CONTEXT_KIND, WORK_STABLE_ID_PREFIX, decode_work_binding,
+    )
+    from ....domain.packages.models import PreparedPackagePayload
+    from ...orchestration.declared_prepare_packages import verify_reviewed_change
+    if (type(authorization) is not WorkPackageAuthorization
+            or authorization.scope != uow.scope):
+        raise ApplicationError('ACTION_NOT_AUTHORIZED')
+    # The existing schema17 relation is required; no alternate table or run is
+    # fabricated when a deployment has not selected declared Work storage.
+    uow.work_dispatch
+    head = uow.workflow.head_ref(
+        WORK_CONTEXT_KIND, WORK_STABLE_ID_PREFIX + authorization.work_id)
+    if (head is None or head.revision != authorization.work_revision
+            or head.digest != 'sha256:' + authorization.work_digest.hex):
+        raise ApplicationError('WORK_PACKAGE_AUTHORIZATION_WORK_CHANGED')
+    work = decode_work_binding(uow.workflow.read(head))
+    packages = tuple(item.ref for item in work.associations if item.kind == 'package')
+    if (work.scope != authorization.scope or work.method_ref != authorization.method_ref
+            or work.revision != authorization.work_revision
+            or packages != (authorization.package_ref,)):
+        raise ApplicationError('WORK_PACKAGE_AUTHORIZATION_BINDING_MISMATCH')
+    package = uow.implementation.resolve_package(authorization.package_ref)
+    payload = package.payload
+    if (type(payload) is not PreparedPackagePayload
+            or package.scope != work.scope or payload.method_ref != work.method_ref):
+        raise ApplicationError('WORK_PACKAGE_AUTHORIZATION_BINDING_MISMATCH')
+    proposals = tuple(item.ref for item in work.associations if item.kind == 'proposal')
+    if proposals and proposals != (payload.change_ref,):
+        raise ApplicationError('WORK_PACKAGE_AUTHORIZATION_BINDING_MISMATCH')
+    control = uow.methods.control(authorization.method_ref)
+    if not control.enabled:
+        raise ApplicationError('METHOD_DISABLED')
+    records = []
+    for ref in payload.review_refs:
+        # This resolver only reads context.scope; the transaction is the source
+        # of that scope. No caller DTO is being treated as authentication.
+        proposal, _, record = verify_reviewed_change(
+            uow, uow, proposal_ref=payload.change_ref, review_ref=ref,
+            method_ref=payload.method_ref, baseline=payload.baseline,
+            candidate=payload.candidate)
+        if (set(payload.review_refs) != set(proposal.source_change.review_refs)
+                or payload.method_resource_refs != proposal.source_change.method_resource_refs):
+            raise ApplicationError('WORK_PACKAGE_AUTHORIZATION_BINDING_MISMATCH')
+        records.append(record)
+    requirements = tuple(record.plan.requirement for record in records)
+    if (not requirements or len(set((r.requirement_id, r.requirement_version)
+                                   for r in requirements)) != len(requirements)):
+        raise ApplicationError('METHOD_REQUIREMENTS_CHANGED')
+    return WorkPackageAuthorizationFacts(work, package, requirements,
+                                         payload.review_refs, tuple(records), control)
+
+
 def resolve_implementation_intent(uow, intent):
     """No captured intent or caller requirement list is itself permission."""
+    if type(intent) is WorkPackageAuthorizationIntent:
+        return resolve_work_package_authorization(uow, intent.authorization)
     if type(intent) is not ImplementationAuthorizationIntent or intent.scope != uow.scope:
         raise ApplicationError('ACTION_NOT_AUTHORIZED')
     uow.authorization.require_implementation_authorization_schema()
@@ -56,6 +131,26 @@ class ImplementationIntentAdmission:
 
     @contextmanager
     def guard_intent(self, context, intent):
+        if type(intent) is WorkPackageAuthorizationIntent:
+            if intent.scope != context.scope:
+                raise ApplicationError('SCOPE_MISMATCH')
+            guard = getattr(self.methods, 'guard', None)
+            if not callable(guard):
+                raise ApplicationError('METHOD_AUTHORITY_UNAVAILABLE')
+            with guard(context, intent.method_ref) as declaration:
+                authorization = intent.authorization
+                actions = tuple(action for action in declaration.actions
+                                if action.action_id == authorization.action_id)
+                steps = (() if len(actions) != 1 else tuple(
+                    step for step in actions[0].steps
+                    if step.step_id == authorization.step_id))
+                if (len(steps) != 1 or steps[0].kind != 'invoke'
+                        or steps[0].name != 'implement-approved-package'):
+                    raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
+                with self.factory.begin(context.scope, 'read') as uow:
+                    resolve_implementation_intent(uow, intent)
+                yield
+            return
         if type(intent) is not ImplementationAuthorizationIntent or intent.scope != context.scope:
             raise ApplicationError('INTENT_OWNER_UNAVAILABLE')
         resolver = getattr(self.bindings, 'resolve_intent_bindings', None)

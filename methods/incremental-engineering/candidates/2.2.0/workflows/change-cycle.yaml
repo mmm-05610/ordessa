@@ -1,0 +1,266 @@
+schema_version: 1
+workflow_id: change-cycle
+semantics: ordessa.change-cycle/v1
+entry: await_proposal
+context_slots:
+- proposal_ref
+- pre_approval_review_set_ref
+- authorization_intent_ref
+- approval_challenge_ref
+- approval_ref
+- package_ref
+- package_review_set_ref
+- execution_ref
+- submission_ref
+- acceptance_review_set_ref
+- adoption_ref
+- decisions_ref
+- baseline_ref
+- summary_ref
+- standard_profile_ref
+- notice_ref
+- target_baseline_ref
+- apply_receipt_ref
+- feedback_ref
+resume_contract: AuthenticatedWorkResume.v1
+steps:
+- id: await_proposal
+  kind: wait
+  event: engineering.proposal.created
+  bind:
+    proposal_ref: event.proposal_ref
+    decisions_ref: event.decisions_ref
+    baseline_ref: event.baseline_ref
+    summary_ref: event.summary_ref
+    standard_profile_ref: event.standard_profile_ref
+  next: source_review
+- id: source_review
+  kind: operation
+  operation: engineering.reviews.request
+  inputs:
+    target: proposal_ref
+  outcomes:
+    passed:
+      next: quality_review
+    blocked:
+      stop: revision_required
+    manual:
+      wait: reviewer_result
+    unknown:
+      wait: check_reconciliation
+  config:
+    purpose: provenance_support
+    standards:
+    - resource: standard.source_review
+    output_slot: pre_approval_review_set_ref
+    output_mode: merge_into_required_review_set_with_cas
+- id: quality_review
+  kind: operation
+  operation: engineering.reviews.request
+  inputs:
+    target: proposal_ref
+    summary: summary_ref
+    standard_profile: standard_profile_ref
+    baseline: baseline_ref
+  outcomes:
+    passed:
+      next: await_notice
+    blocked:
+      stop: revision_required
+    manual:
+      wait: reviewer_result
+    unknown:
+      wait: check_reconciliation
+  config:
+    purpose: quality
+    standards:
+    - resource: standard.quality_review
+    - resource: standard.engineering_content
+    - resource: standard.summary_review
+    output_slot: pre_approval_review_set_ref
+    output_mode: merge_into_required_review_set_with_cas
+- id: await_notice
+  kind: wait
+  event: engineering.notice.published
+  match:
+    proposal: proposal_ref
+    summary: summary_ref
+    reviews: pre_approval_review_set_ref
+  bind:
+    notice_ref: event.notice_ref
+  next: prepare_intent
+- id: prepare_intent
+  kind: operation
+  operation: engineering.approvals.prepare_intent
+  inputs:
+    proposal: proposal_ref
+    reviews: pre_approval_review_set_ref
+    notice: notice_ref
+    baseline: baseline_ref
+  outcomes:
+    prepared:
+      next: request_approval
+    blocked:
+      stop: revision_required
+  config:
+    request_spec_source: frozen_proposal_implementation_intent
+    method_source: work_method_ref
+    output_slot: authorization_intent_ref
+    acceptance_and_implementation_actions: distinct_scopes_in_exact_intent
+- id: request_approval
+  kind: operation
+  operation: engineering.approvals.request
+  inputs:
+    intent_ref: authorization_intent_ref
+  outcomes:
+    granted:
+      next: await_did_applied
+    denied:
+      stop: rejected
+    pending:
+      wait: trusted_approval_result
+    unknown:
+      wait: approval_reconciliation
+  config:
+    grant_source: configured_product_policy_accepts_traceable_explicit_user_chat_attested_by_authorized_main_agent
+    expected_control_context_source: verified_read_set
+    output_slots:
+    - approval_challenge_ref
+    - approval_ref
+- id: await_did_applied
+  kind: wait
+  event: engineering.baseline.applied
+  match:
+    proposal: proposal_ref
+    grant: approval_ref
+    baseline: baseline_ref
+  bind:
+    target_baseline_ref: event.target_baseline_ref
+    apply_receipt_ref: event.apply_receipt_ref
+  next: derive_package
+- id: derive_package
+  kind: operation
+  operation: engineering.packages.derive
+  inputs:
+    proposal: proposal_ref
+    grant: approval_ref
+    target_baseline: target_baseline_ref
+    apply_receipt: apply_receipt_ref
+    standard_profile: standard_profile_ref
+  outcomes:
+    derived:
+      next: package_review
+    out_of_scope:
+      stop: revision_required
+  config:
+    document:
+      resource: document.spec_kit_package.schema
+    output_slot: package_ref
+    receipt_requirement: verified_baseline_owner_cas_readback_and_matching_exact_acceptance
+- id: package_review
+  kind: operation
+  operation: engineering.reviews.request
+  inputs:
+    target: package_ref
+    proposal: proposal_ref
+  outcomes:
+    passed:
+      next: dispatch
+    blocked:
+      stop: revision_required
+    manual:
+      wait: reviewer_result
+    unknown:
+      wait: check_reconciliation
+  config:
+    purpose: quality
+    standards:
+    - resource: standard.quality_review
+    - resource: standard.engineering_content
+    output_slot: package_review_set_ref
+- id: dispatch
+  kind: operation
+  operation: engineering.executions.dispatch
+  inputs:
+    package: package_ref
+    grant: approval_ref
+    package_reviews: package_review_set_ref
+  outcomes:
+    dispatched:
+      next: await_submission
+    blocked:
+      stop: revision_required
+    unknown:
+      wait: execution_reconciliation
+  config:
+    output_slot: execution_ref
+    logical_role: executor
+    provider_requirement: pi
+    offline_final_acceptance: forbidden
+- id: await_submission
+  kind: wait
+  event: engineering.submission.recorded
+  match:
+    execution: execution_ref
+    package: package_ref
+  bind:
+    submission_ref: event.submission_ref
+  next: acceptance
+- id: acceptance
+  kind: operation
+  operation: engineering.acceptance.request
+  inputs:
+    submission: submission_ref
+  outcomes:
+    passed:
+      next: adopt
+    blocked:
+      stop: revision_required
+    manual:
+      wait: reviewer_result
+    unknown:
+      wait: check_reconciliation
+  config:
+    standards:
+    - resource: standard.acceptance
+    output_slot: acceptance_review_set_ref
+- id: adopt
+  kind: operation
+  operation: engineering.acceptance.adopt
+  inputs:
+    submission: submission_ref
+    reviews: acceptance_review_set_ref
+  outcomes:
+    adopted:
+      next: await_feedback
+    conflict:
+      wait: adoption_reconciliation
+  config:
+    output_slot: adoption_ref
+- id: await_feedback
+  kind: wait
+  event: engineering.feedback.recorded
+  match:
+    submission: submission_ref
+    adoption: adoption_ref
+  bind:
+    feedback_ref: event.feedback_ref
+  next: accepted
+- id: accepted
+  kind: stop
+  outcome: accepted
+stop_outcomes:
+- accepted
+- revision_required
+- rejected
+- cancelled
+wait_kinds:
+- reviewer_result
+- check_reconciliation
+- trusted_approval_result
+- approval_reconciliation
+- execution_reconciliation
+- adoption_reconciliation
+cancellation: authenticated_request_then_reconcile_external_effects
+revision_restart: explicit_new_epoch_with_exact_new_proposal
+automatic_side_effect_retry: forbidden_when_outcome_unknown

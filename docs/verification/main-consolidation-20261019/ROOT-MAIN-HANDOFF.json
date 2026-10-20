@@ -1,0 +1,76 @@
+{
+  "authority": "User requested latest main in repository root, clarified no working sessions; preserve data and do not stop services.",
+  "implementationHead": "53ce157d5d60f78e06ce7a1dfd04679a8e59aef0",
+  "developmentRoot": "/home/maoqh/projects/ordessa",
+  "branch": "main",
+  "registeredWorktrees": 1,
+  "uncommittedFilesPreservedAndByteVerified": 10,
+  "rootPreservationManifest": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/root-main-handoff/root-uncommitted-manifest.json",
+  "additionalRegisteredTreesArchived": [
+    {
+      "oldPath": "/home/maoqh/projects/ordessa/worktree/main-consolidation-20261019",
+      "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/main-consolidation-20261019/tree",
+      "preservedGitAdmin": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/main-consolidation-20261019/git-admin",
+      "head": "53ce157d5d60f78e06ce7a1dfd04679a8e59aef0",
+      "branch": "(detached)",
+      "rawIndexSha256": "220e24447d9129884a153ed9f3c8983c703cc949c79511e0c758d2037409b6ae",
+      "unregistered": true,
+      "wholeDirectoryRenamedSameFilesystem": true,
+      "allIgnoredFilesPreserved": true,
+      "originalStatusExactlyMatches": true,
+      "rawIndexMatches": true
+    },
+    {
+      "oldPath": "/home/maoqh/projects/ordessa/worktree/packages-convergence-20261019",
+      "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/packages-convergence-20261019/tree",
+      "preservedGitAdmin": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/packages-convergence-20261019/git-admin",
+      "head": "a23cadf5724a494bac08037ffdddffed6914adef",
+      "branch": "codex/lower-layer-handoff-20261019",
+      "rawIndexSha256": "125657c6e963c4988412cbb6f505d6a98202cb522444919754276ec1e6a44313",
+      "unregistered": true,
+      "wholeDirectoryRenamedSameFilesystem": true,
+      "allIgnoredFilesPreserved": true,
+      "originalStatusExactlyMatches": true,
+      "rawIndexMatches": true
+    }
+  ],
+  "unregisteredDirectoriesArchived": [
+    {
+      "oldPath": "/home/maoqh/projects/ordessa/worktree/nightly",
+      "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-unregistered/nightly/tree",
+      "wasRegistered": false,
+      "wholeDirectoryRenamedSameFilesystem": true,
+      "allEntriesSameInodeModeSizeMtime": true,
+      "entryCount": 3,
+      "credentialContentsNotInspected": true
+    },
+    {
+      "oldPath": "/home/maoqh/projects/ordessa/worktree/review-checkpoint-20261018-scratch",
+      "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-unregistered/review-checkpoint-20261018-scratch/tree",
+      "wasRegistered": false,
+      "wholeDirectoryRenamedSameFilesystem": true,
+      "allEntriesSameInodeModeSizeMtime": true,
+      "entryCount": 24584,
+      "credentialContentsNotInspected": true
+    },
+    {
+      "oldPath": "/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261010",
+      "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-unregistered/nightly-restructure-20261010/tree",
+      "wasRegistered": false,
+      "wholeDirectoryRenamedSameFilesystem": true,
+      "allEntriesSameInodeModeSizeMtime": true,
+      "entryCount": 6,
+      "credentialContentsNotInspected": true
+    }
+  ],
+  "worktreeDirectoryEmpty": true,
+  "offlineDependencyCache": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/offline-dependency-cache/site-packages",
+  "offlineLinksRelocatedAndPostArchiveResolved": 6414,
+  "installedCliListAfterArchiveExit": 0,
+  "sameSourcePythonDistributions": 53,
+  "noServicesStoppedOrRestarted": true,
+  "noResetStashCleanOrPush": true,
+  "engineeringDeferred": true,
+  "fullProductAcceptance": false,
+  "qualification": "This checkpoint changes checkout location and recovery records only; prior product acceptance limits persist. Copied offline cache is inert, not an editable product installation."
+}

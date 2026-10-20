@@ -1,0 +1,13 @@
+{
+  "contract_version": "ordessa.human-review-admission/1",
+  "activation": "selected_product_policy_required",
+  "policy_id": "ordessa.product.v1.chat-attested-human-review",
+  "policy_revision": 1,
+  "policy_digest": "sha256:833be965ff8e43b0fec817e205a4d2f7817f45b7b36777a405a905fff44ec008",
+  "status_dispositions": {
+    "satisfied": "pass",
+    "violated": "block",
+    "insufficient": "block",
+    "unknown": "manual"
+  }
+}

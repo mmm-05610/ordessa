@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import inspect
 
-from ordessa_execution_api.environment.identity import ActivationRef
+from ordessa_units.definitions.admission_identity import MaterialProviderActivationRef
 
 from ordessa_units.definitions.materials import ResourceProviderDescriptor
 
@@ -119,14 +119,14 @@ class AdmittedResourceProviderMetadata:
     different generation is refused (cold recovery gap: same generation only).
     """
 
-    owner_activation: ActivationRef
+    owner_activation: MaterialProviderActivationRef
     descriptor: ResourceProviderDescriptor
     supported_contract_ids: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        if not isinstance(self.owner_activation, ActivationRef):
+        if not isinstance(self.owner_activation, MaterialProviderActivationRef):
             raise ValueError("host owner activation is required")
-        object.__setattr__(self, "owner_activation", ActivationRef(
+        object.__setattr__(self, "owner_activation", MaterialProviderActivationRef(
             self.owner_activation.environment,
             self.owner_activation.plugin_id,
             self.owner_activation.generation,

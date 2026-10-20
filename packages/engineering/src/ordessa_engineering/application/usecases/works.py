@@ -52,6 +52,29 @@ _FIELDS = {
                               'maximum': (1 << 63) - 1},
     },
 }
+# Version 2 of the same entry: an explicit continuation request. It is a closed
+# shape of its own, so a v1 request keeps its schema id, digest and replay
+# identity byte for byte, and a v2 request can never be read as v1 or vice versa.
+_VERSIONED = {'engineering.work.invoke': {
+    1: _FIELDS['engineering.work.invoke'],
+    2: {
+        'invocation_version': {'const': 2},
+        'work_id': {'type': 'string', 'minLength': 1, 'maxLength': 512},
+        'action_id': {'type': 'string', 'minLength': 1, 'maxLength': 512},
+        'inputs': {'type': 'object'},
+        'expected_revision': {'x-optional': True, 'type': 'integer', 'minimum': 1,
+                              'maximum': (1 << 63) - 1},
+        'continuation_of': {
+            'type': 'object', 'additionalProperties': False,
+            'required': ['execution_operation_ref', 'expected_dispatch_version',
+                         'expected_acp_revision'],
+            'properties': {
+                'execution_operation_ref': {'type': 'string', 'minLength': 1, 'maxLength': 512},
+                'expected_dispatch_version': {'type': 'integer', 'minimum': 1,
+                                             'maximum': (1 << 63) - 1},
+                'expected_acp_revision': {'type': 'integer', 'minimum': 1,
+                                         'maximum': (1 << 63) - 1}}},
+    }}}
 _INVOKE = 'engineering.work.invoke'
 def _required_and_props(props):
     """Field specs plus the required list; `x-optional` fields are not required."""
@@ -61,17 +84,24 @@ def _required_and_props(props):
     return cleaned, required
 
 
-_SCHEMA_BYTES = {op: canonical_bytes({
-    '$schema': 'https://json-schema.org/draft/2020-12/schema',
-    '$id': f'urn:ordessa:engineering:operations:{op}:input:1', 'type': 'object',
-    'properties': _required_and_props(props)[0],
-    'required': _required_and_props(props)[1],
-    'additionalProperties': False}) for op, props in _FIELDS.items()}
+def _schema_bytes(op, version):
+    props = _VERSIONED[op][version] if op in _VERSIONED else _FIELDS[op]
+    cleaned, required = _required_and_props(props)
+    return canonical_bytes({
+        '$schema': 'https://json-schema.org/draft/2020-12/schema',
+        '$id': f'urn:ordessa:engineering:operations:{op}:input:{version}', 'type': 'object',
+        'properties': cleaned, 'required': required, 'additionalProperties': False})
+
+
+_SCHEMA_BYTES = {op: _schema_bytes(op, 1) for op in _FIELDS}
+_CONTINUATION_SCHEMA_BYTES = {_INVOKE: _schema_bytes(_INVOKE, 2)}
 SUPPORTED_WORK_COMMANDS = tuple(_FIELDS)
 
 
-def input_schema(operation):
+def input_schema(operation, version=None):
     try:
+        if version == 2:
+            return decode_json(_CONTINUATION_SCHEMA_BYTES[operation])
         return decode_json(_SCHEMA_BYTES[operation])
     except KeyError:
         raise ApplicationError('OPERATION_SCHEMA_UNAVAILABLE') from None
@@ -109,28 +139,29 @@ class WorkUseCases:
     def __init__(self, factory, access, methods=None):
         self.factory, self.access, self.methods = factory, access, methods
 
-    def _input(self, operation, parameters, context, read_set):
+    def _input(self, operation, parameters, context, read_set, *, version=1):
         if type(context) is not CommandContext:
             raise ApplicationError('INVALID_CONTEXT')
         if self.access is None:
             raise ApplicationError('ACCESS_AUTHORITY_UNAVAILABLE')
         self.access.require(context, operation)
+        schema_bytes = (_CONTINUATION_SCHEMA_BYTES[operation] if version == 2
+                        else _SCHEMA_BYTES[operation])
         try:
             parameters = decode_json(canonical_bytes(parameters))
             if (len(canonical_bytes(parameters)) > 2 * 1024 * 1024
-                    or not Draft202012Validator(input_schema(operation)).is_valid(parameters)):
+                    or not Draft202012Validator(input_schema(operation, version)).is_valid(parameters)):
                 raise ApplicationError('INVALID_INPUT')
         except (TypeError, ValueError):
             raise ApplicationError('INVALID_INPUT') from None
         reads = ReadSet(context.scope, ()) if read_set is None else read_set
         if type(reads) is not ReadSet or reads.scope != context.scope:
             raise ApplicationError('SCOPE_MISMATCH')
-        schema = input_schema(operation)
+        schema = input_schema(operation, version)
         digest = request_digest(operation, context, parameters, read_set_projection(reads),
             input_schema_id=schema['$id'],
-            input_schema_digest=Digest('sha256',
-                hashlib.sha256(_SCHEMA_BYTES[operation]).hexdigest()),
-            interface_version='1')
+            input_schema_digest=Digest('sha256', hashlib.sha256(schema_bytes).hexdigest()),
+            interface_version=str(version))
         return parameters, reads, digest
 
     def _replay(self, operation, context, digest):
@@ -180,6 +211,43 @@ class WorkUseCases:
         """
         value, reads, digest = self._input(_INVOKE, parameters, context, read_set)
         return value, digest, self._replay(_INVOKE, context, digest)
+
+    def continuation_replay(self, parameters, context, *, read_set=None):
+        """Recorded result of this exact continuation request, or None.
+
+        The v2 request is a distinct identity (own schema id, digest and
+        interface version), so a continuation never replays a v1 invoke result
+        and a v1 invoke never replays a continuation.
+        """
+        value, reads, digest = self._input(_INVOKE, parameters, context, read_set, version=2)
+        return value, digest, self._replay(_INVOKE, context, digest)
+
+    def begin_continuation_claim(self, context, candidate, digest):
+        """Own the one causal journal row for this origin before any Unit exists.
+
+        The reservation is committed on its own so an interrupted preparation
+        leaves a knowable pending row; a competing request id or principal can
+        only observe it.
+        """
+        from .changes.dispatch_continuation import (
+            claim_continuation, recheck_continuation_candidate, continuation_operation_id,
+            CONTINUATION_OPERATION, ContinuationCandidate)
+        if type(candidate) is not ContinuationCandidate or type(digest) is not Digest:
+            raise ApplicationError('INVALID_INPUT')
+        with self.factory.begin(context.scope) as uow:
+            # The evidence reader already closed its read transaction. Recheck
+            # the immutable predecessor and root debit inside this claim cut.
+            occupied = uow.commands.find_operation(context.scope,
+                continuation_operation_id(context.scope, candidate.origin),
+                operation=CONTINUATION_OPERATION)
+            if occupied is None:
+                recheck_continuation_candidate(uow, context, candidate)
+            reservation = claim_continuation(uow, context, candidate, digest)
+            uow.commit()
+            return reservation
+
+    def finish_continuation(self, context, operation_id, result, *, state='completed'):
+        return self.finish_invoke(context, operation_id, result, state=state)
 
     def begin_invoke(self, context, digest):
         """Reserve the invoke journal row before any step runs.

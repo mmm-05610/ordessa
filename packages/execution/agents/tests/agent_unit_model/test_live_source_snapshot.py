@@ -7,14 +7,14 @@ import pytest
 
 from agent_tools_fixtures.manager_joint import build_joint_owner
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import IdentityMismatchError, GuaranteeUnavailableError
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_units.errors import UnitIdentityMismatch, UnitGuaranteeUnavailable
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.admission.invocation import InvocationAuthorityRefused
 from ordessa_units.bindings.publication import decode_node_ref
 from ordessa_units.bindings.contracts import DirectoryBindingRef
-from ordessa_units.bindings.dispatch_selection import UnitSelectionUnavailable
 from ordessa_units.management.manager import UnitManagementRefused
 from ordessa_units.lifecycle.unit_lifecycle import UnitLifecycleRefused
+from ordessa_units.bindings.dispatch_selection import UnitSelectionUnavailable
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def snapshot(j, **changes):
     return j.services.snapshot_live_unit_selection(j.ref, **params)
 
 
-def test_actual_sources_resolver_files_and_no_strong_guard(owner, monkeypatch):
+def test_actual_sources_resolver_files_and_distinct_live_selection_guard(owner, monkeypatch):
     j = owner
     resolver = j.services.assembly._context_port.resolve
     calls = []
@@ -69,10 +69,12 @@ def test_actual_sources_resolver_files_and_no_strong_guard(owner, monkeypatch):
     # This receipt holds no owner locks/permission across the caller COMMIT.
     j.inputs.authority.allowed = False
     with pytest.raises(InvocationAuthorityRefused): snapshot(j)
+    j.inputs.authority.allowed = True
     with pytest.raises(UnitSelectionUnavailable):
         with j.services.guard_unit_selection(j.ref, expected_profile_revision=j.profile,
                 query_invocation=j.invocation, query_input_digest=j.invocation.facts['inputDigest'], require_live=True):
-            raise AssertionError('old strong guard must refuse')
+            pass
+    assert j.unit.try_quiesce() is True
     assert j.events.count('spawn') == 1 and len(j.factory_calls) == 1
 
 
@@ -87,7 +89,7 @@ def test_exact_owner_ref_and_read_permission(owner, change):
     if change == 'epoch': j.current.epoch = 1
     if change == 'source': j.ref = dict(j.ref, sourceRevision='wrong')
     if change == 'cold_manager': j.manager._units.clear()  # simulate original live scope lost, no relaunch
-    with pytest.raises((IdentityMismatchError, InvocationAuthorityRefused, UnitManagementRefused)):
+    with pytest.raises((UnitIdentityMismatch, InvocationAuthorityRefused, UnitManagementRefused)):
         snapshot(j, **params)
     assert j.events.count('spawn') == 1 and len(j.factory_calls) == 1
 
@@ -106,8 +108,8 @@ def test_re_resolve_original_sources_not_just_equal_expected_dto(owner, monkeypa
         context['privateRootFacts'] = dict(context['privateRootFacts'], cwd=str(Path(context['privateRootFacts']['cwd']).parent/'other'))
         return replace(value, private_context=context)
     monkeypatch.setattr(j.services.assembly._context_port, 'resolve', drift)
-    from ordessa_execution_api.environment import AdmissionRefusedError
-    with pytest.raises((GuaranteeUnavailableError, IdentityMismatchError, AdmissionRefusedError)):
+    from ordessa_units.errors import UnitAdmissionRefused
+    with pytest.raises((UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitAdmissionRefused)):
         snapshot(j)
     assert j.events.count('spawn') == 1
 
@@ -134,7 +136,7 @@ def test_actual_bound_local_and_termination_not_prepared_dto(owner, tmp_path, mo
         j.services.lifecycle.stop(RequestKey('env','principal','stop'), j.node, {})
         if change == 'released': j.services.lifecycle.release(RequestKey('env','principal','release'), j.node, {})
     try:
-        with pytest.raises((GuaranteeUnavailableError, UnitManagementRefused, UnitLifecycleRefused)):
+        with pytest.raises((UnitGuaranteeUnavailable, UnitManagementRefused, UnitLifecycleRefused)):
             snapshot(j)
     finally:
         if change == 'detached':
@@ -175,7 +177,7 @@ def test_snapshot_refuses_busy_original_owner_instead_of_waiting_for_model(owner
         pending=pool.submit(hold_original)
         assert held.wait(1)
         try:
-            with pytest.raises(GuaranteeUnavailableError, match='busy'):
+            with pytest.raises(UnitGuaranteeUnavailable, match='busy'):
                 snapshot(j)
         finally:
             release.set()

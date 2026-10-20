@@ -26,7 +26,7 @@ class Evidence:
 def real_core_parts(tmp_path, *, start_native_session=True):
     from agent_tools_fixtures.invocation_authority import Authority, CurrentState
     from ordessa_infrastructure.identifiers import RequestKey
-    from ordessa_execution_api.environment.operations import OperationIntent, StepIntent
+    from ordessa_units.definitions.operations import OperationIntent, StepIntent
     from ordessa_units.public import SqliteUnitStore
     from ordessa_units.bindings.contracts import DirectoryBindingRef
     from ordessa_units.admission.invocation import InvocationIssuer

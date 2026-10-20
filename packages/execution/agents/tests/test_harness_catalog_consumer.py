@@ -2,10 +2,10 @@
 import pytest
 
 from agent_tools_fixtures.runtime_admission import Provider
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
+from ordessa_execution_agents.harness.providers.registry.errors import (
+    CatalogAdmissionRefused,
+    CatalogUnavailable,
+    CatalogIdentityConflict,
 )
 from ordessa_execution_agents.harness.providers.registry.contributions import AgentContributionSet
 from ordessa_execution_agents.harness.providers.registry.definition_admission import (
@@ -108,17 +108,17 @@ def test_catalog_keeps_admission_permission_mutation_and_scope_fences():
     ref = declaration.descriptor.definition_ref
 
     policy.allowed = False
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         catalog.list()
     policy.allowed = True
 
     foreign = dict(ref)
     foreign["environmentNamespace"] = "other"
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(CatalogIdentityConflict):
         catalog.describe(foreign)
 
     object.__setattr__(declaration, "installation_observer", lambda _ref: None)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         catalog.describe(ref)
 
 
@@ -128,9 +128,9 @@ def test_catalog_construction_is_lazy_without_harness_binding():
     # Harness admission; providers.list/describe will require the real binding.
     services = unit_services(env)
     assert services.providers is not None
-    with pytest.raises(GuaranteeUnavailableError, match="original Harness admission binding required"):
+    with pytest.raises(CatalogUnavailable, match="original Harness admission binding required"):
         services.providers.list()
-    with pytest.raises(GuaranteeUnavailableError, match="original Harness admission binding required"):
+    with pytest.raises(CatalogUnavailable, match="original Harness admission binding required"):
         services.providers.describe(
             {"environmentNamespace": "runtime-test", "definitionId": "brand", "revision": "1"}
         )
@@ -150,5 +150,5 @@ def test_catalog_construction_is_lazy_without_harness_binding():
 def test_describe_rejects_invalid_definition_reference_shapes(reference):
     env, _ = make_environment()
     catalog = unit_services(env).providers
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(CatalogIdentityConflict):
         catalog.describe(reference)

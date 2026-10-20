@@ -1,280 +1,70 @@
-"""Qwen Code serve consumer client (family ``qwen``, protocol ``qwen-serve-http/1``).
+"""Qwen-owned pure Profile validation/preparation through the public SDK.
 
-Pinned facts (N007, upstream main @9915c7ff…, docs read 2026-10-04):
-
-- Channel: a local ``qwen serve`` daemon (default ``http://127.0.0.1:4170``)
-  speaking HTTP JSON routes plus per-session SSE. The daemon owns the
-  workspace registry, each workspace runtime and the ``qwen --acp`` child it
-  spawns; this client talks only to the daemon and never spawns anything.
-- Handshake: ``GET /capabilities`` returns ``{v, protocolVersions, features,
-  workspaceCwd, ...}`` verbatim; feature tags gate behaviour, ``v`` increments
-  only on a breaking frame change.
-- Session: ``POST /session`` creates or attaches in the daemon-owned ledger
-  and answers ``{sessionId, workspaceCwd, attached?}``. The default daemon
-  scope ``single`` shares one conversation per workspace, so this client
-  defaults to ``sessionScope: "thread"`` for an independent conversation. A
-  native ``sessionId`` is surfaced verbatim and never fabricated (G6).
-- Send: ``POST /session/:id/prompt`` answers ``202 {promptId, lastEventId,
-  eventEpoch?}`` — an **admission receipt, NOT completion**. Completion facts
-  are ``turn_complete`` / ``turn_error`` frames on the session SSE stream,
-  correlated by ``promptId``; a stream ending is not completion either.
-- Cancel: ``POST /session/:id/cancel`` (204) cancels only the active prompt;
-  queued prompts keep running (documented multi-prompt contract).
-- Permissions: the agent's ``permission_request`` arrives on SSE and is
-  answered by an explicit caller vote via
-  ``POST /session/:id/permission/:requestId``. This client never auto-votes.
-- Auth: the loopback default is tokenless; a bearer is only ever carried when
-  the caller's own channel supplies one. No user credential is inherited
-  (G12) and nothing is retried (G11).
-
-Unknown SSE envelope types/fields are preserved verbatim (G4). The client is
-a pure consumer over the Execution Agents HTTP transport: loopback
-enforcement, SSE framing, typed failures and owned-connection cleanup
-delegate there; this module adds only qwen's document-level route shapes.
+The former direct HTTP transport consumer is retired. This provider
+never starts a process, reads login state, owns a Unit/session ledger or answers
+permissions. Native HTTP/SSE bootstrap is unavailable; it is never relabelled as ACP.
 """
-
-from __future__ import annotations
-
-from typing import Any, Iterator, Mapping
-
-from ordessa_execution_agents.harness.transport.http import HttpChannelFailure, LoopbackHttpChannel, SseEvent
-from ordessa_execution_agents.harness.transport.channel import ChannelClosed
-
-FAMILY_ID = "qwen"
-PROTOCOL = "qwen-serve-http/1"
-
-#: Events that actually settle a prompt turn on the session SSE stream. The
-#: stream ending, a client eviction or a disconnect are NOT completion.
-TURN_TERMINAL_EVENTS: frozenset[str] = frozenset({"turn_complete", "turn_error"})
+from ordessa_execution_agents.sdk import (HarnessDescriptor,HarnessError,PrepareContext,
+    ProfileContent,LaunchPlan)
+from .native_channel import compile_config,ConfigRefusal
 
 
-class QwenApiError(HttpChannelFailure):
-    """The daemon answered a JSON route with an unexpected status/body."""
+class QwenHarnessProvider:
+    def __init__(self,definition_ref,implementation_digest):
+        self.descriptor=HarnessDescriptor('qwen',definition_ref,implementation_digest,'qwen-serve-http/1',
+            ('work','home','config','data','state','cache','tmp'),('qwen.configuration/1',))
 
-    def __init__(self, route: str, status: int, body: Any = None):
-        super().__init__("QWEN_API_ERROR", f"{route} -> {status}: {body!r}")
-        self.route = route
-        self.status = status
-        self.body = body
+    def _options(self,content):
+        if type(content) is not ProfileContent or dict(content.harness_definition_ref)!=dict(self.descriptor.definition_ref):
+            raise HarnessError('PROFILE_HARNESS_PIN_MISMATCH')
+        options={}
+        for declaration in content.declarations:
+            if (declaration.configuration_kind!='qwen.configuration' or declaration.schema_version!='1'
+                    or declaration.action!='value' or declaration.resource_refs):
+                raise HarnessError('CONFIGURATION_UNSUPPORTED')
+            try:values=dict(declaration.payload)
+            except (TypeError,ValueError):raise HarnessError('CONFIGURATION_INVALID') from None
+            if set(options)&set(values):raise HarnessError('CONFIGURATION_CONFLICT')
+            options.update(values)
+        if 'no_web' in options and type(options['no_web']) is not bool:
+            raise HarnessError('CONFIGURATION_INVALID')
+        for key in ('prompt_deadline_ms','event_ring_size','max_sessions'):
+            if key in options and (type(options[key]) is not int or not 0 < options[key] <= 2147483647):
+                raise HarnessError('CONFIGURATION_INVALID')
+        try:return compile_config(options)
+        except (ConfigRefusal,ValueError,TypeError):raise HarnessError('CONFIGURATION_UNSUPPORTED') from None
 
+    def validate_profile(self,content):self._options(content)
 
-def describe() -> dict[str, Any]:
-    """Static channel facts. No runtime readiness is claimed."""
-    return {
-        "familyId": FAMILY_ID,
-        "channel": "loopback-http+sse-over-acp",
-        "protocol": PROTOCOL,
-        "routes": [
-            "GET /capabilities",
-            "GET /health",
-            "POST /session",
-            "POST /session/:id/prompt",
-            "POST /session/:id/cancel",
-            "DELETE /session/:id",
-            "GET /session/:id/events",
-            "POST /session/:id/permission/:requestId",
-        ],
-    }
+    def prepare(self,content,context):
+        compiled=self._options(content)
+        if type(context) is not PrepareContext:raise HarnessError('PREPARE_CONTEXT_REQUIRED')
+        if not set(self.descriptor.required_roots)<=set(context.private_dirs):raise HarnessError('APPROVED_ROOTS_UNAVAILABLE')
+        if not {'launcher','communicate'}<=set(context.endpoint_facts.get('members',())):
+            raise HarnessError('ENDPOINT_CAPABILITY_UNAVAILABLE')
+        if compiled['session_fields']:raise HarnessError('SESSION_CONFIGURATION_UNAVAILABLE')
+        if any(d.payload.get('no_web') is False for d in content.declarations):raise HarnessError('WEB_UI_UNSUPPORTED')
+        if context.credential_refs:raise HarnessError('CREDENTIAL_BINDING_UNAVAILABLE')
+        if context.session_bootstrap.mode!='fresh':raise HarnessError('SESSION_MODE_UNSUPPORTED')
+        environment=dict(context.launch_environment)
+        required=('HOME','PATH','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_STATE_HOME','XDG_CACHE_HOME','TMPDIR','QWEN_HOME')
+        if any(not environment.get(key) for key in required):raise HarnessError('EXPLICIT_LAUNCH_ENVIRONMENT_REQUIRED')
+        if any(any(marker in key.upper() for marker in ('TOKEN','SECRET','PASSWORD','API_KEY','APIKEY')) for key in environment):
+            raise HarnessError('CREDENTIAL_REFERENCE_REQUIRED')
+        environment.update({'LANG':'C.UTF-8','LC_ALL':'C.UTF-8','TERM':'dumb','NO_COLOR':'1'})
+        return LaunchPlan(context.command_prefix+('serve','--hostname','127.0.0.1','--no-web')+tuple(arg for arg in compiled['args'] if arg!='--no-web'),context.private_dirs['work'],
+            environment,(),(),context.prepared_configuration_refs,context.materials,context.session_bootstrap,('launcher','communicate'))
 
-
-class QwenClient:
-    """Consumer of one local ``qwen serve`` daemon. Loopback only (G9/G12);
-    no auto-retry anywhere (G11); SSE stream end is never completion (G6)."""
-
-    def __init__(self, channel: LoopbackHttpChannel, *, client_id: str | None = None):
-        self._channel = channel
-        self._client_id = client_id
-        self._events: list[SseEvent] = []
-
-    @classmethod
-    def connect(
-        cls, base_url: str, *, timeout: float = 10.0, client_id: str | None = None
-    ) -> "QwenClient":
-        """Connect to a loopback daemon URL. Non-loopback destinations raise
-        NonLoopbackRefused at construction (G9)."""
-        return cls(LoopbackHttpChannel(base_url, timeout=timeout), client_id=client_id)
-
-    # -- handshake ----------------------------------------------------------
-    def initialize(self, *, timeout: float | None = None) -> Mapping[str, Any]:
-        """Real handshake: ``GET /capabilities`` verbatim (v1 protocol
-        versions, feature tags, primary workspaceCwd)."""
-        status, body = self._channel.request_json(
-            "GET", "/capabilities", headers=self._headers(), timeout=timeout
-        )
-        self._expect_ok("GET /capabilities", status, body)
-        return body
-
-    # -- session identity ----------------------------------------------------
-    def create_session(
-        self,
-        *,
-        cwd: str | None = None,
-        session_scope: str = "thread",
-        model_service_id: str | None = None,
-        timeout: float | None = None,
-        **fields: Any,
-    ) -> Mapping[str, Any]:
-        """``POST /session``; the daemon is the session-ledger owner.
-
-        ``session_scope="thread"`` (this client's default) asks the daemon for
-        a fresh distinct conversation; the daemon's own default ``single``
-        would attach to an existing shared session. ``attached: true`` is
-        surfaced verbatim — never rewritten into a new session. The native
-        ``sessionId`` comes only from the daemon (no fabrication, G6).
-        """
-        body: dict[str, Any] = {"sessionScope": session_scope}
-        if cwd is not None:
-            body["cwd"] = cwd
-        if model_service_id is not None:
-            body["modelServiceId"] = model_service_id
-        body.update(fields)
-        status, result = self._channel.request_json(
-            "POST", "/session", body=body, headers=self._headers(), timeout=timeout
-        )
-        self._expect_ok("POST /session", status, result)
-        return result
-
-    def session_status(self, session_id: str, *, timeout: float | None = None) -> Mapping[str, Any]:
-        """``GET /session/:id/status`` for the live owning runtime."""
-        route = f"GET /session/{session_id}/status"
-        status, result = self._channel.request_json(
-            "GET", f"/session/{session_id}/status", headers=self._headers(), timeout=timeout
-        )
-        self._expect_ok(route, status, result)
-        return result
-
-    # -- sending (the 202 is a receipt, not completion) -----------------------
-    def send(
-        self,
-        session_id: str,
-        prompt: Any,
-        *,
-        timeout: float | None = None,
-        **fields: Any,
-    ) -> Mapping[str, Any]:
-        """``POST /session/:id/prompt`` → 202 admission receipt.
-
-        **The returned ``{promptId, lastEventId, eventEpoch?}`` is NOT
-        completion.** Settle the turn by correlating ``turn_complete`` /
-        ``turn_error`` on :meth:`events` by ``promptId``. Any non-202 status
-        is a typed :class:`QwenApiError`; nothing is retried (G11).
-        """
-        body: dict[str, Any] = {"prompt": prompt}
-        body.update(fields)
-        route = f"POST /session/{session_id}/prompt"
-        status, result = self._channel.request_json(
-            "POST", f"/session/{session_id}/prompt", body=body, headers=self._headers(), timeout=timeout
-        )
-        if status != 202:
-            raise QwenApiError(route, status, result)
-        return result
-
-    # -- events ----------------------------------------------------------------
-    def events(
-        self,
-        session_id: str,
-        *,
-        last_event_id: int | str | None = None,
-        max_events: int | None = None,
-    ) -> Iterator[SseEvent]:
-        """Session SSE events verbatim (unknown types preserved, G4).
-
-        ``last_event_id`` becomes the ``Last-Event-ID`` replay cursor. The
-        iterator ending when the server closes the stream is NOT completion:
-        only a ``turn_complete`` / ``turn_error`` frame settles the prompt.
-        """
-        headers = self._headers()
-        if last_event_id is not None:
-            headers["Last-Event-ID"] = str(last_event_id)
-        for event in self._channel.stream_events(
-            f"/session/{session_id}/events", headers=headers, max_events=max_events
-        ):
-            self._events.append(event)
-            yield event
-
-    def seen_events(self) -> tuple[SseEvent, ...]:
-        return tuple(self._events)
-
-    # -- control ----------------------------------------------------------------
-    def cancel(self, session_id: str, *, timeout: float | None = None) -> int:
-        """``POST /session/:id/cancel`` → 204. Cancels only the active prompt;
-        prompts already queued behind it keep running (documented)."""
-        route = f"POST /session/{session_id}/cancel"
-        status, body = self._channel.request_json(
-            "POST", f"/session/{session_id}/cancel", headers=self._headers(), timeout=timeout
-        )
-        if status != 204:
-            raise QwenApiError(route, status, body)
-        return status
-
-    def close_session(self, session_id: str, *, timeout: float | None = None) -> int:
-        """``DELETE /session/:id`` → 204. Closes the live session (its on-disk
-        transcript stays loadable by the daemon); idempotent upstream."""
-        route = f"DELETE /session/{session_id}"
-        status, body = self._channel.request_json(
-            "DELETE", f"/session/{session_id}", headers=self._headers(), timeout=timeout
-        )
-        if status != 204:
-            raise QwenApiError(route, status, body)
-        return status
-
-    def respond_permission(
-        self,
-        session_id: str,
-        request_id: str,
-        *,
-        option_id: str | None = None,
-        cancel: bool = False,
-        timeout: float | None = None,
-    ) -> Any:
-        """Answer a pending ``permission_request`` with one explicit caller
-        choice. There is no default and no auto-approve: exactly one of
-        ``option_id`` / ``cancel=True`` must be given, otherwise nothing is
-        sent and a ``ValueError`` is raised before any write."""
-        if cancel == (option_id is not None):
-            raise ValueError("exactly one of option_id or cancel=True is required")
-        outcome = (
-            {"outcome": "cancelled"}
-            if cancel
-            else {"outcome": "selected", "optionId": option_id}
-        )
-        route = f"POST /session/{session_id}/permission/{request_id}"
-        status, result = self._channel.request_json(
-            "POST",
-            f"/session/{session_id}/permission/{request_id}",
-            body={"outcome": outcome},
-            headers=self._headers(),
-            timeout=timeout,
-        )
-        self._expect_ok(route, status, result)
-        return result
-
-    def close(self) -> None:
-        """Release only this client's own connection (G8)."""
-        self._channel.close()
-
-    # -- internals ---------------------------------------------------------------
-    def _headers(self) -> dict[str, str]:
-        headers: dict[str, str] = {}
-        if self._client_id is not None:
-            headers["X-Qwen-Client-Id"] = self._client_id
-        return headers
-
-    @staticmethod
-    def _expect_ok(route: str, status: int, body: Any) -> None:
-        if status < 200 or status >= 300:
-            raise QwenApiError(route, status, body)
-        if body is None and status != 204:
-            raise QwenApiError(route, status, "empty body")
+    async def open_session(self,process,context):
+        if type(context) is not PrepareContext:raise HarnessError('PREPARE_CONTEXT_REQUIRED')
+        # Native HTTP/SSE is not ACP. No sidecar or raw HTTP fallback.
+        raise HarnessError('HTTP_BOOTSTRAP_UNAVAILABLE')
 
 
-# re-exported so family callers see one failure surface
-__all__ = [
-    "FAMILY_ID",
-    "PROTOCOL",
-    "ChannelClosed",
-    "QwenApiError",
-    "QwenClient",
-    "TURN_TERMINAL_EVENTS",
-    "describe",
-]
+class QwenProviderFactory:
+    def build(self,bindings):
+        if set(bindings)!={'definition_ref','implementation_digest'}:raise HarnessError('HARNESS_BINDINGS_INVALID')
+        return QwenHarnessProvider(bindings['definition_ref'],bindings['implementation_digest'])
+
+
+factory=QwenProviderFactory()

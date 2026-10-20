@@ -4,21 +4,13 @@ from __future__ import annotations
 import json
 from typing import Any, Mapping
 
-from ordessa_execution_api.environment import EnvironmentId, IdentityMismatchError, SecretRef
-
 from .schemas.profile_wire import LOCAL_ID, DIGEST
+from .errors import ProfileRevisionConflict, ProfileValidationError
+from .secret_refs import SecretRef
 
 AGENT_CONTRACT_VERSION = "agent-assembly/1"
 MAX_CONTENT_BYTES = 262144
 MAX_CONTENT_DEPTH = 32
-
-
-class ProfileValidationError(ValueError):
-    code = "PROFILE_INVALID"
-
-
-class ProfileRevisionConflict(IdentityMismatchError):
-    code = "PROFILE_REVISION_CONFLICT"
 
 
 class ProfileNotFound(LookupError):
@@ -106,6 +98,8 @@ def _secret_ref(value: Any) -> None:
 
 
 def _ref(value: Any, environment: str) -> None:
+    if not isinstance(environment, str) or not LOCAL_ID.fullmatch(environment):
+        raise ProfileValidationError("leaf reference environment is malformed")
     if not isinstance(value, Mapping) or len(value) < 2:
         raise ProfileValidationError("leaf references require a scoped structured reference")
     if value.get("environmentNamespace") != environment:
@@ -224,7 +218,8 @@ def canonical_content(value: dict[str, object], environment: str) -> str:
 
 
 def validate_ref(environment_namespace, profile_id, manifest_revision, digest) -> None:
-    EnvironmentId(environment_namespace)
+    if not isinstance(environment_namespace, str) or not LOCAL_ID.fullmatch(environment_namespace):
+        raise ProfileValidationError("environmentNamespace must be a stable local id")
     if not isinstance(profile_id, str) or not LOCAL_ID.fullmatch(profile_id):
         raise ProfileValidationError("profileId must be a stable local id")
     if type(manifest_revision) is not int or manifest_revision < 1:

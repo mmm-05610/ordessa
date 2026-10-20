@@ -1,0 +1,1 @@
+Run the method-owned JEV review for the supplied exact baseline and candidate captures within scope. Return the completed review result with evidence-linked findings and an explicit passed, not-passed, or unknown conclusion. Preserve the exact captured identities. Do not infer a DID, create a change record, or treat discussion as an input.

@@ -9,7 +9,10 @@ import hashlib
 import yaml
 
 from ordessa_engineering.application.contracts.errors import ApplicationError
-from ordessa_engineering.domain.approvals.consent import ConsentPolicyRef
+from ordessa_engineering.domain.approvals.consent import (
+    ConsentPolicyRef, ConversationEvidence, CapturedInstructionEvidence,
+)
+from ordessa_engineering.domain.approvals.implementation import WorkPackageAuthorizationIntent
 from ordessa_engineering.domain.common.models.values import Digest
 
 
@@ -30,7 +33,19 @@ class ConversationAdmission:
             raise ApplicationError('INVALID_CONSENT_POLICY')
         if attestor_guard is None or intent_guard is None:
             raise ApplicationError('CONFIRMATION_AUTHORITY_UNAVAILABLE')
+        kinds = policy.get('accepted_evidence_kinds', ['question_answer'])
+        if (type(kinds) is not list or not kinds
+                or any(type(kind) is not str or kind not in ('question_answer', 'captured_instruction')
+                       for kind in kinds)
+                or len(set(kinds)) != len(kinds)):
+            raise ApplicationError('INVALID_CONSENT_POLICY')
+        if 'captured_instruction' in kinds and (
+                selected_policy_ref.revision < 2
+                or policy.get('instruction_evidence_contract') != 'ordessa.captured-user-instruction/1'
+                or policy.get('instruction_source_reuse') != 'one_source_one_grant'):
+            raise ApplicationError('INVALID_CONSENT_POLICY')
         self.policy_ref = selected_policy_ref
+        self.evidence_kinds = tuple(kinds)
         self._attestor_guard = attestor_guard
         self._intent_guard = intent_guard
 
@@ -54,6 +69,12 @@ class ConversationAdmission:
 
     @contextmanager
     def guard_evidence(self, context, intent, evidence):
+        kind = ('question_answer' if type(evidence) is ConversationEvidence else
+                'captured_instruction' if type(evidence) is CapturedInstructionEvidence else None)
+        if kind not in self.evidence_kinds:
+            raise ApplicationError('CONSENT_EVIDENCE_KIND_UNSUPPORTED')
+        if kind == 'captured_instruction' and type(intent) is not WorkPackageAuthorizationIntent:
+            raise ApplicationError('CONSENT_BINDING_MISMATCH')
         if evidence.policy_ref != intent.policy_ref or evidence.intent_digest != intent.digest or evidence.notice_ref != intent.notice_ref:
             raise ApplicationError('CONSENT_BINDING_MISMATCH')
         with ExitStack() as guards:

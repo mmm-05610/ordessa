@@ -37,10 +37,11 @@ def persist_historical_dispatch(
     prompt_ref,
     prompt_digest,
     query_digest,
+    dispatch_phase="completed",
 ):
     """Persist original run/material/dispatch rows correlated to the Submission.
 
-    The supplied ``unit_ref``, prompt, and completed receipt are fixture facts,
+    The supplied ``unit_ref``, prompt, and terminal receipt are fixture facts,
     not evidence that a production execution owner authenticated or performed
     the action. The package slot, method snapshot, dispatch row, and Submission
     linkage are resolved through the normal original SQLite readers.
@@ -61,6 +62,8 @@ def persist_historical_dispatch(
             or prompt_digest != submission_execution_ref.prompt_input_digest
             or type(prompt_ref) is not BlobRef or type(query_digest) is not str):
         raise ApplicationError("TEST_FIXTURE_EXECUTION_BINDING_MISMATCH")
+    if dispatch_phase not in {"completed", "failed", "unknown"}:
+        raise ApplicationError("TEST_FIXTURE_DISPATCH_PHASE_INVALID")
 
     method_ref = MethodRef(
         snapshot.ref.method_id, snapshot.ref.release_version,
@@ -152,7 +155,10 @@ def persist_historical_dispatch(
                                  fence=1, phase="possibly_written")
         uow.dispatch.transition(
             run_id, node.id, 1, scope, expected_version=1, fence=1,
-            phase="completed", result_blob_ref=submission_execution_ref.captured_observation_ref,
+            phase=dispatch_phase,
+            # Unknown is terminal for control flow, but the original captured
+            # observation remains attached as immutable receipt evidence.
+            result_blob_ref=submission_execution_ref.captured_observation_ref,
         )
         uow.commit()
 
@@ -162,14 +168,15 @@ def persist_historical_dispatch(
         if resolved != package:
             raise ApplicationError("TEST_FIXTURE_HISTORICAL_PACKAGE_MISMATCH")
         row = uow.dispatch.by_operation(submission_execution_ref.operation_ref, scope)
-        if row["dispatch_phase"] != "completed" or row["dispatch_fence"] != 1:
-            raise ApplicationError("TEST_FIXTURE_DISPATCH_NOT_COMPLETED")
+        if row["dispatch_phase"] != dispatch_phase or row["dispatch_fence"] != 1:
+            raise ApplicationError("TEST_FIXTURE_DISPATCH_PHASE_MISMATCH")
         if decode_dispatch(row["binding_bytes"]) != binding:
             raise ApplicationError("TEST_FIXTURE_DISPATCH_BINDING_MISMATCH")
     return {
         "run_id": run_id,
         "step_id": node.id,
         "attempt": 1,
+        "dispatch_phase": dispatch_phase,
         "binding": binding,
         "marker_ref": method_material,
         "synthetic_native_facts": True,

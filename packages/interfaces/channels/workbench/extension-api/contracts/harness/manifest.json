@@ -1,0 +1,6 @@
+{
+  "id": "ordessa.harness-contracts",
+  "version": "0.1.0",
+  "hostApi": "2",
+  "entry": "entry.js"
+}

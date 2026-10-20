@@ -1,0 +1,214 @@
+{
+  "fixture_only": true,
+  "method_contents": [
+    {
+      "schema_ref": {
+        "method_ref": {
+          "method_id": "ordessa.incremental-engineering",
+          "release_version": "1.1.0",
+          "schema_version": 1,
+          "snapshot_digest": {
+            "algorithm": "sha256",
+            "hex": "238dae70b99d88282567562bec51721daac9a30c700f4ea2500cde82c74865a6"
+          }
+        },
+        "resource_id": "document.did.schema",
+        "resource_digest": {
+          "algorithm": "sha256",
+          "hex": "e8dd0cf80d418dd9d6aaf4585bdf39075af64d625138939456087c1618da7e62"
+        }
+      },
+      "value": {
+        "document_type": "did",
+        "schema_version": 1,
+        "title": "规范化负数上限",
+        "intent": "将负数归零并保留其他数值行为。",
+        "claims": [
+          {
+            "claim_id": "C1",
+            "kind": "user_request",
+            "statement": "用户要求负数归零，其他行为不变，实施前确认且不发布。",
+            "source_ids": [
+              "src-user-1"
+            ],
+            "counter_source_ids": []
+          },
+          {
+            "claim_id": "C2",
+            "kind": "observation",
+            "statement": "当前函数原样返回输入，因此负数不会归零。",
+            "source_ids": [
+              "src-code-1"
+            ],
+            "counter_source_ids": []
+          },
+          {
+            "claim_id": "C3",
+            "kind": "design_choice",
+            "statement": "使用 max(0, value) 实现最小修改，并补充边界测试。",
+            "source_ids": [],
+            "counter_source_ids": []
+          }
+        ],
+        "goals": [
+          "负数返回 0",
+          "非负整数行为不变"
+        ],
+        "non_goals": [
+          "发布部署",
+          "改变参数类型或异常契约",
+          "重构其他文件"
+        ],
+        "change_plan": [
+          {
+            "path": "src/limits.py",
+            "change": "返回 max(0, value)。",
+            "reason_claim_ids": [
+              "C1",
+              "C2",
+              "C3"
+            ]
+          },
+          {
+            "path": "tests/test_limits.py",
+            "change": "添加负数、0 和正数回归用例。",
+            "reason_claim_ids": [
+              "C1",
+              "C3"
+            ]
+          }
+        ],
+        "risks": [
+          "非整数输入不在本变更范围内，保持当前契约。"
+        ],
+        "rollback": "回退本次 patch；不触及其他修改。",
+        "acceptance": [
+          {
+            "acceptance_id": "A1",
+            "description": "负数、0、正数边界及既有测试均通过。",
+            "test_ids": [
+              "T1"
+            ]
+          }
+        ],
+        "open_questions": []
+      },
+      "rendered_body_ref": null
+    },
+    {
+      "schema_ref": {
+        "method_ref": {
+          "method_id": "ordessa.incremental-engineering",
+          "release_version": "1.1.0",
+          "schema_version": 1,
+          "snapshot_digest": {
+            "algorithm": "sha256",
+            "hex": "238dae70b99d88282567562bec51721daac9a30c700f4ea2500cde82c74865a6"
+          }
+        },
+        "resource_id": "document.implementation_package.schema",
+        "resource_digest": {
+          "algorithm": "sha256",
+          "hex": "3096671b65964b8df6d720e4494517b3a03c8fc77454575516cac1164d8bc354"
+        }
+      },
+      "value": {
+        "document_type": "implementation-package",
+        "schema_version": 1,
+        "brief": "在已批准两文件范围内修复负数上限，并运行指定测试。",
+        "steps": [
+          {
+            "step_id": "S1",
+            "description": "最小更改 normalize_limit。",
+            "input_paths": [
+              "src/limits.py"
+            ],
+            "output_paths": [
+              "src/limits.py"
+            ]
+          },
+          {
+            "step_id": "S2",
+            "description": "加入边界用例并运行测试。",
+            "input_paths": [
+              "tests/test_limits.py"
+            ],
+            "output_paths": [
+              "tests/test_limits.py"
+            ]
+          }
+        ],
+        "allowed_paths": [
+          "src/limits.py",
+          "tests/test_limits.py"
+        ],
+        "tests": [
+          {
+            "test_id": "T1",
+            "test_command_key": "test-limits",
+            "description": "运行 pytest tests/test_limits.py。",
+            "expected_exit_code": 0
+          }
+        ],
+        "stop_conditions": [
+          "基线不匹配",
+          "需要更改允许列表之外的文件",
+          "需要发布、网络传输或新权限"
+        ],
+        "return_items": [
+          "精确 patch 与输出 tree",
+          "测试命令、退出码与日志",
+          "执行 attempt 和原生记录引用"
+        ]
+      },
+      "rendered_body_ref": null
+    },
+    {
+      "schema_ref": {
+        "method_ref": {
+          "method_id": "ordessa.incremental-engineering",
+          "release_version": "1.1.0",
+          "schema_version": 1,
+          "snapshot_digest": {
+            "algorithm": "sha256",
+            "hex": "238dae70b99d88282567562bec51721daac9a30c700f4ea2500cde82c74865a6"
+          }
+        },
+        "resource_id": "document.submission.schema",
+        "resource_digest": {
+          "algorithm": "sha256",
+          "hex": "42d49c53ae3cab600382f63387745026bdea79579c237303af7e45333ab0cf2a"
+        }
+      },
+      "value": {
+        "document_type": "submission",
+        "schema_version": 1,
+        "summary": "已在两文件范围完成修复并提交证据。",
+        "change_notes": [
+          "负数归零",
+          "补充负数、0 和正数测试"
+        ],
+        "evidence_index": [
+          {
+            "evidence_id": "E1",
+            "kind": "patch",
+            "summary": "两个文件的精确补丁。"
+          },
+          {
+            "evidence_id": "E2",
+            "kind": "test_log",
+            "summary": "针对交回 tree 的测试日志。"
+          },
+          {
+            "evidence_id": "E3",
+            "kind": "native_record",
+            "summary": "fixture execution 原生记录。"
+          }
+        ],
+        "remaining_issues": [],
+        "reported_outcome": "complete"
+      },
+      "rendered_body_ref": null
+    }
+  ]
+}

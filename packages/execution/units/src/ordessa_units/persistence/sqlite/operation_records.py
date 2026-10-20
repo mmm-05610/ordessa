@@ -14,21 +14,11 @@ from ordessa_infrastructure.database.records import (
     DomainRevisionConflict,
     DomainWrite,
 )
-from ordessa_execution_api.environment.errors import GuaranteeUnavailableError, IdentityMismatchError, UnknownResultError
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment.operations import (
-    OperationIntent,
-    OperationRecord,
-    OperationRevisionConflict,
-    StepIntent,
-    StepRecord,
-    StepClaimResult,
-    UsageMutation,
-    operation_holder,
-    node_holder,
-    safe_json,
-)
-from ordessa_execution_api.environment import (
+from ordessa_units.definitions.operations import OperationIntent, OperationRecord, OperationRevisionConflict, StepIntent, StepRecord, StepClaimResult, UsageMutation, operation_holder, node_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
+from ordessa_units.definitions.staged_operations import (
     STAGED_OPERATION_STORE_VERSION, OperationRecipePhase, StagedOperationRecord,
     combine_staged_operation_intent, staged_operation_intent_dict,
     staged_operation_phase_dict,
@@ -102,7 +92,7 @@ class OperationRecordsMixin:
     @contextmanager
     def _operation_transaction(self):
         if self._conn.in_transaction:
-            raise GuaranteeUnavailableError("operation commit cannot nest inside another transaction")
+            raise UnitGuaranteeUnavailable("operation commit cannot nest inside another transaction")
         try:
             self._conn.execute("BEGIN IMMEDIATE")
             yield
@@ -124,7 +114,7 @@ class OperationRecordsMixin:
                 or not isinstance(unit_ref, Mapping)
                 or not isinstance(provider_ref, Mapping)
                 or type(epoch) is not int or epoch < 0):
-            raise GuaranteeUnavailableError("complete original stop identity required")
+            raise UnitGuaranteeUnavailable("complete original stop identity required")
         rows = self._conn.execute(
             "SELECT r.environment,r.principal,r.request_id,r.operation_json,s.step_id "
             "FROM env_request_steps AS s JOIN env_requests AS r "
@@ -136,11 +126,11 @@ class OperationRecordsMixin:
         found = []
         for row in rows:
             if row["operation_json"] is None:
-                raise GuaranteeUnavailableError("unknown legacy claim has no comparable Node")
+                raise UnitGuaranteeUnavailable("unknown legacy claim has no comparable Node")
             try:
                 recipe = OperationIntent.from_dict(json.loads(row["operation_json"]))
             except (TypeError, ValueError, RecursionError):
-                raise GuaranteeUnavailableError("unknown claim recipe is unreadable") from None
+                raise UnitGuaranteeUnavailable("unknown claim recipe is unreadable") from None
             if (recipe.node_ref is not None
                     and safe_json(recipe.node_ref) == safe_json(node_ref)
                     and recipe.kind == "agent-stop"
@@ -166,29 +156,29 @@ class OperationRecordsMixin:
         if (not isinstance(fence, Mapping)
                 or set(fence) != {"holderRef", "expectedUsages", "allowedStates", "unknownPolicy"}
                 or intent.node_ref is None):
-            raise GuaranteeUnavailableError("complete Node Usage claim fence required")
+            raise UnitGuaranteeUnavailable("complete Node Usage claim fence required")
         policy = fence["unknownPolicy"]
         if (policy not in {"stop", "release", "recover"}
                 or intent.kind != {"stop": "agent-stop", "release": "agent-release",
                                    "recover": "agent-recovery"}[policy]
                 or intent.context_ref.get("nodeUsageFenceVersion") != 1):
-            raise GuaranteeUnavailableError("Node Usage unknown policy differs from the fixed recipe")
+            raise UnitGuaranteeUnavailable("Node Usage unknown policy differs from the fixed recipe")
         node = intent.node_ref
         if (not isinstance(node, Mapping)
                 or set(node) != {"environmentNamespace", "instanceId", "generation"}
                 or node["environmentNamespace"] != request.environment_namespace):
-            raise GuaranteeUnavailableError("operation Node identity is unavailable")
+            raise UnitGuaranteeUnavailable("operation Node identity is unavailable")
         holder = node_holder(request.environment_namespace, node["instanceId"], node["generation"])
         if safe_json(fence["holderRef"]) != safe_json(holder):
-            raise IdentityMismatchError("Node Usage fence holder differs")
+            raise UnitIdentityMismatch("Node Usage fence holder differs")
         allowed = fence["allowedStates"]
         if (not isinstance(allowed, (tuple, list)) or not allowed
                 or any(state not in {"active", "unknown"} for state in allowed)
                 or len(set(allowed)) != len(allowed)):
-            raise GuaranteeUnavailableError("Node Usage fence states are invalid")
+            raise UnitGuaranteeUnavailable("Node Usage fence states are invalid")
         expected = fence["expectedUsages"]
         if not isinstance(expected, (tuple, list)) or not expected:
-            raise GuaranteeUnavailableError("Node Usage fence has no original rows")
+            raise UnitGuaranteeUnavailable("Node Usage fence has no original rows")
         expected_by_id = {}
         for item in expected:
             if (not isinstance(item, Mapping)
@@ -200,7 +190,7 @@ class OperationRecordsMixin:
                     or any(not isinstance(right, str) or not right for right in item["rights"])
                     or not isinstance(item["targetRef"], Mapping)
                     or item["usageId"] in expected_by_id):
-                raise GuaranteeUnavailableError("Node Usage fence row is invalid")
+                raise UnitGuaranteeUnavailable("Node Usage fence row is invalid")
             expected_by_id[item["usageId"]] = (
                 item["state"], item["revision"], safe_json({"rights": item["rights"]}),
                 safe_json(item["targetRef"]))
@@ -214,16 +204,16 @@ class OperationRecordsMixin:
             try:
                 rights = json.loads(row["rights"])
             except (TypeError, ValueError):
-                raise GuaranteeUnavailableError("Node Usage rights are unreadable") from None
+                raise UnitGuaranteeUnavailable("Node Usage rights are unreadable") from None
             if (type(rights) is not list or not rights
                     or any(not isinstance(right, str) or not right for right in rights)):
-                raise GuaranteeUnavailableError("Node Usage rights are invalid")
+                raise UnitGuaranteeUnavailable("Node Usage rights are invalid")
             try:
                 target = json.loads(row["target_ref"])
                 if not isinstance(target, dict):
                     raise ValueError("invalid target")
             except (TypeError, ValueError):
-                raise GuaranteeUnavailableError("Node Usage target is unreadable") from None
+                raise UnitGuaranteeUnavailable("Node Usage target is unreadable") from None
             actual[row["usage_id"]] = (
                 row["state"], row["revision"], safe_json({"rights": rights}), safe_json(target))
         if actual != expected_by_id:
@@ -242,13 +232,13 @@ class OperationRecordsMixin:
         for claim in claims:
             if claim["operation_json"] is None:
                 if claim["outcome"] != "concluded":
-                    raise GuaranteeUnavailableError("unresolved legacy claim has no comparable Node")
+                    raise UnitGuaranteeUnavailable("unresolved legacy claim has no comparable Node")
                 continue
             try:
                 other = OperationIntent.from_dict(json.loads(claim["operation_json"]))
             except (TypeError, ValueError, RecursionError):
                 if claim["outcome"] != "concluded":
-                    raise GuaranteeUnavailableError("unresolved claim recipe is unreadable") from None
+                    raise UnitGuaranteeUnavailable("unresolved claim recipe is unreadable") from None
                 continue
             if other.node_ref is not None and safe_json(other.node_ref) == safe_json(node):
                 comparable.append((claim, other))
@@ -307,7 +297,7 @@ class OperationRecordsMixin:
             if claim["outcome"] == "concluded":
                 continue
             if claim["outcome"] == "possibly-dispatched":
-                raise UnknownResultError("same Node has an unresolved effect claim")
+                raise UnitOperationUnknown("same Node has an unresolved effect claim")
             if (same_original_owner(claim, other)
                     and policy == "stop" and other.kind == "agent-stop"):
                 continue  # new RequestKey, original unknown remains spent
@@ -321,7 +311,7 @@ class OperationRecordsMixin:
                     and policy == "release" and other.kind == "agent-stop"
                     and later_confirmed_stop(claim_ref(claim))):
                 continue
-            raise UnknownResultError("same Node has an unresolved effect claim")
+            raise UnitOperationUnknown("same Node has an unresolved effect claim")
 
     def _operation_row(self, request):
         return self._conn.execute(
@@ -331,7 +321,7 @@ class OperationRecordsMixin:
 
     def _staged_metadata(self, operation, staged_json):
         if staged_json is None:
-            raise GuaranteeUnavailableError("operation is not a staged record")
+            raise UnitGuaranteeUnavailable("operation is not a staged record")
         try:
             value = _load(staged_json)
             if (type(value) is not dict or set(value) != {"contractVersion", "rootIntent", "phase"}
@@ -378,15 +368,15 @@ class OperationRecordsMixin:
                         raise ValueError("sealed recipe lost a concluded root step")
             return staged
         except (TypeError, ValueError, KeyError, AttributeError, RecursionError):
-            raise GuaranteeUnavailableError("stored staged operation is inconsistent") from None
+            raise UnitGuaranteeUnavailable("stored staged operation is inconsistent") from None
 
     def _operation_record(self, request, row):
         if row is None:
-            raise GuaranteeUnavailableError("operation is not reserved")
+            raise UnitGuaranteeUnavailable("operation is not reserved")
         if row["operation_json"] is None:
             if row["staged_operation_json"] is not None:
-                raise GuaranteeUnavailableError("staged operation metadata has no operation intent")
-            raise UnknownResultError("spent legacy or non-operation request is not a new operation")
+                raise UnitGuaranteeUnavailable("staged operation metadata has no operation intent")
+            raise UnitOperationUnknown("spent legacy or non-operation request is not a new operation")
         try:
             stored_intent = _load(row["operation_json"])
             if hashlib.sha256(safe_json(stored_intent).encode()).hexdigest() != row["operation_intent_digest"]:
@@ -458,8 +448,8 @@ class OperationRecordsMixin:
                     if step_row is None or self._step_record(request, step_row, operation).outcome != "concluded":
                         raise ValueError("publication lacks its fixed step evidence")
             return operation
-        except (ValueError, TypeError, KeyError, AttributeError, RecursionError, IdentityMismatchError):
-            raise GuaranteeUnavailableError("stored operation is inconsistent") from None
+        except (ValueError, TypeError, KeyError, AttributeError, RecursionError, UnitIdentityMismatch):
+            raise UnitGuaranteeUnavailable("stored operation is inconsistent") from None
 
     def _check_operation(self, request, digest):
         row = self._operation_row(request)
@@ -472,7 +462,7 @@ class OperationRecordsMixin:
         for ref in (intent.profile_snapshot_ref, intent.context_ref, intent.node_ref,
                     *(step.pinned_provider_ref for step in intent.steps)):
             if ref is not None and ref.get("environmentNamespace") != request.environment_namespace:
-                raise IdentityMismatchError("operation reference belongs to another environment")
+                raise UnitIdentityMismatch("operation reference belongs to another environment")
 
     def _write_domains(self, environment, encoded):
         for write, payload in encoded:
@@ -500,29 +490,29 @@ class OperationRecordsMixin:
         for mutation, expected, holder, target, rights, payload in encoded:
             for ref in (mutation.expected_holder_ref, mutation.holder_ref, mutation.target_ref):
                 if ref is not None and ref.get("environmentNamespace") != request.environment_namespace:
-                    raise IdentityMismatchError("Usage identity belongs to another environment")
+                    raise UnitIdentityMismatch("Usage identity belongs to another environment")
             if uncertain and mutation.state == "released":
-                raise UnknownResultError("unknown evidence cannot release Usage")
+                raise UnitOperationUnknown("unknown evidence cannot release Usage")
             if publication:
                 if mutation.expected_holder_ref != owner or mutation.holder_ref.get("kind") != "node":
-                    raise IdentityMismatchError("publication must transfer this operation's Usage to a node")
+                    raise UnitIdentityMismatch("publication must transfer this operation's Usage to a node")
                 destination = node_holder(request.environment_namespace, mutation.holder_ref.get("instanceId"),
                                           mutation.holder_ref.get("generation"))
                 participant = {key: value for key, value in destination.items() if key != "kind"}
-                # ParticipantInstanceRef is three fields; the Usage holder is
+                # AgentNodeRef is three fields; the Usage holder is
                 # its tagged view. Retain the older tagged intent codec too.
                 if (mutation.holder_ref != destination or intent.node_ref not in (destination, participant)
                         or mutation.state != "active"):
-                    raise IdentityMismatchError("publication node holder differs from fixed node identity")
+                    raise UnitIdentityMismatch("publication node holder differs from fixed node identity")
             elif release_holder is not None:
                 # Controlled release seam: the step may only release Usages
                 # held exactly by this holder (typically the node holder).
                 if mutation.state != "released":
-                    raise IdentityMismatchError("release step can only release Usages")
+                    raise UnitIdentityMismatch("release step can only release Usages")
                 if mutation.holder_ref != release_holder or mutation.expected_holder_ref != release_holder:
-                    raise IdentityMismatchError("release Usage must belong to the exact release holder")
+                    raise UnitIdentityMismatch("release Usage must belong to the exact release holder")
             elif mutation.holder_ref != owner or (mutation.expected_holder_ref is not None and mutation.expected_holder_ref != owner):
-                raise IdentityMismatchError("step Usage must belong to this exact operation")
+                raise UnitIdentityMismatch("step Usage must belong to this exact operation")
             row = self._conn.execute("SELECT * FROM env_usages WHERE usage_id=?", (mutation.usage_id,)).fetchone()
             if row is None:
                 if mutation.expected_revision != 0 or mutation.expected_holder_ref is not None:
@@ -534,30 +524,30 @@ class OperationRecordsMixin:
                 )
             else:
                 if row["environment"] != request.environment_namespace:
-                    raise IdentityMismatchError("Usage id is already owned by another environment")
+                    raise UnitIdentityMismatch("Usage id is already owned by another environment")
                 if row["holder_ref"] is None or row["revision"] == 0:
-                    raise GuaranteeUnavailableError("legacy Usage lacks a comparable full holder identity")
+                    raise UnitGuaranteeUnavailable("legacy Usage lacks a comparable full holder identity")
                 if row["revision"] != mutation.expected_revision or row["holder_ref"] != expected:
                     raise OperationRevisionConflict("Usage holder or revision changed")
                 if row["state"] == "released" and (mutation.state != "released" or row["holder_ref"] != holder):
-                    raise IdentityMismatchError("released Usage is terminal; new occupation requires a new Usage id")
+                    raise UnitIdentityMismatch("released Usage is terminal; new occupation requires a new Usage id")
                 if row["state"] == "unknown" and mutation.state == "active" and not concluded:
-                    raise UnknownResultError("unknown Usage requires concluded evidence before becoming active")
+                    raise UnitOperationUnknown("unknown Usage requires concluded evidence before becoming active")
                 # Only an active Usage can be released; unknown and other
                 # non-active rows keep their hold (A14: never release unknown).
                 if mutation.state == "released" and row["state"] not in ("active", "released"):
-                    raise UnknownResultError("only an active Usage can be released")
+                    raise UnitOperationUnknown("only an active Usage can be released")
                 if row["target_ref"] != target:
-                    raise IdentityMismatchError("Usage cannot silently change its fixed target")
+                    raise UnitIdentityMismatch("Usage cannot silently change its fixed target")
                 try:
                     existing_rights = json.loads(row["rights"])
                 except (TypeError, ValueError):
-                    raise GuaranteeUnavailableError("stored Usage rights are unreadable") from None
+                    raise UnitGuaranteeUnavailable("stored Usage rights are unreadable") from None
                 if existing_rights != list(mutation.rights):
-                    raise IdentityMismatchError("Usage rights cannot change without an authority contract")
+                    raise UnitIdentityMismatch("Usage rights cannot change without an authority contract")
                 if row["state"] == "released":
                     if row["payload"] != payload:
-                        raise IdentityMismatchError("released Usage history cannot be rewritten")
+                        raise UnitIdentityMismatch("released Usage history cannot be rewritten")
                     continue  # release of the same terminal Usage is idempotent
                 self._conn.execute(
                     "UPDATE env_usages SET state=?,rights=?,holder_ref=?,revision=?,payload=? WHERE usage_id=? AND environment=?",
@@ -583,7 +573,7 @@ class OperationRecordsMixin:
                 target = json.loads(row["target_ref"])
                 payload = json.loads(row["payload"]) if row["payload"] is not None else None
             except (TypeError, ValueError):
-                raise GuaranteeUnavailableError("stored Usage row is unreadable") from None
+                raise UnitGuaranteeUnavailable("stored Usage row is unreadable") from None
             result.append({"usageId": row["usage_id"], "state": row["state"], "rights": rights,
                            "holderRef": holder, "targetRef": target, "revision": row["revision"],
                            "payload": payload})
@@ -619,7 +609,7 @@ class OperationRecordsMixin:
                         or type(row["revision"]) is not int or row["revision"] < 1):
                     raise ValueError("incomplete Usage")
             except (TypeError, ValueError, RecursionError):
-                raise GuaranteeUnavailableError("unresolved Usage ledger is unreadable") from None
+                raise UnitGuaranteeUnavailable("unresolved Usage ledger is unreadable") from None
             provider_keys = {"environmentNamespace", "providerId",
                              "ownerActivationRef", "generation",
                              "contractVersion", "implementationDigest"}
@@ -631,7 +621,7 @@ class OperationRecordsMixin:
             if "ownerProviderRef" in target:
                 provider = target["ownerProviderRef"]
                 if target.get("environmentNamespace") != environment:
-                    raise GuaranteeUnavailableError("Unit Usage environment is inconsistent")
+                    raise UnitGuaranteeUnavailable("Unit Usage environment is inconsistent")
             elif runtime_markers.intersection(target):
                 provider = target  # partial RuntimeProvider refs fail below
             elif material_markers.intersection(target):
@@ -652,7 +642,7 @@ class OperationRecordsMixin:
                         or not isinstance(target["providerId"], str) or not target["providerId"]
                         or not isinstance(target["providerVersion"], str) or not target["providerVersion"]
                         or not isinstance(owner["pluginId"], str) or not re.fullmatch(r"[a-z][a-z0-9._-]{0,63}", owner["pluginId"])):
-                    raise GuaranteeUnavailableError("material provider Usage identity is inconsistent")
+                    raise UnitGuaranteeUnavailable("material provider Usage identity is inconsistent")
                 if owner["pluginId"] == plugin_id and owner["generation"] == generation:
                     held.append(row["usage_id"])
                 continue
@@ -664,14 +654,14 @@ class OperationRecordsMixin:
                         or target["environmentNamespace"] != environment
                         or any(not isinstance(target[key], str) or not target[key]
                                for key in ("providerId", "contractId", "resourceId", "revision"))):
-                    raise GuaranteeUnavailableError("resource Usage identity is inconsistent")
+                    raise UnitGuaranteeUnavailable("resource Usage identity is inconsistent")
                 continue
             elif "providerId" in target:
-                raise GuaranteeUnavailableError("unclassified provider Usage target")
+                raise UnitGuaranteeUnavailable("unclassified provider Usage target")
             else:
                 continue  # ordinary non-provider target
             if not isinstance(provider, dict) or set(provider) != provider_keys:
-                raise GuaranteeUnavailableError("unresolved provider reference is incomplete")
+                raise UnitGuaranteeUnavailable("unresolved provider reference is incomplete")
             owner = provider["ownerActivationRef"]
             if (not isinstance(owner, dict) or set(owner) != owner_keys
                     or not isinstance(owner["environmentNamespace"], str)
@@ -685,9 +675,9 @@ class OperationRecordsMixin:
                     or provider["contractVersion"] != "agent-runtime/2"
                     or not isinstance(provider["implementationDigest"], str)
                     or not re.fullmatch(r"sha256:[0-9a-f]{64}", provider["implementationDigest"])):
-                raise GuaranteeUnavailableError("unresolved provider reference is inconsistent")
+                raise UnitGuaranteeUnavailable("unresolved provider reference is inconsistent")
             if owner["environmentNamespace"] != environment:
-                raise GuaranteeUnavailableError("provider Usage environment is inconsistent")
+                raise UnitGuaranteeUnavailable("provider Usage environment is inconsistent")
             if owner["pluginId"] == plugin_id and owner["generation"] == generation:
                 held.append(row["usage_id"])
         return tuple(held)
@@ -741,13 +731,13 @@ class OperationRecordsMixin:
                 raise ValueError("step evidence content changed")
             return StepRecord(request, row["intent_json"], row["revision"], row["outcome"], row["evidence_json"])
         except (ValueError, TypeError, KeyError, AttributeError, RecursionError):
-            raise GuaranteeUnavailableError("stored step is inconsistent") from None
+            raise UnitGuaranteeUnavailable("stored step is inconsistent") from None
 
     @_serialized
     def reserve_operation(self, request, digest, intent, writes=(), usages=()):
         prior = self._operation_row(request)
         if prior is not None and prior["staged_operation_json"] is not None:
-            raise IdentityMismatchError("staged operation cannot use the original reservation API")
+            raise UnitIdentityMismatch("staged operation cannot use the original reservation API")
         if not isinstance(intent, OperationIntent) or not isinstance(digest, str) or not digest:
             raise ValueError("operation requires fixed intent and digest")
         intent_json = safe_json(intent.to_dict())
@@ -757,10 +747,10 @@ class OperationRecordsMixin:
             existing = self._operation_row(request)
             if existing is not None:
                 if existing["staged_operation_json"] is not None:
-                    raise IdentityMismatchError("staged operation cannot use the original reservation API")
+                    raise UnitIdentityMismatch("staged operation cannot use the original reservation API")
                 operation = self._check_operation(request, digest)[1]
                 if operation.intent_json != intent_json:
-                    raise IdentityMismatchError("reservation replay changed its fixed intent")
+                    raise UnitIdentityMismatch("reservation replay changed its fixed intent")
                 return operation
             holder = operation_holder(request, intent.operation_ref)
             identity_write = DomainWrite(_IDENTITIES, intent.operation_ref, 0, {"holder": dict(holder)})
@@ -793,13 +783,13 @@ class OperationRecordsMixin:
             existing = self._operation_row(request)
             if existing is not None:
                 if existing["digest"] != digest:
-                    raise IdentityMismatchError("staged request input changed")
+                    raise UnitIdentityMismatch("staged request input changed")
                 if existing["operation_json"] is None or existing["staged_operation_json"] is None:
-                    raise IdentityMismatchError("existing request is not a staged operation")
+                    raise UnitIdentityMismatch("existing request is not a staged operation")
                 operation = self._operation_record(request, existing)
                 staged = self._staged_metadata(operation, existing["staged_operation_json"])
                 if staged.root_intent_json != root_intent_json:
-                    raise IdentityMismatchError("staged root intent changed")
+                    raise UnitIdentityMismatch("staged root intent changed")
                 return staged
 
             holder = operation_holder(request, root_intent.operation_ref)
@@ -829,7 +819,7 @@ class OperationRecordsMixin:
         if row is None:
             return None
         if row["staged_operation_json"] is None:
-            raise GuaranteeUnavailableError("request is not a staged operation")
+            raise UnitGuaranteeUnavailable("request is not a staged operation")
         operation = self._operation_record(request, row)
         return self._staged_metadata(operation, row["staged_operation_json"])
 
@@ -854,25 +844,25 @@ class OperationRecordsMixin:
         with self._operation_transaction():
             row = self._operation_row(request)
             if row is None:
-                raise GuaranteeUnavailableError("staged operation is not reserved")
+                raise UnitGuaranteeUnavailable("staged operation is not reserved")
             if row["digest"] != digest:
-                raise IdentityMismatchError("staged request input changed")
+                raise UnitIdentityMismatch("staged request input changed")
             if row["operation_json"] is None or row["staged_operation_json"] is None:
-                raise IdentityMismatchError("request is not a staged operation")
+                raise UnitIdentityMismatch("request is not a staged operation")
             operation = self._operation_record(request, row)
             staged = self._staged_metadata(operation, row["staged_operation_json"])
             if staged.sealed:
                 existing_phase = staged.phase
                 if existing_phase.phase_id == phase_copy.phase_id:
                     if staged.phase_json != phase_json:
-                        raise IdentityMismatchError("sealed phase replay changed its recipe")
+                        raise UnitIdentityMismatch("sealed phase replay changed its recipe")
                     return staged
-                raise UnknownResultError("staged operation is already sealed")
+                raise UnitOperationUnknown("staged operation is already sealed")
             if (operation.revision != expected_revision
                     or row["operation_intent_digest"] != expected_intent_digest):
                 raise OperationRevisionConflict("staged operation revision or intent digest changed")
             if operation.status != "running":
-                raise UnknownResultError("root operation is not conclusively running")
+                raise UnitOperationUnknown("root operation is not conclusively running")
 
             root = staged.root_intent
             root_step_ids = {step.step_id for step in root.steps}
@@ -881,20 +871,20 @@ class OperationRecordsMixin:
                 _identity(request),
             ).fetchall()
             if {item["step_id"] for item in step_rows} != root_step_ids:
-                raise UnknownResultError("root operation step evidence is incomplete or inconsistent")
+                raise UnitOperationUnknown("root operation step evidence is incomplete or inconsistent")
             for step in root.steps:
                 step_row = self._step_row(request, step.step_id)
                 if step_row is None:
-                    raise UnknownResultError("root operation step has no durable conclusion")
+                    raise UnitOperationUnknown("root operation step has no durable conclusion")
                 record = self._step_record(request, step_row, operation)
                 if record.outcome != "concluded":
-                    raise UnknownResultError("root operation contains an unresolved step")
+                    raise UnitOperationUnknown("root operation contains an unresolved step")
 
             try:
                 combined = combine_staged_operation_intent(root, phase_copy, request.environment_namespace)
                 self._check_refs(request, combined)
-            except (TypeError, ValueError, IdentityMismatchError):
-                raise IdentityMismatchError("recipe phase changes fixed operation identity") from None
+            except (TypeError, ValueError, UnitIdentityMismatch):
+                raise UnitIdentityMismatch("recipe phase changes fixed operation identity") from None
             intent_json = safe_json(staged_operation_intent_dict(combined))
             new_intent_digest = hashlib.sha256(intent_json.encode()).hexdigest()
             stage_json = safe_json({"contractVersion": STAGED_OPERATION_STORE_VERSION,
@@ -929,7 +919,7 @@ class OperationRecordsMixin:
             intent = operation.intent
             frozen = next((item for item in intent.steps if item.step_id == step_intent.step_id), None)
             if frozen is None or safe_json(frozen.to_dict()) != encoded:
-                raise IdentityMismatchError("step differs from fixed operation recipe")
+                raise UnitIdentityMismatch("step differs from fixed operation recipe")
             existing = self._step_row(request, step_intent.step_id)
             if existing is not None:
                 return StepClaimResult(False, self._step_record(request, existing))
@@ -939,17 +929,17 @@ class OperationRecordsMixin:
                 current_index = next(index for index, item in enumerate(intent.steps)
                                      if item.step_id == operation.current_step)
                 if target_index <= current_index:
-                    raise GuaranteeUnavailableError("an earlier operation step claim is missing")
+                    raise UnitGuaranteeUnavailable("an earlier operation step claim is missing")
             if operation.status in {"published", "refused", "cancelled", "unknown"}:
-                raise UnknownResultError("operation does not permit a new step")
+                raise UnitOperationUnknown("operation does not permit a new step")
             for previous in intent.steps:
                 if previous.step_id == step_intent.step_id:
                     break
                 record = self._step_row(request, previous.step_id)
                 if record is None or self._step_record(request, record).outcome != "concluded":
-                    raise UnknownResultError("prior step has not been conclusively recorded")
+                    raise UnitOperationUnknown("prior step has not been conclusively recorded")
             if intent.context_ref.get("nodeUsageFenceVersion") == 1 and node_usage_fence is None:
-                raise GuaranteeUnavailableError("fenced lifecycle recipe requires its original Usage claim fence")
+                raise UnitGuaranteeUnavailable("fenced lifecycle recipe requires its original Usage claim fence")
             if node_usage_fence is not None:
                 self._check_node_usage_fence(request, intent, node_usage_fence)
             self._write_usages(request, intent, usage_rows)
@@ -995,10 +985,10 @@ class OperationRecordsMixin:
             op_row, operation = self._check_operation(request, operation_digest)
             row = self._step_row(request, step_id)
             if row is None:
-                raise GuaranteeUnavailableError("cannot record an unclaimed step")
+                raise UnitGuaranteeUnavailable("cannot record an unclaimed step")
             step = self._step_record(request, row)
             if step.intent.input_digest != step_digest:
-                raise IdentityMismatchError("step result input digest changed")
+                raise UnitIdentityMismatch("step result input digest changed")
             if row["result_digest"] == change_digest:
                 return step
             if (type(expected_revision) is not int or row["revision"] != expected_revision
@@ -1012,7 +1002,7 @@ class OperationRecordsMixin:
                 ).fetchall()
                 if (not {item["usage_id"] for item in held} <= {item[0].usage_id for item in usage_rows}
                         or any(item[0].state != "active" for item in usage_rows)):
-                    raise IdentityMismatchError("step conclusion must account for every retained operation Usage")
+                    raise UnitIdentityMismatch("step conclusion must account for every retained operation Usage")
             self._write_domains(request.environment_namespace, domains)
             self._write_usages(request, operation.intent, usage_rows, uncertain=(outcome == "unknown"),
                                concluded=(outcome == "concluded"), release_holder=release_holder)
@@ -1034,33 +1024,33 @@ class OperationRecordsMixin:
             row, operation = self._check_operation(request, digest)
             if (row["staged_operation_json"] is not None
                     and not self._staged_metadata(operation, row["staged_operation_json"]).sealed):
-                raise UnknownResultError("staged operation must be sealed before publication")
+                raise UnitOperationUnknown("staged operation must be sealed before publication")
             if required_steps != tuple(step.step_id for step in operation.intent.steps):
-                raise IdentityMismatchError("publication must cover every fixed step")
+                raise UnitIdentityMismatch("publication must cover every fixed step")
             if operation.status == "published":
                 if (operation.result_json != result_json
                         or _load(row["receipt"]).get("publication_digest") != publication_digest):
-                    raise IdentityMismatchError("publication replay changed its result or writes")
+                    raise UnitIdentityMismatch("publication replay changed its result or writes")
                 return operation
             if type(expected_revision) is not int or operation.revision != expected_revision:
                 raise OperationRevisionConflict("operation publication revision changed")
             if operation.status in {"unknown", "refused", "cancelled"}:
-                raise UnknownResultError("uncertain or terminal operation cannot publish")
+                raise UnitOperationUnknown("uncertain or terminal operation cannot publish")
             if operation.intent.node_ref is not None and json.loads(result_json).get("nodeRef") != operation.intent.node_ref:
-                raise IdentityMismatchError("publication result differs from fixed node identity")
+                raise UnitIdentityMismatch("publication result differs from fixed node identity")
             for step_id in required_steps:
                 step_row = self._step_row(request, step_id)
                 if step_row is None or self._step_record(request, step_row).outcome != "concluded":
-                    raise UnknownResultError("publication lacks complete step evidence")
+                    raise UnitOperationUnknown("publication lacks complete step evidence")
             held = self._conn.execute(
                 "SELECT usage_id,state FROM env_usages WHERE environment=? AND holder_ref=?",
                 (request.environment_namespace, safe_json(operation_holder(request, operation.intent.operation_ref))),
             ).fetchall()
             required_usage_ids = {item["usage_id"] for item in held if item["state"] != "released"}
             if {item[0].usage_id for item in usage_rows} != required_usage_ids:
-                raise IdentityMismatchError("publication must transfer every retained operation Usage")
+                raise UnitIdentityMismatch("publication must transfer every retained operation Usage")
             if any(item["state"] == "unknown" for item in held):
-                raise UnknownResultError("publication cannot conclude an uncertain retained Usage")
+                raise UnitOperationUnknown("publication cannot conclude an uncertain retained Usage")
             self._write_domains(request.environment_namespace, domains)
             self._write_usages(request, operation.intent, usage_rows, publication=True, concluded=True)
             self._set_operation(request, row, "published", step=operation.current_step,
@@ -1086,7 +1076,7 @@ class OperationRecordsMixin:
                     _identity(request),
                 ).fetchall()
                 if any(item["outcome"] in {"possibly-dispatched", "unknown"} for item in rows):
-                    raise UnknownResultError("cancellation/refusal cannot conclude uncertain steps")
+                    raise UnitOperationUnknown("cancellation/refusal cannot conclude uncertain steps")
             self._set_operation(request, row, outcome, step=operation.current_step, evidence=json.loads(evidence_json))
             return self._operation_record(request, self._operation_row(request))
 
@@ -1127,16 +1117,16 @@ class OperationRecordsMixin:
                 _identity(request),
             ).fetchone()
             if claims is not None:
-                raise UnknownResultError("a durable step claim prevents pre-dispatch refusal")
+                raise UnitOperationUnknown("a durable step claim prevents pre-dispatch refusal")
             if operation.status == "refused":
                 if (type(expected_revision) is not int
                         or operation.revision != expected_revision + 1):
                     raise OperationRevisionConflict("pre-dispatch refusal replay revision changed")
                 if operation.evidence_json != evidence_json:
-                    raise IdentityMismatchError("pre-dispatch refusal replay changed its evidence or writes")
+                    raise UnitIdentityMismatch("pre-dispatch refusal replay changed its evidence or writes")
                 return operation
             if operation.status != "reserved":
-                raise UnknownResultError("only a reserved operation can be refused as unclaimed")
+                raise UnitOperationUnknown("only a reserved operation can be refused as unclaimed")
             if type(expected_revision) is not int or operation.revision != expected_revision:
                 raise OperationRevisionConflict("pre-dispatch refusal operation revision changed")
             self._write_domains(request.environment_namespace, domains)

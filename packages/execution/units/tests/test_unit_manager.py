@@ -4,10 +4,11 @@ import hashlib
 import json
 from pathlib import Path
 from types import SimpleNamespace
+from uuid import uuid4
 import pytest
 from test_unit_instance import Authority, Provider, Preparation
 from ordessa_execution_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_execution_agents.preparation import ConfigurationResources
 from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref, canonical_content, content_digest
 from ordessa_units.management import UnitManager, UnitInstance, UnitManagementRefused
@@ -36,9 +37,11 @@ def managed(tmp_path):
     authority=Authority(provider,None)
     evidence=AcpUnitEvidence(preparation_authority=lambda plan,facts:plan['context']['privateRootFacts'],
         start_authority=authority.continuation,configuration_authority=authority.continuation)
-    records=UnitRecords(OperationJournal(tmp_path/'original.sqlite'),scope_authority=DistinctScopes(),
+    journal_path = tmp_path / 'original.sqlite'
+    journal_path.touch(mode=0o600, exist_ok=False)
+    records=UnitRecords(OperationJournal(journal_path, acp_turn_opt_in=True),scope_authority=DistinctScopes(),
         native_evidence=evidence,verifier=authority,epoch_port=SimpleNamespace(current_epoch=lambda node:0),
-        termination_evidence=evidence,configuration_evidence=evidence)
+        termination_evidence=evidence,configuration_evidence=evidence,acp_turn_opt_in=True)
     evidence.attach_owner(records)
     environments=Provider(root,events); units=[]; calls=[]; fail=[False]
     manifest={'schemaVersion':'1','harnessDefinitionRef':dict(descriptor.definition_ref),'declarations':[],
@@ -99,7 +102,8 @@ def test_two_units_share_original_owners_and_release_only_their_use(managed):
     for name,unit in [('a',a),('b',b)]:
         unit.start(unit.prepared_unit,m.issue(name,'start'))
         grant=unit.lease_port.grant(unit.prepared_unit['unitRef'])
-        assert unit.prompt(unit.prepared_unit['unitRef'],grant,prompt=[],timeout=2)['observedConfiguration']=={'marker':'original-profile'}
+        receipt=unit.prompt(unit.prepared_unit['unitRef'],grant,operation_ref='unit-test/'+uuid4().hex,prompt=[],timeout=2)
+        assert receipt['response']['result']['observedConfiguration']=={'marker':'original-profile'}
     assert m.events.count('spawn')==2
     with pytest.raises(UnitLifecycleRefused,match='stop before release'):
         m.manager.release(ar,m.issue('a','release'))

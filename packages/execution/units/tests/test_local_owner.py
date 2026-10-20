@@ -19,8 +19,9 @@ from ordessa_execution_agents.preparation import (
     SessionBootstrap,
 )
 from ordessa_execution_agents.profiles import ProfileRevisionRef, ProfileService
-from ordessa_execution_api.environment import EnvironmentId, GuaranteeUnavailableError
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_units.errors import UnitGuaranteeUnavailable
+from ordessa_units.definitions.admission_identity import AdmissionNamespace
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_interfaces.system_access.access_control.authentication import (
     AccessGrant,
     InstanceAccessAuthority,
@@ -28,13 +29,14 @@ from ordessa_interfaces.system_access.access_control.authentication import (
 )
 from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_units.admission.context import UnitAdmissionContext
+from ordessa_units.bindings.profile_admission import UnitProfileAdmission
 from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
 from ordessa_units.admission.invocation import InvocationAuthorityRefused, InvocationIssuer
 from ordessa_units.admission.material_registration import MaterialCatalog
 from ordessa_units.admission.owner_ports import AgentOwnerPorts, AgentProviderView
 from ordessa_units.admission.owner_selection import AgentOwnerUnavailable, bind_unit_manager
 from ordessa_units.admission.run_permission import RUN_ACTIONS, UnitRunPermission
-from ordessa_units.api.errors import UnitApiRefused
+from ordessa_units.errors import UnitApiRefused
 from ordessa_units.definitions import UnitSpec
 from ordessa_units.management import UnitManager as OriginalUnitManager
 from ordessa_units.persistence.sqlite.store import SqliteUnitStore
@@ -202,7 +204,7 @@ def live_owner(tmp_path, request):
         policy=policy,
         principal_scope=PRINCIPAL_ID,
         admission_lock=lock,
-        retirement_guard=lambda owner_id, generation: context_ref["context"].provider_retirement_guard(
+        retirement_guard=lambda owner_id, generation: context_ref["context"].harness_provider_retirement_guard(
             owner_id, generation
         ),
     )
@@ -231,7 +233,7 @@ def live_owner(tmp_path, request):
     declaration = HarnessDefinitionDeclaration(definition, lambda _installation: None)
     catalog.stage("local-acp-owner", 1, "local-installation", "c" * 64, (declaration,)).commit()
 
-    profile_service = ProfileService(admission)
+    profile_service = ProfileService(UnitProfileAdmission(admission))
     profile = profile_service.create(
         profile_id="profile",
         name="Local Unit fixture",
@@ -279,6 +281,7 @@ def live_owner(tmp_path, request):
         defer_effect_write_guard_factory=defer_effect_write_guard_factory,
         acp_turn_opt_in=acp_turn_opt_in,
         callback_approval=callback_approval,
+        managed_input_ports=fixture_options.get('managed_input_ports'),
         clock=lambda: now[0],
     )
     assert owner.owner_inputs.acp_turn_opt_in is acp_turn_opt_in
@@ -308,7 +311,7 @@ def live_owner(tmp_path, request):
     owner.owner_inputs.native_session_evidence.attach_owner(records)
     view = AgentProviderView(records, verifier)
     original_manager = bind_unit_manager(
-        owner.owner_inputs, environment_id=EnvironmentId(namespace), provider_view=view
+        owner.owner_inputs, environment_id=AdmissionNamespace(namespace), provider_view=view
     )
     ports = AgentOwnerPorts(
         issuer=issuer,
@@ -406,6 +409,7 @@ def live_owner(tmp_path, request):
                         store.close()
 
 
+@pytest.mark.parametrize("live_owner", [{"acp_turn_opt_in": True}], indirect=True)
 def test_public_local_unit_executes_and_records_through_original_owners(live_owner):
     world = live_owner
     unit = world.public_manager.create(world.owner.spec, world.owner.authorization())
@@ -524,6 +528,7 @@ def test_local_authorization_handle_is_opaque_and_bound_to_its_owner(live_owner)
         other_owner.revoke()
 
 
+@pytest.mark.parametrize("live_owner", [{"acp_turn_opt_in": True}], indirect=True)
 def test_access_authority_revoke_fences_existing_unit_interaction(live_owner):
     world = live_owner
     unit = world.public_manager.create(world.owner.spec, world.owner.authorization())
@@ -534,6 +539,7 @@ def test_access_authority_revoke_fences_existing_unit_interaction(live_owner):
     world.access_revoked_cleanup = True
 
 
+@pytest.mark.parametrize("live_owner", [{"acp_turn_opt_in": True}], indirect=True)
 def test_local_owner_refuses_foreign_profile_environment_and_cross_unit_session(live_owner):
     world = live_owner
     authorization = world.owner.authorization()
@@ -605,7 +611,7 @@ def test_unknown_release_is_not_replayed_by_public_unit_close(live_owner, monkey
     termination = world.records.owner_read_termination(unit.identity["unitId"], "release")
     assert termination is not None and termination["state"] == "unknown"
     assert world.environment.snapshot.active_uses == 1
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         world.admission.close()
     assert world.admission.pending()["operationRefs"]
     world.unknown_release_completed = True

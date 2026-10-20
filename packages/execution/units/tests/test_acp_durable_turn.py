@@ -7,19 +7,15 @@ from types import SimpleNamespace
 
 import pytest
 import test_unit_instance as helpers
+from test_local_owner_recorded_query import historical_query_world, _historical_query
 from ordessa_units.records import OperationJournal, UnitRecords, UnitRecordsRefused
 from ordessa_units.records import acp_turns
 
 
 @pytest.fixture
 def recorded(tmp_path, monkeypatch):
-    def journal(path):
-        path.touch(exist_ok=False)
-        return OperationJournal(path, acp_turn_opt_in=True)
-    def records(*args, **kwargs):
-        return UnitRecords(*args, **kwargs, acp_turn_opt_in=True)
-    monkeypatch.setattr(helpers, 'OperationJournal', journal)
-    monkeypatch.setattr(helpers, 'UnitRecords', records)
+    # The shared real-owner fixture provisions its pristine journal and
+    # explicitly enables the same ACP schema; no constructor replacement.
     generator = helpers.flow.__wrapped__(tmp_path, monkeypatch)
     flow = next(generator)
     yield flow
@@ -50,7 +46,7 @@ def test_recorded_success_original_events_digest_and_cold_authorized_read(record
     peer = peer.replace("    elif method=='unused/prompt':\n", '')
     monkeypatch.setattr(helpers, 'PEER', peer)
     ref, lease = start(recorded)
-    result = recorded.instance.prompt_recorded(ref, lease, operation_ref='turn-1', timeout=2, prompt=[])
+    result = recorded.instance.prompt(ref, lease, operation_ref='turn-1', timeout=2, prompt=[])
     assert result['state'] == 'completed'
     assert result['summary']['text'] == 'original text'
     assert result['summary']['successfulRpcResponse'] is True
@@ -67,7 +63,7 @@ def test_recorded_success_original_events_digest_and_cold_authorized_read(record
         epoch_port=SimpleNamespace(current_epoch=lambda node:0))
     assert query(cold, recorded, ref, 'turn-1', result['inputDigest']) == result
     # A separate interpreter has no original factories, threads or SDK handles.
-    from ordessa_execution_api.environment.operations import safe_json
+    from ordessa_infrastructure.encoding.immutable_json import safe_json
     child = r'''
 import json,sys
 from types import SimpleNamespace
@@ -96,7 +92,7 @@ print('cold-authorized-read-confirmed')
     assert completed.returncode == 0, completed.stderr
     assert completed.stdout.strip() == 'cold-authorized-read-confirmed'
     with pytest.raises(UnitRecordsRefused, match='no replay'):
-        recorded.instance.prompt_recorded(ref, lease, operation_ref='turn-1', prompt=[])
+        recorded.instance.prompt(ref, lease, operation_ref='turn-1', prompt=[])
     with pytest.raises(UnitRecordsRefused, match='prompt input digest'):
         query(cold, recorded, ref, 'turn-1', 'wrong-prompt-digest')
     with pytest.raises(UnitRecordsRefused, match='not found'):
@@ -116,27 +112,27 @@ def test_known_remote_failure_and_unknown_are_not_success_or_replay(recorded, mo
     ref, lease = start(recorded)
     expected = UnitRecords.acp_prompt_input_digest(ref, {'prompt':[], 'sessionId':'controlled-native-session'})
     if mode == 'error':
-        result = recorded.instance.prompt_recorded(ref, lease, operation_ref='failure-1', prompt=[], timeout=.2)
+        result = recorded.instance.prompt(ref, lease, operation_ref='failure-1', prompt=[], timeout=.2)
         assert result['state'] == 'failed'
         assert result['response']['error']['data'] == {'error':'original Connection error.'}
         assert result['summary']['knownRemoteFailure'] is True
     else:
         with pytest.raises(Exception):
-            recorded.instance.prompt_recorded(ref, lease, operation_ref='failure-1', prompt=[], timeout=.2)
+            recorded.instance.prompt(ref, lease, operation_ref='failure-1', prompt=[], timeout=.2)
         result = query(recorded.records, recorded, ref, 'failure-1', expected)
         assert result['state'] == 'unknown'
         assert result['response'] is None
         from ordessa_units.admission.connection import ConnectionLeaseRefused
         refusal = ConnectionLeaseRefused if mode == 'lost' else UnitRecordsRefused
         with pytest.raises(refusal):
-            recorded.instance.prompt_recorded(ref, lease, operation_ref='new-turn', prompt=[], timeout=.2)
+            recorded.instance.prompt(ref, lease, operation_ref='new-turn', prompt=[], timeout=.2)
         with pytest.raises(UnitRecordsRefused, match='unresolved'):
             acp_turns.reserve(recorded.records, ref, 'new-turn', {'prompt':[], 'sessionId':'controlled-native-session'})
     assert result['summary']['successfulRpcResponse'] is False
     from ordessa_units.admission.connection import ConnectionLeaseRefused
     refusal = ConnectionLeaseRefused if mode == 'lost' else UnitRecordsRefused
     with pytest.raises(refusal):
-        recorded.instance.prompt_recorded(ref, lease, operation_ref='failure-1', prompt=[], timeout=.2)
+        recorded.instance.prompt(ref, lease, operation_ref='failure-1', prompt=[], timeout=.2)
     with recorded.records.journal._connect() as db:
         assert db.execute('SELECT count(*) FROM harness_acp_turn_attempts').fetchone()[0] == 1
     assert recorded.events.count('spawn') == 1
@@ -145,7 +141,7 @@ def test_known_remote_failure_and_unknown_are_not_success_or_replay(recorded, mo
 @pytest.mark.parametrize('field,rehash', [('summary', False), ('summary', True), ('frame', True), ('session', True)])
 def test_integrity_damage_refuses_cold_result_read(recorded, field, rehash):
     ref, lease = start(recorded)
-    result = recorded.instance.prompt_recorded(ref, lease, operation_ref='integrity-1', prompt=[], timeout=2)
+    result = recorded.instance.prompt(ref, lease, operation_ref='integrity-1', prompt=[], timeout=2)
     with recorded.records.journal._connect() as db:
         row = db.execute('SELECT * FROM harness_acp_turn_attempts').fetchone()
         body = json.loads(row['body_json'])
@@ -155,7 +151,7 @@ def test_integrity_damage_refuses_cold_result_read(recorded, field, rehash):
             body['request']['raw']['id'] = 'different'
         else:
             body['nativeBinding']['sessionId'] = 'foreign'
-        from ordessa_execution_api.environment.operations import safe_json
+        from ordessa_infrastructure.encoding.immutable_json import safe_json
         db.execute('UPDATE harness_acp_turn_attempts SET body_json=?,body_digest=?',
                    (safe_json(body), acp_turns.digest(body) if rehash else row['body_digest']))
     with pytest.raises(UnitRecordsRefused):
@@ -170,7 +166,7 @@ def test_frozen_request_mutation_is_refused_before_native_bytes(recorded, monkey
         return original(owner, operation, changed)
     monkeypatch.setattr(acp_turns, 'dispatch', mutate)
     with pytest.raises(UnitRecordsRefused, match='frozen prompt'):
-        recorded.instance.prompt_recorded(ref, lease, operation_ref='mutation-1', prompt=[], timeout=2)
+        recorded.instance.prompt(ref, lease, operation_ref='mutation-1', prompt=[], timeout=2)
     expected = UnitRecords.acp_prompt_input_digest(ref, {'prompt':[], 'sessionId':'controlled-native-session'})
     result = query(recorded.records, recorded, ref, 'mutation-1', expected)
     assert result['state'] == 'unknown' and result['request'] is None
@@ -183,7 +179,7 @@ def test_observation_persistence_failure_cannot_be_reported_as_completed(recorde
         raise RuntimeError('controlled original journal observation failure')
     monkeypatch.setattr(acp_turns, 'observe', fail)
     with pytest.raises(RuntimeError, match='durable ACP observation'):
-        recorded.instance.prompt_recorded(ref, lease, operation_ref='capture-1', prompt=[], timeout=2)
+        recorded.instance.prompt(ref, lease, operation_ref='capture-1', prompt=[], timeout=2)
     expected = UnitRecords.acp_prompt_input_digest(ref, {'prompt':[], 'sessionId':'controlled-native-session'})
     result = query(recorded.records, recorded, ref, 'capture-1', expected)
     assert result['state'] == 'unknown'
@@ -192,7 +188,7 @@ def test_observation_persistence_failure_cannot_be_reported_as_completed(recorde
 
 def test_query_rejects_foreign_unit_and_nonquery_invocation(recorded):
     ref, lease = start(recorded)
-    result = recorded.instance.prompt_recorded(ref, lease, operation_ref='authorized-1', prompt=[], timeout=2)
+    result = recorded.instance.prompt(ref, lease, operation_ref='authorized-1', prompt=[], timeout=2)
     invocation = recorded.authority.issue('query')
     invocation.facts['inputDigest'] = UnitRecords.acp_turn_query_digest(ref, 'authorized-1', result['inputDigest'])
     with pytest.raises(UnitRecordsRefused, match='verified invocation'):
@@ -217,6 +213,90 @@ def test_revoked_cached_lease_cannot_reserve_durable_operation(recorded):
     recorded.leases.revoke(ref)
     from ordessa_units.admission.connection import ConnectionLeaseRefused
     with pytest.raises(ConnectionLeaseRefused):
-        recorded.instance.prompt_recorded(ref, lease, operation_ref='revoked-1', prompt=[], timeout=2)
+        recorded.instance.prompt(ref, lease, operation_ref='revoked-1', prompt=[], timeout=2)
     with recorded.records.journal._connect() as db:
         assert db.execute('SELECT count(*) FROM harness_acp_turn_attempts').fetchone()[0] == 0
+
+
+def _historical_rows(records):
+    with records.journal._connect() as db:
+        return {table: tuple(tuple(row) for row in db.execute('SELECT * FROM ' + table))
+                for table in ('harness_unit_reservations', 'harness_unit_sessions',
+                              'harness_unit_confirmations', 'harness_unit_terminations',
+                              'harness_acp_turn_attempts')}
+
+
+def _read_historical(world, token):
+    ref = world.unit.public_ref
+    expected = world.receipt['inputDigest']
+    return world.records.query_acp_turn(ref, 'historical-turn', token,
+        input_digest=world.records.acp_turn_query_digest(ref, 'historical-turn', expected),
+        expected_prompt_input_digest=expected)
+
+
+def test_historical_acp_read_keeps_original_rows_and_all_execution_fences(historical_query_world):
+    world = historical_query_world
+    before = _historical_rows(world.records)
+    request, token = _historical_query(world)
+    assert _read_historical(world, token) == world.receipt
+    assert _read_historical(world, token) == world.receipt
+    assert world.issuer.verified_observation(token) is True
+    assert world.issuer.verified_consumption(token) is False
+    assert world.store.read_operation_step(request, 'read') is None
+    with pytest.raises(UnitRecordsRefused, match='historical'):
+        world.records.owner_read_unit(world.unit.unit_ref)
+    with pytest.raises(UnitRecordsRefused, match='historical'):
+        acp_turns.reserve(world.records, world.unit.public_ref, 'another-turn',
+                          {'prompt': [], 'sessionId': 'original-session'})
+    for effect in (lambda: acp_turns.dispatch(world.records, 'historical-turn', {}),
+                   lambda: acp_turns.observe(world.records, 'historical-turn', {}),
+                   lambda: acp_turns.finish(world.records, 'historical-turn', 'unknown')):
+        with pytest.raises(UnitRecordsRefused, match='historical'):
+            effect()
+    assert _historical_rows(world.records) == before
+
+
+@pytest.mark.parametrize('change', ['revoked', 'expired', 'generation', 'foreign-ticket'])
+def test_historical_acp_read_revalidates_current_query_ticket(historical_query_world, change):
+    from ordessa_units.admission.invocation import InvocationAuthorityRefused
+    from ordessa_interfaces.system_access.contracts.transport import AccessError
+    world = historical_query_world
+    before = _historical_rows(world.records)
+    _request, token = _historical_query(world)
+    if change == 'revoked':
+        world.access.revoke()
+    elif change == 'expired':
+        world.now[0] = world.permission.expires_at + 1
+    elif change == 'generation':
+        world.owner.environment.snapshot.generation += 1
+    else:
+        token = SimpleNamespace(facts=dict(token.facts))
+    with pytest.raises((InvocationAuthorityRefused, AccessError)):
+        _read_historical(world, token)
+    assert _historical_rows(world.records) == before
+
+
+@pytest.mark.parametrize('field', ['input', 'nativeBinding'])
+def test_historical_acp_read_still_checks_original_body_provenance(historical_query_world, field):
+    world = historical_query_world
+    _request, token = _historical_query(world)
+    with world.records.journal._connect() as db:
+        row = db.execute('SELECT * FROM harness_acp_turn_attempts').fetchone()
+        body = json.loads(row['body_json'])
+        if field == 'input':
+            body['input']['params']['prompt'] = [{'type': 'text', 'text': 'substituted'}]
+        else:
+            body['nativeBinding']['sessionId'] = 'another-original-session'
+        # Even rehashed data must pass the existing semantic/source checks.
+        db.execute('UPDATE harness_acp_turn_attempts SET body_json=?,body_digest=?',
+                   (acp_turns._json(body), acp_turns.digest(body)))
+    with pytest.raises(UnitRecordsRefused, match='integrity|provenance'):
+        _read_historical(world, token)
+
+
+def test_historical_acp_read_refuses_missing_identity_resolver(historical_query_world, monkeypatch):
+    world = historical_query_world
+    _request, token = _historical_query(world)
+    monkeypatch.setattr(world.records, 'owner_read_unit_for_query', None)
+    with pytest.raises(UnitRecordsRefused, match='resolver unavailable'):
+        _read_historical(world, token)

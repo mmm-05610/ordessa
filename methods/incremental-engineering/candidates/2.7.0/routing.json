@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "routes": [
+    {"action_id": "incremental.prepare-packages", "profile_ref": {"kind": "caller_input", "input": "profile"}},
+    {"action_id": "incremental.implement-package", "profile_ref": {"kind": "caller_input", "input": "profile"}}
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "document_type": "implementation-package",
+  "schema_version": 1,
+  "brief": "在已批准两文件范围内修复负数上限，并运行指定测试。",
+  "steps": [
+    {
+      "step_id": "S1",
+      "description": "最小更改 normalize_limit。",
+      "input_paths": [
+        "src/limits.py"
+      ],
+      "output_paths": [
+        "src/limits.py"
+      ]
+    },
+    {
+      "step_id": "S2",
+      "description": "加入边界用例并运行测试。",
+      "input_paths": [
+        "tests/test_limits.py"
+      ],
+      "output_paths": [
+        "tests/test_limits.py"
+      ]
+    }
+  ],
+  "allowed_paths": [
+    "src/limits.py",
+    "tests/test_limits.py"
+  ],
+  "tests": [
+    {
+      "test_id": "T1",
+      "test_command_key": "test-limits",
+      "description": "运行 pytest tests/test_limits.py。",
+      "expected_exit_code": 0
+    }
+  ],
+  "stop_conditions": [
+    "基线不匹配",
+    "需要更改允许列表之外的文件",
+    "需要发布、网络传输或新权限"
+  ],
+  "return_items": [
+    "精确 patch 与输出 tree",
+    "测试命令、退出码与日志",
+    "执行 attempt 和原生记录引用"
+  ]
+}

@@ -6,8 +6,8 @@ The core verifies every identity field against the ORIGINAL operation/step
 facts and fixes one immutable FixedEffectScope before any staged phase may be
 appended. Verification outcomes are three-way by construction:
 
-  mismatch -> typed IdentityMismatchError, refused before any dispatch;
-  unknown  -> UnknownResultError, the original occupation is kept: nothing is
+  mismatch -> typed UnitIdentityMismatch, refused before any dispatch;
+  unknown  -> UnitOperationUnknown, the original occupation is kept: nothing is
               appended, sealed or called (preparation-effects freeze s1);
   verified -> one FixedEffectScope whose effect_digest binds the sealed phase.
 
@@ -24,8 +24,8 @@ import re
 from types import MappingProxyType
 from typing import Any, Mapping
 
-from ordessa_execution_api.environment.errors import IdentityMismatchError, UnknownResultError
-from ordessa_execution_api.environment.operations import safe_json, sealed_mapping
+from ordessa_units.errors import UnitIdentityMismatch, UnitOperationUnknown
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 
@@ -393,11 +393,11 @@ def verify_preparation_effect(plan: PreparationEffectPlan, *, target, scope, bef
     the action sequence must be an in-order subsequence of the approved set;
     item 5 recovery_correlation must match a same-action original step, and a
     new action key may not reuse any original correlation. Any known mismatch
-    is a typed IdentityMismatchError refused before dispatch; any unknown fact
-    is an UnknownResultError and the caller keeps its original occupation.
+    is a typed UnitIdentityMismatch refused before dispatch; any unknown fact
+    is an UnitOperationUnknown and the caller keeps its original occupation.
     """
     if type(plan) is not PreparationEffectPlan:
-        raise IdentityMismatchError("a fixed PreparationEffectPlan is required")
+        raise UnitIdentityMismatch("a fixed PreparationEffectPlan is required")
     mismatches: list[str] = []
     unknowns: list[str] = []
     for label, plan_value, original_value in (
@@ -421,7 +421,7 @@ def verify_preparation_effect(plan: PreparationEffectPlan, *, target, scope, bef
         known = set()
         for item in verified_materials:
             if not isinstance(item, Mapping):
-                raise UnknownResultError("verified material facts are unavailable; occupation kept")
+                raise UnitOperationUnknown("verified material facts are unavailable; occupation kept")
             known.add(safe_json({"immutableMaterialRef": item.get("immutableMaterialRef"),
                                  "contentDigest": item.get("contentDigest")}))
         for item in plan.material_refs:
@@ -454,11 +454,11 @@ def verify_preparation_effect(plan: PreparationEffectPlan, *, target, scope, bef
             elif step.recovery_correlation in original_values:
                 mismatches.append("recoveryCorrelations")
     if mismatches:
-        raise IdentityMismatchError(
+        raise UnitIdentityMismatch(
             "preparation effect plan differs from the fixed operation facts: "
             + ", ".join(sorted(set(mismatches))))
     if unknowns:
-        raise UnknownResultError(
+        raise UnitOperationUnknown(
             "preparation effect verification is unknown; occupation kept: "
             + ", ".join(sorted(set(unknowns))))
     action_ids = tuple(step.action_id for step in plan.steps)

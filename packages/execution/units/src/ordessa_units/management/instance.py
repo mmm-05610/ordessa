@@ -8,7 +8,7 @@ from ordessa_units.lifecycle.unit_lifecycle import UnitLifecycle, UnitLifecycleR
 from ordessa_units.sessions.acp_factory import AcpChannelFactory
 from ordessa_units.sessions.callbacks import UnitCallbacks
 from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref, decode_revision
-from ordessa_execution_api.environment.operations import safe_json, sealed_mapping
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_units.lifecycle.unit_lifecycle import same_reference, plain
 from collections.abc import Mapping
 from ordessa_units.definitions import UnitDefinition
@@ -230,20 +230,6 @@ class UnitInstance(UnitLifecycle):
         finally:
             self._lifecycle_lock.release()
 
-    def prompt(self, unit_ref, authorized_lease, **params):
-        # A consumer still passes through the original lease port. Native
-        # side-effect permissions/fs/terminal callbacks are explicit inputs.
-        if self._effect_write_guard_factory is not None:
-            raise UnitLifecycleRefused('Guarded Unit requires original recorded operation prompt')
-        session_id = self.projection.read_session(unit_ref).native_facts['sessionId']
-        if params.get('sessionId', session_id) != session_id:
-            raise UnitLifecycleRefused('Prompt belongs to a different fixed Run session')
-        if 'on_request' in params:
-            raise UnitLifecycleRefused('Unit callbacks are bound to the original environment/approval owner')
-        params['on_request'] = self.callbacks.handle
-        params['sessionId'] = session_id
-        return self.connect(unit_ref, authorized_lease).prompt(**params)
-
     def connect(self, unit_ref, authorized_lease):
         self.describe_access(unit_ref)
         key = (unit_ref['unitId'], id(authorized_lease))
@@ -255,9 +241,21 @@ class UnitInstance(UnitLifecycle):
             self._connections[key] = (authorized_lease, entry)
             return entry
 
-    def prompt_recorded(self, unit_ref, authorized_lease, *, operation_ref, timeout=60, **params):
-        """One explicitly recorded ACP operation on the original journal/lease."""
-        from ordessa_units.sessions.recorded_prompt import prompt_recorded
+    def prompt(self, unit_ref, authorized_lease, *, operation_ref, timeout=60, params=None,
+               managed_input=None, **native):
+        """Send one prompt through the original ACP journal/lease path."""
+        if params is not None and native:
+            raise UnitLifecycleRefused('Recorded prompt payload must use one mapping entry')
+        if params is None:
+            params = native
+        elif not isinstance(params, Mapping):
+            raise UnitLifecycleRefused('Recorded prompt payload mapping required')
+        else:
+            params = dict(params)
+        if (self.records.acp_turn_available is not True
+                or self.records.journal.acp_turn_opt_in is not True):
+            raise UnitLifecycleRefused('Original ACP durable-record opt-in is unavailable')
+        from ordessa_units.sessions.prompt import prompt
         # The durable reservation starts before the wire write, and finishing
         # the original receipt may continue after the native response arrives.
         # Keep the original SDK admission open for that entire transaction.
@@ -274,8 +272,8 @@ class UnitInstance(UnitLifecycle):
         # The original SDK owner tracks the full request/receipt span. Do not
         # hold the Unit lifecycle lock while the SDK loop waits for a peer.
         with admitted():
-            return prompt_recorded(self, unit_ref, authorized_lease,
-                operation_ref=operation_ref, timeout=timeout, params=params)
+            return prompt(self, unit_ref, authorized_lease,
+                operation_ref=operation_ref, timeout=timeout, params=params, managed_input=managed_input)
 
     def _acquire_selection_fence(self, validator):
         if not callable(validator):
@@ -314,7 +312,7 @@ class UnitInstance(UnitLifecycle):
             from ordessa_units.sessions.sdk_client import SdkAcpClient
             client = record.entry
             if type(client) is not SdkAcpClient:
-                # ProcessChannel.attach can fail after the Environment has
+                # Channel attachment can fail after the Environment has
                 # spawned the original process but before any SDK/channel IO
                 # exists. Permit cleanup only for the exact retained factory
                 # placeholder, registered to one original Unit whose session
@@ -339,6 +337,24 @@ class UnitInstance(UnitLifecycle):
                         and self._owned_record(unit) is record)
             quiesce = getattr(client, 'try_quiesce', None)
             return callable(quiesce) and quiesce() is True
+        finally:
+            self._lifecycle_lock.release()
+
+    def quiescence_observation(self):
+        """Read-only close diagnostics; this never proves or changes idleness."""
+        if not self._lifecycle_lock.acquire(blocking=False):
+            return {'reason': 'lifecycle_lock_busy'}
+        try:
+            if self._selection_fences:
+                return {'reason': 'selection_fence_active',
+                        'selection_fences': len(self._selection_fences)}
+            record = self.channel_factory.owned_record
+            if record is None:
+                return {'reason': 'owned_process_unavailable'}
+            from ordessa_units.sessions.sdk_client import SdkAcpClient
+            if type(record.entry) is not SdkAcpClient:
+                return {'reason': 'original_sdk_unavailable'}
+            return record.entry.quiescence_observation()
         finally:
             self._lifecycle_lock.release()
 

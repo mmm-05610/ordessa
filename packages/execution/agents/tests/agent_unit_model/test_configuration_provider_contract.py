@@ -6,7 +6,7 @@ resolution, compilation, Harness control, or native configuration effects.
 """
 import pytest
 
-from ordessa_execution_api.environment import ActivationRef
+from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
 from ordessa_execution_agents.harness.definitions.configuration_providers import ConfigurationContractError
 from ordessa_units.public import (
     CONFIGURATION_METHODS,
@@ -44,7 +44,7 @@ def _pin(*, provider_id=_PROVIDER_ID, contract_version=CONFIGURATION_PROVIDER_VE
         provider_id,
         contract_version,
         implementation_digest,
-        owner_activation or ActivationRef(_ENV, "extension.configuration-alpha", 3),
+        owner_activation or HarnessActivationRef(_ENV, "extension.configuration-alpha", 3),
     )
 
 
@@ -194,8 +194,8 @@ def test_same_resource_may_have_distinct_purposes_only_with_distinct_reference_i
 @pytest.mark.parametrize("wrong_pin", [
     _pin(provider_id="configuration.other"),
     _pin(implementation_digest="sha256:" + "c" * 64),
-    _pin(owner_activation=ActivationRef(_ENV, "extension.configuration-alpha", 4)),
-    _pin(owner_activation=ActivationRef("other-env", "extension.configuration-alpha", 3)),
+    _pin(owner_activation=HarnessActivationRef(_ENV, "extension.configuration-alpha", 4)),
+    _pin(owner_activation=HarnessActivationRef("other-env", "extension.configuration-alpha", 3)),
 ])
 def test_expected_provider_pin_mismatch_is_rejected_even_when_extraction_is_self_consistent(wrong_pin):
     with pytest.raises(ConfigurationContractError):
@@ -341,7 +341,7 @@ def test_provider_version_and_digest_have_exact_safe_encodings():
             _PROVIDER_ID,
             "agent-configuration-provider/2",
             _PROVIDER_DIGEST,
-            ActivationRef(_ENV, "extension.configuration-alpha", 3),
+            HarnessActivationRef(_ENV, "extension.configuration-alpha", 3),
         )
     with pytest.raises(ConfigurationContractError):
         _descriptor(contract_version="agent-configuration-provider/2")
@@ -381,7 +381,7 @@ def test_expected_pin_rejects_a_different_caller_claimed_owner_generation():
     # A syntactically valid caller-created pin is not Registry admission,
     # authorization, or proof that a provider was invoked. The pure validator
     # only compares it with the independently fixed expected identity.
-    caller_pin = _pin(owner_activation=ActivationRef(_ENV, "caller.claimed-owner", 99))
+    caller_pin = _pin(owner_activation=HarnessActivationRef(_ENV, "caller.claimed-owner", 99))
     extraction = _extraction(pin=caller_pin)
     with pytest.raises(ConfigurationContractError):
         _validate(_descriptor(), extraction, pin=_pin())

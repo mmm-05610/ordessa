@@ -13,6 +13,7 @@ from ..contracts.run_waits import ReviewReadiness, ReviewReadinessBindings
 from ..contracts.snapshots import ResolvedReviewMaterial
 from ..contracts.execution_dispatch import EXECUTION_DISPATCH
 from ..contracts.errors import ApplicationError
+from ..contracts.failure_diagnostic import FailureDiagnostic
 from ..contracts.mixed_reviews import MixedReviewerAuthorityPort
 from ...domain.changes.dispatch import DispatchBinding
 from ...domain.common.models.refs import BlobRef
@@ -29,7 +30,7 @@ from ..orchestration.profile_selection import select_method_profile, select_and_
 __all__ = ["EngineeringService", "SUPPORTED_COMMANDS", "SUPPORTED_QUERIES", "CommandContext",
            "CommandResult", "ReadSet", "WorkReviewSelector", "decode_work_review_selector",
            "work_review_selector_projection", "EXECUTION_DISPATCH", "DispatchBinding", "BlobRef",
-           "ApplicationError", "bound_review_check_capabilities",
+           "ApplicationError", "FailureDiagnostic", "bound_review_check_capabilities",
            "OwnerOperationResult", "UnitReviewBinding", "UnitReviewBindingResolver",
            "UnitReviewerAuthority", "NativeReviewInvocation", "MixedReviewerAuthorityPort",
            "ReviewerAssignmentRef", "ASSIGN_REVIEWER", "REVOKE_REVIEWER",

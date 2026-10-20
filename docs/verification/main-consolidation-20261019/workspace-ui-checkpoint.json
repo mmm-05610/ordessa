@@ -1,0 +1,61 @@
+{
+  "scope": "Workspace binding identity and Profile UI current operation consumer only",
+  "files": [
+    {
+      "path": "plugins/agents/workspace/src/ordessa_workspace/__init__.py",
+      "sha256": "48519e5a6b8e55a32c42feb91eaee2a8ae636098aefc62165d2eb034c7e1f212"
+    },
+    {
+      "path": "plugins/agents/workspace/src/ordessa_workspace/directory_binding.py",
+      "sha256": "356f1fbe690eb9446dbb36de98bd453e5b95d5832e68b5f597134bf1421c06d6"
+    },
+    {
+      "path": "plugins/agents/workspace/src/ordessa_workspace/public.py",
+      "sha256": "85dd5764e266c71586cb660f77cf06e0f23434b79a37efcefd7d4786cc828913"
+    },
+    {
+      "path": "plugins/agents/workspace/src/ordessa_workspace/records.py",
+      "sha256": "e1e847ee854126c66c3478df568a136ac2cdf8bf25d8af1242b042be759ef1c3"
+    },
+    {
+      "path": "plugins/agents/profiles/ui/frontend/src/entry.tsx",
+      "sha256": "2bed427f46dc582cf1a8567158f80b54e0bb6aeccdc28090b486777c7f6f7f89"
+    },
+    {
+      "path": "plugins/agents/profiles/ui/frontend/src/wire-client.ts",
+      "sha256": "a6e96b181e78c168ec440811f3d68bc30623f4b89b03814d392ad0d684730f77"
+    },
+    {
+      "path": "plugins/agents/profiles/ui/frontend/tests/wire-client.test.ts",
+      "sha256": "60d285b1e9482e2c0eeb01127959641abaa8692306c2e37f48a47de9abe07460"
+    },
+    {
+      "path": "plugins/agents/profiles/ui/frontend/tsconfig.json",
+      "sha256": "5735f3a0f0f1b5dd1907b5df2909b165a486edeac80d471c0fa760ffa5d4da4c"
+    }
+  ],
+  "originalErrorClasses": {
+    "DirectoryBindingRefused": "original AST unchanged",
+    "DirectoryBindingUnavailable": "original AST unchanged",
+    "DirectoryBindingIdentityMismatch": "original AST unchanged"
+  },
+  "workspaceTests": {
+    "command": "python -I -S /tmp/ordessa-run-isolated-pytests.py TARGET workspace-current-ref-checkpoint tests/integration/packages_convergence/test_workspace_binding_ref_owner.py",
+    "passed": 10,
+    "skipped": 0
+  },
+  "frontendTypecheck": {
+    "command": "npm run --workspace plugins/agents/profiles/ui/frontend typecheck",
+    "exit": 0
+  },
+  "qualification": "Not Workspace sandbox/CRUD, installed distribution, full product, desktop launch or Engineering acceptance",
+  "knownLegacyWorkspaceProbe": "local_environment.py:_host_sandbox_probe still references retired sandbox_resolution; unchanged and not exercised by this cohort",
+  "conflictTargetsResolved": 190,
+  "conflictTargetsPending": 33,
+  "frontendTests": {
+    "command": "npm run --workspace plugins/agents/profiles/ui/frontend test",
+    "passed": 8,
+    "files": 2,
+    "exit": 0
+  }
+}

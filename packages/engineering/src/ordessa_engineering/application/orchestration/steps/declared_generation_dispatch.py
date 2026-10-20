@@ -50,6 +50,7 @@ from ordessa_engineering.domain.changes.dispatch import DispatchBinding
 from ordessa_engineering.domain.changes.dispatch_codec import decode_dispatch, encode_dispatch
 from ordessa_engineering.domain.common.models.values import Digest, validate_id
 from ordessa_engineering.domain.common.models.refs import BlobRef
+from ordessa_engineering.domain.common.mechanisms.codec import decode_blob_ref
 from ordessa_infrastructure.encoding import canonical_bytes, decode_json
 from ordessa_engineering.application.orchestration.declared_prepare_packages import verify_reviewed_change
 from ordessa_engineering.domain.artifacts.provenance_codec import decode_source
@@ -252,6 +253,56 @@ class DeclaredGenerationDispatch:
         return frozen
 
     # -- the transport sequence ----------------------------------------------
+    def read_completed_generation(self, operation_ref, context, *, current_work_id,
+                                  change_ref, review_ref, method_ref, baseline, candidate):
+        """Read an explicitly selected prior result without re-entering its Work.
+
+        The same original relation, review admission and blob authority are
+        used. A completed native turn is required even when its outer package
+        operation was rejected; unknown native attempts cannot be selected.
+        """
+        # This is an admission prerequisite of the exact dispatch child, not
+        # a second Work query. Production leases admit one operation at a time.
+        self._access(context, "engineering.executions.dispatch")
+        validate_id(operation_ref)
+        with self.factory.begin(context.scope, "read") as uow:
+            row = uow.work_dispatch.by_operation(operation_ref, context.scope)
+            binding = decode_dispatch(row["binding_bytes"])
+            work = binding.work or {}
+            if (binding.binding_version != 2
+                    or row["dispatch_phase"] != "completed"
+                    or row["execution_operation_ref"] != operation_ref
+                    or binding.execution_operation_ref != operation_ref
+                    or row["dispatch_fence"] != binding.fence
+                    or row["binding_digest"] != _digest(row["binding_bytes"])
+                    or row["result_blob_json"] is None
+                    or work.get("action_id") != "incremental.prepare-packages"
+                    or binding.step_id != "draft" or binding.attempt != 1
+                    or work.get("work_id") == current_work_id
+                    or len(binding.action_instances) != 1
+                    or binding.action_instances[0][0] != _GENERATE):
+                raise ApplicationError("WORK_ACTION_GENERATION_REWORK_INVALID")
+            self._require_work_proposal(uow, current_work_id, change_ref, method_ref)
+            self._require_work_proposal(uow, work["work_id"], change_ref, method_ref)
+            evidence = self.verified_reviewed_change(
+                uow, context, change_ref=change_ref, review_ref=review_ref,
+                method_ref=method_ref, inputs_digest=binding.prompt_input_digest,
+                baseline=baseline, candidate=candidate)
+            self._reentry_matches(row, work["work_id"], work["action_id"],
+                binding.step_id, binding.attempt, context, binding.prompt_input_digest,
+                evidence=evidence)
+            existing = self._existing(uow, work["work_id"], work["action_id"],
+                                      binding.step_id, binding.attempt)
+            if existing is None or existing["binding_bytes"] != row["binding_bytes"]:
+                raise ApplicationError("WORK_ACTION_GENERATION_REWORK_INVALID")
+        self._guard_admission(context, evidence, review_ref, method_ref, baseline, candidate)
+        # Neither freeze_input nor send is used: either could resolve an old
+        # live Unit. Content-addressed prior prompt/result bytes are read only.
+        self.blobs.read_verified(binding.prompt_ref)
+        outcome = self._view(row, already_dispatched=True)
+        self.blobs.read_verified(decode_blob_ref(outcome["result_blob_ref"]))
+        return outcome, binding
+
     def dispatch_generation(self, work_id, action_id, step_id, attempt, unit_ref, params,
                             context, *, change_ref, review_ref, method_ref,
                             input_snapshot=None, timeout=60):

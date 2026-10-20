@@ -336,7 +336,7 @@ def compile_config(materials: Mapping[str, Any]) -> dict:
     return {"thread_params": thread_params, "args": [], "deferred": deferred}
 
 
-def capability_matrix() -> dict[str, dict]:
+def _historical_capability_matrix() -> dict[str, dict]:
     """declared/implemented/observed per capability; never all-true (seams §4).
 
     The local artifact is broken, so this package has observed nothing of the
@@ -358,3 +358,13 @@ def capability_matrix() -> dict[str, dict]:
         "transportFence": {"declared": "no", "implemented": "no", "observed": "no"},
         "requestReconciliation": {"declared": "yes", "implemented": "yes", "observed": "no"},
     }
+
+
+def capability_matrix() -> dict[str, dict]:
+    """Current SDK availability; observed values retain their historical scope."""
+    matrix=_historical_capability_matrix()
+    for name,row in matrix.items():
+        if name not in ('modelConfig','sessionPersist') and ('client' in row['implemented'] or row['implemented'] in ('yes','reply')):
+            row['implemented']='unavailable (original-owner native protocol pending); historical requirement: '+row['implemented']
+        if name=='modelConfig':row['implemented']='pure compile only'
+    return matrix

@@ -1,0 +1,37 @@
+{
+  "scope": "schema generator relocation and current SDK mirror packaging only",
+  "incoming": "a23cadf5:products/agent-tools/packaging/generate_schema.py",
+  "actualOwner": "tooling/generation/generate-agent-cli-schemas.py",
+  "files": [
+    {
+      "path": "tooling/generation/generate-agent-cli-schemas.py",
+      "sha256": "08dafebb7e78302a255b9d93e62427b2c018f150773d0696e3ad77062567c356"
+    },
+    {
+      "path": "packages/interfaces/transport/client/python/pyproject.toml",
+      "sha256": "cd75085c20e7900ae2a6043782df6da384f62e36a109cb9b9aeab82cff08c8d7"
+    },
+    {
+      "path": "packages/interfaces/transport/client/python/src/ordessa_system_access_client/sdk-contract-catalog.json",
+      "sha256": "65b164b865309db57dda560b2a193ed68a3397d4f035ac84fbc54519a757b923"
+    }
+  ],
+  "validation": {
+    "command": "python -I -S /tmp/ordessa-diagnose-launch-imports.py",
+    "schemaGeneratorExit": 0,
+    "mirrorVerifiedAgainst": "current Agent SDK contract_catalog and contract_catalog_digest",
+    "currentTransportWheelBuilt": true
+  },
+  "additionalUncommittedConsumerCohort": {
+    "passed": 2,
+    "skip": 0,
+    "test": "tests/integration/packages_convergence/test_agent_tools_capability_consumer.py",
+    "qualification": "uses freshly rebuilt app wheels; not whole CLI bundle acceptance"
+  },
+  "notQualified": [
+    "old RPC bundle publisher",
+    "installed CLI dependency closure",
+    "HTTP default launch",
+    "Engineering compatibility"
+  ]
+}

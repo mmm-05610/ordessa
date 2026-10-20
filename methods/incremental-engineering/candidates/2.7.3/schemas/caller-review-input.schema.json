@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Candidate caller-supplied review materials. SourceRef equality, scope binding, check completeness, and excerpt membership in captured source text require deterministic adapter validation. Supplied text and references do not prove truth or semantic support.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scope", "baseline", "candidate", "checks"],
+  "properties": {
+    "scope": {"$ref": "scope.schema.json"},
+    "baseline": {"$ref": "source-ref.schema.json"},
+    "candidate": {"$ref": "source-ref.schema.json"},
+    "checks": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["check_id", "claim", "evidence"],
+        "properties": {
+          "check_id": {
+            "enum": [
+              "source-version-preservation",
+              "scoped-read-boundary",
+              "evidence-support",
+              "unique-record-authority",
+              "public-call-chain",
+              "changed-source-refusal",
+              "acceptance-coverage",
+              "declared-limitations"
+            ]
+          },
+          "claim": {"type": "string", "minLength": 1},
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["source_ref", "excerpt"],
+              "properties": {
+                "source_ref": {"$ref": "source-ref.schema.json"},
+                "excerpt": {"type": "string", "minLength": 1}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

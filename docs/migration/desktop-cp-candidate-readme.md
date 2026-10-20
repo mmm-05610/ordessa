@@ -8,7 +8,7 @@ This branch is an isolated HD-002 candidate based on FC integration commit `d14a
 
 The candidate excludes the old direct Pi and Codex desktop connectors, the empty Settings provider, and the empty interactions extension. Conversation still renders Server-backed approval cards. The source for excluded prototypes remains in the original FC and executor branch history.
 
-`tooling/build-all.mjs` builds only admitted extensions and checks their `@extensions/` dependency closure. It clears the previous extension output first. `products/desktop/extensions.lock.json` records SHA-256 digests of that clean output; the runtime uses `extensions.json` as its enabled list. User `extensions.json` is a complete override and is never rewritten by the host.
+`tooling/workspace/build-all.mjs` builds only admitted extensions and checks their `@extensions/` dependency closure. It clears the previous extension output first. `products/desktop/extensions.lock.json` records SHA-256 digests of that clean output; the runtime uses `extensions.json` as its enabled list. User `extensions.json` is a complete override and is never rewritten by the host.
 
 ## Local verification
 

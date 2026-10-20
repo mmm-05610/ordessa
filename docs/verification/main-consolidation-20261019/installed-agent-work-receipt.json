@@ -1,0 +1,82 @@
+{
+  "basisCommit": "18d6431109aac9526551cf89839a88870a70bd43",
+  "filesSha256": {
+    "tests/integration/packages_convergence/installed_server_fixture.py": "2d4d363c98f561a86a38d7aeaa597750ce48da148c94fe529ce6268f6e5f36a6",
+    "tests/integration/packages_convergence/test_installed_agent_work.py": "618a988b3aa66cec643dfe0d72ec9f6d98ea770fad0c20769b5c2b8ee8ab37ef",
+    "tests/integration/packages_convergence/test_agent_guarded_bootstrap.py": "61fe2b296a47eda13b64880ded92553c15d9ac1b1e786fbb4b3c4ad24013336c"
+  },
+  "build": {
+    "python": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/installed-agent-work/snapshot-v1/venv/bin/python",
+    "console": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/installed-agent-work/snapshot-v1/venv/bin/ordessa",
+    "root": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/installed-agent-work/snapshot-v1",
+    "snapshotFiles": 2887,
+    "stable": true,
+    "selected": [
+      "decision-runtime",
+      "ordessa-engineering",
+      "ordessa-environments",
+      "ordessa-environments-local",
+      "ordessa-execution-agents",
+      "ordessa-harness-gemini-cli",
+      "ordessa-harness-pi",
+      "ordessa-infrastructure",
+      "ordessa-interfaces",
+      "ordessa-interfaces-contracts",
+      "ordessa-server",
+      "ordessa-server-plugin-api",
+      "ordessa-server-product",
+      "ordessa-system-access-bindings",
+      "ordessa-units"
+    ],
+    "pipCheck": {
+      "returncode": 1,
+      "stdout": "ordessa-server 2.0.0a1 requires secretstorage, which is not installed.\n",
+      "stderr": "WARNING: The directory '/home/maoqh/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\n"
+    }
+  },
+  "installedInnerPytest": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "3",
+    "time": "35.260",
+    "timestamp": "2026-10-19T18:54:01.626830+08:00",
+    "hostname": "maoqh-g15"
+  },
+  "ownerByteAudit": {
+    "modules": 517,
+    "errors": [],
+    "receipt": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/installed-agent-work/snapshot-v1/agent-work-imports.json"
+  },
+  "scope": "Fresh15localwheels including actual installed product entrypoint and selected Gemini harness. Actual completed/UNKNOWN/preparation-revoked Root→full Wire→Work→SDK scenarios. No source-owner fallback, models or network. This does not establish current default production trust bindings or all installed Engineering/report/registry paths.",
+  "pipelineCommands": [
+    "timeout60 ORIGINAL_P -I -S /tmp/ordessa-installed-root-build.py",
+    "timeout115 ORIGINAL_P -I -S /tmp/ordessa-run-installed-root.py (bounded local require_escalated)"
+  ],
+  "runnerFiles": [
+    "/tmp/ordessa-installed-root-build.py",
+    "/tmp/ordessa-run-installed-root.py"
+  ],
+  "sourceSnapshot": {
+    "before": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/installed-agent-work/source-before.json",
+    "after": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/installed-agent-work/source-after.json",
+    "stableFiles": 2887,
+    "qualification": "All53project py/toml/json/test files enumerated before/after15wheel build, with agents paused. Production source has changed subsequently; exact frozen snapshot remains authoritative."
+  },
+  "testFixtureChange": {
+    "reason": "Previously setup imported unselected Goose/Vibe packages for Gemini, despite explicit single-brand catalog. Import only the selected factory; original3brand parameterization and all test function AST unchanged.",
+    "originalTestFunctionASTPreserved": true,
+    "existingBrandRegression": {
+      "passed": 3,
+      "skipped": 0,
+      "seconds": 0.74,
+      "xml": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/engineering-dispatch-current-integration/root-selected-brand-fixture-regression.xml"
+    }
+  },
+  "earlierFailures": [
+    "Generated child runner syntax error, saved syntax-initial-result.json and syntax-initial-runner.py",
+    "3early fixture imports failed before native bootstrap; saved fixture-import-initial-* receipts"
+  ],
+  "qualification": "Two-stage actual build/run commands passed. The combined outer pytest convenience function has not separately been rerun; count3inner cases, not an extra outer pass. Missing SecretStorage remains pipcheck failure."
+}

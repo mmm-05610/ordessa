@@ -19,8 +19,9 @@ from agent_tools_fixtures.invocation_authority import Authority, CurrentState  #
 from agent_tools_fixtures.unit_records import ROOT, parts  # noqa: E402
 
 from ordessa_infrastructure.identifiers import RequestKey  # noqa: E402
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, safe_json  # noqa: E402
-from ordessa_units.public import SqliteUnitStore  # noqa: E402
+from ordessa_units.definitions.operations import OperationIntent, StepIntent
+from ordessa_infrastructure.encoding.immutable_json import safe_json  # noqa: E402
+from pacthold.adapters.sqlite.environment.store import SqliteStorePort  # noqa: E402
 from ordessa_units.bindings.contracts import DirectoryBindingRef  # noqa: E402
 from ordessa_units.admission.invocation import InvocationIssuer  # noqa: E402
 
@@ -75,7 +76,7 @@ def family_core_parts(tmp_path, *, with_session=False):
         "configuration": {"action": "applyConfiguration", "targetRef": target,
                           "delegationRef": None, "cleanup": False},
     }
-    store = SqliteUnitStore(tmp_path / "core.sqlite")
+    store = SqliteStorePort(tmp_path / "core.sqlite")
     steps = (StepIntent("prepare", FAMILY_PROVIDER, "input", "prepare-correlation"),
              StepIntent("start", FAMILY_PROVIDER, "start-input", "start-correlation"),
              StepIntent("configuration", FAMILY_PROVIDER, "change-input", "configuration-correlation"))

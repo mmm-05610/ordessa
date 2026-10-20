@@ -22,7 +22,7 @@ from agent_tools_fixtures.invocation_authority import Authority, CurrentState
 from agent_tools_fixtures.node_publication import Policy
 from ordessa_execution_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import EnvironmentId
+from ordessa_units.definitions.admission_identity import AdmissionNamespace
 from ordessa_execution_agents.harness.providers.registry.definition_admission import (
     HarnessDefinitionDescriptor, HarnessDefinitionDeclaration,
     HarnessInstallationObservation, HarnessAdmission, HarnessCatalog,
@@ -62,9 +62,12 @@ def build_joint_owner(tmp_path, *, acp_turn_opt_in=False, effect_write_guard_fac
     def retirement_guard(owner_id, generation):
         return context_owner["context"].provider_retirement_guard(owner_id, generation)
 
+    def harness_retirement_guard(owner_id, generation):
+        return context_owner["context"].harness_provider_retirement_guard(owner_id, generation)
+
     harness_catalog = HarnessCatalog(
         "env", policy=policy, principal_scope="principal", admission_lock=admission_lock,
-        retirement_guard=retirement_guard,
+        retirement_guard=harness_retirement_guard,
     )
     material_catalog = MaterialCatalog(
         "env", admission_lock=admission_lock, retirement_guard=retirement_guard,
@@ -137,7 +140,7 @@ def build_joint_owner(tmp_path, *, acp_turn_opt_in=False, effect_write_guard_fac
             return ConfigurationResources(agent.harness.resources.kind, directory_path, True)
 
         def create_instance(environment_id, plan, provider_view):
-            if environment_id != EnvironmentId("env") or provider_view.records is not records or provider_view.verifier is not verifier:
+            if environment_id != AdmissionNamespace("env") or provider_view.records is not records or provider_view.verifier is not verifier:
                 raise ValueError("fixture factory requires the original Environment and owner view")
             factory_calls.append((environment_id, plan, provider_view))
             from ordessa_execution_agents.profiles import decode_revision_ref
@@ -175,7 +178,7 @@ def build_joint_owner(tmp_path, *, acp_turn_opt_in=False, effect_write_guard_fac
             acp_turn_opt_in=acp_turn_opt_in,
             lifecycle_observation_port=None, termination_evidence=evidence,
         )
-        manager = bind_unit_manager(inputs, environment_id=EnvironmentId("env"), provider_view=view)
+        manager = bind_unit_manager(inputs, environment_id=AdmissionNamespace("env"), provider_view=view)
         bundle = AgentOwnerPorts(issuer, view, preparation_context_port=inputs.preparation_context_port,
                                  unit_manager=manager)
         services = unit_services(context, owner_ports=bundle)

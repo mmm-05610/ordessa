@@ -3,11 +3,15 @@ from __future__ import annotations
 from ordessa_execution_agents.profiles import decode_revision_ref, encode_content, encode_profile, encode_revision_ref
 import json
 
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError, ComparisonUnavailableError,
-    UnknownResultError,
+from ordessa_units.errors import (
+    UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch,
+    UnitComparisonUnavailable, UnitOperationUnknown,
 )
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_execution_agents.profiles import (
+    HistoricalProfileIdentityMismatch, ProfileAccessRefused,
+    ProfileStoreUnavailable, ProfileChangeUnknown,
+)
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_infrastructure.database.records import DomainRevisionConflict
 from ordessa_units.public import (
@@ -29,7 +33,7 @@ def _lifecycle_actions(service):
             or any(type(action) is not str or action not in {'stop', 'release', 'recover'}
                    for action in actions)
             or len(set(actions)) != len(actions)):
-        raise GuaranteeUnavailableError('Agent lifecycle capabilities are invalid')
+        raise UnitGuaranteeUnavailable('Agent lifecycle capabilities are invalid')
     return capabilities['nodeLifecycle'], frozenset(actions) if capabilities['nodeLifecycle'] else frozenset()
 
 
@@ -92,7 +96,7 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                         raise ValueError('complete definition reference required')
                 if "requestId" in params:
                     RequestKey("parameter-check", "local", params["requestId"])
-            except (ValueError, TypeError, KeyError, IdentityMismatchError):
+            except (ValueError, TypeError, KeyError, UnitIdentityMismatch):
                 raise WireError("INVALID_REQUEST", "Agent parameters are invalid", {"retryable": False}) from None
             try:
                 services=unit_services(environment_resolver())
@@ -214,13 +218,13 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                 raise WireError('INVALID_REQUEST','Agent configuration parameters are invalid',{'retryable':False}) from None
             except (ProfileRevisionConflict, DomainRevisionConflict, ConfigurationRevisionConflict):
                 raise WireError("CONFLICT_VERSION", "Agent revision comparison failed", {"retryable": False}) from None
-            except IdentityMismatchError:
+            except (UnitIdentityMismatch, HistoricalProfileIdentityMismatch):
                 raise WireError("CONFLICT_REQUEST", "Request or reference identity conflict", {"retryable": False}) from None
-            except (AdmissionRefusedError,InvocationAuthorityRefused):
+            except (UnitAdmissionRefused, ProfileAccessRefused, InvocationAuthorityRefused):
                 raise WireError("FORBIDDEN", "Profile access refused", {"retryable": False}) from None
-            except GuaranteeUnavailableError:
+            except (UnitGuaranteeUnavailable, ProfileStoreUnavailable):
                 raise WireError("CAPABILITY_UNSUPPORTED", "Required core guarantee unavailable", {"retryable": False}) from None
-            except (UnknownResultError, ComparisonUnavailableError):
+            except (UnitOperationUnknown, UnitComparisonUnavailable, ProfileChangeUnknown):
                 raise WireError("OUTCOME_UNKNOWN", "Request outcome is unknown; do not resend", {"retryable": False}) from None
             except ProfileNotFound:
                 raise WireError("NOT_FOUND", "Profile reference not found", {"retryable": False}) from None

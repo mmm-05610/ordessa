@@ -1,10 +1,20 @@
-"""Agent/Profile public definitions; Unit composition belongs to ordessa_units."""
+"""Agent/Profile consumer surface; explicit endpoints and original source only."""
 from ordessa_execution_agents.profiles import (
     ProfileService, Profile, ProfileRevision, ProfileRevisionRef, ProfileContent,
     ConfigurationDeclaration, ProfileNotFound, ProfileRevisionConflict, ProfileValidationError,
 )
 from ordessa_execution_agents.profiles.definitions.validation import AGENT_CONTRACT_VERSION
 
+from .sdk.manager import AgentManager, Records, ManagerRefused
+from .sdk.instances import AgentInstanceRef, EndpointRef
+from .sdk.interactions import InteractionService
+from .harness.providers.catalog import HarnessCatalog
+from .instances import AgentStartRequest, AgentStartReceipt, PreparedAgentContext
+
+from .sdk.native_contracts import FrozenNativeRequest,NativeOperationRef,NativeOperationReceipt,NativeWriteBinding
+
 __all__ = ["AGENT_CONTRACT_VERSION", "ProfileService", "Profile", "ProfileRevision",
     "ProfileRevisionRef", "ProfileContent", "ConfigurationDeclaration", "ProfileNotFound",
-    "ProfileRevisionConflict", "ProfileValidationError"]
+    "ProfileRevisionConflict", "ProfileValidationError",
+    "AgentManager", "Records", "ManagerRefused", "AgentInstanceRef", "EndpointRef",
+    "InteractionService", "AgentStartRequest", "AgentStartReceipt", "PreparedAgentContext", "HarnessCatalog", "FrozenNativeRequest", "NativeOperationRef", "NativeOperationReceipt", "NativeWriteBinding"]

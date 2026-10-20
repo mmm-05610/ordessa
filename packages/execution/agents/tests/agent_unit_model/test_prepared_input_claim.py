@@ -11,7 +11,7 @@ import pytest
 
 from test_sessionless_input import first_input, node_fixture, reserve
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import UnknownResultError
+from ordessa_units.errors import UnitOperationUnknown
 from ordessa_units.channels.reservations import CapturedInputRef, CapturedInputEvidence, FIRST_SESSION_ATTEMPTS
 from ordessa_units.admission.invocation import InvocationAuthorityRefused, InvocationIssuer
 from ordessa_execution_agents.harness.transport import LaunchSpec, ProcessChannel, RequestTimeout, WriterLeaseRefused, LostReceipt
@@ -90,8 +90,8 @@ def actual_guard(p, operation, context, protocol, seen):
 def assert_original_unknown_hold(p, operation):
     assert p[0].read_operation_step(operation.request, 'native-input').outcome == 'possibly-dispatched'
     assert p[0].list_domain('env', FIRST_SESSION_ATTEMPTS)[0]['value']['state'] == 'held'
-    with pytest.raises(UnknownResultError): p[5].claim_dispatch(operation.request, p[8])
-    with pytest.raises(UnknownResultError): reserve(p, key='cannot-change-key', draft='cannot-change-draft')
+    with pytest.raises(UnitOperationUnknown): p[5].claim_dispatch(operation.request, p[8])
+    with pytest.raises(UnitOperationUnknown): reserve(p, key='cannot-change-key', draft='cannot-change-draft')
     assert p[4].dispatch_calls == 0
 
 
@@ -109,7 +109,7 @@ def test_original_core_claim_capture_and_native_write_are_one_identity(first_inp
     assert channel._prepared_inflight == {} and channel._unresolved is False
     # Native ACK says accepted only; it cannot publish Core or release first hold.
     assert_original_unknown_hold(first_input, operation)
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         first_input[8].verifier().verify_and_consume(context, 'submitInput', first_input[4].state.provider_ref,
                                                      first_input[4].state.unit_ref, operation.digest)
 
@@ -210,6 +210,6 @@ def test_post_verification_owner_fence_stops_actual_write(first_input, native_cl
     with pytest.raises(WriterLeaseRefused): channel.acquire_writer()
     first_input[6].allowed = True
     assert_original_unknown_hold(first_input, operation)
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         first_input[8].verifier().verify_and_consume(context, 'submitInput', first_input[4].state.provider_ref,
                                                      first_input[4].state.unit_ref, operation.digest)

@@ -3,9 +3,9 @@ import json
 import pytest
 from agent_tools_fixtures.lifecycle import lifecycle
 from agent_tools_fixtures.node_publication import setup
-from ordessa_execution_api.environment import GuaranteeUnavailableError
-from ordessa_execution_api.environment.operations import UsageMutation, operation_holder, node_holder
-from ordessa_execution_api.environment.identity import ActivationRef
+from ordessa_units.errors import UnitGuaranteeUnavailable
+from ordessa_units.definitions.operations import UsageMutation, operation_holder, node_holder
+from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
 from ordessa_units.bindings.materials import MaterialProviderPin
 from ordessa_units.bindings.material_operations import material_provider_ref
 
@@ -20,7 +20,7 @@ def test_cleanup_requires_real_use_rights_on_original_provider_and_unit(lifecycl
     store._conn.execute("UPDATE env_usages SET rights=? WHERE usage_id=?",
                         (json.dumps(rights), target["usageId"]))
     store._conn.commit()
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         coordinator.stop(request, node_ref, {})
     assert store.read_operation(request) is None
     assert provider.lifecycle_calls == []

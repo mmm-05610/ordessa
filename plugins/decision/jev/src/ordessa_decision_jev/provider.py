@@ -3,6 +3,7 @@ import asyncio
 from contextvars import ContextVar
 import logging
 import math
+import json
 import time
 from dataclasses import dataclass
 from collections.abc import Callable, Mapping
@@ -15,11 +16,20 @@ from typesafe_sdk import (
     Usage, TypeSafeAuthenticationError, TypeSafePermissionDeniedError,
     TypeSafeAPIResponseValidationError, TypeSafeError, __version__,
 )
-from decision_runtime.definitions.values import canonical, decode, digest, plain, name
+from decision_runtime.definitions.values import canonical_bytes, digest_hex, plain, name
 from decision_runtime.definitions.models import DecisionQuestion, DecisionAnswer
-from decision_runtime.definitions.ports import ModelCallContext
+from decision_runtime.ports import ModelCallContext
 
-PROTOCOL_VERSION = 'jev-protocol/1'
+PROTOCOL_VERSION = 'jev-protocol/2'
+#: The official free route pins a model but echoes the *alias* in the response.
+#: Accepting that echo is a route alias, never a relaxed identity check: the raw
+#: body model must still equal the SDK's resolved model.
+OFFICIAL_FREE_ROUTE = 'https://opencode.ai/inference/systemone'
+FREE_MODEL_ALIAS = 'jev-1.13-free'
+#: The alias maps onto this pinned SDK-native model; an operator who replaces the
+#: accepted set is assumed to have changed the identity contract on purpose, so
+#: the alias exception does not override a different set.
+FREE_MODEL_NATIVE = 'jev-1.13.0'
 TOLERANCE = 1e-6
 _SDK_CALL = ContextVar('ordessa_jev_sdk_call', default=False)
 
@@ -57,6 +67,11 @@ class JevProviderSettings:
     accepted_response_models: tuple[str, ...] = ()
     timeout_seconds: float = 10.0
     protocol_validation_version: str = PROTOCOL_VERSION
+    #: Opt-in SDK danger-zone header for a larger context window. It is data,
+    #: never authority: the runtime still issues one permit per call, and a
+    #: permit minted for the disabled identity cannot be spent by an enabled one
+    #: (the settings digest changes).
+    long_context: bool = False
 
     def __post_init__(self):
         name(self.binding_ref); name(self.secret_ref); name(self.model)
@@ -73,12 +88,22 @@ class JevProviderSettings:
             raise JevProviderError('settings_invalid')
         if (self.protocol_validation_version != PROTOCOL_VERSION
                 or type(self.timeout_seconds) not in (int, float)
-                or not math.isfinite(self.timeout_seconds) or self.timeout_seconds <= 0):
+                or not math.isfinite(self.timeout_seconds) or self.timeout_seconds <= 0
+                or type(self.long_context) is not bool):
             raise JevProviderError('settings_invalid')
 
     @property
     def settings_digest(self):
-        return digest('descriptor', {'kind': 'jev_provider_settings', **plain(self)})
+        value = {'kind': 'jev_provider_settings',
+            'binding_ref':self.binding_ref,'secret_ref':self.secret_ref,'base_url':self.base_url,
+            'model':self.model,'accepted_response_models':list(self.accepted_response_models),
+            'timeout_seconds':self.timeout_seconds,
+            'protocol_validation_version':self.protocol_validation_version}
+        # Disabled is the default identity: it must not gain a new digest field,
+        # otherwise every existing permit would be invalidated by this change.
+        if self.long_context:
+            value['long_context'] = True
+        return 'sha256:'+digest_hex({'domain':'descriptor','value':value})
 
 
 def _number(value, minimum=0, maximum=1):
@@ -100,27 +125,20 @@ class JevDecisionProvider:
     """Owns one dedicated SDK client. Cancelled runs never close this resource.
 
     ``transport`` is a host-only injection seam, owned and closed by this client.
-    ``http_client`` permits a host-configured HTTP client (for example, a
-    diagnostic subclass retaining httpx2's normal trust_env proxy/CA behavior).
-    Ownership transfers to the SDK client and is closed with this provider. The
-    two seams are mutually exclusive; neither changes provider policy.
     The SDK's named logger is filtered only within this adapter's async call
     context to prevent raw body logging. Unrelated SDK users retain their logs.
     Safe call evidence belongs to the runtime, not SDK debug logging.
     """
     def __init__(self, settings: JevProviderSettings, *, secret_resolver: Callable[[str], str],
-                 transport: httpx2.AsyncBaseTransport | None = None,
-                 http_client: httpx2.AsyncClient | None = None):
+                 transport: httpx2.AsyncBaseTransport | None = None):
         if not isinstance(settings, JevProviderSettings) or not callable(secret_resolver):
-            raise JevProviderError('settings_invalid')
-        if (transport is not None and http_client is not None
-                or http_client is not None and not isinstance(http_client, httpx2.AsyncClient)):
             raise JevProviderError('settings_invalid')
         if __version__ != '0.7.2':
             raise JevProviderError('sdk_version_unsupported')
-        logger = logging.getLogger('typesafe_sdk')
-        if not any(isinstance(f, _NoSDKPayloads) for f in logger.filters):
-            logger.addFilter(_NoSDKPayloads())
+        for logger_name in ('typesafe_sdk','httpx2'):
+            logger = logging.getLogger(logger_name)
+            if not any(isinstance(f, _NoSDKPayloads) for f in logger.filters):
+                logger.addFilter(_NoSDKPayloads())
         self._settings = settings
         self.settings_digest = settings.settings_digest
         self.binding_ref = settings.binding_ref
@@ -134,7 +152,11 @@ class JevDecisionProvider:
             self._client = AsyncTypeSafeClient(
                 api_key=key, model=settings.model, base_url=settings.base_url,
                 retry=RetryPolicy(max_retries=0), timeout=settings.timeout_seconds,
-                transport=transport, http_client=http_client,
+                # The official SDK exposes the opt-in long-context header; the
+                # request body and response rules are unchanged by it.
+                headers=({'TypeSafe-Danger-Zone-Long-Context': 'true'}
+                         if settings.long_context else None),
+                transport=transport,
             )
         except Exception:
             failure = True
@@ -227,13 +249,28 @@ class JevDecisionProvider:
     def _map_response(self, question, response):
         # Public raw response preserves unknown kinds the SDK otherwise drops.
         try:
-            raw = decode(response.raw_http_response.content)
+            content=response.raw_http_response.content
+            if type(content) is not bytes or len(content)>262144:raise ValueError('response_size')
+            def unique(pairs):
+                result={}
+                for key,value in pairs:
+                    if key in result:raise ValueError('duplicate_response_field')
+                    result[key]=value
+                return result
+            raw=json.loads(content.decode('utf-8'),object_pairs_hook=unique)
+            canonical_bytes(raw,maximum=262144) # finite bounded JSON; wire need not be canonical text
         except Exception:
             raise JevProviderError('protocol_invalid', diagnostic='response_decode') from None
         if not isinstance(raw, Mapping):
             raise JevProviderError('protocol_invalid', diagnostic='response_fields')
-        if (raw.get('model') not in self._settings.accepted_response_models
-                or response.model != raw.get('model')):
+        body_model = raw.get('model')
+        accepted = body_model in self._settings.accepted_response_models
+        if not accepted:
+            accepted = (self._settings.base_url.rstrip('/') == OFFICIAL_FREE_ROUTE
+                        and self._settings.model == FREE_MODEL_ALIAS
+                        and body_model == FREE_MODEL_ALIAS
+                        and FREE_MODEL_NATIVE in self._settings.accepted_response_models)
+        if not accepted or response.model != body_model:
             raise JevProviderError('protocol_invalid', diagnostic='model_identity')
         if (not isinstance(raw.get('answers'), Mapping)
                 or set(raw['answers']) != {question.question_id}
@@ -266,13 +303,18 @@ class JevDecisionProvider:
             legend = answer['legend']
             if not isinstance(legend, Mapping) or set(legend) != set(keys):
                 raise JevProviderError('protocol_invalid', diagnostic='score_legend')
-            if canonical([legend[k] for k in keys]) != canonical(question.scale):
+            if canonical_bytes([legend[k] for k in keys]) != canonical_bytes(question.scale):
                 raise JevProviderError('protocol_invalid', diagnostic='score_legend')
             value = _number(answer['score'], 0, len(keys) - 1)
-            expected = math.fsum(int(k) * p for k, p in probabilities.items())
-            if abs(value - expected) > TOLERANCE:
-                raise JevProviderError('protocol_invalid', diagnostic='score_expected_value')
-            receipt.update(probabilities=probabilities, confidence=_number(answer['confidence']))
+            # The official endpoint returns the model's own expected score, which
+            # is NOT required to equal the probability-weighted average exactly
+            # (e.g. score 0.22 with {"0": .84, "1": .13} whose average is 0.19).
+            # Rejecting that mismatch was our invention; range, legend and
+            # probability consistency above remain enforced.
+            # The runtime re-validates the score answer against this receipt, so
+            # the resolved legend must be part of it (not only in the raw body).
+            receipt.update(probabilities=probabilities, legend=dict(legend),
+                           confidence=_number(answer['confidence']))
         usage = {'status': 'unknown'}
         reported = {k: getattr(response.usage, k) for k in ('input_tokens', 'output_tokens')}
         if any(v is not None for v in reported.values()):

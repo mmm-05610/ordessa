@@ -14,7 +14,7 @@ model-configuration facts. The family tables are empty by construction:
 The npm pin ``@deepseek-ai/dsh`` ``0.1.5-rc.1`` (tooling/npm lock) is a
 CLI/channel pin, not a model-configuration fact: it must never be projected
 into configuration claims. ``session/load`` rejection and the resume/bridge
-continuation split are channel facts, recorded in provider.py/client.py.
+continuation split are channel facts, historically recorded in the unchanged original client tests; current gaps are in README.md.
 """
 from __future__ import annotations
 
@@ -22,7 +22,6 @@ import hashlib
 import json
 from typing import Any
 
-from ordessa_execution_agents.harness.definitions.model_compilation import parse_version
 
 CANONICAL_PROTOCOLS = ("openai-chat", "openai-responses", "anthropic-messages", "gemini-generate")
 
@@ -55,8 +54,7 @@ def translate_protocol(harness, protocol):
 def version_in_range(harness, version):
     if harness != "dsh":
         raise ValueError("dsh ACP version fact cannot describe another family")
-    parsed = parse_version(version)
-    if parsed is None:
+    if not isinstance(version,str) or not version.strip() or not all(part.isdigit() for part in version.strip().split('.')):
         return "unknown"
     # The pinned dsh range is EMPTY: no concrete version is supported by it.
     return "unsupported"

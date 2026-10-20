@@ -1,8 +1,8 @@
 """Original Unit ledger inventory, without C1 execution IDs or a second store."""
 import pytest
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import AdmissionRefusedError, GuaranteeUnavailableError
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, UsageMutation, operation_holder
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable
+from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, operation_holder
 from ordessa_units.public import unit_services
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from pacthold.public import Environment
@@ -54,19 +54,19 @@ def test_shutdown_inventory_reads_original_unit_requests_and_hides_foreign_princ
         # Inventory must never dispatch, release a hold, or settle the original request.
         assert unit_services(env).operations.unresolved_snapshot() == report
         policy.node_allowed = False
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(UnitAdmissionRefused):
             unit_services(env).operations.unresolved_snapshot()
         policy.node_allowed = True
         with store.transaction() as connection:
             connection.execute("UPDATE env_usages SET state='fabricated' WHERE usage_id='held-original'")
-        with pytest.raises(GuaranteeUnavailableError, match="Usage inventory is inconsistent"):
+        with pytest.raises(UnitGuaranteeUnavailable, match="Usage inventory is inconsistent"):
             unit_services(env).operations.unresolved_snapshot()
         with store.transaction() as connection:
             connection.execute("UPDATE env_usages SET state='active' WHERE usage_id='held-original'")
             connection.execute("UPDATE env_domain_records SET payload='{}' "
                 "WHERE environment=? AND namespace=? AND record_id=?",
                 (env.environment_id, "core.operation-identities", "preparation-original"))
-        with pytest.raises(GuaranteeUnavailableError, match="inventory is inconsistent"):
+        with pytest.raises(UnitGuaranteeUnavailable, match="inventory is inconsistent"):
             unit_services(env).operations.unresolved_snapshot()
     finally:
         env.close()
@@ -110,7 +110,7 @@ def test_concluded_lifecycle_row_does_not_hide_residual_usage_or_unknown(tmp_pat
         # even though its generic operation status alone looks settled.
         with store.transaction() as connection:
             connection.execute("UPDATE env_usages SET state='fabricated' WHERE usage_id='usage-held'")
-        with pytest.raises(GuaranteeUnavailableError, match="Usage inventory is inconsistent"):
+        with pytest.raises(UnitGuaranteeUnavailable, match="Usage inventory is inconsistent"):
             unit_services(env).operations.unresolved_snapshot()
     finally:
         env.close()
@@ -135,7 +135,7 @@ def test_closed_cut_inventory_keeps_original_acl_and_cannot_run_early(tmp_path):
                           ("use",), "active")
     try:
         store.reserve_operation(request, "fixed-digest", intent, usages=(usage,))
-        with pytest.raises(GuaranteeUnavailableError, match="admission cut"):
+        with pytest.raises(UnitGuaranteeUnavailable, match="admission cut"):
             services.operations.closed_unresolved_snapshot()
         env.close()
         report = services.operations.closed_unresolved_snapshot()
@@ -168,7 +168,7 @@ def test_closed_inventory_still_enforces_node_acl_when_a_node_exists(tmp_path):
                                      ' "instanceId": "node-1", "generation": 1}}}'))
         env.close()
         policy.node_allowed = False
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(UnitAdmissionRefused):
             services.operations.closed_unresolved_snapshot()
     finally:
         store.close()

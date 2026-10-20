@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "retrieved_at_utc": "2026-10-12",
+  "policy": "Independent summary; source pages are mutable. No page-body snapshot or immutable page version is included.",
+  "sources": [
+    {
+      "id": "gitlab-product-flow",
+      "url": "https://handbook.gitlab.com/handbook/product-development/how-we-work/product-development-flow/",
+      "observed_footer_last_modified": "2026-08-27",
+      "footer_commit_ref": "4469685d",
+      "body_pinned_to_footer_commit": false,
+      "summary": "Current page describes issue statuses, maps former workflow labels, says those labels will be unsupported after 2026-02-27, and states Validation/Build may overlap and phases may be skipped with judgement."
+    },
+    {
+      "id": "gitlab-application-lifecycle",
+      "url": "https://handbook.gitlab.com/handbook/engineering/infrastructure-platforms/developer-experience/application-lifecycle/workflow/",
+      "observed_footer_last_modified": "2026-08-21",
+      "footer_commit_ref": "6b0a1bdd",
+      "body_pinned_to_footer_commit": false,
+      "summary": "Application Lifecycle team page continues to present workflow labels and a team-specific Kanban/blocker process, including skipped validation phases."
+    },
+    {
+      "id": "gitlab-deployment-paths",
+      "url": "https://handbook.gitlab.com/handbook/engineering/testing/deployment_paths/",
+      "observed_footer_last_modified": "2025-12-15",
+      "footer_commit_ref": "56a49071",
+      "body_pinned_to_footer_commit": false,
+      "summary": "GitLab internal deployment-path page distinguishes GitLab.com deployment from Self-Managed release/package publication and describes separate environments and verification events."
+    },
+    {
+      "id": "gitlab-handbook-license",
+      "url": "https://gitlab.com/gitlab-com/content-sites/handbook/-/blob/main/LICENSE",
+      "retrieved_at_utc": "2026-10-12",
+      "body_pinned_to_commit": false,
+      "summary": "Coordinator confirmed the repository page displays a project MIT License marker. No substantial handbook text, templates, figures or source code were reused.",
+      "observed_license_scope": "Project marker verified; full editorial content reuse scope was not independently established and no substantial text is reused.",
+      "substantial_external_text_reuse": false
+    }
+  ],
+  "unresolved_version_differences": [
+    "The Product Development Flow page describes statuses and states scoped workflow labels will become unsupported after 2026-02-27.",
+    "The Application Lifecycle team page, whose footer says last modified 2026-08-21, still displays workflow::* labels.",
+    "These pages do not prove which state model is active in any particular GitLab instance; the method records that instance's observed model and exact state value."
+  ]
+}

@@ -96,6 +96,50 @@ class EngineeringReviewAdmission:
             any(type(target.ref) is SourceTargetRef
                 for target in plan.requirement.expected_targets.targets))
 
+    @staticmethod
+    def _is_declared_submission_plan(plan):
+        return (type(plan) is ReviewPlan and plan.requirement.method_ref.schema_version == 2
+            and any(type(target.ref) is SubmissionRef
+                    for target in plan.requirement.expected_targets.targets))
+
+    @contextmanager
+    def _guard_declared_submission_plan(self, context, plan):
+        """Bind a declared report plan without entering compiled MethodRun reads."""
+        from ..changes.declared_report import resolve_declared_report_binding
+        targets, requirement = plan.requirement.expected_targets.targets, plan.requirement
+        resolver = getattr(self.bindings, 'resolve_declared_submission_plan', None)
+        if (len(targets) != 1 or targets[0].role != 'primary'
+                or type(targets[0].ref) is not SubmissionRef
+                or requirement.scope != context.scope or requirement.schema_version != 2
+                or requirement.purpose != 'acceptance'
+                or getattr(self.bindings, 'factory', None) is not self.factory
+                or not callable(resolver) or self.method_guard is None):
+            raise ApplicationError('SUBMISSION_REVIEW_BINDING_MISMATCH')
+        with self.factory.begin(context.scope, 'read') as uow:
+            submission = uow.submissions.resolve(targets[0].ref)
+            dispatch = resolve_declared_report_binding(uow, submission)
+        with guard_method_resources(context, requirement.method_ref,
+                requirement.method_resource_refs, self.method_guard) as declaration:
+            actions = tuple(a for a in declaration.actions
+                            if a.action_id == dispatch.work['action_id'])
+            steps = () if len(actions) != 1 else tuple(s for s in actions[0].steps
+                if s.step_id == requirement.phase_key and s.name == 'independently-review-report')
+            if len(steps) != 1 or steps[0].kind != 'invoke':
+                raise ApplicationError('SUBMISSION_REVIEW_BINDING_MISMATCH')
+            selected = resolver(context, plan, declaration)
+            if type(selected) is not SourceReviewBinding or selected.plan != plan:
+                raise ApplicationError('METHOD_REVIEW_PLAN_CHANGED')
+            standard = selected.standard
+            exact = self.method_guard.resource_ref(
+                context, requirement.method_ref, 'implementation-review-criteria')
+            if (exact not in requirement.method_resource_refs
+                    or standard.standard_id != requirement.criterion_set_ref.criterion_set_id
+                    or standard.resource_ref.resource_id != exact.resource_id
+                    or standard.resource_ref.sha256 != exact.resource_digest.hex
+                    or requirement.criterion_set_ref.digest != exact.resource_digest):
+                raise ApplicationError('METHOD_REQUIREMENTS_CHANGED')
+            yield standard
+
     @contextmanager
     def _guard_source_plan(self,context,plan):
         requirement=plan.requirement
@@ -287,6 +331,12 @@ class EngineeringReviewAdmission:
     def guard_plan(self, context, plan, *, work_selector=None):
         if type(plan) is not ReviewPlan or plan.scope != context.scope:
             raise ApplicationError('INVALID_INPUT')
+        if self._is_declared_submission_plan(plan):
+            if work_selector is not None:
+                raise ApplicationError('WORK_REVIEW_SELECTOR_INVALID')
+            with self._guard_declared_submission_plan(context, plan):
+                yield
+            return
         if self._is_source_plan(plan):
             if work_selector is not None:
                 raise ApplicationError('WORK_REVIEW_SELECTOR_INVALID')
@@ -323,6 +373,9 @@ class EngineeringReviewAdmission:
     def verify_response(self, context, plan, request, raw_response_ref):
         if self.source is None:
             raise ApplicationError('REVIEW_SOURCE_AUTHORITY_UNAVAILABLE')
+        if self._is_declared_submission_plan(plan):
+            with self._guard_declared_submission_plan(context, plan) as standard:
+                return self._verify_response_with_standard(context, plan, request, raw_response_ref, standard)
         if self._is_source_plan(plan):
             with self._guard_source_plan(context,plan) as standard:
                 return self._verify_response_with_standard(context,plan,request,raw_response_ref,standard)

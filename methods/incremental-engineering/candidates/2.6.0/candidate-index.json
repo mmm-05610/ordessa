@@ -4,7 +4,7 @@
   "files": [
     {
       "path": "README.md",
-      "sha256": "e4aeff8a278679a8e0326af16d7d06f52b15f3da6a61e89f06fe8486f81d7f4e"
+      "sha256": "1d9748040267c5bdfa97d742a8a1db3790815a5a4d882cfd37f3f237b04460c7"
     },
     {
       "path": "boundary-vectors.json",
@@ -12,7 +12,7 @@
     },
     {
       "path": "contracts/implemented-owner-contracts.json",
-      "sha256": "962ad44bff87717514e95478b8bf1ae9610ad2e94f24be6b753bbc922fafcf90"
+      "sha256": "e776c0329755c7038d708c8243c6e984c8d1421c4d1e26d5a58a319ee91a89ee"
     },
     {
       "path": "decisions/change-consistency.yaml",
@@ -28,7 +28,7 @@
     },
     {
       "path": "decisions/output-scope.yaml",
-      "sha256": "1817552afbcddf119839a8990b73c6b78f0d69e4979a4300b88716c3c6540efc"
+      "sha256": "b898c4a24a1abbe2502b555eae72e75da3f5aac12281abd5040b6128a3d00f07"
     },
     {
       "path": "decisions/rework-scope.yaml",
@@ -44,11 +44,11 @@
     },
     {
       "path": "decisions/test-evidence.yaml",
-      "sha256": "61ba82234e87b44bf1059724021b163aa612e73c2d6f3a672830f9b72e635484"
+      "sha256": "10c1a8deb4539b57cbca41993a51e8d3a0c4a8782491b31cc935d18a6e48c9b9"
     },
     {
       "path": "docs/candidate-revision-notes.md",
-      "sha256": "fb2b693b5d0cf95f1c8770ad3d1fbc16f33823c5bd10d380972187b6bb8d99ad"
+      "sha256": "906188799eef80c93eea07ed433713c2eb586ba1a04e6f8b23a28893c3b6d827"
     },
     {
       "path": "docs/reviewer-output-checkpoint-rev59.json",
@@ -72,7 +72,7 @@
     },
     {
       "path": "docs/unit-submission-host-contract.md",
-      "sha256": "f5dcb2581ff2cfad2bdce32763ccd849f4f853f09ed2934198a03a6c3e9e7357"
+      "sha256": "723af5096b873d8398f896e79a7b8475b699a7ad28349d6f5dfbb2b39d57ca1f"
     },
     {
       "path": "docs/validation.before-unit-policy.json",
@@ -92,7 +92,7 @@
     },
     {
       "path": "documents/correction-plan/schema.json",
-      "sha256": "77b199595fa8f906d7b85c137182cc3d4d15722b516d686c60b99b0d9c44f3db"
+      "sha256": "fa9f7375104ceac889520b9c1f51dd11cd597f26df4bccfae369f6fee9feb90f"
     },
     {
       "path": "documents/correction-plan/template.md",
@@ -188,7 +188,7 @@
     },
     {
       "path": "documents/work-inputs/schema.json",
-      "sha256": "6615d057301395d2254ec138706f274cac8b3958d0d6ea4ae43b679ab73ead87"
+      "sha256": "30fdc928eb5476747a36965cc84f2da902a8fced38651b7772270fe88a3cab68"
     },
     {
       "path": "documents/work-inputs/template.md",
@@ -196,7 +196,7 @@
     },
     {
       "path": "method.yaml",
-      "sha256": "e86b4d584ced56897f373947cfc57de294d6ca52a0bbb48d072db8a229433b8e"
+      "sha256": "58d3f20e2e7a542855e7826757b51104b4182a38812dae21635cfceaa836e0c8"
     },
     {
       "path": "migration.md",
@@ -204,7 +204,7 @@
     },
     {
       "path": "pending-bindings.yaml",
-      "sha256": "5daf43fd3d1bd790fc492b80f91e41524341ffbcddae32f3f4c07e31073a252f"
+      "sha256": "d6e95512f1ed000039d6f3aa555f03ffc8ef5fa6cb96b34dc41cd21e80428e58"
     },
     {
       "path": "policies/product-chat-human-review.v1.yaml",
@@ -212,7 +212,7 @@
     },
     {
       "path": "policies/unit-submission-review.v1.yaml",
-      "sha256": "b4741b7ecfe2ffb649729e617dd74659bfffc4ccf3a8da5aa9a2d60c42b99c15"
+      "sha256": "32914779d31403342dd8981d761d4cfc2ab09c3713c0f96cf88cac6e586edac3"
     },
     {
       "path": "skills/decision-record/SKILL.md",
@@ -252,7 +252,7 @@
     },
     {
       "path": "standards/acceptance.yaml",
-      "sha256": "e703bda2c2fa4e26a00d1814be83eae96cffee5b893ec214b4b16b872e329e8d"
+      "sha256": "1a772b9f01dbc6e51f87919b30cfa85faf43701a7e63f81ab51560dae15165be"
     },
     {
       "path": "standards/engineering-content.yaml",
@@ -273,6 +273,10 @@
     {
       "path": "standards/summary-review.yaml",
       "sha256": "b95d3deb8e0e43718d3e7fda165cff546d49e24af6e712d0bbab76d85f8de767"
+    },
+    {
+      "path": "templates/implementation-task.md",
+      "sha256": "7f75f0a5ff48e5c8ab5faed5a33f59bd2ddb622d04f649ed03e85771161dd280"
     },
     {
       "path": "templates/spec-kit/README.md",
@@ -303,12 +307,16 @@
       "sha256": "cbb11ca678c46685b07e1367aa3f3a909c1b9fab7c9edcb104f6a0d2c341187b"
     },
     {
+      "path": "tests/test_review_phase_policy90.py",
+      "sha256": "e8a2afdc17dc3e4085a9c7abf0c9d272ef05ce0e8ad22be31cd465324867aed0"
+    },
+    {
       "path": "validation.json",
       "sha256": "9198bececce70be83f21ea2498fd3a68467711a7ab4ce3960480f2b1a8b1ad5d"
     },
     {
       "path": "workflows/change-cycle.yaml",
-      "sha256": "f9210a449b28c225700f9cfb31088771b6af9dd56350b734d4dc8680f5582310"
+      "sha256": "5bc4ad60d4fe3305c53602fbd6ca3d0d009643a2d47401e2551b81ad9af23a44"
     }
   ]
 }

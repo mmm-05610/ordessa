@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Public engineering/agent/decision capability bindings for the system-access surface"
 requires-python = ">=3.12"
 dependencies = ["ordessa-infrastructure==0.1.0", "ordessa-interfaces==0.1.0", "ordessa-engineering==0.1.0",
-    "ordessa-execution-agents==0.1.0", "ordessa-units==0.1.0", "ordessa-execution-api==0.1.0", "decision-runtime==0.1.0",
+    "ordessa-execution-agents==0.1.0", "ordessa-units==0.1.0", "decision-runtime==0.2.0",
     "ordessa-server-plugin-api>=0.1.0,<1"]
 
 [tool.setuptools.packages.find]

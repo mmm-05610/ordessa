@@ -15,6 +15,13 @@ from ...domain.common.models.identity import Scope
 from ...domain.common.models.values import Digest
 
 NATIVE_DIFFERENT_UNIT = 'original_author_unit_identity_must_differ_from_original_reviewer_unit_identity'
+NATIVE_DIFFERENT_AGENT = 'original_author_agent_identity_must_differ_from_original_reviewer_agent_identity'
+AGENT_SOURCE_BOUND_POLICY = {
+    'contract': 'ordessa.review.authorship-policy/2',
+    'source_rules': {'native_agent': 'different_original_agent',
+                     'authenticated_material_submitter': 'separately_assigned_reviewer_role'},
+    'unknown_source': 'refuse',
+}
 SOURCE_BOUND_POLICY = {
     'contract':'ordessa.review.authorship-policy/1',
     'source_rules':{'native_unit':'different_original_unit',
@@ -25,7 +32,7 @@ SOURCE_BOUND_POLICY = {
 
 def validate_authorship_policy(value):
     """Accept only explicitly supported frozen policies, preserving old refs."""
-    if value is None or value == NATIVE_DIFFERENT_UNIT or value == SOURCE_BOUND_POLICY:
+    if value is None or value == NATIVE_DIFFERENT_UNIT or value == SOURCE_BOUND_POLICY or value == NATIVE_DIFFERENT_AGENT or value == AGENT_SOURCE_BOUND_POLICY:
         return value
     raise ApplicationError('UNIT_REVIEW_IDENTITY_CONSTRAINT_UNSUPPORTED')
 
@@ -83,12 +90,60 @@ class ReviewAuthorship:
             raise ApplicationError('REVIEW_AUTHOR_SOURCE_UNSUPPORTED')
 
 
+@dataclass(frozen=True)
+class AgentReviewAuthorship:
+    """V2 native author facts; never an assignment or a reviewer role grant.
+
+    Separate from the original material/v1 DTO so its captured bytes/shape do
+    not acquire new null fields or silently change a historical prompt digest.
+    """
+    scope: Scope
+    method_ref: MethodRef
+    delivery_refs: tuple[ArtifactRevisionRef,...]
+    author_agent_ref_bytes: bytes
+    source_kind: str = 'native_agent'
+
+    def __post_init__(self):
+        from ...domain.common.models.execution_refs import read_agent_instance_ref
+        read_agent_instance_ref(self.author_agent_ref_bytes)
+        if (type(self.scope) is not Scope or type(self.method_ref) is not MethodRef
+                or self.source_kind!='native_agent' or type(self.delivery_refs) is not tuple
+                or not self.delivery_refs or len(self.delivery_refs)>4096
+                or len(set(self.delivery_refs))!=len(self.delivery_refs)
+                or any(type(ref) is not ArtifactRevisionRef or (ref.realm_id,ref.project_id)!=
+                    (self.scope.realm_id,self.scope.project_id) for ref in self.delivery_refs)):
+            raise ApplicationError('REVIEW_AUTHOR_SOURCE_INVALID')
+
+    def require_distinct_reviewer(self,reviewer_agent_ref_bytes):
+        """Identity invariant only; never supplies assigned roles or admission."""
+        from ...domain.common.models.execution_refs import read_agent_instance_ref,agent_instance_identity
+        author=read_agent_instance_ref(self.author_agent_ref_bytes)
+        reviewer=read_agent_instance_ref(reviewer_agent_ref_bytes)
+        if agent_instance_identity(author)==agent_instance_identity(reviewer):
+            raise ApplicationError('UNTRUSTED_REVIEWER')
+
+    @property
+    def author_agent_ref(self):
+        from ordessa_infrastructure.encoding import decode_json
+        return decode_json(self.author_agent_ref_bytes)
+
+
 class ReviewAuthorshipResolver(Protocol):
     def resolve_authorship(self, context, plan, delivery_refs) -> ReviewAuthorship: ...
 
 
 def authorship_mode(policy, source):
     validate_authorship_policy(policy)
+    if type(source) is AgentReviewAuthorship:
+        if policy in (NATIVE_DIFFERENT_AGENT, AGENT_SOURCE_BOUND_POLICY):
+            return 'different_original_agent'
+        raise ApplicationError('AGENT_REVIEW_IDENTITY_CONSTRAINT_REQUIRED')
+    if policy == AGENT_SOURCE_BOUND_POLICY and type(source) is ReviewAuthorship:
+        if source.source_kind == 'authenticated_material_submitter':
+            return 'separately_assigned_reviewer_role'
+        raise ApplicationError('AGENT_REVIEW_AUTHOR_BINDING_UNAVAILABLE')
+    if policy == NATIVE_DIFFERENT_AGENT:
+        raise ApplicationError('AGENT_REVIEW_AUTHOR_BINDING_UNAVAILABLE')
     if type(source) is not ReviewAuthorship:
         raise ApplicationError('REVIEW_AUTHOR_SOURCE_INVALID')
     if policy == NATIVE_DIFFERENT_UNIT:
@@ -100,13 +155,24 @@ def authorship_mode(policy, source):
     raise ApplicationError('UNIT_REVIEW_IDENTITY_CONSTRAINT_UNSUPPORTED')
 
 
+def authorship_projection(source):
+    """Version native Agent data without changing original material/v1 bytes."""
+    from dataclasses import asdict
+    if type(source) is AgentReviewAuthorship:
+        value=asdict(source);value.pop('author_agent_ref_bytes')
+        return {'schemaVersion':'engineering-agent-review-authorship/2',**value,
+            'author_agent_ref':source.author_agent_ref}
+    if type(source) is ReviewAuthorship:return asdict(source)
+    raise ApplicationError('REVIEW_AUTHOR_SOURCE_INVALID')
+
+
 def resolve_plan_authorship(resolver, context, plan, delivery_refs=None):
     """Validate an original-source response; a captured DTO is not the reader."""
     refs=tuple(target.ref for target in plan.requirement.expected_targets.targets) if delivery_refs is None else delivery_refs
     if resolver is None or not callable(getattr(resolver,'resolve_authorship',None)):
         raise ApplicationError('REVIEW_AUTHOR_SOURCE_UNAVAILABLE')
     source=resolver.resolve_authorship(context,plan,refs)
-    if (type(source) is not ReviewAuthorship or source.scope!=context.scope
+    if (type(source) not in (ReviewAuthorship, AgentReviewAuthorship) or source.scope!=context.scope
             or source.scope!=plan.scope or source.method_ref!=plan.requirement.method_ref
             or source.delivery_refs!=refs):
         raise ApplicationError('REVIEW_AUTHOR_SOURCE_INVALID')

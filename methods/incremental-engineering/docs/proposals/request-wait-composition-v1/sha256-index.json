@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "1b2608fb85fa199184f296ffbecc9a09b0c42450ff8d730182bca5d2eafffbb1"
+    },
+    {
+      "path": "proposal.json",
+      "sha256": "16eca7776f425c13892880dff48fecfb278d16745aef5f7a49e2adafd96aad1a"
+    }
+  ]
+}

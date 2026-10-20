@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "fixture_only": true,
+  "not_executed_as_application_tests": true,
+  "baseline_files": [
+    "did.json",
+    "implementation-package.json",
+    "submission.json",
+    "sources.json",
+    "fixture-refs.json",
+    "review-pass.json"
+  ],
+  "cases": [
+    {
+      "case_id": "complete_fixture_chain",
+      "input": "baseline",
+      "expected_work_state": "accepted",
+      "expected_error": null,
+      "expected_dispatch_attempts": 1
+    },
+    {
+      "case_id": "source_missing",
+      "input": "review-insufficient.json",
+      "expected_work_state": "revision_required",
+      "expected_error": "EVIDENCE_INSUFFICIENT",
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "decision_unknown",
+      "input": "review-unknown.json",
+      "expected_work_state": "waiting_check",
+      "expected_error": "CHECK_UNKNOWN",
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "source_contradiction",
+      "input": {
+        "answers.support/C1.selected_option_id": "contradicted"
+      },
+      "expected_work_state": "revision_required",
+      "expected_error": "CRITERION_VIOLATED",
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "low_choice_probability",
+      "input": {
+        "answers.support/C1.probabilities": {
+          "supported": "0.60",
+          "contradicted": "0.10",
+          "insufficient": "0.30"
+        }
+      },
+      "expected_work_state": "waiting_reviewer",
+      "expected_error": "MODEL_REVIEW_REQUIRED",
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "unvalidated_model",
+      "input": {
+        "model_evaluation": "missing"
+      },
+      "expected_work_state": "waiting_reviewer",
+      "expected_error": "MODEL_EVALUATION_UNAVAILABLE",
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "new_revision",
+      "input": "revision-change.json",
+      "expected_work_state": "revision_required",
+      "expected_error": "APPROVAL_TARGET_MISMATCH",
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "bounded_package",
+      "input": {
+        "package.allowed_paths": [
+          "src/limits.py"
+        ]
+      },
+      "expected_work_state": "package_review",
+      "expected_error": null,
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "scope_expansion",
+      "input": {
+        "package.allowed_paths": [
+          "src/limits.py",
+          "other.py"
+        ]
+      },
+      "expected_work_state": "revision_required",
+      "expected_error": "AUTHORIZATION_SCOPE_EXCEEDED",
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "review_set_race",
+      "input": {
+        "expected_set_version": 1,
+        "actual_set_version": 2
+      },
+      "expected_work_state": "waiting_reconciliation",
+      "expected_error": "REVIEW_SET_CHANGED",
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "duplicate_grant_event",
+      "input": {
+        "delivery_count": 2,
+        "same_nonce": true
+      },
+      "expected_work_state": "accepted",
+      "expected_error": null,
+      "expected_dispatch_attempts": 1
+    },
+    {
+      "case_id": "dispatch_unknown",
+      "input": {
+        "dispatch_result": "unknown"
+      },
+      "expected_work_state": "waiting_execution_reconciliation",
+      "expected_error": "EXECUTION_OUTCOME_UNKNOWN",
+      "expected_dispatch_attempts": 1
+    },
+    {
+      "case_id": "forged_user_approved",
+      "input": {
+        "approval_payload": {
+          "userApproved": true
+        }
+      },
+      "expected_work_state": "waiting_approval",
+      "expected_error": "TRUSTED_APPROVAL_EVIDENCE_REQUIRED",
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "modified_resource_same_version",
+      "input": {
+        "mutate": "standards/source-review.yaml",
+        "rewrite_manifest_hash": false
+      },
+      "expected_work_state": "load_rejected",
+      "expected_error": "RESOURCE_DIGEST_MISMATCH",
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "republished_same_version",
+      "input": {
+        "mutate": "standards/source-review.yaml",
+        "rewrite_manifest_hash": true,
+        "existing_release": true
+      },
+      "expected_work_state": "load_rejected",
+      "expected_error": "METHOD_RELEASE_COLLISION",
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "skill_not_loaded",
+      "input": {
+        "skill_delivery": "unavailable",
+        "ordinary_native_input_available": true
+      },
+      "expected_work_state": "same_domain_gates_required",
+      "expected_error": null,
+      "expected_dispatch_attempts": 0
+    },
+    {
+      "case_id": "test_log_wrong_tree",
+      "input": {
+        "test_output_ref": "BASE1"
+      },
+      "expected_work_state": "revision_required",
+      "expected_error": "TEST_TARGET_MISMATCH",
+      "expected_dispatch_attempts": 1
+    },
+    {
+      "case_id": "execution_success_no_submission",
+      "input": {
+        "execution_status": "succeeded",
+        "submission": null
+      },
+      "expected_work_state": "waiting_submission",
+      "expected_error": null,
+      "expected_dispatch_attempts": 1
+    },
+    {
+      "case_id": "acceptance_pass_adoption_conflict",
+      "input": {
+        "adopt_result": "conflict"
+      },
+      "expected_work_state": "waiting_adoption_reconciliation",
+      "expected_error": "ACCEPTANCE_ADOPTION_CONFLICT",
+      "expected_dispatch_attempts": 1
+    }
+  ]
+}

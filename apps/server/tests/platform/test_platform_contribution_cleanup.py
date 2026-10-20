@@ -30,8 +30,8 @@ from server_plugin_api import (
 
 from contribution_fakes import ContribPlugin, RecordingHandler, contribution, new_host
 
-import ordessa_server.plugin_host.contribution_points as contribution_points
-from ordessa_server.plugin_host import (
+import ordessa_server.composition.plugin_host.contribution_points as contribution_points
+from ordessa_server.composition.plugin_host import (
     ContributionPointRegistry, PublishedRecord, ResolvedContribution,
 )
 

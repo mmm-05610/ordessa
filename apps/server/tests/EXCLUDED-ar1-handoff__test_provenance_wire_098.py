@@ -41,7 +41,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
-from ordessa_server_product.composition import create_composition  # T014-S1d funnel
+from ordessa_server.composition.configuration.product_selection import create_host_product_composition as create_composition  # T014-S1d funnel
 from ordessa_server.transport.http import create_app
 from ordessa_server_compat import core_wire as handlers_module
 from test_wire_v1 import Wire, registry

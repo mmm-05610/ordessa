@@ -1,0 +1,265 @@
+{
+  "schema_version": 1,
+  "projects": [
+    {
+      "path": "apps/server",
+      "distribution": "ordessa-server",
+      "version": "2.0.0a1"
+    },
+    {
+      "path": "packages/execution/units",
+      "distribution": "ordessa-units",
+      "version": "0.1.0"
+    },
+    {
+      "path": "packages/interfaces/transport/server/plugin-api",
+      "distribution": "ordessa-server-plugin-api",
+      "version": "0.1.0"
+    },
+    {
+      "path": "packages/engineering",
+      "distribution": "ordessa-engineering",
+      "version": "0.1.0"
+    },
+    {
+      "path": "packages/execution/agents",
+      "distribution": "ordessa-execution-agents",
+      "version": "0.1.0"
+    },
+    {
+      "path": "packages/execution/environments",
+      "distribution": "ordessa-environments",
+      "version": "0.1.0"
+    },
+    {
+      "path": "packages/execution/decision",
+      "distribution": "decision-runtime",
+      "version": "0.2.0"
+    },
+    {
+      "path": "packages/infrastructure",
+      "distribution": "ordessa-infrastructure",
+      "version": "0.1.0"
+    },
+    {
+      "path": "packages/interfaces",
+      "distribution": "ordessa-interfaces",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/agents/resources/mcp",
+      "distribution": "ordessa-mcp",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/agents/resources/model-provider/server",
+      "distribution": "ordessa-model-provider",
+      "version": "2.0.0a1"
+    },
+    {
+      "path": "plugins/agents/resources/prompts",
+      "distribution": "ordessa-prompts",
+      "version": "2.0.0a1"
+    },
+    {
+      "path": "plugins/agents/resources/sandbox/adapters",
+      "distribution": "ordessa-sandbox-adapters",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/agents/resources/sandbox/api",
+      "distribution": "ordessa-sandbox-api",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/agents/resources/sandbox/backend",
+      "distribution": "ordessa-sandbox-backend",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/agents/resources/skills",
+      "distribution": "ordessa-skills",
+      "version": "2.0.0a1"
+    },
+    {
+      "path": "plugins/workbench/command-templates",
+      "distribution": "ordessa-command-templates",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/decision/jev",
+      "distribution": "ordessa-decision-jev",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/agents/extensions",
+      "distribution": "ordessa-extensions",
+      "version": "1.0.0a1"
+    },
+    {
+      "path": "plugins/environments/local",
+      "distribution": "ordessa-environments-local",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/harness/claude-code",
+      "distribution": "ordessa-harness-claude-code",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/codex",
+      "distribution": "ordessa-harness-codex",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/copilot",
+      "distribution": "ordessa-harness-copilot",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/dsh",
+      "distribution": "ordessa-harness-dsh",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/gemini_cli",
+      "distribution": "ordessa-harness-gemini-cli",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/goose",
+      "distribution": "ordessa-harness-goose",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/grok-build",
+      "distribution": "ordessa-harness-grok-build",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/hermes",
+      "distribution": "ordessa-harness-hermes",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/kilo",
+      "distribution": "ordessa-harness-kilo",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/kimi",
+      "distribution": "ordessa-harness-kimi",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/opencode",
+      "distribution": "ordessa-harness-opencode",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/pi",
+      "distribution": "ordessa-harness-pi",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/qoder",
+      "distribution": "ordessa-harness-qoder",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/qwen",
+      "distribution": "ordessa-harness-qwen",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/harness/vibe",
+      "distribution": "ordessa-harness-vibe",
+      "version": "0.1.0a1"
+    },
+    {
+      "path": "plugins/workbench/lsp/adapters",
+      "distribution": "ordessa-lsp-adapters",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/workbench/lsp/api",
+      "distribution": "ordessa-lsp-api",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/agents/memory",
+      "distribution": "ordessa-memory",
+      "version": "1.0.0a1"
+    },
+    {
+      "path": "plugins/agents/permissions/adapters",
+      "distribution": "ordessa-permissions-adapters",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/agents/permissions/api",
+      "distribution": "ordessa-permissions-api",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/agents/permissions/backend",
+      "distribution": "ordessa-permissions-backend",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/agents/runtime-preferences",
+      "distribution": "ordessa-runtime-preferences-adapters",
+      "version": "1.0.0a1"
+    },
+    {
+      "path": "plugins/agents/subagents",
+      "distribution": "ordessa-assets-subagents",
+      "version": "2.0.0a1"
+    },
+    {
+      "path": "plugins/agents/workspace",
+      "distribution": "ordessa-workspace",
+      "version": "2.0.0a1"
+    },
+    {
+      "path": "apps/cli",
+      "distribution": "ordessa-agent-tools",
+      "version": "0.1.0a2"
+    },
+    {
+      "path": "apps/server/deployment/default-product",
+      "distribution": "ordessa-server-product",
+      "version": "2.0.0a1"
+    },
+    {
+      "path": "packages/interfaces/channels/mcp",
+      "distribution": "ordessa-mcp-server",
+      "version": "0.1.0"
+    },
+    {
+      "path": "packages/interfaces/system-access/bindings",
+      "distribution": "ordessa-system-access-bindings",
+      "version": "0.1.0"
+    },
+    {
+      "path": "packages/interfaces/transport/client/python",
+      "distribution": "ordessa-system-access-client",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/environments/openshell",
+      "distribution": "ordessa-environments-openshell",
+      "version": "0.1.0"
+    },
+    {
+      "path": "packages/interfaces/contracts",
+      "distribution": "ordessa-interfaces-contracts",
+      "version": "0.1.0"
+    },
+    {
+      "path": "plugins/decision/rules-cel",
+      "distribution": "ordessa-decision-rules-cel",
+      "version": "0.1.0"
+    }
+  ]
+}

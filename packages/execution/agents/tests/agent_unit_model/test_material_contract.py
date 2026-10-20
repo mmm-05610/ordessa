@@ -11,8 +11,9 @@ from typing import ClassVar, get_type_hints
 
 import pytest
 
-from ordessa_execution_api.environment.identity import ActivationRef, ParticipantInstanceRef
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
+from ordessa_units.definitions.admission_identity import AgentNodeRef
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.public import (
     AGENT_MATERIAL_CONTRACT_VERSION,
     AuthorizedMaterialProvider,
@@ -57,13 +58,13 @@ def _digest(value):
 
 
 def _refs(environment="env", provider="provider.alpha"):
-    activation = ActivationRef(environment, "owner.alpha", 3)
+    activation = HarnessActivationRef(environment, "owner.alpha", 3)
     resource = ResourceRef(
         environment, provider, "sample.alpha@1", "model-material", "revision-7")
     pin = MaterialProviderPin(provider, "2.4.1", activation)
     directory = DirectoryBindingRef(
         environment, "directory.alpha", 4, _CONTENT_DIGEST)
-    node = ParticipantInstanceRef(environment, "planned-node-1", 2)
+    node = AgentNodeRef(environment, "planned-node-1", 2)
     target = MaterialUseTarget(node, directory, 9, "configure-model")
     return activation, resource, pin, directory, node, target
 
@@ -173,7 +174,7 @@ def test_identity_dtos_are_closed_frozen_and_roundtrip_with_separate_provider_pi
     assert resource.environment_namespace == pin.owner_activation.environment
     assert pin.owner_activation == activation
     assert pin.owner_activation is not activation
-    assert type(target.node_ref) is ParticipantInstanceRef
+    assert type(target.node_ref) is AgentNodeRef
     assert target.node_ref == node
     assert target.directory_binding_ref == directory
     assert target.purpose == "configure-model"
@@ -188,7 +189,7 @@ def test_identity_dtos_are_closed_frozen_and_roundtrip_with_separate_provider_pi
 def test_activation_and_target_inputs_are_copied_and_wrong_environment_is_rejected():
     activation, resource, _, directory, node, _ = _refs()
     correlation = MaterialCorrelation("operation-1", "step-1", "corr-1", _HEX)
-    activation_copy = ActivationRef(
+    activation_copy = HarnessActivationRef(
         activation.environment, activation.plugin_id, activation.generation)
     pin = MaterialProviderPin("provider.alpha", "2.4.1", activation_copy)
     assert pin.owner_activation is not activation_copy
@@ -208,7 +209,7 @@ def test_activation_and_target_inputs_are_copied_and_wrong_environment_is_reject
 
     with pytest.raises(MaterialContractError):
         MaterialUseTarget(
-            ParticipantInstanceRef("other", "planned-node-1", 2), directory, 9,
+            AgentNodeRef("other", "planned-node-1", 2), directory, 9,
             "configure-model")
     with pytest.raises(MaterialContractError):
         MaterialRequest(resource, pin, target, _HEX, _request().correlation)
@@ -219,7 +220,7 @@ def test_activation_and_target_inputs_are_copied_and_wrong_environment_is_reject
             "other", "provider.alpha", "sample.alpha@1", "model-material", "revision-7"))
     with pytest.raises(MaterialContractError):
         _request(pin=MaterialProviderPin(
-            "provider.alpha", "2.4.1", ActivationRef("other", "owner.alpha", 3)))
+            "provider.alpha", "2.4.1", HarnessActivationRef("other", "owner.alpha", 3)))
     with pytest.raises(MaterialContractError):
         MaterialUseTarget(node, DirectoryBindingRef(
             "other", "directory.alpha", 4, _CONTENT_DIGEST), 9, "configure-model")
@@ -349,7 +350,7 @@ def test_request_facts_bind_stable_refs_and_exclude_correlation_and_lease():
         _request(resource=ResourceRef("env", "provider.alpha", "sample.alpha@1",
                                       "other-resource", "revision-7")),
         _request(pin=MaterialProviderPin("provider.alpha", "2.4.2",
-                                         ActivationRef("env", "owner.alpha", 3))),
+                                         HarnessActivationRef("env", "owner.alpha", 3))),
         _request(target=MaterialUseTarget(
             request.target.node_ref, request.target.directory_binding_ref, 10,
             "configure-model")),

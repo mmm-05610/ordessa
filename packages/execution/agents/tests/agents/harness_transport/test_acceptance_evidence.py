@@ -39,7 +39,7 @@ def test_real_broken_own_package_build_preserves_failure_command(tmp_path, monke
 
 def test_injected_build_timeout_records_unknown_exit_and_cleans(tmp_path, monkeypatch):
     module = helper()
-    monkeypatch.setattr(module, 'PROJECTS', ('packages/interfaces/execution/c1-api',))
+    monkeypatch.setattr(module, 'PROJECTS', ('packages/execution/agents',))
     original_run = module.subprocess.run
     def timeout(command, **kwargs):
         if command[0] == 'git': return original_run(command, **kwargs)

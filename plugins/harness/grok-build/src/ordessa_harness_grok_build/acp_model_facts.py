@@ -25,7 +25,6 @@ import hashlib
 import json
 from typing import Any
 
-from ordessa_execution_agents.harness.definitions.model_compilation import parse_version
 
 CANONICAL_PROTOCOLS = ("openai-chat", "openai-responses", "anthropic-messages", "gemini-generate")
 
@@ -58,8 +57,7 @@ def translate_protocol(harness, protocol):
 def version_in_range(harness, version):
     if harness != "grok-build":
         raise ValueError("grok-build ACP version fact cannot describe another family")
-    parsed = parse_version(version)
-    if parsed is None:
+    if not isinstance(version,str) or not version.strip() or not all(part.isdigit() for part in version.strip().split('.')):
         return "unknown"
     # The pinned grok-build range is EMPTY: no concrete version is supported by it.
     return "unsupported"

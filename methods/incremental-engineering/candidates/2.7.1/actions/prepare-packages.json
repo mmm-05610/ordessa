@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "action_id": "incremental.prepare-packages",
+  "inputs": [
+    {"name": "baseline", "value_kind": "source_ref"},
+    {"name": "candidate", "value_kind": "source_ref"},
+    {"name": "scope", "value_kind": "json_object"},
+    {"name": "review", "value_kind": "review_contract"},
+    {"name": "profile", "value_kind": "profile_ref"},
+    {"name": "method", "value_kind": "method_ref"}
+  ],
+  "steps": [
+    {"step_id": "qualify", "kind": "invoke", "name": "check-package-admission", "inputs": [
+      {"name": "baseline", "source_kind": "action_input", "source_name": "baseline"},
+      {"name": "candidate", "source_kind": "action_input", "source_name": "candidate"},
+      {"name": "scope", "source_kind": "action_input", "source_name": "scope"},
+      {"name": "review", "source_kind": "action_input", "source_name": "review"}
+      ,{"name": "method", "source_kind": "action_input", "source_name": "method"}
+      ,{"name": "method_schema", "source_kind": "resource", "source_name": "method-ref-schema"}
+      ,{"name": "source-ref-schema", "source_kind": "resource", "source_name": "source-ref-schema"}
+      ,{"name": "scope-schema", "source_kind": "resource", "source_name": "scope-schema"}
+    ], "outputs": ["qualified_inputs"]},
+    {"step_id": "draft", "kind": "invoke", "name": "prepare-spec-kit-package", "inputs": [
+      {"name": "inputs", "source_kind": "step_output", "source_name": "qualified_inputs", "step_id": "qualify"},
+      {"name": "criteria", "source_kind": "resource", "source_name": "package-preparation-criteria"},
+      {"name": "prompt", "source_kind": "resource", "source_name": "package-preparation-prompt"},
+      {"name": "spec-template", "source_kind": "resource", "source_name": "spec-kit-spec"},
+      {"name": "plan-template", "source_kind": "resource", "source_name": "spec-kit-plan"},
+      {"name": "tasks-template", "source_kind": "resource", "source_name": "spec-kit-tasks"},
+      {"name": "baseline-template", "source_kind": "resource", "source_name": "spec-kit-baseline"},
+      {"name": "acceptance-template", "source_kind": "resource", "source_name": "spec-kit-acceptance"},
+      {"name": "change-map-template", "source_kind": "resource", "source_name": "spec-kit-change-map"},
+      {"name": "package-schema", "source_kind": "resource", "source_name": "spec-kit-package-schema"}
+    ], "outputs": ["package_ref"]}
+  ],
+  "outputs": [{"name": "package", "value_kind": "package_ref", "step_id": "draft", "output": "package_ref"}],
+  "admission": [
+    {"kind": "same_scope", "inputs": ["baseline", "candidate", "scope"]},
+    {"kind": "exact_inputs", "inputs": ["baseline", "candidate", "scope", "review"]},
+    {"kind": "method_pin", "inputs": ["method", "review"]},
+    {"kind": "review_complete", "inputs": ["review"]},
+    {"kind": "review_passed", "inputs": ["review"]},
+    {"kind": "baseline_available", "inputs": ["baseline"]}
+  ],
+  "resources": ["package-preparation-criteria", "package-preparation-prompt", "spec-kit-spec", "spec-kit-plan", "spec-kit-tasks", "spec-kit-baseline", "spec-kit-acceptance", "spec-kit-change-map", "spec-kit-package-schema", "package-result-schema", "review-result-schema", "method-ref-schema", "source-ref-schema", "scope-schema"]
+  ,"preparation_documents": [
+    {"role": "spec", "template_resource_id": "spec-kit-spec"},
+    {"role": "plan", "template_resource_id": "spec-kit-plan"},
+    {"role": "tasks", "template_resource_id": "spec-kit-tasks"}
+  ]
+}

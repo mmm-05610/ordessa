@@ -51,3 +51,9 @@ contextBridge.exposeInMainWorld('desktopHost', {
   downloadUpdate: (): Promise<unknown> => ipcRenderer.invoke('update:download'),
   applyUpdate: (): Promise<unknown> => ipcRenderer.invoke('update:apply'),
 })
+
+contextBridge.exposeInMainWorld('statusBoardHost', {
+  collapse: (collapsed: boolean): Promise<void> => ipcRenderer.invoke('status-board:collapse', collapsed),
+  pin: (pinned: boolean): Promise<void> => ipcRenderer.invoke('status-board:pin', pinned),
+  close: (): Promise<void> => ipcRenderer.invoke('window:close'),
+})

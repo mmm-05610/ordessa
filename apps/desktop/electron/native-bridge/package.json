@@ -1,0 +1,20 @@
+{
+  "name": "@ordessa/native-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./ui-storage": "./src/ui-storage.mjs"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1"
+  },
+  "dependencies": {
+    "@ordessa/extension-host": "0.1.0",
+    "@ordessa/extension-api": "0.1.0"
+  },
+  "peerDependencies": {
+    "electron": ">=40"
+  }
+}

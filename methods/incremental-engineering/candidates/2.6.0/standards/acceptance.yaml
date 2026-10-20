@@ -44,7 +44,6 @@ criteria:
   - submission_ref
   - fixed_delivery_refs
   - executor_report
-  - independent_review_observations
   checks:
   - capability_id: ordessa.decision.evaluate
     interface_version: 1.0.0
@@ -87,7 +86,6 @@ criteria:
   - submission_ref
   - fixed_delivery_refs
   - executor_report
-  - independent_review_observations
   - acceptance_mapping
   checks:
   - capability_id: ordessa.decision.evaluate

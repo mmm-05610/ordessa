@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "purpose": "Pending original consumer verification, not executed model judgments",
+  "cases": [
+    {
+      "id": "three-valid-options",
+      "expected": "Resolve supported/contradicted/insufficient to the three declared statuses, then apply original quality/disposition rules",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "tie",
+      "expected": "Legal provider tie resolves unknown; no winner guessed",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "missing-answer",
+      "expected": "Missing legal answer resolves unknown; not satisfied",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "partial-answer",
+      "expected": "Incomplete legal answer resolves unknown; not satisfied",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "truncated-input",
+      "expected": "Input truncation preserves original fact and resolves unknown; not satisfied",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "unmapped-option",
+      "expected": "Unmapped finite selection follows unknown rule; never pass",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "missing-evaluation",
+      "expected": "Nominal satisfied has no matching validated evaluation; quality stays manual/MODEL_EVALUATION_UNAVAILABLE",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "unresolved-model",
+      "expected": "Unavailable exact model resolution keeps quality manual",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "wrong-ref-or-shape",
+      "expected": "Malformed binding/ref/shape rejected, no DTO evaluation claim trusted",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "incomplete-option-map",
+      "expected": "Missing or extra option key rejected by original resolver",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "no-kind-exemption",
+      "expected": "All exact formal Claims remain in check collection regardless of kind/source links",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "old-snapshot",
+      "expected": "2.1/2.2 unchanged; old choice cannot gain new semantics automatically",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "source-provenance",
+      "expected": "Nominal resolver cannot attest raw source or original reviewer capability",
+      "runtime_validation": "pending_engineering_consumer"
+    },
+    {
+      "id": "decision-policy-conflict",
+      "expected": "Nominal declaration and decision_policy cannot coexist",
+      "runtime_validation": "pending_engineering_consumer"
+    }
+  ]
+}

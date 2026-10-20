@@ -161,7 +161,8 @@ def test_capability_matrix_is_honest() -> None:
     assert matrix["turn"]["observed"].startswith("no")
     assert matrix["transportFence"]["observed"] == "no"
     assert matrix["resume"]["implemented"] == "plan-only"
-    assert matrix["requestReconciliation"]["implemented"] == "yes"
+    assert matrix["requestReconciliation"]["implemented"].startswith("unavailable")
+    assert "historical requirement: yes" in matrix["requestReconciliation"]["implemented"]
     assert matrix["approvalCallback"]["observed"] == "no"
     assert matrix["cancel"]["observed"] == "no"
 

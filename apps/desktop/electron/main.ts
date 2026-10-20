@@ -2,7 +2,7 @@
  * Desktop 主进程（PA-02/03/04/07/08/09/10/11/12/13/21/22/23 的接线点）。
  *
  * 纪律：
- *   · 测试驱动代码**不在**本文件（PA-11）：smoke 驱动只按路径动态加载，永不进发行物；
+ *   · 测试驱动代码**不在**本文件（PA-11）：smoke 只按 Root 准入 ID 加载经 digest 核验的 fixture 闭包，永不进发行物；
  *   · 令牌不经过渲染进程（C-03 §4 / FR-031）：wire 调用在主进程发起，界面只拿三态；
  *   · 凭据/路径不外泄：拒绝信息最多带 basename（C-04 §4 定位符规则）。
  */
@@ -19,15 +19,21 @@ import { collectDiagnostics, createLogService, type LogService } from '@ordessa/
 import { installNativeBridge } from '@ordessa/native-bridge'
 import { acquireDataRootLock, defaultHome, ensureDataRoot, probeDataRoot, resolveDataRoot } from './data-root'
 import { isRenderableFault, sortFaults } from './faults'
+import { resolveProductLayout } from './product-layout'
 import { beginSession, cleanSession, runCleanup, restoreWindowState, startupCrashReport, type CrashMarker, type QuitStep, type WindowState } from './lifecycle'
 import { APP_ORIGIN, SECURE_WEB_PREFERENCES, WINDOW_OPEN_ACTION, isTrustedIpcCaller } from './security'
 import { createSettingsStore } from './settings-store'
 import type { UpdateClient } from './update-client'
 import { createUpdateClient, defaultPublicKeyPath } from './update-engine'
 import { createAbsentWirePort, type WirePort } from './wire-fixture'
-import { HttpWirePort, ServerBridge, tokenReaderFor } from '@ordessa/server-bridge'
+import { HttpWirePort, ServerBridge, tokenReaderFor, productServerArgs } from '@ordessa/server-bridge'
 import type { Fault } from '@extensions/ordessa.contracts/contract.js'
+import { resolveSmokeDriver } from './smoke-driver-admission'
 
+import { statusBoardConnection, isStatusBoardRead } from './windows/status-board-connection'
+import { createStatusBoardWindow } from './windows/status-board'
+
+const statusBoardMode = process.argv.includes('--status-board')
 const distDir = __dirname
 const smoke = process.env.MODULAR_SMOKE === '1'
 if (smoke) app.disableHardwareAcceleration()
@@ -41,7 +47,7 @@ interface BuildInfo {
 }
 function readBuildInfo(): BuildInfo {
   const file = path.join(distDir, 'build-info.json')
-  if (!existsSync(file)) throw Error('build-info.json is missing: the app was not built by scripts/build.mjs')
+  if (!existsSync(file)) throw Error('build-info.json is missing: the app was not built by packaging/build.mjs')
   return JSON.parse(readFileSync(file, 'utf8')) as BuildInfo
 }
 
@@ -79,6 +85,8 @@ app.on('second-instance', () => {
 app.whenReady().then(async () => {
   const info = readBuildInfo()
   const dataRoot = resolveDataRoot(process.env, defaultHome)
+  // Validate attachment separation before any desktop data-root write.
+  const attached = statusBoardMode ? statusBoardConnection(process.env, dataRoot) : undefined
   // 首次启动：数据根不存在是**正常**路径（C-01：缺省走规范），先建再用；
   // 建不起来（符号链接 / 不可写 / 被活进程锁住）才升级成故障 UI，绝不静默、也不写进 dist。
   let probe = await probeDataRoot(dataRoot, { isLive: pid => isProcessAlive(pid) })
@@ -119,16 +127,33 @@ app.whenReady().then(async () => {
   })
   // INT-01 真实接缝（C-01/C-02/C-03）：服务端由本宿主启动并监管，wire 口打到它身上。
   // 令牌只在主进程（C-03 §4）：`readToken` 由这里供给，WirePort 不存令牌字段。
-  const bridge = new ServerBridge({})
+  let bridge: ServerBridge | undefined
   let wire: WirePort
-  try {
+  if (smoke && (process.env.ORDESSA_EMPTY_HOST === '1' || process.env.MODULAR_AGENT_SMOKE === '1')) {
+    // Explicit platform-only fixture: no product is discovered and no
+    // native product process is owned by this host round.
+    wire = createAbsentWirePort()
+  } else try {
+    if (attached) {
+      // Explicit read-only attachment: never starts, stops or grants access to this server.
+      wire = new HttpWirePort({ origin: attached.origin, scope: null, readToken: attached.tokenLocator ? async () => (await readFile(attached.tokenLocator!, 'utf8')).trim() : tokenReaderFor(attached.serverDataRoot, file => readFile(file, 'utf8')) })
+      log.info('status-board attached to explicitly selected server')
+    } else {
+    bridge = new ServerBridge({ args: productServerArgs() })
     const instance = await bridge.start()
+    // C-02 §2：握手已读，把 origin/token 定位符交给本进程的扩展宿主（native 适配器
+    // 从 process.env 读，lifecycle.ts 的既定交接点）。launcher 显式给过的非空值不
+    // 覆盖：那是操作者输入；host 只补缺，绝不用空值顶掉已有事实。
+    for (const [name, value] of Object.entries(bridge.launchEnvironment())) {
+      if (!process.env[name]) process.env[name] = value
+    }
     wire = new HttpWirePort({
       origin: instance.origin,
       scope: instance.scope,
       readToken: tokenReaderFor(dataRoot, file => readFile(file, 'utf8')),
     })
     log.info('server started', { scope: instance.scope, pid: instance.pid })
+    }
   } catch (error) {
     // C-02 §7：类型化失败 → 故障 UI；缺席实现保持诚实（不假绿、不空白）。
     faults.push(launchFault(error))
@@ -145,15 +170,17 @@ app.whenReady().then(async () => {
   sessionState.marker = beginSession(new Date(), process.pid)
   await writeFile(markerFile, JSON.stringify(sessionState.marker))
 
-  const bundled = process.env.ORDESSA_EMPTY_HOST === '1' ? undefined : path.resolve(distDir, '../../../products/desktop/dist')
+  // B-003：安装布局下产品产物与宿主产物合并在 $ORDESSA_BUNDLED_ROOT/app/dist；
+  // 只认开发树相对路径会让装机后的 discover 静默返回空，界面成为零扩展空壳。
+  const bundled = process.env.ORDESSA_EMPTY_HOST === '1' ? undefined : resolveProductLayout(distDir, process.env).dist
   const discovery = await discover(process.env.ORDESSA_EXTENSION_HOME ?? app.getPath('userData'), bundled)
-  protocol.handle('ordessa', protocolHandler(path.join(distDir, 'renderer'), discovery))
+  protocol.handle('ordessa', protocolHandler(path.join(distDir, 'renderer', ...(statusBoardMode ? ['status-board'] : [])), discovery))
   // 权限请求一律拒绝：渲染进程没有理由向用户要任何设备/位置/通知权限。
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false))
 
   const windowState = restoreWindowState(await readJson<WindowState>(path.join(stateDir, 'window.json')), displays())
   const frameless = process.platform !== 'darwin'
-  const win = new BrowserWindow({
+  const win = statusBoardMode ? createStatusBoardWindow(path.join(distDir, 'preload.cjs'), !smoke) : new BrowserWindow({
     width: windowState.width, height: windowState.height, ...(windowState.x >= 0 ? { x: windowState.x, y: windowState.y } : {}),
     minWidth: 760, minHeight: 520, show: !smoke, frame: !frameless,
     // PA-03：窗口图标来自构建期导出的产物；缺图时不传该字段（不阻塞启动）。
@@ -162,11 +189,11 @@ app.whenReady().then(async () => {
     webPreferences: { preload: path.join(distDir, 'preload.cjs'), ...SECURE_WEB_PREFERENCES },
   })
   mainWindow = win
-  if (windowState.maximized) win.maximize()
+  if (!statusBoardMode && windowState.maximized) win.maximize()
   win.setMenuBarVisibility(false)
   win.setAutoHideMenuBar(true)
 
-  if (frameless) installWindowChrome(win)
+  if (frameless || statusBoardMode) installWindowChrome(win)
   installNativeBridge(win, discovery)
   registerIpc({ win, info, dataRoot: probe.ok ? dataRoot : logsDir, logsDir, secretsDir, discovery, settings, update, wire, faults, log })
 
@@ -186,12 +213,12 @@ app.whenReady().then(async () => {
   app.on('child-process-gone', (_event, details) => log.error('child process gone', { type: details.type, reason: details.reason }))
 
   const persistWindow = () => writeFile(path.join(stateDir, 'window.json'), JSON.stringify(currentWindowState(win))).catch(() => undefined)
-  win.on('close', persistWindow)
+  if (!statusBoardMode) win.on('close', persistWindow)
   win.on('closed', () => { if (mainWindow === win) mainWindow = undefined })
 
   quitSteps = [
     // C-02 §5：只终止本宿主 spawn 的进程。
-    { name: 'stop-server', run: async () => { await bridge.stop() } },
+    { name: 'stop-server', run: async () => { await bridge?.stop() } },
     { name: 'stop-children', run: () => log.info('stopping child processes') },
     { name: 'release-data-root-lock', run: async () => { await releaseDataRootLock?.() } },
     { name: 'flush-logs', run: async () => { await logService?.close() } },
@@ -221,11 +248,12 @@ async function shutdown(cause: unknown) {
 }
 app.on('window-all-closed', () => { if (!quitting) void shutdown(undefined) })
 
-// --- PA-11 smoke 驱动：按路径动态加载，绝不进发行物 --------------------------
+// --- PA-11 smoke 驱动：只加载 Root 准入且 digest 核验的 fixture ---------------
 async function runSmokeDriver(win: BrowserWindow) {
-  const driver = process.env.ORDESSA_SMOKE_DRIVER
-  if (!driver) { console.error('Smoke requested without ORDESSA_SMOKE_DRIVER'); app.exit(1); return }
-  const module = await import(pathToFileURL(driver).href) as { runSmoke: (ctx: { win: BrowserWindow; app: typeof app }) => Promise<void> }
+  const driverId = process.env.ORDESSA_SMOKE_DRIVER_ID
+  if (!driverId) { console.error('Smoke requested without ORDESSA_SMOKE_DRIVER_ID'); app.exit(1); return }
+  const driverPath = await resolveSmokeDriver(driverId, app.getAppPath())
+  const module = await import(pathToFileURL(driverPath).href) as { runSmoke: (ctx: { win: BrowserWindow; app: typeof app }) => Promise<void> }
   await module.runSmoke({ win, app })
 }
 
@@ -364,6 +392,7 @@ function registerIpc(context: IpcContext) {
   // wire 口（PA-21/PA-22）：令牌只在这里（主进程），渲染进程拿不到。
   ipcMain.handle('wire:call', async (event, method: unknown, params: unknown) => {
     trusted(event, 'wire:call')
+    if (statusBoardMode && !isStatusBoardRead(method)) return { kind: 'Refused', requestId: 'status-board-policy', reason: 'status-board-read-only', retryable: false }
     return wire.call(String(method), (params ?? {}) as Record<string, unknown>)
   })
   ipcMain.handle('wire:ready', event => { trusted(event, 'wire:ready'); return wire.ready })
@@ -394,8 +423,11 @@ function readLicenses(): { name: string; version: string; license: string }[] {
 
 function readProductManifests(): Record<string, string> {
   const out: Record<string, string> = {}
+  // 与扩展发现**同一个**解析点：安装布局下清单随产品产物合并进 <root>/app/dist。
+  // 缺文件照旧跳过（诊断降级，不是启动失败）。
+  const { manifestDir } = resolveProductLayout(distDir, process.env)
   for (const name of ['extensions.json', 'extensions.lock.json']) {
-    const file = path.resolve(distDir, '../../../products/desktop', name)
+    const file = path.join(manifestDir, name)
     if (existsSync(file)) out[name] = readFileSync(file, 'utf8')
   }
   return out

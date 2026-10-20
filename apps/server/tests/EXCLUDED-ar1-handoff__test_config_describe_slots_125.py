@@ -50,7 +50,7 @@ wire_v1 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(wire_v1)
 
 from ordessa_server.bootstrap import build_runtime
-from ordessa_server_product.composition import create_composition
+from ordessa_server.composition.configuration.product_selection import create_host_product_composition as create_composition
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.transport.http import create_app
 from ordessa_server_compat.model_configs.service import _model_references

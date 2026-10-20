@@ -17,9 +17,9 @@ from test_managed_input_reservations import managed as managed_fixture, reserve 
 from test_sessionless_input import first_input as first_input_fixture, reserve as reserve_sessionless
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError,
-    UnknownResultError,
+from ordessa_units.errors import (
+    UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch,
+    UnitOperationUnknown,
 )
 from ordessa_units.channels.reservations import (
     CapturedInputEvidence, CapturedInputRef, ManagedInputReservations,
@@ -65,7 +65,7 @@ def test_direct_binding_rejects_other_same_store_issuer_before_claim_then_origin
     assert context.facts["operationRef"] == operation.intent.operation_ref
     assert store.read_operation_step(request, "native-input").outcome == "possibly-dispatched"
     assert native.dispatch_calls == 0
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         inputs.claim_dispatch(request, bound)
     assert store.read_operation_step(request, "native-input").outcome == "possibly-dispatched"
     assert native.dispatch_calls == 0
@@ -150,7 +150,7 @@ def test_reconcile_wrong_same_store_issuer_is_refused_before_owner_or_query(firs
     assert store.read_operation_step(request, "native-input").outcome == "unknown"
     assert native.dispatch_calls == 0
 
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         inputs.reconcile_first_input(request, bound)
     assert observer.calls == 1
     assert store.read_operation_step(request, "native-input").outcome == "unknown"
@@ -169,7 +169,7 @@ def test_unbound_reservation_cannot_late_bind_issuer_for_claim(first_input_fixtu
         {"environmentNamespace": "env", "protocol": "controlled-native/1", "requestId": request_id})
     issued_before = len(bound._issued)
     native_reads_before = native.calls
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         unbound.claim_dispatch(operation.request, bound)
     assert len(bound._issued) == issued_before
     assert native.calls == native_reads_before
@@ -194,7 +194,7 @@ def test_unbound_reservation_cannot_late_bind_issuer_for_reconcile(first_input_f
     native_reads_before = native.calls
     issued_before = len(bound._issued)
 
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         unbound.reconcile_first_input(request, bound)
     assert observer.calls == 0
     assert len(bound._issued) == issued_before
@@ -213,13 +213,13 @@ def test_claim_checks_request_authority_before_persistent_operation_read(
     reserve_managed(parts)
     if failure == "environment":
         denied_request = RequestKey("other-environment", request.principal_scope, request.request_id)
-        expected = IdentityMismatchError
+        expected = UnitIdentityMismatch
     elif failure == "principal":
         denied_request = RequestKey(request.environment_namespace, "other-principal", request.request_id)
-        expected = AdmissionRefusedError
+        expected = UnitAdmissionRefused
     else:
         denied_request = request
-        expected = AdmissionRefusedError
+        expected = UnitAdmissionRefused
         monkeypatch.setattr(policy, "admit_invoke", lambda *args: False)
 
     operation_reads = []

@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, AsyncMock
 import pytest
 from ordessa_environments import ProcessHandle
 from ordessa_execution_agents.harness.transport import EffectWriteGuard, EffectWriteRefused, WriterLeaseRefused, ChannelClosed
-from ordessa_execution_agents.harness.transport.environment_channel import EnvironmentProcessChannel
+from ordessa_units.sessions.environment_channel import EnvironmentProcessChannel
 
 
 UNIT = {'environmentNamespace': 'env', 'unitId': 'unit', 'ownerProviderRef': {}, 'sourceRevision': 'rev'}
@@ -169,7 +169,7 @@ def test_original_unit_sdk_guard_release_precedes_model_wait(tmp_path, monkeypat
         record.process.write_stdin = observed_write
         marker = Path(record.prepared_agent.harness.launch_spec.env['FIXTURE_CONFIG']+'.allow-result')
         with ThreadPoolExecutor(max_workers=1) as pool:
-            pending = pool.submit(unit.prompt_recorded, ref, lease, operation_ref='guarded-turn', timeout=5, prompt=[])
+            pending = pool.submit(unit.prompt, ref, lease, operation_ref='guarded-turn', timeout=5, prompt=[])
             try:
                 assert released.wait(2)
                 assert not pending.done()  # Peer has not returned the matching response.
@@ -184,9 +184,9 @@ def test_original_unit_sdk_guard_release_precedes_model_wait(tmp_path, monkeypat
             with pytest.raises(EffectWriteRefused):
                 connection.command('session/prompt', sessionId=record.entry.session_id, prompt=[],
                     effect_write_guard=forged, _effect_write_owner=owner, before_write=lambda raw:None)
-        with pytest.raises(UnitLifecycleRefused, match='recorded operation'): unit.prompt(ref, lease, prompt=[])
-        with pytest.raises(UnitLifecycleRefused, match='callbacks'): unit.prompt_recorded(ref, lease,
+        with pytest.raises(TypeError, match='operation_ref'): unit.prompt(ref, lease, prompt=[])
+        with pytest.raises(UnitLifecycleRefused, match='callbacks'): unit.prompt(ref, lease,
             operation_ref='wire-injection', prompt=[], effect_write_guard=object())
-        with pytest.raises(UnitLifecycleRefused, match='callbacks'): unit.prompt_recorded(ref, lease,
+        with pytest.raises(UnitLifecycleRefused, match='callbacks'): unit.prompt(ref, lease,
             operation_ref='wire-owner', prompt=[], _effect_write_owner=object())
         assert state['writes'] == 1 and j.events.count('spawn') == 1

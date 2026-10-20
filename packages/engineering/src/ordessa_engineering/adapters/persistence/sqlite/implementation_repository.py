@@ -13,10 +13,11 @@ from ordessa_engineering.domain.changes.repository_baseline import RepositoryBas
 from ordessa_engineering.domain.changes.repository_baseline_codec import (
     MAX_REPOSITORY_BASELINE_BYTES, decode_repository_baseline, encode_repository_baseline,
 )
-from ordessa_engineering.domain.packages.models import ImplementationPackage
+from ordessa_engineering.domain.packages.models import ImplementationPackage, PreparedPackagePayload
+from ordessa_engineering.domain.common.models.refs import BlobRef
 from ordessa_engineering.domain.packages.refs import ImplementationPackageRef
 from ordessa_engineering.domain.packages.codec import decode_package, encode_package
-from .blob_bytes import read_bytes, BlobBytesError
+from .blob_bytes import read_bytes, BlobBytesError, object_id
 from .implementation_schema import IMPLEMENTATION_SCHEMA_VERSION
 from .dispatch_schema import WORK_DISPATCH_SCHEMA_VERSION
 from .submission_schema import SUBMISSION_SCHEMA_VERSION, SUBMISSION_DDL, IMPLEMENTATION_APPLY_DDL
@@ -79,6 +80,29 @@ class SQLiteImplementationRepository:
             return read_bytes(self.access, self.access.authority_id, ref)
         except BlobBytesError as exc:
             raise ApplicationError('IMPLEMENTATION_BLOB_' + exc.code) from exc
+
+    def read_prepared_document(self, package_ref, role):
+        """Read only this package's captured document from the original blobs.
+
+        Generation and package-freeze archive those exact bytes before their
+        package COMMIT. Missing archives refuse; no live-file fallback exists.
+        """
+        package = self.resolve_package(package_ref)
+        if type(package.payload) is not PreparedPackagePayload:
+            raise ApplicationError('IMPLEMENTATION_ENVELOPE_UNAVAILABLE')
+        documents = tuple(d for d in package.payload.documents if d.role == role)
+        if len(documents) != 1:
+            raise ApplicationError('PACKAGE_DOCUMENT_ROLES_INCOMPLETE')
+        source = documents[0].source_ref
+        digest = source.capture.content_digest
+        ref = BlobRef(digest, source.byte_length, source.media_type,
+                      object_id(self.access.authority_id, digest.hex))
+        try:
+            return self.read_blob(ref)
+        except ApplicationError as exc:
+            if exc.code == 'IMPLEMENTATION_BLOB_NOT_FOUND':
+                raise ApplicationError('PACKAGE_DOCUMENT_ARCHIVE_UNAVAILABLE') from exc
+            raise
 
     def _verify_files(self, record):
         total = 0

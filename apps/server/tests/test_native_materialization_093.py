@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_harness import native_materialization as nm
+from ordessa_server_product import native_materialization as nm
 
 
 # -- G2: canonical -> dialect, and typed refusal -----------------------------

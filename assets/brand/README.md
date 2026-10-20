@@ -8,7 +8,7 @@ guidelines 的 PRIMARY/APP ICON/HORIZONTAL/VERTICAL 对照表逐张渲染确认�
 ## 布局
 
 - `icon.svg` —— 应用图标的**单一事实源**：`packaging/icons/export-icons.mjs`
-  与 `apps/desktop/scripts/build-icons.mjs` 构建时读取它栅格化全档
+  与 `apps/desktop/tests/smoke/build-icons.mjs` 构建时读取它栅格化全档
   （hicolor 16-256 + win/mac）。当前放 ordessa-icon-light（白底黑符·圆角卡），
   暗色版在 `app-icon/ordessa-icon-dark.svg`，要切换即替换本文件（纯文件替换，
   无代码改动）。

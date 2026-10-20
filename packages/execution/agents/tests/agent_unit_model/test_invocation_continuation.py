@@ -8,7 +8,7 @@ import sys
 import pytest
 from agent_tools_fixtures.invocation_authority import setup, issue, verify
 from ordessa_units.admission.invocation import InvocationIssuer, InvocationAuthorityRefused, InvocationVerifier
-from ordessa_execution_api.environment.errors import UnknownResultError
+from ordessa_units.errors import UnitOperationUnknown
 
 
 def continued(parts, context, **fields):
@@ -30,8 +30,8 @@ def test_same_successfully_consumed_claim_rechecks_without_new_claim_or_context(
         claim=p[0].read_operation_step(p[1],'work')
         assert claim.revision==1 and claim.outcome=='possibly-dispatched'
         assert p[0]._conn.execute('SELECT count(*) FROM env_request_steps').fetchone()[0]==1
-        with pytest.raises(UnknownResultError): issue(p)
-        with pytest.raises(UnknownResultError): verify(p,c)
+        with pytest.raises(UnitOperationUnknown): issue(p)
+        with pytest.raises(UnitOperationUnknown): verify(p,c)
     finally: p[0].close()
 
 

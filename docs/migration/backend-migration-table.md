@@ -20,8 +20,8 @@ All destinations are relative to `ordessa-migration/backend/tree/`.
 | `src/agent_box/`（除 `server/`） | `packages/pacthold/src/pacthold/` | 模块目录与全部 import `agent_box*` → `pacthold*`（work_core, storage, migrations, execution, extensions, service, resource_contracts, cli） | 治理核心 → packages/pacthold（契约 §2/§3） |
 | `src/agent_box/migrations/*.sql`（001–009） | `packages/pacthold/src/pacthold/migrations/` | 文件名与序号不变（数据兼容） | 数据库迁移序号是数据格式 |
 | `src/agent_box/server/` | `apps/server/src/ordessa_server/` | 包 `agent_box.server` → `ordessa_server`；入口 `python -m ordessa_server`；scripts `ordessa-server`、`ordessa-server-credential` | server 独立发行包，只 import pacthold/ordessa-harness，不复制核心 |
-| `plugins/agent-box-harness/` | `plugins/harness/` | dist `agent-box-harness` → `ordessa-harness`；包 `agent_box_harness` → `ordessa_harness`；entry points 指向 `ordessa_harness.entrypoints:*` | 唯一进 main 的后端插件 |
-| `plugins/agent-box-harness/src/agent_box_harnesses/`、`agent_box_harness_{dsh,qwen,kilo}/`（alias shim 包） | 不迁（删除） | — | 旧仓多发行名合并的 import-only 兼容 shim（`_compat.py` 自述 "retired distribution names"）；新仓只有单一发行名，所有活动 import 已改写为 canonical `ordessa_harness(.dsh/.qwen/.kilo)`；server bootstrap 两处 `agent_box_harnesses.registry` 调用点改直连 canonical 包。对应 shim 身份测试按新不变量重写（见 §6） |
+| `plugins/agent-box-harness/` | `plugins/harness/` | dist `agent-box-harness` → `ordessa-harness`；包 `agent_box_harness` → `pacthold.harness_kit`；entry points 指向 `pacthold.harness_kit.entrypoints:*` | 唯一进 main 的后端插件 |
+| `plugins/agent-box-harness/src/agent_box_harnesses/`、`agent_box_harness_{dsh,qwen,kilo}/`（alias shim 包） | 不迁（删除） | — | 旧仓多发行名合并的 import-only 兼容 shim（`_compat.py` 自述 "retired distribution names"）；新仓只有单一发行名，所有活动 import 已改写为 canonical `pacthold.harness_kit(.dsh/.qwen/.kilo)`；server bootstrap 两处 `agent_box_harnesses.registry` 调用点改直连 canonical 包。对应 shim 身份测试按新不变量重写（见 §6） |
 | acp-adapter Go 源 `41d9d94` | `plugins/harness/adapters/acp-adapter/` | 路径改名，go.mod 上游 module path `github.com/beyond5959/acp-adapter` 保留 | 桥归 harness 内部（契约 §3）；上游标识不改 |
 
 ## 2. 数据兼容例外清单（保留旧标识，逐项）
@@ -35,7 +35,7 @@ All destinations are relative to `ordessa-migration/backend/tree/`.
 | 工作记录标题 `"AgentBox Session Turn"` | `ordessa_server.bootstrap.runtime` | 落库数据值 |
 | 资源契约 id（`agent-box.skill@1`、`agent-box.profile@1` 等）与模块 `resource_contracts/agent_box_profile_v1.py`、类 `AgentBoxProfileV1` | `pacthold.resource_contracts` | 契约 id 是协议（测试 pin）；模块/类名随契约 id 命名 |
 | wire 协议 `wire/1`（`WIRE_VERSION`） | `ordessa_server.wire.handlers` | 协议版本 |
-| harness 数据 `harnesses.toml`（driver、harness_type、capabilities、native_home、guest_home、mount/skill/mcp 目标与键） | `plugins/harness/src/ordessa_harness/harnesses.toml` | 部署/观测数据格式，8 个 harness 身份未变 |
+| harness 数据 `harnesses.toml`（driver、harness_type、capabilities、native_home、guest_home、mount/skill/mcp 目标与键） | `plugins/harness/src/pacthold.harness_kit/harnesses.toml` | 部署/观测数据格式，8 个 harness 身份未变 |
 | npm 打包产物名 `agent-box-harness-runtime-{claude,codex,pi,dsh,…}` | `plugins/harness/packaging/*/package.json` + `package-lock.json` | 已发布的 npm 闭包产物与 lock（测试 `test_packaging_boundaries.py` 钉住 name==目录） |
 | `pacthold` 包内符号 `agent_box_home()`、`PluginContext.agent_box_home/.agent_box_version`、测试 fixture `tmp_agent_box_home` | core/extensions/cli/harness | 以 `AGENT_BOX_HOME` 兼容面命名的 API 符号，改名会与它所绑定的环境变量脱钩 |
 | `pacthold/__init__` 对 `version("agent-box-cli")` 的回退查询 | 已删除 | 旧发行名回退在单仓基线不再需要（dist 即 pacthold）；version() 主路径保留 |
@@ -61,7 +61,7 @@ All destinations are relative to `ordessa-migration/backend/tree/`.
 
 | 旧路径 | 新路径 | 说明 |
 | --- | --- | --- |
-| `tests/conftest.py` | `packages/pacthold/tests/conftest.py`、`apps/server/tests/conftest.py`、`tree/tests/conftest.py`（三份，各指向 `tree/scripts/artifact_presence.py`） | import 改 `pacthold.work_core.db`；presence 报告路径改新布局 |
+| `tests/conftest.py` | `packages/pacthold/tests/conftest.py`、`apps/server/tests/conftest.py`、`tree/tests/conftest.py`（三份，各指向 `tree/tooling/checks/artifact_presence.py`） | import 改 `pacthold.work_core.db`；presence 报告路径改新布局 |
 | `tests/_editor_mock.py`、`test_extensions.py`、`test_plugins_cli.py`、`test_resource_contracts.py`、`test_runtime_composition_protocol.py`、`test_work_core_*.py`（7 个） | `packages/pacthold/tests/` | 治理核心测试随包迁移，import 已改 |
 | `tests/capability/`（8 个，除 `test_capability_slots.py`） | `packages/pacthold/tests/capability/` | `test_capability_slots.py` 不迁：import `agent_box_runtime_local`/`agent_box_sandbox_bwrap`（不进 main） |
 | `tests/server/`（其余 ~74 个文件） | `apps/server/tests/`（含 `fixtures/`） | import 与仓内路径全部改新布局（`tests/server/fixtures` → `apps/server/tests/fixtures`、源码路径 → `apps/server/src/ordessa_server`、`packages/pacthold/src/pacthold`、`plugins/harness`） |
@@ -77,16 +77,16 @@ All destinations are relative to `ordessa-migration/backend/tree/`.
 
 | 新路径 | 来源/内容 |
 | --- | --- |
-| `tree/scripts/artifact_presence.py` | 来自 `scripts/server-round1/`，conftest VERDICT 机制依赖（Order 118） |
-| `tree/scripts/start-server.sh` | 新写：127.0.0.1 高位端口 + 临时 data-root 启动 `python -m ordessa_server`（只 import 树内包，无旧树路径） |
+| `tree/tooling/checks/artifact_presence.py` | 来自 `scripts/server-round1/`，conftest VERDICT 机制依赖（Order 118） |
+| `tree/tooling/dev/start-server.sh` | 新写：127.0.0.1 高位端口 + 临时 data-root 启动 `python -m ordessa_server`（只 import 树内包，无旧树路径） |
 | `tree/plugins/harness/packaging/builders/` | 来自 `scripts/server-round1/` 的 harness 构建脚本（见 §4），PYTHONPATH/digest 引用改为 `pacthold.resource_contracts.runtime_artifacts`（bwrap 插件只是该实现的 re-export），路径全部新布局 |
 | `tree/plugins/harness/packaging/acp-adapter/` | `build-acp-adapter-round-h.sh`（新写，配方 `CGO_ENABLED=0 go build -trimpath -buildvcs=false -ldflags "-buildid=" ./cmd/acp`）、`README.md`（pins 与验证）、`handshake-check.py`、`BUILD-RECORD.md`（历史 provenance，含 v0.3.8/hd004b 记录） |
 
 ## 6. server/harness 对核心与其余 9 插件的依赖结论
 
 - **pacthold（core）**：不 import 任何插件；对 `agent_box_web` 仅存在 `cli` 的惰性、可降级引用（提示安装），属可选组件守卫，非链路依赖。核心不反向依赖产品/插件 ✓。
-- **ordessa_server**：只 import `pacthold`（治理核心）与自身；`bootstrap` 惰性加载 `ordessa_harness.registry`（main 内插件 ✓）。对不进 main 插件的残留依赖点共 4 处，均已如实收口/待办：`ssh_connector`（本轮改惰性+typed shim，错误信息点名缺失包）、`bootstrap.runtime` 惰性 `agent_box_runtime_wsl.WslConnector`、`local_channel` 惰性 `agent_box_sandbox_windows.job.Job`、`cli` 惰性 `agent_box_web`——全部保持旧行为语义（缺包时 placement/功能明说拒绝），未删除、未隐藏，pyproject 不声明这些 dist（声明了会装不上）；README 与本表登记为待办。
-- **ordessa_harness**：只 import `pacthold`（resource_contracts/work_core/extensions）。原 pyproject 对 `agent-box-terminal-session` 的依赖声明被移除：全包源码 0 处 import 该插件（仅测试 `test_skill_projection.py` import skills 插件，该测试不迁），声明会使 `pip install ordessa-harness` 失败。
+- **ordessa_server**：只 import `pacthold`（治理核心）与自身；`bootstrap` 惰性加载 `pacthold.harness_kit.registry`（main 内插件 ✓）。对不进 main 插件的残留依赖点共 4 处，均已如实收口/待办：`ssh_connector`（本轮改惰性+typed shim，错误信息点名缺失包）、`bootstrap.runtime` 惰性 `agent_box_runtime_wsl.WslConnector`、`local_channel` 惰性 `agent_box_sandbox_windows.job.Job`、`cli` 惰性 `agent_box_web`——全部保持旧行为语义（缺包时 placement/功能明说拒绝），未删除、未隐藏，pyproject 不声明这些 dist（声明了会装不上）；README 与本表登记为待办。
+- **pacthold.harness_kit**：只 import `pacthold`（resource_contracts/work_core/extensions）。原 pyproject 对 `agent-box-terminal-session` 的依赖声明被移除：全包源码 0 处 import 该插件（仅测试 `test_skill_projection.py` import skills 插件，该测试不迁），声明会使 `pip install ordessa-harness` 失败。
 - **harness 对其余 9 插件**：无 import 依赖；仅 npm 打包锁（packaging/*/package-lock.json）与 deploy 脚本引用各 harness 目标，属其内部配置。
 
 ## 7. 显示层改名（非兼容面，已改并在此登记）

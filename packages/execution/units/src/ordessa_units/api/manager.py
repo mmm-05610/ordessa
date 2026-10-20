@@ -14,5 +14,9 @@ class UnitManager:
     def list(self):
         return self._assembly.list()
 
+    def read_input(self, authorization, request, unit_ref, captured_ref):
+        """Read an exact original managed attempt, including after Unit release."""
+        return self._assembly.read_input(authorization, request, unit_ref, captured_ref)
+
     def close(self, authorization):
         return self._assembly.close_manager(authorization)

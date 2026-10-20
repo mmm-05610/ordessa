@@ -16,10 +16,10 @@ import sys
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    IdentityMismatchError,
-    UnknownResultError,
+from ordessa_units.errors import (
+    UnitAdmissionRefused,
+    UnitIdentityMismatch,
+    UnitOperationUnknown,
 )
 from ordessa_units.configuration.contracts import (
     ApplicationPolicy,
@@ -114,7 +114,7 @@ def test_inline_snapshot_has_its_own_object_permission_for_write_and_read(assemb
     policy = SnapshotAccessPolicy(snapshot_write=False)
     env._policy = policy
 
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         coordinator.prepare(request, None, {}, {}, _inline_manifest(assembly, marker="denied-write"))
     assert store.read_operation(request) is None
     assert provider.calls == []
@@ -125,7 +125,7 @@ def test_inline_snapshot_has_its_own_object_permission_for_write_and_read(assemb
     assert store.list_domain("env", "agents.profile-snapshots")
 
     policy.snapshot_read = False
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         ProfileService(env).get_revision(ref)
 
 
@@ -134,7 +134,7 @@ def test_inline_snapshot_read_denial_is_rejected_before_operation_or_native_call
     env = rest[4]
     env._policy = SnapshotAccessPolicy(snapshot_read=False, snapshot_write=True)
 
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         coordinator.prepare(request, None, {}, {}, _inline_manifest(assembly, marker="read-denied"))
 
     assert store.read_operation(request) is None
@@ -183,7 +183,7 @@ def test_standing_no_change_domain_receipt_replays_without_rechecking_owner(mana
     first = coordinator.apply_profile(request, node, profile.current_revision, "native-2",
         ApplicationPolicy(), base_profile_ref=profile.current_revision)
     assert first == applied
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         store.read_operation(request)
     row = store._conn.execute(
         "SELECT receipt FROM env_requests WHERE environment=? AND principal=? AND request_id=?",
@@ -271,13 +271,13 @@ def test_unknown_operation_without_exact_domain_receipt_never_falls_back_to_unus
     base = _base_ref(management_setup)
 
     def unknown_operation(_request):
-        raise UnknownResultError("controlled incomplete request lookup")
+        raise UnitOperationUnknown("controlled incomplete request lookup")
 
     monkeypatch.setattr(store, "read_operation", unknown_operation)
     monkeypatch.setattr(store, "read_domain_result", lambda _request, _digest: None)
     request = RequestKey("env", "principal", "unknown-without-domain-proof")
 
-    with pytest.raises(UnknownResultError, match="controlled incomplete"):
+    with pytest.raises(UnitOperationUnknown, match="controlled incomplete"):
         coordinator.apply_profile(request, node, None, "native-1", ApplicationPolicy(),
             base_profile_ref=base, profile_manifest=_omitted_manifest(marker="must-not-be-stored"))
 
@@ -299,7 +299,7 @@ def test_no_change_same_request_with_different_manifest_conflicts_before_dispatc
         {**DECLARATION, "payload": {"modelId": "different"}},
     ), name="different-body-profile")
 
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         coordinator.apply_profile(key, node, changed.current_revision, "native-1", ApplicationPolicy(),
                                   base_profile_ref=base)
     assert first.status == "refused"
@@ -322,7 +322,7 @@ def test_omission_refusal_spends_existing_request_row_without_payload_or_scope_f
             base_profile_ref=base, profile_manifest=_omitted_manifest())
 
     assert refused.value.omitted == ("model",)
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         store.read_operation(request)
     assert store.list_domain("env", "agents.profile-snapshots") == ()
     assert store.list_domain("env", CONFIGURATION_ATTEMPTS) == before_fence
@@ -376,7 +376,7 @@ def test_correcting_omission_under_spent_request_id_conflicts_before_native_effe
     reset["action"] = "reset"
     corrected = {"harnessDefinitionRef": dict(DEFINITION), "schemaVersion": "1",
                  "declarations": [reset]}
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         coordinator.apply_profile(request, node, None, "native-1", ApplicationPolicy(),
             base_profile_ref=base, profile_manifest=corrected)
     assert owner_calls == []

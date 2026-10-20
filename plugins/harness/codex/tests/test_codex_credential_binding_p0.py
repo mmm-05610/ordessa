@@ -1,8 +1,7 @@
 from pathlib import Path
 import pytest
 
-from pacthold.extensions import PluginContext
-from ordessa_execution_api.resources.credentials import CredentialRefV1
+from ordessa_execution_agents.harness.definitions.credentials import CredentialRefV1
 from ordessa_execution_agents.harness.definitions import NativeCredentialRef, NativeProfileRef, NativeContinuationRef
 from ordessa_harness_codex.credentials import CodexCredentialSource
 

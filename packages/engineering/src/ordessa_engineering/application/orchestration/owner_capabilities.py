@@ -107,6 +107,18 @@ _SUBMISSION_RECORD = _obj({
     'source_refs':_array(_SOURCE_REF),'method_content':{'oneOf':[_METHOD_CONTENT,{'type':'null'}]},
     'checkpoint_ref':{'oneOf':[_BLOB,{'type':'null'}]},'digest':_DIGEST,
 })
+_SUBMISSION_RECORD_V2 = deepcopy(_SUBMISSION_RECORD)
+_SUBMISSION_RECORD_V2['properties']['schema_version'] = {'const': 2}
+_SUBMISSION_RECORD_V2['required'].append('schema_version')
+for _field in ('baseline_snapshots', 'resulting_snapshots', 'commit_refs',
+               'file_changes', 'test_evidence', 'effect_observations'):
+    _SUBMISSION_RECORD_V2['properties'][_field]['maxItems'] = 0
+_SUBMISSION_RECORD_V2['properties']['checkpoint_ref'] = {'type': 'null'}
+_SUBMISSION_RECORD_V2['properties']['output_refs'] = {
+    'type': 'array', 'minItems': 1, 'maxItems': 1, 'items': _OUTPUT_REF['oneOf'][0]}
+_SUBMISSION_RECORD_V2['properties']['method_content'] = deepcopy(_METHOD_CONTENT)
+_SUBMISSION_RECORD_V2['properties']['method_content']['properties']['rendered_body_ref'] = _BLOB
+_SUBMISSION_RECORD = {'oneOf': [_SUBMISSION_RECORD, _SUBMISSION_RECORD_V2]}
 _UNIT_REF = {
     'type':'object','additionalProperties':False,
     'required':['environmentNamespace','unitId','ownerProviderRef','sourceRevision'],
@@ -129,11 +141,11 @@ _DISPATCH = {
             'action_id':{'type':'string','minLength':1,'maxLength':512},
             'step_id':{'type':'string','minLength':1,'maxLength':512},
             'attempt':{'type':'integer','minimum':1,'maximum':4096},'unit_ref':_UNIT_REF,
-            'params':{'type':'object','x-maxCanonicalBytes':262144,
+            'params':{'type':'object','x-maxCanonicalBytes':589824,
                 'description':'Canonical JSON object; callback keys are forbidden recursively; the session is fixed by the original Unit session.'},
             'actions':{'type':'array','items':{'type':'string','enum':['edit_repository','run_checks','create_local_commit','export_bundle','publish_branch','deploy']},
                 'minItems':1,'uniqueItems':True},
-            'timeout':{'type':'number','exclusiveMinimum':0,'maximum':60}}}},
+            'timeout':{'type':'number','exclusiveMinimum':0,'maximum':3600}}}},
 }
 _DISPATCH['x-maxCanonicalBytes'] = 2097152
 
@@ -205,8 +217,8 @@ def owner_capabilities():
                     'source snapshot guard','original UnitRecords query identity','native effect-write lease'],
             effect='One fixed declared Work step attempt reserves its original debit on the declared-Work relation before one native RPC call; no retry.',
             idempotency='Original Work identity/step/attempt and immutable operation binding; unknown sends are not retried.',
-            limits={'unit_ref_canonical_bytes_max':4096,'prompt_canonical_bytes_max':262144,
-                    'attempt_min':1,'attempt_max':4096,'timeout_max_seconds':60},
+            limits={'unit_ref_canonical_bytes_max':4096,'prompt_canonical_bytes_max':589824,
+                    'attempt_min':1,'attempt_max':4096,'timeout_max_seconds':3600},
             note='Outcome is only the original native RPC record status; engineering_completed is always false.'),
         _descriptor('engineering.submissions.record_report',
             {'type':'object','additionalProperties':False,'required':['record'],
@@ -216,8 +228,9 @@ def owner_capabilities():
                     'current package Grant and complete review gates','original Submission graph and UoW'],
             effect='Persist immutable authored report Submission; workflow_state submitted, review_status pending_review, accepted false.',
             idempotency='Original CommandContext key plus exact report-mode Submission digest; no replay as legacy record.',
-            limits={'record_canonical_bytes_max':2097152,'report_observation_bytes_max':262144},
-            note='Only fixed Artifact outputs and MethodContent reports. File/test/effect claims remain asserted report data, never verified facts or pass.'),
+            limits={'record_canonical_bytes_max':2097152,'report_observation_bytes_max':262144,
+                    'declared_work_report_observation_bytes_max':2621440},
+            note='Historical fixed Artifact reports or explicit v2 Work report Blob outputs. File/test/effect claims remain asserted report data, never verified facts or pass.'),
     )
 
 
@@ -226,3 +239,73 @@ def detached_owner_capabilities():
     return tuple(CapabilityDescriptor(item.capability_id, item.kind, item.interface_version,
                                       item.contract_digest, deepcopy(dict(item.contract)))
                  for item in owner_capabilities())
+
+
+def agent_dispatch_capability():
+    """Explicit v2 Agent dispatch declaration; old v1 bytes remain historical.
+
+    Composition must bind this descriptor with the actual Agent Work owner.
+    Merely asking for the descriptor grants no authority or registration.
+    """
+    schema = deepcopy(_DISPATCH)
+    request = schema['properties']['dispatch']
+    request['required'] = [key if key != 'unit_ref' else 'agent_ref' for key in request['required']]
+    request['properties'].pop('unit_ref')
+    request['properties']['agent_ref'] = {
+        'type':'object', 'additionalProperties':False,
+        'required':['schemaVersion','namespace','instanceId','bindingDigest'],
+        'properties':{'schemaVersion':{'const':'agent-instance/1'},
+            'namespace':{'type':'string','minLength':1,'maxLength':512},
+            'instanceId':{'type':'string','minLength':1,'maxLength':512},
+            'bindingDigest':{'type':'string','pattern':'^sha256:[0-9a-f]{64}$'}},
+        'x-maxCanonicalBytes':8192}
+    request['properties']['params'] = {'type':'object','additionalProperties':False,
+        'required':['sessionId'], 'properties':{'sessionId':{'type':'string','minLength':1,'maxLength':8192}},
+        'description':'Explicit original fixed-session metadata. The Work owner assembles the authored prompt.'}
+    request['properties']['timeout'] = {'type':'number','exclusiveMinimum':0,'maximum':60}
+    return _descriptor('engineering.executions.dispatch', schema, ['completed','failed','unknown'],
+        interface_version='2',
+        input_schema_id='urn:ordessa:engineering:owner-operation:engineering.executions.dispatch:input:2',
+        guards=['declared Work identity and exact frozen package subject',
+            'original package Grant, method, review, control and action-consumption guards',
+            'pinned Agent Profile and original source read',
+            'explicit original workspace action-scope fence',
+            'original Agent TurnRef/query/input binding and single-use physical effect handoff'],
+        effect='One original declared Work/step/attempt reserves its immutable debit before the same original Agent recorded prompt; no retry.',
+        idempotency='Original Work identity/step/attempt with fixed original Agent TurnRef; UNKNOWN never restores send rights.',
+        limits={'agent_ref_canonical_bytes_max':8192,'prompt_canonical_bytes_max':262144,
+                'attempt_min':1,'attempt_max':4096,'timeout_max_seconds':60},
+        note='Only original recorded Agent outcome; engineering_completed and accepted remain false.')
+
+
+def agent_owner_capabilities():
+    """Trusted explicit v2 selection; never return two versions of one id."""
+    descriptors = {item.capability_id: item for item in (agent_dispatch_capability(), agent_report_capability())}
+    return tuple(descriptors.get(item.capability_id, item) for item in owner_capabilities())
+
+
+def agent_report_capability():
+    """Explicit Agent-only input2; original Unit input1 remains historical bytes."""
+    properties = deepcopy(_SUBMISSION_RECORD['oneOf'][1]['properties'])
+    fields = ('realm_id','project_id','submission_id','created_at','created_by','change_set',
+        'authorization_refs','package_ref','output_refs','coverage','source_refs','method_content',
+        'checkpoint_ref','digest')
+    report = {name: properties[name] for name in fields}
+    report['schemaVersion'] = {'const':'engineering-agent-submission-report/1'}
+    agent = deepcopy(agent_dispatch_capability().contract['input_schema']['properties']['dispatch']['properties']['agent_ref'])
+    turn = _obj({'schemaVersion':{'const':'agent-turn-ref/1'},'instanceRef':agent,'turnId':{'type':'string','minLength':1}})
+    report['execution_ref'] = _obj({'schemaVersion':{'const':'engineering-agent-execution-ref/2'},
+        'agent_ref_bytes':agent,'turn_ref_bytes':turn,'source_revision':{'type':'string','minLength':1},
+        'operation_ref':{'type':'string','minLength':1},'engineering_attempt_ref':{'type':'string','minLength':1},
+        'prompt_input_digest':_DIGEST,'query_digest':{'type':'string','pattern':'^sha256:[0-9a-f]{64}$'},
+        'captured_observation_ref':_BLOB})
+    return _descriptor('engineering.submissions.record_report', _obj({'record':_obj(report)}), ['submitted','unknown'],
+        interface_version='2', input_schema_id='urn:ordessa:engineering:owner-operation:engineering.submissions.record_report:input:2',
+        guards=['original authorized Agent TurnRef/query/input/operation capture and Profile provenance',
+            'same-authority BlobStore','pinned selected Method report schema and Agent input2 contract',
+            'original frozen package Grant, full review/control/action-consumption and Work binding',
+            'original Submission graph, command journal and COMMIT UoW'],
+        effect='Persist one immutable Agent authored report as submitted and pending_review; accepted false.',
+        idempotency='Original CommandContext key and explicit input2 digest; replay performs no native read or send.',
+        limits={'record_canonical_bytes_max':2097152,'report_observation_bytes_max':262144},
+        note='Only ordinary first-attempt Agent Work reports. Checkpoint/continuation require their own new contracts; report file/test/effect text remains asserted.')

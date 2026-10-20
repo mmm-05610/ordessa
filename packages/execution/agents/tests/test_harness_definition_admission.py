@@ -6,10 +6,10 @@ from threading import RLock
 
 import pytest
 
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
+from ordessa_execution_agents.harness.providers.registry.errors import (
+    CatalogAdmissionRefused,
+    CatalogUnavailable,
+    CatalogIdentityConflict,
 )
 from ordessa_execution_agents.harness.providers.registry import (
     AdmittedHarnessDefinition,
@@ -51,7 +51,7 @@ class UsageStore:
     def unresolved_provider_usages(self, namespace, owner_id, generation):
         assert (namespace, owner_id, generation) == ("env", "brand", 3)
         if not self.available:
-            raise GuaranteeUnavailableError("original provider Usage ledger unavailable")
+            raise CatalogUnavailable("original provider Usage ledger unavailable")
         return ("usage-1",) if self.held else ()
 
 
@@ -85,7 +85,7 @@ def setup(*, observer=None, store=None):
         policy=policy,
         principal_scope="controlled",
         admission_lock=lock,
-        retirement_guard=lambda owner_id, generation: context_ref["context"].provider_retirement_guard(
+        retirement_guard=lambda owner_id, generation: context_ref["context"].harness_provider_retirement_guard(
             owner_id, generation
         ),
     )
@@ -121,7 +121,7 @@ def test_declaration_admission_uses_catalog_without_runtime_dispatch():
 
     committed = registration.commit()
     assert len(committed) == 1 and type(committed[0]) is AdmittedHarnessDefinition
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         registration.commit()
     admitted = admission.describe(declaration.descriptor.definition_ref)
     assert admitted == committed[0] and admission.list() == (admitted,)
@@ -137,7 +137,7 @@ def test_declaration_admission_uses_catalog_without_runtime_dispatch():
 
 
 def test_missing_context_catalog_binding_refuses_discovery():
-    with pytest.raises(GuaranteeUnavailableError, match="context HarnessCatalog binding required"):
+    with pytest.raises(CatalogUnavailable, match="context HarnessCatalog binding required"):
         HarnessAdmission(object())
 
 
@@ -146,7 +146,7 @@ def test_registration_rollback_releases_only_its_staged_batch():
     registration = stage(catalog, declaration)
     registration.rollback()
     assert registration.state == "rolled_back" and catalog.list() == ()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         registration.commit()
     assert len(stage(catalog, declaration).commit()) == 1
 
@@ -165,7 +165,7 @@ def test_exact_definition_and_provider_identity_keep_original_batch_claims():
     _context, _policy, declaration, _calls, catalog, _store = setup()
     first = stage(catalog, declaration)
     # Same owner-generation is claimed at stage time, before either commit.
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         stage(catalog, declaration)
 
     # Changing provider identity or Mapping insertion order cannot evade the
@@ -173,7 +173,7 @@ def test_exact_definition_and_provider_identity_keep_original_batch_claims():
     same_definition = HarnessDefinitionDeclaration(
         replace(declaration.descriptor, provider_id="another"), declaration.installation_observer
     )
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         stage(catalog, same_definition, owner_id="other")
     reordered = HarnessDefinitionDeclaration(
         replace(
@@ -183,7 +183,7 @@ def test_exact_definition_and_provider_identity_keep_original_batch_claims():
         ),
         declaration.installation_observer,
     )
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         stage(catalog, reordered, owner_id="other-two")
 
     first.commit()
@@ -194,10 +194,10 @@ def test_installation_owner_mutation_between_stage_and_commit_is_refused():
     _context, _policy, declaration, calls, catalog, _store = setup()
     registration = stage(catalog, declaration)
     object.__setattr__(declaration, "installation_observer", lambda _ref: HarnessInstallationObservation("unknown"))
-    with pytest.raises(AdmissionRefusedError, match="declaration changed after staging"):
+    with pytest.raises(CatalogAdmissionRefused, match="declaration changed after staging"):
         registration.commit()
     assert registration.state == "unknown"
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         registration.commit()
     assert catalog.list() == () and calls == []
 
@@ -211,7 +211,7 @@ def test_foreign_namespace_and_revoked_observation_are_refused():
         ),
         declaration.installation_observer,
     )
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(CatalogIdentityConflict):
         stage(catalog, foreign)
 
     def revoke(_installation_ref):
@@ -223,7 +223,7 @@ def test_foreign_namespace_and_revoked_observation_are_refused():
     revoking = HarnessDefinitionDeclaration(declaration.descriptor, revoke)
     stage(catalog, revoking).commit()
     admission = HarnessAdmission(context)
-    with pytest.raises(AdmissionRefusedError, match="discovery refused"):
+    with pytest.raises(CatalogAdmissionRefused, match="discovery refused"):
         admission.inspect_installation(revoking.descriptor.definition_ref)
     assert observed == [True] and calls == []  # permission was revoked by the native observation
 
@@ -235,17 +235,17 @@ def test_draining_excludes_new_admission_and_preserves_retirement_usage_gate():
     admission = HarnessAdmission(context)
     catalog.drain("brand", 3)
     assert admission.list() == ()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         admission.describe(declaration.descriptor.definition_ref)
     assert admission.describe_for_cleanup(
         declaration.descriptor.definition_ref, admitted.provider_ref
     ) == admitted
 
-    with pytest.raises(GuaranteeUnavailableError, match="Usage remains held"):
+    with pytest.raises(CatalogUnavailable, match="Usage remains held"):
         catalog.retire("brand", 3)
     store.held = False
     catalog.retire("brand", 3)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         admission.describe_for_cleanup(declaration.descriptor.definition_ref, admitted.provider_ref)
     assert calls == []
     catalog.close()
@@ -256,7 +256,7 @@ def test_missing_durable_usage_guarantee_refuses_retirement():
     context, _policy, declaration, calls, catalog, _store = setup(store=store)
     admitted, = stage(catalog, declaration).commit()
     catalog.drain("brand", 3)
-    with pytest.raises(GuaranteeUnavailableError, match="Usage ledger unavailable"):
+    with pytest.raises(CatalogUnavailable, match="Usage ledger unavailable"):
         catalog.retire("brand", 3)
     assert HarnessAdmission(context).list() == ()
     assert HarnessAdmission(context).describe_for_cleanup(

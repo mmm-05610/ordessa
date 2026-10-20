@@ -1,0 +1,901 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ordessa:gitlab-product-change:report:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "report_version": {
+      "const": 1
+    },
+    "identity": {
+      "$ref": "#/$defs/identity"
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/role"
+      }
+    },
+    "validation_track": {
+      "$ref": "#/$defs/validation_track"
+    },
+    "build_track": {
+      "$ref": "#/$defs/build_track"
+    },
+    "track_links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/track_link"
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/blocker"
+      }
+    },
+    "rework": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rework"
+      }
+    },
+    "merge_requests": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/merge_request"
+      }
+    },
+    "deployment": {
+      "$ref": "#/$defs/deployment"
+    },
+    "outcome_evaluation": {
+      "$ref": "#/$defs/outcome_evaluation"
+    },
+    "closure": {
+      "$ref": "#/$defs/closure"
+    },
+    "source_snapshot": {
+      "$ref": "#/$defs/source_snapshot"
+    },
+    "revision_history": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/revision_observation"
+      }
+    }
+  },
+  "required": [
+    "report_version",
+    "identity",
+    "roles",
+    "validation_track",
+    "build_track",
+    "track_links",
+    "blockers",
+    "rework",
+    "merge_requests",
+    "deployment",
+    "outcome_evaluation",
+    "closure",
+    "source_snapshot"
+  ],
+  "$defs": {
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "phase_status": {
+      "enum": [
+        "not_started",
+        "active",
+        "completed",
+        "skipped",
+        "blocked",
+        "rework",
+        "deferred",
+        "rejected",
+        "cancelled"
+      ]
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "result": {
+          "$ref": "#/$defs/text"
+        },
+        "rationale": {
+          "$ref": "#/$defs/text"
+        },
+        "decided_by": {
+          "$ref": "#/$defs/text"
+        },
+        "decided_at": {
+          "$ref": "#/$defs/text"
+        },
+        "approval_or_record_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "result",
+        "rationale",
+        "decided_by",
+        "decided_at",
+        "approval_or_record_ref"
+      ]
+    },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/phase_status"
+        },
+        "entered_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "exited_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "owner": {
+          "$ref": "#/$defs/text"
+        },
+        "outcome_or_skip_rationale": {
+          "$ref": "#/$defs/text"
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/refs"
+        },
+        "decision": {
+          "$ref": "#/$defs/decision"
+        }
+      },
+      "required": [
+        "status",
+        "entered_at",
+        "exited_at",
+        "owner",
+        "outcome_or_skip_rationale",
+        "evidence_refs",
+        "decision"
+      ]
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_path": {
+          "$ref": "#/$defs/text"
+        },
+        "issue_url": {
+          "$ref": "#/$defs/text"
+        },
+        "issue_title": {
+          "$ref": "#/$defs/text"
+        },
+        "work_type": {
+          "$ref": "#/$defs/text"
+        },
+        "product_area": {
+          "$ref": "#/$defs/text"
+        },
+        "primary_dri": {
+          "$ref": "#/$defs/text"
+        },
+        "issue_state_model": {
+          "enum": [
+            "issue_status",
+            "workflow_label",
+            "other"
+          ]
+        },
+        "issue_state_value": {
+          "$ref": "#/$defs/text"
+        },
+        "state_observed_at": {
+          "$ref": "#/$defs/text"
+        },
+        "tracking_item_refs": {
+          "$ref": "#/$defs/refs"
+        }
+      },
+      "required": [
+        "project_path",
+        "issue_url",
+        "issue_title",
+        "work_type",
+        "product_area",
+        "primary_dri",
+        "issue_state_model",
+        "issue_state_value",
+        "state_observed_at",
+        "tracking_item_refs"
+      ]
+    },
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phase_or_decision": {
+          "$ref": "#/$defs/text"
+        },
+        "role_name": {
+          "$ref": "#/$defs/text"
+        },
+        "person_or_group": {
+          "$ref": "#/$defs/text"
+        },
+        "authority_basis": {
+          "$ref": "#/$defs/text"
+        },
+        "approval_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "phase_or_decision",
+        "role_name",
+        "person_or_group",
+        "authority_basis",
+        "approval_ref"
+      ]
+    },
+    "validation_track": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "applicability": {
+          "enum": [
+            "applicable",
+            "partially_applicable",
+            "skipped",
+            "deferred"
+          ]
+        },
+        "applicability_rationale": {
+          "$ref": "#/$defs/text"
+        },
+        "problem_validation": {
+          "$ref": "#/$defs/phase"
+        },
+        "design": {
+          "$ref": "#/$defs/phase"
+        },
+        "solution_validation": {
+          "$ref": "#/$defs/phase"
+        },
+        "success_hypotheses_and_metrics": {
+          "$ref": "#/$defs/refs"
+        },
+        "validation_evidence_refs": {
+          "$ref": "#/$defs/refs"
+        }
+      },
+      "required": [
+        "applicability",
+        "applicability_rationale",
+        "problem_validation",
+        "design",
+        "solution_validation",
+        "success_hypotheses_and_metrics",
+        "validation_evidence_refs"
+      ]
+    },
+    "build_track": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "applicability": {
+          "enum": [
+            "applicable",
+            "partially_applicable",
+            "skipped",
+            "deferred"
+          ]
+        },
+        "applicability_rationale": {
+          "$ref": "#/$defs/text"
+        },
+        "plan": {
+          "$ref": "#/$defs/phase"
+        },
+        "development": {
+          "$ref": "#/$defs/phase"
+        },
+        "testing": {
+          "$ref": "#/$defs/phase"
+        },
+        "review": {
+          "$ref": "#/$defs/phase"
+        },
+        "verification": {
+          "$ref": "#/$defs/phase"
+        },
+        "planning_refs": {
+          "$ref": "#/$defs/refs"
+        },
+        "test_and_review_refs": {
+          "$ref": "#/$defs/refs"
+        }
+      },
+      "required": [
+        "applicability",
+        "applicability_rationale",
+        "plan",
+        "development",
+        "testing",
+        "review",
+        "verification",
+        "planning_refs",
+        "test_and_review_refs"
+      ]
+    },
+    "track_link": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "relation": {
+          "enum": [
+            "overlap",
+            "feeds",
+            "blocks",
+            "unblocks",
+            "handoff",
+            "skip_decision"
+          ]
+        },
+        "validation_work_ref": {
+          "$ref": "#/$defs/text"
+        },
+        "build_work_ref": {
+          "$ref": "#/$defs/text"
+        },
+        "recorded_at": {
+          "$ref": "#/$defs/text"
+        },
+        "recorded_by": {
+          "$ref": "#/$defs/text"
+        },
+        "rationale_or_decision_ref": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "relation",
+        "validation_work_ref",
+        "build_work_ref",
+        "recorded_at",
+        "recorded_by",
+        "rationale_or_decision_ref"
+      ]
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "enum": [
+            "open",
+            "resolved",
+            "accepted_risk",
+            "cancelled"
+          ]
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "owner": {
+          "$ref": "#/$defs/text"
+        },
+        "opened_at": {
+          "$ref": "#/$defs/text"
+        },
+        "expected_resolution_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "actions_taken_refs": {
+          "$ref": "#/$defs/refs"
+        },
+        "resolution_or_escalation": {
+          "$ref": "#/$defs/text"
+        },
+        "closed_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "state",
+        "description",
+        "owner",
+        "opened_at",
+        "expected_resolution_at",
+        "actions_taken_refs",
+        "resolution_or_escalation",
+        "closed_at"
+      ]
+    },
+    "rework": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trigger": {
+          "$ref": "#/$defs/text"
+        },
+        "from_phase": {
+          "$ref": "#/$defs/text"
+        },
+        "new_revision_or_follow_up_ref": {
+          "$ref": "#/$defs/text"
+        },
+        "owner": {
+          "$ref": "#/$defs/text"
+        },
+        "status": {
+          "enum": [
+            "open",
+            "in_progress",
+            "completed",
+            "deferred",
+            "cancelled"
+          ]
+        },
+        "exit_criteria": {
+          "$ref": "#/$defs/text"
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/refs"
+        }
+      },
+      "required": [
+        "trigger",
+        "from_phase",
+        "new_revision_or_follow_up_ref",
+        "owner",
+        "status",
+        "exit_criteria",
+        "evidence_refs"
+      ]
+    },
+    "merge_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "$ref": "#/$defs/text"
+        },
+        "state": {
+          "enum": [
+            "open",
+            "merged",
+            "closed_unmerged"
+          ]
+        },
+        "source_revision": {
+          "$ref": "#/$defs/text"
+        },
+        "merged_commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "merged_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "review_and_pipeline_refs": {
+          "$ref": "#/$defs/refs"
+        },
+        "merge_is_deployment_evidence": {
+          "const": false
+        }
+      },
+      "required": [
+        "url",
+        "state",
+        "source_revision",
+        "merged_commit",
+        "merged_at",
+        "review_and_pipeline_refs",
+        "merge_is_deployment_evidence"
+      ]
+    },
+    "deployment_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "$ref": "#/$defs/text"
+        },
+        "target_environment": {
+          "$ref": "#/$defs/text"
+        },
+        "version_or_commit": {
+          "$ref": "#/$defs/text"
+        },
+        "result": {
+          "enum": [
+            "succeeded",
+            "failed",
+            "blocked",
+            "unknown",
+            "not_run"
+          ]
+        },
+        "occurred_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "external_evidence_refs": {
+          "$ref": "#/$defs/refs"
+        },
+        "confirmed_by": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "event",
+        "target_environment",
+        "version_or_commit",
+        "result",
+        "occurred_at",
+        "external_evidence_refs",
+        "confirmed_by"
+      ]
+    },
+    "deployment_path": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "applicability": {
+          "enum": [
+            "applicable",
+            "skipped",
+            "not_selected",
+            "deferred"
+          ]
+        },
+        "rationale": {
+          "$ref": "#/$defs/text"
+        },
+        "release_or_package_binding": {
+          "$ref": "#/$defs/text"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/deployment_event"
+          }
+        },
+        "post_deployment_migration_refs": {
+          "$ref": "#/$defs/refs"
+        },
+        "live_version_confirmed": {
+          "type": "boolean"
+        },
+        "confirmation_evidence_refs": {
+          "$ref": "#/$defs/refs"
+        },
+        "upstream_release_state": {
+          "enum": [
+            "not_released",
+            "published",
+            "available",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "target_installation_state": {
+          "enum": [
+            "not_installed",
+            "installed",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "target_installation_evidence_refs": {
+          "$ref": "#/$defs/refs"
+        }
+      },
+      "required": [
+        "applicability",
+        "rationale",
+        "release_or_package_binding",
+        "events",
+        "post_deployment_migration_refs",
+        "live_version_confirmed",
+        "confirmation_evidence_refs",
+        "upstream_release_state",
+        "target_installation_state",
+        "target_installation_evidence_refs"
+      ]
+    },
+    "deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target_model": {
+          "enum": [
+            "gitlab_com",
+            "self_managed",
+            "both",
+            "other",
+            "not_yet_selected"
+          ]
+        },
+        "target_rationale": {
+          "$ref": "#/$defs/text"
+        },
+        "gitlab_com_path": {
+          "$ref": "#/$defs/deployment_path"
+        },
+        "self_managed_path": {
+          "$ref": "#/$defs/deployment_path"
+        },
+        "deployment_dri": {
+          "$ref": "#/$defs/text"
+        },
+        "verification_decision": {
+          "$ref": "#/$defs/decision"
+        }
+      },
+      "required": [
+        "target_model",
+        "target_rationale",
+        "gitlab_com_path",
+        "self_managed_path",
+        "deployment_dri",
+        "verification_decision"
+      ]
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "definition": {
+          "$ref": "#/$defs/text"
+        },
+        "baseline": {
+          "type": [
+            "string",
+            "integer",
+            "null"
+          ]
+        },
+        "target": {
+          "type": [
+            "string",
+            "integer",
+            "null"
+          ]
+        },
+        "observed_value": {
+          "type": [
+            "string",
+            "integer",
+            "null"
+          ]
+        },
+        "measurement_window": {
+          "$ref": "#/$defs/text"
+        },
+        "source_refs": {
+          "$ref": "#/$defs/refs"
+        },
+        "owner": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "name",
+        "definition",
+        "baseline",
+        "target",
+        "observed_value",
+        "measurement_window",
+        "source_refs",
+        "owner"
+      ]
+    },
+    "outcome_evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/phase_status"
+        },
+        "evaluation_window": {
+          "$ref": "#/$defs/text"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/metric"
+          }
+        },
+        "customer_and_operational_feedback_refs": {
+          "$ref": "#/$defs/refs"
+        },
+        "decision": {
+          "enum": [
+            "continue",
+            "iterate",
+            "rollback",
+            "abandon",
+            "restart_validation",
+            "extend_measurement",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "decision_rationale": {
+          "$ref": "#/$defs/text"
+        },
+        "decision_owner": {
+          "$ref": "#/$defs/text"
+        },
+        "decided_at": {
+          "$ref": "#/$defs/text"
+        },
+        "follow_up_refs": {
+          "$ref": "#/$defs/refs"
+        }
+      },
+      "required": [
+        "status",
+        "evaluation_window",
+        "metrics",
+        "customer_and_operational_feedback_refs",
+        "decision",
+        "decision_rationale",
+        "decision_owner",
+        "decided_at",
+        "follow_up_refs"
+      ]
+    },
+    "closure": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "decision": {
+          "enum": [
+            "complete_after_verification",
+            "deferred",
+            "cancelled",
+            "duplicate",
+            "wont_do",
+            "open_follow_up",
+            "not_closed",
+            "deferred",
+            "rejected"
+          ]
+        },
+        "reason": {
+          "$ref": "#/$defs/text"
+        },
+        "closed_or_reviewed_by": {
+          "$ref": "#/$defs/text"
+        },
+        "recorded_at": {
+          "$ref": "#/$defs/text"
+        },
+        "feedback_and_follow_up_refs": {
+          "$ref": "#/$defs/refs"
+        },
+        "next_review_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "decision",
+        "reason",
+        "closed_or_reviewed_by",
+        "recorded_at",
+        "feedback_and_follow_up_refs",
+        "next_review_at"
+      ]
+    },
+    "source_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_index_path": {
+          "const": "SOURCES.md"
+        },
+        "retrieved_at": {
+          "$ref": "#/$defs/text"
+        },
+        "source_policy_version_or_url": {
+          "$ref": "#/$defs/text"
+        },
+        "version_discrepancies_not_resolved": {
+          "$ref": "#/$defs/refs"
+        },
+        "authored_report_is_claim_only": {
+          "const": true
+        }
+      },
+      "required": [
+        "source_index_path",
+        "retrieved_at",
+        "source_policy_version_or_url",
+        "version_discrepancies_not_resolved",
+        "authored_report_is_claim_only"
+      ]
+    },
+    "revision_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "observation": {
+          "enum": [
+            "before_wait",
+            "resume_after_wait",
+            "rework_revision",
+            "other"
+          ]
+        },
+        "report_revision_ref": {
+          "$ref": "#/$defs/text"
+        },
+        "observed_at": {
+          "$ref": "#/$defs/text"
+        },
+        "issue_state_value": {
+          "$ref": "#/$defs/text"
+        },
+        "summary": {
+          "$ref": "#/$defs/text"
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/refs"
+        }
+      },
+      "required": [
+        "observation",
+        "report_revision_ref",
+        "observed_at",
+        "issue_state_value",
+        "summary",
+        "evidence_refs"
+      ]
+    }
+  }
+}

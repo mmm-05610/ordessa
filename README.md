@@ -1,42 +1,24 @@
 # Ordessa
 
-**A software engineering system for coding agents.**
+2026-10-10：本次上层结构目标已完成并结束；[逐项验收与原始证据](docs/verification/overnight-upper-structure-20261009/final-acceptance.md)。完整产品及底层全面运行未作完成声明。
 
-Ordessa 是供编程 Agent 调用的软件工程任务执行与管理系统。
+Ordessa is the product monorepo for the desktop Workbench, Server, Agent/Profile mechanisms, independent Harness providers, engineering workflow and plugins.
 
-开发者在熟悉的 Codex、Claude Code 等工具中讨论方案，由主 Agent 调用系统提交设计变更。
-系统依据 DID 设计文档规范组织设计审核，参考 Spec Kit 的文档组织方式，将通过审核的变更
-转为包含规格说明、实施计划和任务清单的实施包，并关联设计版本、实施任务与验收记录，
-让任务有明确的设计依据和验收标准。
+Current applications live under `apps/{cli,desktop,mcp,server,status-board}`; MCP and status-board are structural reservations. Shared source lives under `packages/{engineering,execution,interfaces,infrastructure}`; business plugins live under `plugins/{agents,decision,engineering,harness,workbench}`. The Server product is `apps/server/deployment/default-product`; Desktop assembly is `apps/desktop/packaging/product`; Agent Tools is `apps/cli` plus Server composition under `composition/agent_tools`. Retired `packages/backend`, `packages/frontend`, `products`, `scripts` and compatibility runtime source roots are absent. The sole Agent/Profile service shares the original Pacthold Environment, CoreRegistry, store and permission authorities. Persisted identifiers, fifteen Harness brands and desktop extension identities remain unchanged. Engineering and Decision each have one implementation owner, with concrete Jev owned by its independent plugin.
 
-在此基础上，Ordessa 封装决策单元和 Agent 执行单元，组织执行者选择、任务派发、独立审查及
-进度查询。以下是项目的定位与设计方向；实现状态见下方说明。
+Start with [the documentation index](docs/README.md). [The engineering-system positioning](docs/reference/engineering-platform-positioning.md) states the engineering platform's positioning together with an explicit verified/unverified boundary. [The development baseline](docs/reference/baseline.md) lists current command entrypoints, toolchain observations and unverified scope. [The nightly plan](docs/implementation/nightly/README.md) records the fixed source, worktree, W00–W16 orders and authorization boundaries.
 
-## 设计重点
+The root `.env`, live data and service directories are local environment resources, never source artifacts. Use package-local Python metadata and the root npm lock; do not copy historical aggregate install commands. Full aggregate and product runtime validation are separate from the upper architecture boundary checks. Full product/runtime acceptance is not claimed.
 
-- **可迭代的工程方法。** `methods` 定义审核标准、实施步骤、接受条件与有界返工规则，
-  让工程方法可以独立于通用执行机制持续改进。
-- **方法与机制分离。** 工程层解释方法、组织实施包和记录；决策单元与 Agent 执行单元
-  提供各自的执行能力，具体 provider 通过公开接口接入。
-- **原生通道与执行环境。** 保留 Harness 的原生交互语义，以 ACP 等通道连接执行者，
-  并通过 Environment 管理执行环境与生命周期。
-- **可追溯的工程过程。** 用精确版本引用关联设计、审核、实施包和执行记录；分别记录
-  执行结果、独立审查与工程接受结论。
+The nightly integration branch is `codex/nightly-restructure-20261009` in `worktree/nightly-restructure-20261009`, based on `c5c0e50b08178cbfb52aa5e423d904aa9c5b5145`. This upper architecture goal is tracked separately from the broader product implementation; actual checkpoints, verification and lower unreviewed scope are recorded in [nightly status](docs/implementation/nightly/status.md). No push or merge to main is authorized.
 
-## 开发状态
+Architecture and known gaps: [architecture](docs/architecture/overview.md), [known issues](docs/reference/known-issues.md), [nightly status](docs/implementation/nightly/status.md). Historical documentation and source remain recoverable through [the archive](docs/archive/pre-restructure/README.md) and [reference index](docs/reference/index.md).
 
-项目正在持续开发与结构收敛。声明式 Work、设计审核记录、实施包登记、执行状态持久化及
-版本化授权模型已有开发检查点；最新代码正在 [PR #70](https://github.com/mmm-05610/ordessa/pull/70)
-中审查与整合，尚未合入当前 main。
+Engineering uses the original library connection for method snapshots, Artifact commands, review records, complete review sets and the command journal. Schema2 remains the default; upgrades through schema7 are explicit. Earlier review tests and installed-wheel evidence are recorded in [review checkpoint](docs/implementation/nightly/evidence/W04/review-checkpoint.md). Raw responses now persist through the same byte authority with versioned review records; see [current checkpoint](docs/implementation/nightly/evidence/W04/durable-raw-checkpoint.md). Production authentication/catalog/reviewer ports, confirmation and the CLI loop remain incomplete. See [review migration](docs/migration/engineering-schema5-reviews.md).
 
-**真实 Agent 实施 → 独立审查 → 接受或有界返工的完整链路，尚未完成端到端验证。**
-当前仓库用于展示工程设计、实现和迭代过程，不代表完整产品已经交付。
+Material commands now use explicit schema6 and version2 revisions, with actual blob/excerpt/claim and published-method schema validation. [Material evidence](docs/implementation/nightly/evidence/W04/material-checkpoint.md) records451 source/wheel cases each; they overlap. [Migration](docs/migration/engineering-schema6-materials.md) preserves historical bytes. Complete production/source owners and Consent/outbox remain pending.
 
-## 技术与文档
+Schema7 now persists Change/Proposal/control and expands actual review requirements in the original EngineeringLibrary/UoW/journal. Source and installed noneditable Engineering wheel each pass488 tests without skips; scopes overlap and dependencies remain the nightly environment, not a full product distribution. Production auth/catalog/trust, baseline owner, AuthorizationIntent/Grant/outbox and Server/CLI remain incomplete. Pure ActionScope is not permission. See [Proposal evidence](docs/implementation/nightly/evidence/W04/proposal-checkpoint.md) and [explicit migration](docs/migration/engineering-schema7-proposals.md).
 
-Python · TypeScript · Electron · ACP · SQLite
 
-- [公开基线的组件与依赖方向](docs/architecture.md)
-- [开发与运行基线](docs/baseline.md)
-- [基线限制与已知问题](docs/known-issues.md)
-- [许可证](LICENSE)
+W10 now selects one InstanceAccessAuthority in the default Server. The instance bearer is a machine identity with no default Engineering grants; original local owner ACLs remain. HTTP/wire/REST/WS share this identity mechanism; missing authority refuses, without the old token fallback. Real SQLite admission/COMMIT, revocation and copied-context negatives are verified. Full production Engineering catalog/receipt, project mapping, CLI and human confirmation remain incomplete. Server now requires Python >=3.12, matching its direct interfaces dependency. See [W10 actual evidence](docs/implementation/nightly/evidence/W10/README.md).

@@ -1,0 +1,18 @@
+{
+  "source": "https://github.com/giuliastro/harness-remote.git",
+  "ref": "v3.0.2",
+  "commit": "21ce6db49af708c4c7c3f96ef6a50f62dced8dab",
+  "license": "Apache-2.0",
+  "license_file": "LICENSE",
+  "selection": "Work Order 38 conditional leader; adopted by Work Order 40-A",
+  "files": [
+    {
+      "path": "harness_remote_launcher.mjs",
+      "origin": "upstream",
+      "upstream_sha256": "1c8de5def3fecd304e068cb22542ded3a4bbd7e4ab3322299f5935796363076c",
+      "current_sha256": "1c8de5def3fecd304e068cb22542ded3a4bbd7e4ab3322299f5935796363076c",
+      "patched_sha256": "62b3c9c2a060e64198591df435750e875e64538d7f5330ea7f72fd0570379460",
+      "patch": "owner split; explicit injected backend facts, selected priorities and native host; single Agents executable lookup; no nonexistent implicit cli/daemon fallback"
+    }
+  ]
+}

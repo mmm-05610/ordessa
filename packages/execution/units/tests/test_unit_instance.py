@@ -8,6 +8,7 @@ from pathlib import Path
 from threading import Event, Thread
 from types import SimpleNamespace
 import sys
+from uuid import uuid4
 
 import pytest
 
@@ -150,9 +151,12 @@ def flow(tmp_path, monkeypatch):
     authority=Authority(provider,node)
     evidence=AcpUnitEvidence(preparation_authority=lambda plan,facts:plan['context']['privateRootFacts'],
         start_authority=authority.continuation,configuration_authority=authority.continuation)
-    journal=OperationJournal(tmp_path/'original.sqlite')
+    journal_path = tmp_path / 'original.sqlite'
+    journal_path.touch(exist_ok=False)  # Explicit pristine test-owned schema opt-in.
+    journal=OperationJournal(journal_path, acp_turn_opt_in=True)
     records=UnitRecords(journal,scope_authority=Scope(),native_evidence=evidence,
-        verifier=authority,epoch_port=SimpleNamespace(current_epoch=lambda node:0),termination_evidence=evidence,configuration_evidence=evidence)
+        verifier=authority,epoch_port=SimpleNamespace(current_epoch=lambda node:0),termination_evidence=evidence,configuration_evidence=evidence,
+        acp_turn_opt_in=True)
     evidence.attach_owner(records)
     environments=Provider(root,events);leases=ConnectionLeasePort()
     manifest={'schemaVersion':'1','harnessDefinitionRef':dict(descriptor.definition_ref),'declarations':[],
@@ -207,6 +211,11 @@ def prepare_and_start(flow):
     return prepared,started
 
 
+def prompt_result(instance, unit_ref, lease, **params):
+    receipt = instance.prompt(unit_ref, lease, operation_ref='unit-test/' + uuid4().hex, **params)
+    return receipt['response']['result']
+
+
 def test_complete_unit_uses_original_records_fixed_profile_environment_process_and_session(flow):
     prepared,started=prepare_and_start(flow)
     assert flow.events==['acquire','prepare','materialize','spawn']
@@ -224,7 +233,7 @@ def test_complete_unit_uses_original_records_fixed_profile_environment_process_a
     grant=flow.leases.grant(prepared['unitRef'])
     connection=flow.instance.connect(prepared['unitRef'],grant)
     for _ in range(2):
-        result=flow.instance.prompt(prepared['unitRef'],grant,prompt=[{'type':'text','text':'controlled'}],timeout=2)
+        result=prompt_result(flow.instance,prepared['unitRef'],grant,prompt=[{'type':'text','text':'controlled'}],timeout=2)
         assert result['observedConfiguration']=={'marker':'actual-materialized-revision-1'}
     assert flow.instance.stop(prepared['unitRef'],flow.authority.issue('stop'))['state']=='confirmed'
     assert record.process.observe().state=='exited'
@@ -264,15 +273,15 @@ def test_definition_and_prepared_profile_are_immutable(flow):
     flow.plan['profileSnapshot']['manifest']['metadata']['marker']='profile-edited-after-start'
     assert flow.instance.prepared_agent is original
     grant=flow.leases.grant(prepared['unitRef'])
-    assert flow.instance.prompt(prepared['unitRef'],grant,prompt=[],timeout=2)['observedConfiguration']['marker']=='actual-materialized-revision-1'
+    assert prompt_result(flow.instance,prepared['unitRef'],grant,prompt=[],timeout=2)['observedConfiguration']['marker']=='actual-materialized-revision-1'
 
 
 def test_foreign_session_and_forged_grant_cannot_prompt(flow):
     prepared,_=prepare_and_start(flow)
     with pytest.raises(UnitLifecycleRefused,match='different fixed Run'):
-        flow.instance.prompt(prepared['unitRef'],object(),sessionId='foreign',prompt=[])
+        flow.instance.prompt(prepared['unitRef'],object(),operation_ref='unit-test/foreign-session',sessionId='foreign',prompt=[])
     with pytest.raises(ConnectionLeaseRefused):
-        flow.instance.prompt(prepared['unitRef'],object(),prompt=[])
+        flow.instance.prompt(prepared['unitRef'],object(),operation_ref='unit-test/forged-lease',prompt=[])
 
 
 def test_revoked_connection_cuts_existing_view_before_further_write(flow):
@@ -389,15 +398,15 @@ def test_actual_reverse_file_callback_bound_environment_permission_and_duplicate
     monkeypatch.setattr(files,'write_text',write)
     callback={'id':'original-reverse-1','method':'fs/write_text_file',
               'params':{'sessionId':'controlled-native-session','path':target,'content':'actual callback write'}}
-    response=flow.instance.prompt(unit,grant,prompt=[],controlledCallbacks=[callback,callback],timeout=2)
+    response=prompt_result(flow.instance,unit,grant,prompt=[],controlledCallbacks=[callback,callback],timeout=2)
     assert [r['result'] for r in response['callbacks']]==[{},{}]
     assert files.read_text('callback.txt')=='actual callback write'
     assert len(calls)==len(owner.calls)==1
     read={'id':'reverse-read','method':'fs/read_text_file','params':{'sessionId':'controlled-native-session','path':target}}
-    assert flow.instance.prompt(unit,grant,prompt=[],controlledCallbacks=[read],timeout=2)['callbacks'][0]['result']['content']=='actual callback write'
+    assert prompt_result(flow.instance,unit,grant,prompt=[],controlledCallbacks=[read],timeout=2)['callbacks'][0]['result']['content']=='actual callback write'
     owner.allowed=False
     refused={**callback,'id':'reverse-denied','params':{**callback['params'],'content':'not approved'}}
-    assert 'error' in flow.instance.prompt(unit,grant,prompt=[],controlledCallbacks=[refused],timeout=2)['callbacks'][0]
+    assert 'error' in prompt_result(flow.instance,unit,grant,prompt=[],controlledCallbacks=[refused],timeout=2)['callbacks'][0]
     assert files.read_text('callback.txt')=='actual callback write'
 
 
@@ -408,15 +417,15 @@ def test_callbacks_refuse_foreign_session_escape_missing_approval_and_terminal(f
         ('foreign','fs/write_text_file',str(Path(root)/'no.txt'),'other-session'),
         ('terminal','terminal/create',root,'controlled-native-session')]:
         callback={'id':identifier,'method':method,'params':{'sessionId':session,'path':path,'content':'denied','command':'false'}}
-        assert 'error' in flow.instance.prompt(unit,grant,prompt=[],controlledCallbacks=[callback],timeout=2)['callbacks'][0]
+        assert 'error' in prompt_result(flow.instance,unit,grant,prompt=[],controlledCallbacks=[callback],timeout=2)['callbacks'][0]
     assert not Path(root,'no.txt').exists()
     flow.instance.callbacks.approval=CallbackOwner()
     callback={'id':'escape','method':'fs/write_text_file','params':{'sessionId':'controlled-native-session','path':str(Path(root).parent/'escaped.txt'),'content':'denied'}}
-    assert 'error' in flow.instance.prompt(unit,grant,prompt=[],controlledCallbacks=[callback],timeout=2)['callbacks'][0]
+    assert 'error' in prompt_result(flow.instance,unit,grant,prompt=[],controlledCallbacks=[callback],timeout=2)['callbacks'][0]
     assert not Path(root).parent.joinpath('escaped.txt').exists()
     assert flow.events.count('spawn')==1
     with pytest.raises(UnitLifecycleRefused,match='original environment/approval owner'):
-        flow.instance.prompt(unit,grant,prompt=[],on_request=lambda request:None)
+        flow.instance.prompt(unit,grant,operation_ref='unit-test/forbidden-callback',prompt=[],on_request=lambda request:None)
 
 
 def test_cold_restart_never_relaunches_or_replaces_original_native_binding(flow):
@@ -459,7 +468,7 @@ def test_acp_option_temporary_override_confirmed_in_original_journal_without_pro
     assert result['state']=='confirmed' and result['temporary'] is True
     assert flow.instance.profile_revision==revision
     assert flow.instance.prepared_agent.profile_revision==result['profileRevision']
-    observed=flow.instance.prompt(unit,grant,prompt=[],timeout=2)
+    observed=prompt_result(flow.instance,unit,grant,prompt=[],timeout=2)
     assert observed['runtimeOptions'][0]['currentValue']=='high'
     assert observed['observedConfiguration']=={'marker':'actual-materialized-revision-1'}
     with pytest.raises(UnitRecordsRefused,match='existing configuration attempt'):
@@ -483,7 +492,7 @@ def test_configuration_lost_receipt_or_mismatched_readback_retains_unknown_and_n
     assert result['state']=='unknown'
     query=flow.instance.query_config_change(unit,configuration_invocation(flow,unit,query=True))
     assert query.state=='unknown'
-    with pytest.raises(ConnectionLeaseRefused):flow.instance.prompt(unit,grant,prompt=[])
+    with pytest.raises(ConnectionLeaseRefused):flow.instance.prompt(unit,grant,operation_ref='unit-test/revoked-lease',prompt=[])
     writes=Path(flow.plan['context']['privateRootFacts']['profile'],'settings.json.option-writes')
     assert writes.read_text()=='set\n'
     query_again=flow.instance.query_config_change(unit,configuration_invocation(flow,unit,query=True))
@@ -535,7 +544,7 @@ def test_remote_prompt_failure_preserves_sdk_error_and_releases_original_use(flo
     grant = flow.leases.grant(prepared['unitRef'])
     record = flow.instance.channel_factory.owned_record
     with pytest.raises(AcpRemoteError) as caught:
-        flow.instance.prompt(prepared['unitRef'], grant, prompt=[{'type':'text','text':'controlled'}], timeout=2)
+        prompt_result(flow.instance, prepared['unitRef'], grant, prompt=[{'type':'text','text':'controlled'}], timeout=2)
     error = caught.value
     assert error.method == 'session/prompt' and error.raw_error['code'] == -32603
     assert error.remote_data == {'source':'backend','error':'controlled Connection error'}

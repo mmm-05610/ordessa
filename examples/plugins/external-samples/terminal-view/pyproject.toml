@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-sample-terminal"
+version = "0.1.0"
+description = "External sample #3: a non-Chat terminal/document extension (sample-terminal/1)"
+requires-python = ">=3.9"
+license = { text = "Proprietary" }
+dependencies = ["ordessa-server-plugin-api>=0.1.0,<1"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

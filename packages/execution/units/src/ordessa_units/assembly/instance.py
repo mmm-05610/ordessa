@@ -1,16 +1,19 @@
 """Instance assembly over the retained original Unit handles and records."""
 from collections.abc import Mapping
+import json
 from threading import RLock
+from uuid import uuid4
 
 from ordessa_execution_agents.profiles import encode_revision_ref
-from ordessa_execution_api.environment.operations import sealed_mapping
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_units.definitions import UnitSpec
 from ordessa_units.management import UnitManager as OriginalManager
 from ordessa_units.management import UnitManagementRefused
-from ordessa_units.lifecycle.unit_lifecycle import same_reference
-from ordessa_units.api.errors import UnitApiRefused, UnitReconnectUnavailable
+from ordessa_units.lifecycle.unit_lifecycle import UnitLifecycleRefused, same_reference
+from ordessa_units.errors import UnitApiRefused, UnitReconnectUnavailable
 from ordessa_units.api.unit import Unit
 from ordessa_units.api.interaction import UnitInteraction
+from ordessa_units.records import UnitRecordsRefused
 
 
 class UnitAssembly:
@@ -126,14 +129,42 @@ class UnitAssembly:
         self._interactions[instance] = interaction
         return interaction
 
-    def request(self, unit, connection, method, params, timeout):
+    def request(self, unit, connection, method, params, timeout, *, operation_ref=None):
         instance = self._owned(unit)
         self._require_connection(instance, connection)
-        if instance._effect_write_guard_factory is not None and method == 'session/prompt':
-            raise UnitApiRefused('Recorded prompt authority must be bound before guarded interaction')
+        if method != 'session/prompt' and operation_ref is not None:
+            raise UnitApiRefused('Stable operation reference is only supported for session/prompt')
         session = instance.projection.read_session(unit.identity).native_facts['sessionId']
         if params.get('sessionId', session) != session:
             raise UnitApiRefused('Native request belongs to another Unit session')
+        if method == 'session/prompt':
+            if getattr(self.bindings, '_managed_inputs', None) is not None:
+                raise UnitApiRefused('Selected Unit requires its original managed-input capture')
+            if 'operationRef' in params:
+                raise UnitApiRefused('Prompt operation reference is owned by the original Unit')
+            if (instance._effect_write_guard_factory is not None
+                    or instance._fixed_effect_write_guard_factory is not None):
+                raise UnitApiRefused('Canonical effect-guarded prompts require their original Engineering binding')
+            native = dict(params, sessionId=session)
+            try:
+                receipt = instance.prompt(unit.identity, connection._binding.grant,
+                    operation_ref=(operation_ref if operation_ref is not None
+                                   else 'unit-prompt/' + uuid4().hex),
+                    timeout=timeout, params=native)
+            except (UnitLifecycleRefused, UnitRecordsRefused) as error:
+                # Translate only the original owner's typed local refusal at
+                # the public API boundary. Native ACP failures and durable
+                # unknowns have their own types and remain distinguishable.
+                raise UnitApiRefused(str(error)) from error
+            response = receipt.get('response') if isinstance(receipt, Mapping) else None
+            if isinstance(response, Mapping) and isinstance(response.get('error'), Mapping):
+                from ordessa_execution_agents.harness.protocols.acp import AcpRemoteError
+                raise AcpRemoteError('session/prompt', response.get('id'), response['error'])
+            if not isinstance(response, Mapping) or 'result' not in response:
+                raise UnitApiRefused('Original recorded prompt has no confirmed native result')
+            # Records deliberately seal their evidence. Restore only the native
+            # JSON result representation, including lists, at the ACP boundary.
+            return json.loads(safe_json(response['result']))
         # A fresh outer mapping binds identity; opaque values remain unchanged.
         native = dict(params)
         if method.startswith('session/'):
@@ -146,11 +177,38 @@ class UnitAssembly:
         session = instance.projection.read_session(unit.identity).native_facts['sessionId']
         return connection.cancel(sessionId=session)
 
+    def submit_input(self, unit, connection, request, captured_ref, *, timeout):
+        instance = self._owned(unit)
+        self._require_connection(instance, connection)
+        submit = getattr(self.bindings, 'submit_managed_input', None)
+        authorize = getattr(self.bindings, 'authorization', None)
+        if not callable(submit) or not callable(authorize):
+            raise UnitApiRefused('Original managed ACP input owner unavailable')
+        return submit(unit, authorize(), request, captured_ref, timeout=timeout)
+
+    def read_input(self, authorization, request, unit_ref, captured_ref):
+        # A receipt read requires neither a live Unit nor a writer connection.
+        # The bound original owner still verifies current permission, issuer,
+        # exact request/capture/Unit and its own Records query authority.
+        read = getattr(self.bindings, 'read_managed_input', None)
+        if not callable(read):
+            raise UnitApiRefused('Original managed ACP input owner unavailable')
+        return read(authorization, request, unit_ref, captured_ref)
+
     def _require_connection(self, instance, connection):
         retained = self._interactions.get(instance)
         if retained is None or retained._connection is not connection:
             raise UnitApiRefused('Original authorized Unit interaction required')
         connection._port._require_writable(connection)
+
+    @staticmethod
+    def _pending_close(instance, identity):
+        try:
+            observation = instance.quiescence_observation()
+        except Exception:
+            observation = {'reason': 'observation_unavailable'}
+        return sealed_mapping({'identity': identity, 'state': 'pending',
+                               'unresolved': True, 'quiescence': observation})
 
     def close_unit(self, unit, authorization):
         with self._lock:
@@ -183,11 +241,11 @@ class UnitAssembly:
                 return sealed_mapping({'identity': identity, 'state': 'unknown'})
             try:
                 if instance.try_quiesce() is not True:
-                    return sealed_mapping({'identity': identity, 'state': 'pending', 'unresolved': True})
+                    return self._pending_close(instance, identity)
             except Exception:
                 # A damaged/missing gate is not evidence of idleness. Keep the
                 # handle and all original Use/termination state for inspection.
-                return sealed_mapping({'identity': identity, 'state': 'pending', 'unresolved': True})
+                return self._pending_close(instance, identity)
             try:
                 if stop is None:
                     context = self.bindings.authorize('stop', unit, authorization)
@@ -235,6 +293,8 @@ class UnitAssembly:
             except Exception:
                 idle = ()
             if len(idle) != len(entries) or not all(idle):
+                # The Server's zero-effect all-Units-pending proof has an exact
+                # shape. Detailed observations belong to authorized Unit.close.
                 pending = tuple(sealed_mapping({'identity': identity, 'state': 'pending', 'unresolved': True})
                                 for _instance, identity in entries)
                 return sealed_mapping({'state': 'pending', 'units': pending, 'unresolved': True})

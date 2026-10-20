@@ -1,3 +1,8 @@
+> Current convergence note: the former Unit/runtime/client/lease/server chain
+> described below is retired. This document is retained as historical reuse
+> provenance, not an active architecture or readiness claim. See README.md for
+> the current SDK provider and explicit acceptance gaps.
+
 # grok-build channel reuse decision (xAI Grok Build Provider)
 
 Repository checkpoint: baseline `c47696b74b11863a9ee2fd1542033e72ce9b513b`
@@ -10,8 +15,8 @@ plus the Grok Build registration draft
 | --- | --- | --- |
 | Official Grok Build ACP stdio face | Three-source check 2026-10-07: repo `github.com/xai-org/grok-build` (Apache-2.0 double-sourced: repo badge + LICENSE header "Copyright 2023-2026 SpaceXAI"); CLI changelog x.ai/changelog/build latest **v1.0.46** (entry 2026-09-30); official ACP stdio launch `grok agent stdio` documented at docs.x.ai/build/cli/headless-scripting (initialize/authenticate/session/new/session/prompt/session/update) | **Selected**: native ACP stdio subprocess channel, frozen pin `1.0.46`; ACP JSON-RPC 2.0 frames; every capability behind explicit deployment ports |
 | npm / PyPI SDK track | No npm package and no PyPI SDK exists for Grok Build (install-script/source route only; registration draft §1/§7.7) | **No SDK track exists** — nothing to pin, nothing to dual-track. If an SDK ever appears, it must copy the claude-code extras pattern (lazy optional import, separately pinned), be independently re-verified, and never be inferred together with the CLI track (see 禁双轨推断 below) |
-| Go ACP bridge (`plugins/harness/pi/vendor/acp-adapter`) | `harnesses.toml` draft continuation block: `kind = "native_session"`, `contract_id = "agent-box.grok-continuation@1"`, `target_provider = "grok-build-continuation"`; ACP reopen (`session/load`\|`session/resume`) has NO documentary evidence on the grok-build face; headless `-r`/`-c` are NOT ACP paths | **Wire/reference source only, not this brand's Go backend**: Go cmd supports Codex/Pi only. Own Python GrokBuildAcpChannelFactory/client consume grok agent stdio; reopen remains absent and provider.recover permanently typed-refused. The historical agent-box.grok-continuation@1/grok-build-continuation identifiers do not prove an active Go continuation implementation. |
-| Legacy Harness paths / old direct-native wrappers | `docs/reference/index.md` history: retired `agent_box` code and old Harness provider internals import retired compat chains; the bridge's old paths reinterpret upstream natively | **Do not revive** legacy dependencies or route grok-build through them; reuse identity knowledge only. No placeholder implementations in `main` |
+| Go ACP bridge (`adapters/acp-adapter`) | `harnesses.toml` draft continuation block: `kind = "native_session"`, `contract_id = "agent-box.grok-continuation@1"`, `target_provider = "grok-build-continuation"`; ACP reopen (`session/load`\|`session/resume`) has NO documentary evidence on the grok-build face; headless `-r`/`-c` are NOT ACP paths | **Retained for the continuation path only**: reopen methods stay absent client registrations; they NEVER enter provider `supported_methods`, and `provider.recover` is permanently typed-refused. Bridge owns continuation semantics and its gate evidence |
+| Legacy Harness paths / old direct-native wrappers | `docs/reference-index.md` history: retired `agent_box` code and old Harness provider internals import retired compat chains; the bridge's old paths reinterpret upstream natively | **Do not revive** legacy dependencies or route grok-build through them; reuse identity knowledge only. No placeholder implementations in `main` |
 
 ## Explicit injected ports (documented in provider.py)
 

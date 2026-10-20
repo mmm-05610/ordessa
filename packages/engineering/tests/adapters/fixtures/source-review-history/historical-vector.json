@@ -1,0 +1,207 @@
+{
+  "run_id": "12345678-1234-4234-8234-123456789abc",
+  "request": {
+    "request_id": "history-source-request",
+    "task": {
+      "task_id": "historical-review",
+      "task_revision": "0",
+      "goal": "Frozen review vector",
+      "inputs": [],
+      "boundaries": [],
+      "acceptance_criteria": [],
+      "context_refs": [],
+      "continuation_ref": null
+    },
+    "flow_ref": {
+      "flow_id": "engineering.source-review",
+      "version": "3",
+      "content_digest": "sha256:156ce99c6dbf6484c9979e948e97777d6d5cfbc9f905c760023a701d984e032a"
+    },
+    "limits": {
+      "max_model_attempts": 8,
+      "max_node_entries": 1,
+      "max_repair_rounds": 2,
+      "max_inflight_model_calls": 1,
+      "wall_timeout_seconds": 240,
+      "cleanup_timeout_seconds": 2,
+      "max_business_candidates": 64,
+      "max_choice_options": 66,
+      "max_candidate_pages": 4,
+      "candidate_page_size": 32,
+      "max_combinations": 64,
+      "max_proposals_per_round": 8
+    },
+    "prior_outcome_ref": null,
+    "extensions": {},
+    "contract_version": "decision/1"
+  },
+  "questions": [
+    {
+      "question_id": "check-0",
+      "version": "2",
+      "kind": "choice",
+      "bounded_state": {},
+      "question_text": "Frozen check",
+      "options": {
+        "passed": "Passed",
+        "not_passed": "Not passed"
+      },
+      "scale": [],
+      "evidence_ids": [],
+      "allowed_answer_ids": [],
+      "policy_ref": {
+        "policy_id": "source-review-binding",
+        "version": "2",
+        "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "question_id": "check-1",
+      "version": "2",
+      "kind": "choice",
+      "bounded_state": {},
+      "question_text": "Frozen check",
+      "options": {
+        "passed": "Passed",
+        "not_passed": "Not passed"
+      },
+      "scale": [],
+      "evidence_ids": [],
+      "allowed_answer_ids": [],
+      "policy_ref": {
+        "policy_id": "source-review-binding",
+        "version": "2",
+        "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "question_id": "check-2",
+      "version": "2",
+      "kind": "choice",
+      "bounded_state": {},
+      "question_text": "Frozen check",
+      "options": {
+        "passed": "Passed",
+        "not_passed": "Not passed"
+      },
+      "scale": [],
+      "evidence_ids": [],
+      "allowed_answer_ids": [],
+      "policy_ref": {
+        "policy_id": "source-review-binding",
+        "version": "2",
+        "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "question_id": "check-3",
+      "version": "2",
+      "kind": "choice",
+      "bounded_state": {},
+      "question_text": "Frozen check",
+      "options": {
+        "passed": "Passed",
+        "not_passed": "Not passed"
+      },
+      "scale": [],
+      "evidence_ids": [],
+      "allowed_answer_ids": [],
+      "policy_ref": {
+        "policy_id": "source-review-binding",
+        "version": "2",
+        "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "question_id": "check-4",
+      "version": "2",
+      "kind": "choice",
+      "bounded_state": {},
+      "question_text": "Frozen check",
+      "options": {
+        "passed": "Passed",
+        "not_passed": "Not passed"
+      },
+      "scale": [],
+      "evidence_ids": [],
+      "allowed_answer_ids": [],
+      "policy_ref": {
+        "policy_id": "source-review-binding",
+        "version": "2",
+        "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "question_id": "check-5",
+      "version": "2",
+      "kind": "choice",
+      "bounded_state": {},
+      "question_text": "Frozen check",
+      "options": {
+        "passed": "Passed",
+        "not_passed": "Not passed"
+      },
+      "scale": [],
+      "evidence_ids": [],
+      "allowed_answer_ids": [],
+      "policy_ref": {
+        "policy_id": "source-review-binding",
+        "version": "2",
+        "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "question_id": "check-6",
+      "version": "2",
+      "kind": "choice",
+      "bounded_state": {},
+      "question_text": "Frozen check",
+      "options": {
+        "passed": "Passed",
+        "not_passed": "Not passed"
+      },
+      "scale": [],
+      "evidence_ids": [],
+      "allowed_answer_ids": [],
+      "policy_ref": {
+        "policy_id": "source-review-binding",
+        "version": "2",
+        "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "question_id": "check-7",
+      "version": "2",
+      "kind": "choice",
+      "bounded_state": {},
+      "question_text": "Frozen check",
+      "options": {
+        "passed": "Passed",
+        "not_passed": "Not passed"
+      },
+      "scale": [],
+      "evidence_ids": [],
+      "allowed_answer_ids": [],
+      "policy_ref": {
+        "policy_id": "source-review-binding",
+        "version": "2",
+        "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  ],
+  "policies": [
+    {
+      "policy_id": "source-review-binding",
+      "version": "2",
+      "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "policy_id": "engineering-source-review-input/1",
+      "version": "1",
+      "content_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  ],
+  "provider_binding": "controlled-frozen-provider/1",
+  "events_jsonl": "{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:0992f1a9fe801119a8a549ed5087ccd4e198e91c2ac830ae7123b5045c5b56aa\",\"payload\":{\"flow_digest\":\"sha256:156ce99c6dbf6484c9979e948e97777d6d5cfbc9f905c760023a701d984e032a\",\"manifest_digest\":\"sha256:e8f04007d04b84088fe0c5d95c16997dc4d0dfbb5d38b181f6c36c92cb2af516\",\"request_digest\":\"sha256:445884f900eba69c64b79768d3b90106d46c1fe1184c7d0ebb41988a20689c64\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"run.started\"},\"payload_digest\":\"sha256:4fdabbd7cbf708539ae0cf53ba1725e32a15d064aa696edfad491c06cf5aa20f\",\"prev_digest\":null,\"seq\":1}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:a82cf3b6d326f6a65f091fbe3da65fcc9af72b8400d28a9bc5d6143e50cafbaa\",\"payload\":{\"attempt\":1,\"call_id\":\"call-1\",\"question_digest\":\"sha256:fbf1ff24770247a287379d0c00eb602b17aa8b6dd530fd9bd5869cbc1ba41703\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.intent\"},\"payload_digest\":\"sha256:3bb89cf54459c7c0708f77bc0cb49e79e8308db21594b684fd83915b29f5da13\",\"prev_digest\":\"sha256:0992f1a9fe801119a8a549ed5087ccd4e198e91c2ac830ae7123b5045c5b56aa\",\"seq\":2}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:567e6e74d3b1f759a07dd90a5d2b7ea9052998145da967ce290ce9ef3433d0b7\",\"payload\":{\"answer_digest\":\"sha256:a8724142f1c579d8bc152c5f29ee22f4a780ab6f84dea45562db6320775c6ab3\",\"attempt\":1,\"call_id\":\"call-1\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.response\"},\"payload_digest\":\"sha256:4092a1a11aa62c1cbd534c938fbb73228cd9566cc30bf85bb25722cd7a8b9f08\",\"prev_digest\":\"sha256:a82cf3b6d326f6a65f091fbe3da65fcc9af72b8400d28a9bc5d6143e50cafbaa\",\"seq\":3}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:4cb069ed73674c8a11536f825679f5ec2cb1b687eaa87dd6964b367840523940\",\"payload\":{\"attempt\":2,\"call_id\":\"call-2\",\"question_digest\":\"sha256:cf8c6e55a78e62c277b7bdcf2313e9f399b4d96f773ebf169d30f37d13c13ebd\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.intent\"},\"payload_digest\":\"sha256:d4eddbb27371252cd11aaed8f96facc03603c95707c613977a7e17d8e63238c0\",\"prev_digest\":\"sha256:567e6e74d3b1f759a07dd90a5d2b7ea9052998145da967ce290ce9ef3433d0b7\",\"seq\":4}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:aea9128ff9617ac142e7168bf5047b52e207b6fffcb24446986999e7a1736b8d\",\"payload\":{\"answer_digest\":\"sha256:e2ce077bc5aa83be1d3d424a2167a7de31f56a9a57d821e72dc77a202ff7e386\",\"attempt\":2,\"call_id\":\"call-2\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.response\"},\"payload_digest\":\"sha256:5999418d4f0cd165ed39b632af97c913f3e56a8b603a0d2e985c12c14c7de996\",\"prev_digest\":\"sha256:4cb069ed73674c8a11536f825679f5ec2cb1b687eaa87dd6964b367840523940\",\"seq\":5}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:7dd63464e4482fa6050bd4f2a3a2697b24bca329ceedbca36cf09487a38cd066\",\"payload\":{\"attempt\":3,\"call_id\":\"call-3\",\"question_digest\":\"sha256:d69f09c45b71200a82bf3e40ae2c635c958aeccfdc0077ff2ae199c2376908a3\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.intent\"},\"payload_digest\":\"sha256:82d382cb27359dd851dfecc63895af94a6975b8246133eb10fd7480ad904f51b\",\"prev_digest\":\"sha256:aea9128ff9617ac142e7168bf5047b52e207b6fffcb24446986999e7a1736b8d\",\"seq\":6}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:3e8ecfb7fc5dc0d109f111a20ef314b10b3428c8bd0dd4d52bcaf9e1e0b2de2c\",\"payload\":{\"answer_digest\":\"sha256:60a295e43cd7d5c3e1403219b82c3925991b8e01a204c493125fc3ff74aa5975\",\"attempt\":3,\"call_id\":\"call-3\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.response\"},\"payload_digest\":\"sha256:169d32d11ec6740e1d60346a3724bdad4b1e137c5445511190342293e39083d9\",\"prev_digest\":\"sha256:7dd63464e4482fa6050bd4f2a3a2697b24bca329ceedbca36cf09487a38cd066\",\"seq\":7}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:09178b78a23ec06d24633a902d07453a3fbc609bce08ca106c90533e5378acfb\",\"payload\":{\"attempt\":4,\"call_id\":\"call-4\",\"question_digest\":\"sha256:7d83a8e184082cc3646f297ee0850a405d4e613193740811132056d3effe6bb2\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.intent\"},\"payload_digest\":\"sha256:2f025baa89bbdcb40a352942795b190827abad0f02d91f1db550fc82f4a2dce3\",\"prev_digest\":\"sha256:3e8ecfb7fc5dc0d109f111a20ef314b10b3428c8bd0dd4d52bcaf9e1e0b2de2c\",\"seq\":8}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:21578469180b793ba11f3b818db6fe2bc7fba83a26273dce357d4752d80019bd\",\"payload\":{\"answer_digest\":\"sha256:77770d88b2f31317b98eb1d9cbf8388e452640c363bf665aaae1610aa68d84c6\",\"attempt\":4,\"call_id\":\"call-4\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.response\"},\"payload_digest\":\"sha256:33a3baa7955b7c012bab7caca28a2651be5a4333250c272d4a44211d30c6980b\",\"prev_digest\":\"sha256:09178b78a23ec06d24633a902d07453a3fbc609bce08ca106c90533e5378acfb\",\"seq\":9}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:c723ca0e93d780c7a2dc43cbb50616a53020684079589642bbcf701018ae713e\",\"payload\":{\"attempt\":5,\"call_id\":\"call-5\",\"question_digest\":\"sha256:a96ccdf69be0738f7c6bc5da420036eab2cb9bf292edf207748c3c70e2ddacd7\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.intent\"},\"payload_digest\":\"sha256:7fdb85287a4d7d2046c96349e80e65aa136f83213f14e75c2e88c2bd87fda36c\",\"prev_digest\":\"sha256:21578469180b793ba11f3b818db6fe2bc7fba83a26273dce357d4752d80019bd\",\"seq\":10}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:d3aa90600cc9dc4edb36a14a20e42031a7c9735ba64c41aa6c3c13eb97acd25d\",\"payload\":{\"answer_digest\":\"sha256:7fe631f92685bbfb8e566a53d93fe6ec75e8d196b3cc4899717d3dbc14ff13ce\",\"attempt\":5,\"call_id\":\"call-5\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.response\"},\"payload_digest\":\"sha256:1827950f4ba07782e6f425d5c89c87d6f656487802832b491b823c2911344dd4\",\"prev_digest\":\"sha256:c723ca0e93d780c7a2dc43cbb50616a53020684079589642bbcf701018ae713e\",\"seq\":11}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:cfbbd463d4687bbcc33c431d0a4e5c73bfdff89e6fd892ac34a33aad26459eb0\",\"payload\":{\"attempt\":6,\"call_id\":\"call-6\",\"question_digest\":\"sha256:6a8e10c4622766b2b2a92c3b243e31d06011adbe933e923b6f19188833f4fd40\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.intent\"},\"payload_digest\":\"sha256:6e047e229320941c4ea5c7bc75de9e922d520ca9c3160fda92ffc8843f163eb9\",\"prev_digest\":\"sha256:d3aa90600cc9dc4edb36a14a20e42031a7c9735ba64c41aa6c3c13eb97acd25d\",\"seq\":12}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:bcaf8bcac855a2d49ba4508c57ee35aaf653f2dd12ae5a69f06a70acf222e4e0\",\"payload\":{\"answer_digest\":\"sha256:8421f8e80cc3c8ff9951027819bfee9f3dcdf4aa258c9b08e2cfa081c5450aa0\",\"attempt\":6,\"call_id\":\"call-6\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.response\"},\"payload_digest\":\"sha256:219fbed415039eaab43df77a02fd5ec4955805422986b9d10a2948808d4c8d80\",\"prev_digest\":\"sha256:cfbbd463d4687bbcc33c431d0a4e5c73bfdff89e6fd892ac34a33aad26459eb0\",\"seq\":13}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:82ea3aae63bcbf3f09985eb8e9a7b828bda354674f4326936c940ffc3777039c\",\"payload\":{\"attempt\":7,\"call_id\":\"call-7\",\"question_digest\":\"sha256:f631a0436b5ca7ed8323648a8e4d649d362323a1ffc6556616505df97b349dc5\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.intent\"},\"payload_digest\":\"sha256:0910a24a342b0a6644fdb8b1fd6f31a4c1f1ad1ff8543d4c87e60420a76377ad\",\"prev_digest\":\"sha256:bcaf8bcac855a2d49ba4508c57ee35aaf653f2dd12ae5a69f06a70acf222e4e0\",\"seq\":14}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:bf3246c303509a3d38e9a98897fcc75aa93680ef55ee38121924c43a8327a22c\",\"payload\":{\"answer_digest\":\"sha256:7559097f20dbc70373cbb4b10220ccdae649fa143801ec31b60cc9ff71c1d9f7\",\"attempt\":7,\"call_id\":\"call-7\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.response\"},\"payload_digest\":\"sha256:b87b45535c9148b622185f884ac348e04b882a39a25f1374b0ebc78f34da6abc\",\"prev_digest\":\"sha256:82ea3aae63bcbf3f09985eb8e9a7b828bda354674f4326936c940ffc3777039c\",\"seq\":15}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:9a789428afa16f06d7c2a7b20782596dec3e2f0460839456495786e06cd31de5\",\"payload\":{\"attempt\":8,\"call_id\":\"call-8\",\"question_digest\":\"sha256:570143c751a31f6c20da9776b4b5ce1b79b16f34a157625e6adb99c3517f9aac\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.intent\"},\"payload_digest\":\"sha256:5e0e31b6827e3df8acc2052edeaa0d5837079ab084a38d4c9b1f886e1ce885e7\",\"prev_digest\":\"sha256:bf3246c303509a3d38e9a98897fcc75aa93680ef55ee38121924c43a8327a22c\",\"seq\":16}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:9fb475eb91d5c88cda6610cfd70c30232192531ff1ed1e693b2cf5e568183a93\",\"payload\":{\"answer_digest\":\"sha256:7c08cf44674872b3e923f1b5f8a264ce5295e56f855fb5d18e81fcf287f7f1a2\",\"attempt\":8,\"call_id\":\"call-8\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"type\":\"call.response\"},\"payload_digest\":\"sha256:af823c795b7e103c29c155e3f6ce655f25b64360de362c8d593cd2c1ff3721aa\",\"prev_digest\":\"sha256:9a789428afa16f06d7c2a7b20782596dec3e2f0460839456495786e06cd31de5\",\"seq\":17}\n{\"contract_version\":\"decision-evidence/1\",\"digest\":\"sha256:108d11f313f667ab3b49cbbc480397bdcf95ab51ea6819e8444029aae5c0d26e\",\"payload\":{\"result_digest\":\"sha256:adb4ca5d6a142c5ca8d8b7f83230e215e1a9f691d3d007e853bfd635d6bdba08\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"terminal_record_digest\":\"sha256:c87903ee220dc63a26740473a65905c872c1daebb531896c8bc2224096fe728b\",\"type\":\"terminal.commit\"},\"payload_digest\":\"sha256:84e895825e3532c3aa8cfe27581ea9a9a022245db0107a352868f9c96db9532f\",\"prev_digest\":\"sha256:9fb475eb91d5c88cda6610cfd70c30232192531ff1ed1e693b2cf5e568183a93\",\"seq\":18}\n",
+  "terminal_json": "{\"digest\":\"sha256:c87903ee220dc63a26740473a65905c872c1daebb531896c8bc2224096fe728b\",\"expected_last_seq\":17,\"last_digest\":\"sha256:9fb475eb91d5c88cda6610cfd70c30232192531ff1ed1e693b2cf5e568183a93\",\"terminal\":{\"result\":{\"call_evidence\":\"recorded\",\"consumed\":{},\"effective_policy_refs\":[{\"content_digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"policy_id\":\"source-review-binding\",\"version\":\"2\"},{\"content_digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"policy_id\":\"engineering-source-review-input/1\",\"version\":\"1\"}],\"error_code\":null,\"evidence_summary_ref\":null,\"exhausted_dimension\":null,\"failure_stage\":null,\"flow_ref\":{\"content_digest\":\"sha256:156ce99c6dbf6484c9979e948e97777d6d5cfbc9f905c760023a701d984e032a\",\"flow_id\":\"engineering.source-review\",\"version\":\"3\"},\"outcome\":{\"disposition\":\"revise\",\"issues\":[{\"answer\":{\"kind\":\"choice\",\"provider_receipt\":{\"selection_status\":\"unique\"},\"question_id\":\"check-0\",\"usage_evidence\":{\"status\":\"unknown\"},\"value\":\"passed\"},\"check_id\":\"check-0\",\"code\":\"source-review-answer\"},{\"answer\":{\"kind\":\"choice\",\"provider_receipt\":{\"selection_status\":\"unique\"},\"question_id\":\"check-1\",\"usage_evidence\":{\"status\":\"unknown\"},\"value\":\"passed\"},\"check_id\":\"check-1\",\"code\":\"source-review-answer\"},{\"answer\":{\"kind\":\"choice\",\"provider_receipt\":{\"selection_status\":\"unique\"},\"question_id\":\"check-2\",\"usage_evidence\":{\"status\":\"unknown\"},\"value\":\"passed\"},\"check_id\":\"check-2\",\"code\":\"source-review-answer\"},{\"answer\":{\"kind\":\"choice\",\"provider_receipt\":{\"selection_status\":\"unique\"},\"question_id\":\"check-3\",\"usage_evidence\":{\"status\":\"unknown\"},\"value\":\"passed\"},\"check_id\":\"check-3\",\"code\":\"source-review-answer\"},{\"answer\":{\"kind\":\"choice\",\"provider_receipt\":{\"selection_status\":\"unique\"},\"question_id\":\"check-4\",\"usage_evidence\":{\"status\":\"unknown\"},\"value\":\"passed\"},\"check_id\":\"check-4\",\"code\":\"source-review-answer\"},{\"answer\":{\"kind\":\"choice\",\"provider_receipt\":{\"selection_status\":\"unique\"},\"question_id\":\"check-5\",\"usage_evidence\":{\"status\":\"unknown\"},\"value\":\"passed\"},\"check_id\":\"check-5\",\"code\":\"source-review-answer\"},{\"answer\":{\"kind\":\"choice\",\"provider_receipt\":{\"selection_status\":\"unique\"},\"question_id\":\"check-6\",\"usage_evidence\":{\"status\":\"unknown\"},\"value\":\"passed\"},\"check_id\":\"check-6\",\"code\":\"source-review-answer\"},{\"answer\":{\"kind\":\"choice\",\"provider_receipt\":{\"selection_status\":\"unique\"},\"question_id\":\"check-7\",\"usage_evidence\":{\"status\":\"unknown\"},\"value\":\"passed\"},\"check_id\":\"check-7\",\"code\":\"source-review-answer\"}],\"proposals\":[],\"receipts\":[]},\"request_id\":\"history-source-request\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"run_manifest_digest\":\"sha256:e8f04007d04b84088fe0c5d95c16997dc4d0dfbb5d38b181f6c36c92cb2af516\",\"status\":\"completed\",\"task_revision\":\"0\"},\"result_digest\":\"sha256:adb4ca5d6a142c5ca8d8b7f83230e215e1a9f691d3d007e853bfd635d6bdba08\",\"run_id\":\"12345678-1234-4234-8234-123456789abc\",\"status\":\"completed\"},\"terminal_digest\":\"sha256:adb4ca5d6a142c5ca8d8b7f83230e215e1a9f691d3d007e853bfd635d6bdba08\"}"
+}

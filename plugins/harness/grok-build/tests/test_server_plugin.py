@@ -3,9 +3,10 @@
 The plugin publishes only the frozen ``HarnessDefinitionDeclaration`` at the
 host's definition point. The retired provider factory and the owner-view wiring
 it used are gone: no live owner, records, journal or native process is consumed
-here. Provider checks below use controlled fixture views and cover only local
-pair consistency and lifecycle advertisement. Canonical Unit owner/factory/
-captured-input gates separately verify actual selected-owner identity.
+here. The assembled owner's records/verifier stay a real, refused-if-substituted
+input to the provider a deployment composes — the positive (the exact assembled
+pair is consumed) and negative (a substituted pair never advertises the
+lifecycle) cases remain.
 """
 from types import SimpleNamespace
 
@@ -147,7 +148,7 @@ def test_registration_never_carries_a_live_owner_or_provider():
     payload = registration_payload(GrokBuildServerPlugin(frozen).build(context()))
     view = fresh_view()
     provider = live_provider(view)
-    # The fixture provider retains the supplied fixture records and verifier.
+    # The provider consumes exactly the assembled owner's original records and verifier.
     assert provider.records is view.records and provider.verifier is view.verifier
     # Capabilities follow the consumed owner records: the full unit lifecycle
     # minus the configuration family (absent for grok-build in this version).
@@ -174,8 +175,7 @@ def test_registration_does_not_require_a_live_owner():
 
 
 @pytest.mark.parametrize("field", ["records", "verifier"])
-def test_non_declaration_owner_view_with_replaced_fields_is_rejected(field):
-    """This is DTO type rejection; actual owner identity is gated by Unit tests."""
+def test_substituted_owner_records_or_verifier_is_refused(field):
     view = fresh_view()
     setattr(view, field, object())
     with pytest.raises(TypeError, match="frozen Grok Build Harness definition"):
@@ -183,7 +183,7 @@ def test_non_declaration_owner_view_with_replaced_fields_is_rejected(field):
 
 
 @pytest.mark.parametrize("mode", ["records", "verifier"])
-def test_provider_with_inconsistent_fixture_pair_does_not_advertise_lifecycle(mode):
+def test_provider_refuses_other_records_or_verifier_than_the_assembled_owner(mode):
     """A substituted store/verifier never advertises the unit lifecycle."""
     view = fresh_view()
     other = fresh_view()

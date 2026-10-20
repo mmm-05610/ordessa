@@ -1,0 +1,124 @@
+{
+  "schema_version": "engineering-method/1",
+  "method_id": "did-change.standard-first",
+  "revision": 3,
+  "description": "Check the selected prototype standard before source maps.",
+  "registry_ref": {
+    "registry_id": "ordessa-engineering.operations",
+    "revision": 59,
+    "digest": "sha256:b13b5f7b304b1426340861801f51a2c9c5e16456e424f04268264fffc566b018"
+  },
+  "steps": [
+    {
+      "id": "standard-review",
+      "operation": "standard.review",
+      "on": {
+        "NEEDS_EVIDENCE": {
+          "wait": "WAITING_FOR_STANDARD"
+        },
+        "CONFLICT": {
+          "stop": "CONFLICT"
+        },
+        "INDETERMINATE": {
+          "stop": "INDETERMINATE"
+        }
+      }
+    },
+    {
+      "id": "source-review",
+      "operation": "source.review",
+      "on": {
+        "NEEDS_EVIDENCE": {
+          "wait": "WAITING_FOR_SOURCE"
+        },
+        "CONFLICT": {
+          "stop": "CONFLICT"
+        },
+        "INDETERMINATE": {
+          "stop": "INDETERMINATE"
+        }
+      }
+    },
+    {
+      "id": "summary-fidelity",
+      "operation": "summary.verify",
+      "on": {
+        "CONFLICT": {
+          "stop": "CONFLICT"
+        },
+        "INDETERMINATE": {
+          "stop": "INDETERMINATE"
+        }
+      }
+    },
+    {
+      "id": "review-select",
+      "operation": "review.select",
+      "on": {
+        "REVISION_REQUIRED": {
+          "stop": "REVISION_REQUIRED"
+        },
+        "CONFLICT": {
+          "stop": "CONFLICT"
+        },
+        "INDETERMINATE": {
+          "stop": "INDETERMINATE"
+        }
+      }
+    },
+    {
+      "id": "await-acceptance",
+      "operation": "acceptance.wait",
+      "on": {
+        "WAITING_FOR_ACCEPTANCE": {
+          "wait": "WAITING_FOR_ACCEPTANCE"
+        }
+      }
+    },
+    {
+      "id": "apply-did",
+      "operation": "did.apply",
+      "on": {
+        "CONFLICT": {
+          "stop": "CONFLICT"
+        }
+      }
+    },
+    {
+      "id": "export-package",
+      "operation": "package.export",
+      "on": {
+        "CONFLICT": {
+          "stop": "CONFLICT"
+        },
+        "INDETERMINATE": {
+          "stop": "INDETERMINATE"
+        }
+      }
+    },
+    {
+      "id": "package-standard-review",
+      "operation": "standard.review-package",
+      "on": {
+        "NEEDS_EVIDENCE": {
+          "stop": "INDETERMINATE"
+        },
+        "CONFLICT": {
+          "stop": "CONFLICT"
+        }
+      }
+    },
+    {
+      "id": "package-review",
+      "operation": "package.review",
+      "on": {
+        "CONFLICT": {
+          "stop": "CONFLICT"
+        },
+        "INDETERMINATE": {
+          "stop": "INDETERMINATE"
+        }
+      }
+    }
+  ]
+}

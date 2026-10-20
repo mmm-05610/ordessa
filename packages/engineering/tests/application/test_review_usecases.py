@@ -63,9 +63,13 @@ class SyntheticAccess:
 class SyntheticAdmission:
     """Test-only review evidence source with controllable race hooks."""
 
-    def __init__(self, library, blobs):
+    def __init__(self, library, blobs, factory=None):
         self.library = library
         self.blobs = blobs
+        # Same-authority identity: the owning factory is supplied by the test
+        # composition that also builds the Service, so the port and the use cases
+        # are shown to share one UoW factory rather than merely looking similar.
+        self.factory = factory
         self.plan_calls = 0
         self.verify_calls = 0
         self.trust_calls = 0

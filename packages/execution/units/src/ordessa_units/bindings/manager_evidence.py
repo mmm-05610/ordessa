@@ -5,10 +5,9 @@ import hashlib
 import json
 from collections.abc import Mapping
 
-from ordessa_execution_api.environment import GuaranteeUnavailableError, IdentityMismatchError
-from ordessa_execution_api.environment.operations import (
-    UsageMutation, operation_holder, safe_json, sealed_mapping,
-)
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitIdentityMismatch
+from ordessa_units.definitions.operations import UsageMutation, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_units.lifecycle.unit_lifecycle import same_reference
 from ordessa_units.management.instance import UnitInstance
 
@@ -36,7 +35,7 @@ def _record_correlation(operation, step):
 def _owner_ref(environment, provider, source_revision, ref):
     if (not isinstance(source_revision, str) or not source_revision
             or not isinstance(ref, str) or not ref):
-        raise GuaranteeUnavailableError("original Unit evidence reference unavailable")
+        raise UnitGuaranteeUnavailable("original Unit evidence reference unavailable")
     return sealed_mapping({"environmentNamespace": environment,
                            "ownerProviderRef": provider,
                            "sourceRevision": source_revision,
@@ -61,19 +60,19 @@ class UnitOwnerEvidence:
         if type(reply) is UnitInstance:
             return reply.prepared_unit["unitRef"], reply
         if not isinstance(reply, Mapping):
-            raise GuaranteeUnavailableError("original Unit reply unavailable")
+            raise UnitGuaranteeUnavailable("original Unit reply unavailable")
         value = reply.get("unitRef")
         if value is None and isinstance(reply.get("preparedUnit"), Mapping):
             value = reply["preparedUnit"].get("unitRef")
         if not isinstance(value, Mapping):
-            raise GuaranteeUnavailableError("original Unit reference unavailable")
+            raise UnitGuaranteeUnavailable("original Unit reference unavailable")
         return value, None
 
     def _unit(self, operation, step, reply):
         unit_ref, replied_unit = self._unit_ref_from(reply)
         unit = self._manager.find(unit_ref)
         if replied_unit is not None and replied_unit is not unit:
-            raise IdentityMismatchError("reply is not the manager's original Unit")
+            raise UnitIdentityMismatch("reply is not the manager's original Unit")
         owner = self._records.owner_read_unit(unit_ref["unitId"])
         facts = owner.facts
         if (not same_reference(owner.public_ref, unit_ref)
@@ -83,23 +82,23 @@ class UnitOwnerEvidence:
                 or facts.get("managementEpoch") != step.management_epoch
                 or facts.get("inputDigest") != step.input_digest
                 or facts.get("correlation") != _record_correlation(operation, step)):
-            raise IdentityMismatchError("original Unit facts differ from reserved operation step")
+            raise UnitIdentityMismatch("original Unit facts differ from reserved operation step")
         prepared = unit.prepared_agent
         if (prepared is None
                 or prepared.profile_revision != safe_json(operation.intent.profile_snapshot_ref)
                 or not prepared.harness.resources.applied):
-            raise GuaranteeUnavailableError("original prepared resources/Profile revision unavailable")
+            raise UnitGuaranteeUnavailable("original prepared resources/Profile revision unavailable")
         descriptor = getattr(unit.descriptor, "definition_ref", None)
         if (not isinstance(descriptor, Mapping)
                 or descriptor.get("environmentNamespace") != operation.request.environment_namespace):
-            raise GuaranteeUnavailableError("original Harness definition pin unavailable")
+            raise UnitGuaranteeUnavailable("original Harness definition pin unavailable")
         return unit, owner, facts, prepared, _plain(descriptor)
 
     def _prepare_observation(self, operation, step, reply):
         from ordessa_units.bindings.assembly import PreparationObservation
         unit, owner, facts, prepared, definition_ref = self._unit(operation, step, reply)
         if step.step_id != "prepare":
-            raise IdentityMismatchError("preparation observation requested for another step")
+            raise UnitIdentityMismatch("preparation observation requested for another step")
         provider = facts["providerRef"]
         evidence_ref = _owner_ref(
             operation.request.environment_namespace, provider,
@@ -124,7 +123,7 @@ class UnitOwnerEvidence:
                 or not same_reference(step.pinned_provider_ref, prepare_step.pinned_provider_ref)
                 or step.input_digest != prepare_step.input_digest
                 or step.management_epoch != prepare_step.management_epoch):
-            raise IdentityMismatchError("start step differs from original prepared Unit scope")
+            raise UnitIdentityMismatch("start step differs from original prepared Unit scope")
         unit, owner, facts, prepared, _ = self._unit(operation, prepare_step, {"unitRef": unit_ref})
         session = self._records.owner_read_session(unit_ref["unitId"])
         expected = _record_correlation(operation, step)
@@ -134,10 +133,10 @@ class UnitOwnerEvidence:
                 or not isinstance(native, Mapping)
                 or not isinstance(native.get("evidenceRef"), str)
                 or not native["evidenceRef"]):
-            raise GuaranteeUnavailableError("original confirmed Unit session evidence unavailable")
+            raise UnitGuaranteeUnavailable("original confirmed Unit session evidence unavailable")
         if isinstance(reply, Mapping) and reply.get("unitRef") is not None \
                 and not same_reference(reply["unitRef"], owner.public_ref):
-            raise IdentityMismatchError("start reply changed the original Unit reference")
+            raise UnitIdentityMismatch("start reply changed the original Unit reference")
         evidence_ref = _owner_ref(operation.request.environment_namespace,
             facts["providerRef"], str(session.source_revision), native["evidenceRef"])
         return PreparationObservation(step.step_id, facts["providerRef"], step.input_digest,
@@ -153,10 +152,10 @@ class UnitOwnerEvidence:
     def _stop_observation(self, operation, step, reply):
         from ordessa_units.lifecycle.service import LifecycleObservation
         if operation.intent.kind not in ("agent-stop", "agent-release") or step.step_id not in ("stop", "release"):
-            raise GuaranteeUnavailableError("unsupported original Unit lifecycle observation")
+            raise UnitGuaranteeUnavailable("unsupported original Unit lifecycle observation")
         action = step.step_id
         if operation.intent.kind != "agent-" + action:
-            raise GuaranteeUnavailableError("unsupported original Unit lifecycle observation")
+            raise UnitGuaranteeUnavailable("unsupported original Unit lifecycle observation")
         unit_ref, _ = self._unit_ref_from(reply)
         unit = self._manager.find(unit_ref)
         owner = self._records.owner_read_unit(unit_ref["unitId"])
@@ -174,12 +173,12 @@ class UnitOwnerEvidence:
                 or not same_reference(record.get("identity", {}).get("unitRef"), owner.public_ref)
                 or not isinstance(record.get("outcome"), Mapping)
                 or not record["outcome"]):
-            raise GuaranteeUnavailableError("original confirmed stop record unavailable")
+            raise UnitGuaranteeUnavailable("original confirmed stop record unavailable")
         if isinstance(reply, Mapping) and (
                 reply.get("action") != action or reply.get("state") != "confirmed"
                 or not same_reference(reply.get("unitRef"), owner.public_ref)
                 or not same_reference(reply.get("outcome"), record["outcome"])):
-            raise IdentityMismatchError("stop reply differs from original UnitRecords outcome")
+            raise UnitIdentityMismatch("stop reply differs from original UnitRecords outcome")
         provider = facts["providerRef"]
         evidence_ref = _owner_ref(operation.request.environment_namespace, provider,
             str(record["sourceRevision"]), record["outcome"].get("terminationEvidenceRef"))
@@ -189,7 +188,7 @@ class UnitOwnerEvidence:
     def inspect(self, operation, steps):
         from ordessa_units.bindings.publication import NodePublicationEvidence
         if operation.intent.kind != "agent-preparation" or len(steps) != len(operation.intent.steps):
-            raise GuaranteeUnavailableError("complete original preparation steps required")
+            raise UnitGuaranteeUnavailable("complete original preparation steps required")
         observations = []
         unit = None
         owner = None
@@ -199,30 +198,30 @@ class UnitOwnerEvidence:
         for stored, intent in zip(steps, operation.intent.steps):
             if (stored is None or stored.outcome != "concluded"
                     or not same_reference(stored.intent.to_dict(), intent.to_dict())):
-                raise GuaranteeUnavailableError("original concluded preparation step unavailable")
+                raise UnitGuaranteeUnavailable("original concluded preparation step unavailable")
             observed = self.observe(operation, stored.intent, stored.evidence)
             if (not same_reference(stored.evidence.get("evidenceRef"), observed.evidence_ref)
                     or not same_reference(stored.evidence.get("preparedUnit"), observed.prepared_unit)):
-                raise IdentityMismatchError("stored preparation evidence differs from original Unit owner")
+                raise UnitIdentityMismatch("stored preparation evidence differs from original Unit owner")
             observations.append(observed)
             if intent.step_id == "prepare":
                 unit_ref = observed.prepared_unit["unitRef"]
                 unit, owner, facts, prepared, definition_ref = self._unit(
                     operation, intent, {"unitRef": unit_ref})
         if unit is None or owner is None or facts is None or prepared is None:
-            raise GuaranteeUnavailableError("original prepared Unit unavailable")
+            raise UnitGuaranteeUnavailable("original prepared Unit unavailable")
         session = self._records.owner_read_session(owner.unit_ref)
         if session.state != "confirmed" or not isinstance(session.native_facts, Mapping):
-            raise GuaranteeUnavailableError("original confirmed session unavailable for publication")
+            raise UnitGuaranteeUnavailable("original confirmed session unavailable for publication")
         access = unit.describe_access(owner.public_ref)
         if not same_reference(access.get("unitRef"), owner.public_ref):
-            raise IdentityMismatchError("access surface differs from original Unit")
+            raise UnitIdentityMismatch("access surface differs from original Unit")
         safe_access = {"protocol": access.get("protocol"),
                        "leaseRequired": access.get("leaseRequired"),
                        "fullNativeSideEffects": access.get("fullNativeSideEffects"),
                        "readonlySupported": access.get("readonlySupported")}
         if any(value is None for value in safe_access.values()):
-            raise GuaranteeUnavailableError("safe original Unit access surface unavailable")
+            raise UnitGuaranteeUnavailable("safe original Unit access surface unavailable")
         access_ref = _owner_ref(operation.request.environment_namespace, facts["providerRef"],
             str(session.source_revision), _digest({"unitRef": owner.public_ref,
                 "sessionEvidenceRef": session.native_facts.get("evidenceRef"),

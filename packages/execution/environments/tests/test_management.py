@@ -7,7 +7,7 @@ import sqlite3
 
 import pytest
 from ordessa_environments import (
-    EnvironmentManager, SQLiteEnvironmentStore, BackendObservation, Capabilities,
+    EnvironmentManager, SQLiteEnvironmentStore, BackendObservation, CapabilityReport,
     EnvironmentRefused, EnvironmentOperationUnknown, BackendNotFound,
 )
 
@@ -27,7 +27,7 @@ class Provider:
     def inspect(self, backend_id):
         if not self.exists:
             raise BackendNotFound('controlled backend absent')
-        return BackendObservation(backend_id, self.state, Capabilities('controlled'), datetime.now(timezone.utc).isoformat())
+        return BackendObservation(backend_id, self.state, CapabilityReport({}, 'controlled', 'provider_self_report'), datetime.now(timezone.utc).isoformat())
 
     def create(self, reference, *, operation_id):
         self.creates += 1

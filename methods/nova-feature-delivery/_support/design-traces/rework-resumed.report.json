@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "report_id": "synthetic-check-resumed-02",
+  "phase": "zuul_check",
+  "reported_at": "2025-02-02T12:00:00Z",
+  "reporter": {
+    "actor_id": "example-contributor",
+    "role_claim": "contributor",
+    "reported_at": "2025-02-02T12:00:00Z"
+  },
+  "cycle": "synthetic-cycle",
+  "blueprint": {
+    "id": "synthetic-blueprint",
+    "url": "https://blueprints.launchpad.net/nova/+spec/synthetic-blueprint",
+    "status": "Approved",
+    "cycle": "synthetic-cycle"
+  },
+  "spec": {
+    "url": "https://specs.openstack.org/openstack/nova-specs/specs/2025.1/implemented/libvirt-virtiofs-attach-manila-shares.html",
+    "status": "Approved",
+    "cycle": "synthetic-cycle"
+  },
+  "decision": "Revised patchset check jobs passed; this report covers the new patchset only.",
+  "decision_record": {
+    "actor_id": "example-zuul-observer",
+    "role_claim": "CI status reporter",
+    "decided_at": "2025-02-02T12:00:00Z",
+    "authority_ref": "https://zuul.opendev.org/",
+    "rationale_summary": "Synthetic example of a buildset result observed after review feedback was addressed."
+  },
+  "result": "passed",
+  "summary": "Wait ended after new patchset check completed; separate gate approval is still required.",
+  "patchsets": [
+    "https://review.opendev.org/c/openstack/nova/+/000001/2"
+  ],
+  "gerrit": {
+    "change_url": "https://review.opendev.org/c/openstack/nova/+/000001",
+    "change_id": "I-synthetic",
+    "patchset": "2"
+  },
+  "zuul": {
+    "pipeline": "check",
+    "buildset_url": "https://zuul.opendev.org/t/openstack/buildset/synthetic",
+    "verified_vote": 1,
+    "failure_class": "none"
+  },
+  "blockers": [],
+  "predecessors": [
+    {
+      "report_id": "synthetic-gerrit-wait-01",
+      "artifact_revision": "synthetic-revision-wait-01"
+    }
+  ],
+  "evidence_urls": [
+    "https://review.opendev.org/c/openstack/nova/+/000001",
+    "https://zuul.opendev.org/t/openstack/buildset/synthetic"
+  ],
+  "limitations": [
+    "Synthetic buildset and actor identifiers; no actual CI was run."
+  ],
+  "spec_required": true
+}

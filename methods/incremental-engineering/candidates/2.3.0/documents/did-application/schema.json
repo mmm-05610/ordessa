@@ -1,0 +1,307 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ordessa:method:incremental-engineering:did-application:2",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "document_type": {
+      "const": "did-application"
+    },
+    "schema_version": {
+      "const": 2
+    },
+    "proposal_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_id",
+        "revision",
+        "digest",
+        "locator"
+      ]
+    },
+    "baseline_before": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_id",
+        "revision",
+        "digest",
+        "locator"
+      ]
+    },
+    "baseline_after": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_id",
+        "revision",
+        "digest",
+        "locator"
+      ]
+    },
+    "review_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "object_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "revision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "locator": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "object_id",
+          "revision",
+          "digest",
+          "locator"
+        ]
+      }
+    },
+    "notice_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_id",
+        "revision",
+        "digest",
+        "locator"
+      ]
+    },
+    "acceptance_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_id",
+        "revision",
+        "digest",
+        "locator"
+      ]
+    },
+    "authorization_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_id",
+        "revision",
+        "digest",
+        "locator"
+      ]
+    },
+    "exact_patch_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_id",
+        "revision",
+        "digest",
+        "locator"
+      ]
+    },
+    "readback_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_id",
+        "revision",
+        "digest",
+        "locator"
+      ]
+    },
+    "result": {
+      "enum": [
+        "applied",
+        "conflict",
+        "unknown",
+        "rejected"
+      ]
+    }
+  },
+  "required": [
+    "document_type",
+    "schema_version",
+    "proposal_ref",
+    "baseline_before",
+    "review_refs",
+    "notice_ref",
+    "acceptance_ref",
+    "authorization_ref",
+    "exact_patch_ref",
+    "result"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "result": {
+            "const": "applied"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "baseline_after",
+          "readback_ref"
+        ]
+      }
+    }
+  ]
+}

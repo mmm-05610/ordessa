@@ -11,6 +11,7 @@ from contextvars import ContextVar
 import json
 import os
 import threading
+import time
 from contextlib import contextmanager
 
 from acp import schema
@@ -22,7 +23,9 @@ from ordessa_execution_agents.harness.protocols.acp.callbacks import reply_error
 from ordessa_execution_agents.harness.protocols.acp.connection import open_sdk_connection
 from ordessa_execution_agents.harness.protocols.acp.interaction import invoke_bound_callback
 from ordessa_execution_agents.harness.protocols.acp.sessions import validate_request, validate_response
-from ordessa_execution_agents.harness.transport import EffectWriteGuard, EffectWriteRefused
+from ordessa_execution_agents.harness.transport import (
+    EffectWriteGuard, EffectWriteRefused, attach_native_write_failure,
+)
 
 _dispatch = ContextVar('unit_sdk_dispatch', default=None)
 
@@ -34,9 +37,11 @@ class _ManagedTransport:
 
     async def send(self, payload):
         callback_admission = self.client._claim_callback_response(payload)
+        active = _dispatch.get()
+        original_request = (active is not None and payload.get('method') == active['method']
+                            and 'id' in payload)
         try:
             self.client._check_write_authority()
-            active = _dispatch.get()
             if active is not None and payload.get('method') == active['method'] and 'id' in payload:
                 active['id'] = payload['id']
                 self.client._outgoing[payload['id']] = active
@@ -56,20 +61,44 @@ class _ManagedTransport:
                 fields = {'before_write': before_native_write}
                 if active['effect_write_guard'] is not None:
                     fields['effect_write_guard'] = active['effect_write_guard']
+                def observed_boundary(snapshot):
+                    with self.client._operation_lock:
+                        active['write_boundary'] = snapshot
+                fields['on_write_boundary'] = observed_boundary
                 await self.client._channel.send_frame_async(frame, **fields)
+        except BaseException as error:
+            if original_request:
+                # The official SDK may wrap a local send refusal as a generic
+                # request error. Preserve the actual exception in this same
+                # original request state before that wrapping takes place.
+                with self.client._operation_lock:
+                    active['send_failure'] = error
+            raise
         finally:
             if callback_admission is not None:
                 self.client._finish_admission()
 
     async def receive(self):
         while not self.detached:
+            # A ready channel inbox or Local stdout buffer may return without
+            # suspending. Give the original request timeout/cancellation and
+            # callback replies a loop turn before consuming the next frame.
+            await asyncio.sleep(0)
+            if self.detached:
+                return None
             try:
                 message = await self.client._channel.next_message_async(timeout=.05)
                 return message.raw
             except RequestTimeout:
                 continue
-            except (ChannelClosed, FramingError):
-                return None
+            except Exception as error:
+                with self.client._operation_lock:
+                    active = self.client._request_state
+                    if active is not None and not active.get('coroutine_finished'):
+                        active['receive_failure'] = error
+                if isinstance(error, (ChannelClosed, FramingError)):
+                    return None
+                raise
         return None
 
     async def close(self):
@@ -101,6 +130,13 @@ class SdkAcpClient:
         self._native_admission_open = True
         self._active_native_operations = 0
         self._callback_response_admissions = defaultdict(deque)
+        self._request_state = None
+        self._incoming_observation = {
+            'frames': 0, 'message_utf8_bytes': 0, 'last_kind': None,
+            'received_at_unix': None, 'completed_at_unix': None,
+            'durable_observer_active': False, 'durable_observer_calls': 0,
+            'durable_observer_seconds': 0.0, 'durable_observer_max_seconds': 0.0,
+        }
         if type(connect) is not bool:
             raise TypeError('explicit SDK connection mode required')
         self._loop = asyncio.new_event_loop()
@@ -244,6 +280,40 @@ class SdkAcpClient:
             self._native_admission_open = False
             return True
 
+    def quiescence_observation(self):
+        """Bounded owner diagnostics only; never change admission or authority."""
+        if not self._operation_lock.acquire(blocking=False):
+            return {'reason': 'sdk_operation_lock_busy'}
+        try:
+            active = self._active_native_operations
+            alive = self._thread.is_alive()
+            state = self._request_state
+            request = None if state is None else {
+                'method': state['method'] if state['method'] in {
+                    'initialize', 'session/new', 'session/load', 'session/prompt',
+                    'session/cancel', '_ordessa/session/configuration'} else 'other',
+                'has_rpc_id': state['id'] is not None,
+                'receipt_seen': state['receipt'] is not None,
+                'timeout_origin': state.get('timeout_origin'),
+                'cancel_requested': state.get('cancel_requested', False),
+                'cancellation_observed': state.get('cancellation_observed', False),
+                'coroutine_finished': state.get('coroutine_finished', False),
+                'started_at_unix': state.get('started_at_unix'),
+                'finished_at_unix': state.get('finished_at_unix'),
+                'fence_attempts': state.get('fence_attempts', 0),
+                'writer_fenced': state.get('writer_fenced', False),
+            }
+            return {'reason': 'sdk_loop_thread' if threading.current_thread() is self._thread else
+                    'sdk_loop_not_running' if not alive else
+                    'sdk_operations_active' if active else 'sdk_idle',
+                'active_native_operations': active,
+                'pending_callback_responses': sum(len(q) for q in self._callback_response_admissions.values()),
+                'io_loop_alive': alive, 'native_admission_open': self._native_admission_open,
+                'durable_observer_failed': self._observation_failure is not None,
+                'request': request, 'incoming': dict(self._incoming_observation)}
+        finally:
+            self._operation_lock.release()
+
     def _check_write_authority(self):
         if self._write_authority is not None:
             self._write_authority()
@@ -349,13 +419,44 @@ class SdkAcpClient:
         if event.direction.value != 'incoming':
             return
         raw = event.message
-        if self._active_observation is not None:
+        observing = self._active_observation
+        params = raw.get('params')
+        update = params.get('update') if isinstance(params, dict) else None
+        content = update.get('content') if isinstance(update, dict) else None
+        message_bytes = 0
+        if (raw.get('method') == 'session/update' and isinstance(update, dict)
+                and update.get('sessionUpdate') == 'agent_message_chunk'
+                and isinstance(content, dict) and isinstance(content.get('text'), str)):
             try:
-                self._active_observation(raw)
+                message_bytes = len(content['text'].encode('utf-8'))
+            except UnicodeError:
+                pass  # Diagnostics cannot replace original malformed-input handling.
+        method = raw.get('method')
+        kind = (method if isinstance(method, str) and method in {'session/update', 'session/request_permission'}
+                else 'response' if 'method' not in raw and 'id' in raw else 'other')
+        started = time.monotonic()
+        with self._operation_lock:
+            facts = self._incoming_observation
+            facts['frames'] += 1
+            facts['message_utf8_bytes'] += message_bytes
+            facts['last_kind'] = kind
+            facts['received_at_unix'] = time.time()
+            facts['durable_observer_active'] = observing is not None
+        if observing is not None:
+            try:
+                observing(raw)
             except Exception as error:
                 # The SDK's observer contract isolates observer failures.
                 # Retain ours and refuse a complete durable outcome below.
                 self._observation_failure = error
+        with self._operation_lock:
+            facts['completed_at_unix'] = time.time()
+            facts['durable_observer_active'] = False
+            if observing is not None:
+                elapsed = time.monotonic() - started
+                facts['durable_observer_calls'] += 1
+                facts['durable_observer_seconds'] += elapsed
+                facts['durable_observer_max_seconds'] = max(facts['durable_observer_max_seconds'], elapsed)
         if 'method' in raw and 'id' in raw:
             self._reverse[self._key(raw['method'], raw.get('params'))].append(raw)
         elif 'method' not in raw and 'id' in raw and raw['id'] in self._outgoing:
@@ -397,11 +498,37 @@ class SdkAcpClient:
         else:
             validate_response(method, result)
 
-    async def _request(self, method, params, timeout, callback, guard, observation=None, effect_write_guard=None):
+    async def _request(self, method, params, timeout, callback, guard, observation=None,
+                       effect_write_guard=None, dispatch_state=None):
+        try:
+            return await self._request_in_admission(method, params, timeout, callback, guard,
+                observation, effect_write_guard, dispatch_state)
+        except BaseException as error:
+            with self._operation_lock:
+                original = None if dispatch_state is None else dispatch_state.get('send_failure')
+                snapshot = None if dispatch_state is None else dispatch_state.get('write_boundary')
+            selected = original if original is not None else error
+            attach_native_write_failure(selected, snapshot, response_wait=(
+                original is None and isinstance(error, (RequestTimeout, LostReceipt))
+                and dispatch_state is not None and dispatch_state.get('receipt') is None))
+            if selected is error:
+                raise
+        finally:
+            if dispatch_state is not None:
+                with self._operation_lock:
+                    dispatch_state['coroutine_finished'] = True
+                    dispatch_state['finished_at_unix'] = time.time()
+        # Raise outside the SDK wrapper's except suite so Python preserves
+        # the original context, including a write/release double fault.
+        raise selected
+
+    async def _request_in_admission(self, method, params, timeout, callback, guard, observation,
+                                    effect_write_guard, dispatch_state):
         with self.admitted_operation():
             self._validate(method, params)
-            active = {'method':method, 'guard':guard, 'id':None, 'receipt':None,
-                      'effect_write_guard':effect_write_guard}
+            active = (dispatch_state if dispatch_state is not None else
+                {'method':method, 'guard':guard, 'id':None, 'receipt':None,
+                 'effect_write_guard':effect_write_guard})
             self._active_callback = callback
             self._active_observation = observation
             self._observation_failure = None
@@ -410,13 +537,21 @@ class SdkAcpClient:
                 try:
                     result = await asyncio.wait_for(self.sdk_connection.send_request(method, params), timeout)
                 except asyncio.TimeoutError as error:
+                    with self._operation_lock:
+                        active['timeout_origin'] = 'async_deadline'
                     self._fence_unknown_request(active)
                     raise RequestTimeout(method, active['id'], timeout) from error
+                except asyncio.CancelledError:
+                    with self._operation_lock:
+                        active['cancellation_observed'] = True
+                    self._fence_unknown_request(active)
+                    raise
                 except RequestError as error:
                     raise AcpRemoteError(method, active['id'], error.to_error_obj()) from error
                 except ConnectionError as error:
                     self._fence_unknown_request(active)
-                    raise LostReceipt(method, active['id'], 'Official SDK connection lost after dispatch') from error
+                    raise LostReceipt(method, active['id'], 'Official SDK connection lost after dispatch') from (
+                        active.get('receive_failure') or error)
                 self._last_response = active['receipt']
                 if self._observation_failure is not None:
                     raise RuntimeError('Original durable ACP observation failed') from self._observation_failure
@@ -432,11 +567,16 @@ class SdkAcpClient:
 
     def _fence_unknown_request(self, active):
         if active['id'] is not None and active['receipt'] is None:
+            with self._operation_lock:
+                active['fence_attempts'] = active.get('fence_attempts', 0) + 1
             try:
                 self._channel.mark_input_unknown()
             except (WriterLeaseRefused, ChannelClosed):
                 # The original lease is already cut; never replace or clear it.
                 pass
+            else:
+                with self._operation_lock:
+                    active['writer_fenced'] = True
 
     def command(self, method, *, timeout=10, on_request=None, before_write=None, on_observation=None,
                 effect_write_guard=None, _effect_write_owner=None, **params):
@@ -453,12 +593,36 @@ class SdkAcpClient:
             raise EffectWriteRefused('original operation prompt write guard required')
         with self.admitted_operation():
             with self._round_trip_lock:
-                future = self._submit(self._request(method, params, timeout, on_request, before_write, on_observation, effect_write_guard))
+                # The original SDK transport fills this same state before its
+                # native write. The waiting thread must be able to cut that
+                # writer even while a synchronous callback occupies the loop.
+                state = {'method':method, 'guard':before_write, 'id':None,
+                         'receipt':None, 'effect_write_guard':effect_write_guard,
+                         'started_at_unix':time.time(), 'coroutine_finished':False}
+                with self._operation_lock:
+                    self._request_state = state
+                future = self._submit(self._request(method, params, timeout, on_request,
+                    before_write, on_observation, effect_write_guard, state))
                 try:
                     return future.result(timeout=timeout+2)
-                except FutureTimeout:
-                    future.cancel()
-                    raise RequestTimeout(method, None, timeout) from None
+                except FutureTimeout as error:
+                    if (future.done() and not future.cancelled()
+                            and future.exception() is error):
+                        # A native TimeoutError is an actual coroutine result,
+                        # not proof that the outer waiting thread timed out.
+                        raise
+                    with self._operation_lock:
+                        state['timeout_origin'] = 'host_waiter'
+                        state['cancel_requested'] = True
+                        snapshot = state.get('write_boundary')
+                        response_pending = state.get('receipt') is None
+                    try:
+                        self._fence_unknown_request(state)
+                    finally:
+                        future.cancel()
+                    refused = RequestTimeout(method, None, timeout)
+                    attach_native_write_failure(refused, snapshot, response_wait=response_pending)
+                    raise refused from None
 
     def initialize(self, *, timeout=10, before_write=None, **capabilities):
         return self.command('initialize', timeout=timeout, before_write=before_write,

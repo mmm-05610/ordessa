@@ -20,7 +20,8 @@ from agent_tools_fixtures.management import setup, explicit_capabilities  # noqa
 from test_apply_profile import _base_ref, _profile
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment.operations import node_holder, safe_json
+from ordessa_units.definitions.operations import node_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.configuration.contracts import (
     ApplicationPolicy,
     ConfigurationUnsupported,

@@ -1,0 +1,12 @@
+{
+  "name": "@ordessa/system-access-client",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./wire-port": "./src/wire-port.ts"
+  },
+  "dependencies": {
+    "@ordessa/interface-contracts": "0.1.0"
+  }
+}

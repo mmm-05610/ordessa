@@ -8,7 +8,7 @@ import hashlib
 import os
 from collections.abc import Mapping
 
-from ordessa_execution_api.environment.operations import safe_json, sealed_mapping
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_units.lifecycle.unit_lifecycle import plain, UnitLifecycleRefused
 
 

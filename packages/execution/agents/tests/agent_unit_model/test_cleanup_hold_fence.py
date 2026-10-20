@@ -5,8 +5,8 @@ from threading import Event
 import pytest
 from test_manager_node_joint import joint, managed_lifecycle as lifecycle
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import UnknownResultError
-from ordessa_execution_api.environment.operations import node_holder
+from ordessa_units.errors import UnitOperationUnknown
+from ordessa_units.definitions.operations import node_holder
 
 
 def test_stop_claim_blocks_release_until_original_step_concludes(lifecycle):
@@ -28,7 +28,7 @@ def test_stop_claim_blocks_release_until_original_step_concludes(lifecycle):
                 stop.result(timeout=1)
             assert ready
             release_request = RequestKey("env", "principal", "release-while-stop-claim-live")
-            with pytest.raises(UnknownResultError, match="unresolved effect claim"):
+            with pytest.raises(UnitOperationUnknown, match="unresolved effect claim"):
                 coordinator.release(release_request, node_ref, {})
             rows = store.read_usages("env", node_holder("env", node_ref.instance_id, node_ref.generation))
             assert rows and all(row["state"] == "active" for row in rows)
@@ -57,8 +57,8 @@ def test_release_first_refuses_new_stop_without_effect(lifecycle):
     assert store.read_operation_step(release_request, 'release').outcome == 'concluded'
     rows = store.read_usages('env', node_holder('env', node_ref.instance_id, node_ref.generation))
     assert rows and all(row['state'] == 'released' for row in rows)
-    from ordessa_execution_api.environment import GuaranteeUnavailableError
-    with pytest.raises(GuaranteeUnavailableError):
+    from ordessa_units.errors import UnitGuaranteeUnavailable
+    with pytest.raises(UnitGuaranteeUnavailable):
         coordinator.stop(request, node_ref, {})
     assert provider.lifecycle_calls == before
     assert store.read_operation(request) is None
@@ -71,7 +71,7 @@ def test_unknown_stop_blocks_release_and_keeps_original_holds(lifecycle):
     assert store.read_operation_step(request, 'stop').outcome == 'unknown'
     before = list(provider.lifecycle_calls)
     release_request = RequestKey('env', 'principal', 'release-after-unknown-stop')
-    with pytest.raises(UnknownResultError, match='unresolved effect claim'):
+    with pytest.raises(UnitOperationUnknown, match='unresolved effect claim'):
         coordinator.release(release_request, node_ref, {})
     assert store.read_operation_step(release_request, 'release') is None
     assert provider.lifecycle_calls == before
@@ -101,7 +101,7 @@ def test_release_claim_blocks_stop_until_original_release_concludes(lifecycle):
             if not ready and release.done():
                 release.result(timeout=1)
             assert ready
-            with pytest.raises(UnknownResultError, match='unresolved effect claim'):
+            with pytest.raises(UnitOperationUnknown, match='unresolved effect claim'):
                 coordinator.stop(stop_request, node_ref, {})
             assert store.read_operation_step(stop_request, 'stop') is None
             assert store.read_operation_step(release_request, 'release').outcome == 'possibly-dispatched'
@@ -119,7 +119,7 @@ def test_release_claim_blocks_stop_until_original_release_concludes(lifecycle):
 
 @pytest.mark.parametrize('change', ['revision', 'rights', 'state'])
 def test_original_usage_snapshot_change_is_refused_at_claim(lifecycle, change):
-    from ordessa_execution_api.environment.operations import OperationRevisionConflict
+    from ordessa_units.definitions.operations import OperationRevisionConflict
     coordinator, owner, provider, node_ref, node, env, store, request, pin, current = lifecycle
     original_claim = store.claim_operation_step
     rows = store.read_usages('env', node_holder('env', node_ref.instance_id, node_ref.generation))

@@ -10,8 +10,8 @@ import re
 from types import MappingProxyType
 from typing import Mapping
 
-from ordessa_execution_api.environment.identity import EnvironmentId
-from ordessa_execution_api.environment.operations import sealed_mapping
+from ordessa_units.definitions.admission_identity import AdmissionNamespace
+from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
 
 from ordessa_execution_agents.harness.definitions.configuration_providers import (
     ConfigurationContractError,
@@ -68,7 +68,7 @@ def _definition_ref(value: object) -> Mapping[str, str]:
         _invalid()
     environment = _label(environment, maximum=64)
     try:
-        EnvironmentId(environment)
+        AdmissionNamespace(environment)
     except (TypeError, ValueError):
         _invalid()
     definition_id = _label(definition_id, maximum=128)

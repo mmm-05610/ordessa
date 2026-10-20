@@ -1,181 +1,66 @@
-"""OpenCode server consumer client (family ``opencode``, protocol ``opencode-http/1``).
+"""OpenCode-owned pure Profile validation/preparation through the public SDK.
 
-Pinned facts (N004, official https://opencode.ai/docs/server/ read 2026-10-04):
-
-- Channel: local HTTP server ``opencode serve [--port N] [--hostname H]``
-  (default 127.0.0.1:4096 — loopback by default) plus SSE event streams.
-- Session identity: ``POST /session`` (body ``{parentID?, title?}``) creates a
-  real session; ``POST /session/:id/message`` records the user message — that
-  response is a receipt, NOT the assistant's completed answer (completion
-  facts arrive as bus events / follow-up messages).
-- Cancellation is explicit: ``POST /session/:id/abort``. The upstream doc does
-  not tie task lifetime to the SSE connection, and does not say a dropped SSE
-  stream ends a task — so a disconnect is never treated as completion here.
-- Events: ``GET /event`` (first ``server.connected``, then bus events) and
-  ``GET /global/event``. Payload schemas are NOT specified upstream beyond
-  that; unknown event types/fields surface verbatim (G4) and are never
-  guessed at.
-- Auth: transport-level HTTP basic auth via ``OPENCODE_SERVER_PASSWORD`` (and
-  optional ``OPENCODE_SERVER_USERNAME``); provider credentials are a separate
-  ``PUT /auth/:id`` route. This client never inherits user credentials (G12).
+The former direct HTTP transport consumer is retired. This provider
+never starts a process, reads login state, owns a Unit/session ledger or answers
+permissions. Native HTTP/SSE bootstrap is unavailable; it is never relabelled as ACP.
 """
-
-from __future__ import annotations
-
-from typing import Any, Iterator, Mapping
-
-from ordessa_execution_agents.harness.transport.http import HttpChannelFailure, LoopbackHttpChannel, SseEvent
-from ordessa_execution_agents.harness.transport.channel import ChannelClosed
-
-FAMILY_ID = "opencode"
-PROTOCOL = "opencode-http/1"
+from ordessa_execution_agents.sdk import (HarnessDescriptor,HarnessError,PrepareContext,
+    ProfileContent,LaunchPlan)
+from .native_channel import compile_config,ConfigRefusal
 
 
-class OpenCodeApiError(HttpChannelFailure):
-    """The server answered with a non-2xx status on a JSON route."""
+class OpenCodeHarnessProvider:
+    def __init__(self,definition_ref,implementation_digest):
+        self.descriptor=HarnessDescriptor('opencode',definition_ref,implementation_digest,'opencode-http/1',
+            ('work','home','config','data','state','cache','tmp'),('opencode.configuration/1',))
 
-    def __init__(self, route: str, status: int, body: Any = None):
-        super().__init__("OPENCODE_API_ERROR", f"{route} -> {status}: {body!r}")
-        self.route = route
-        self.status = status
-        self.body = body
+    def _options(self,content):
+        if type(content) is not ProfileContent or dict(content.harness_definition_ref)!=dict(self.descriptor.definition_ref):
+            raise HarnessError('PROFILE_HARNESS_PIN_MISMATCH')
+        options={}
+        for declaration in content.declarations:
+            if (declaration.configuration_kind!='opencode.configuration' or declaration.schema_version!='1'
+                    or declaration.action!='value' or declaration.resource_refs):
+                raise HarnessError('CONFIGURATION_UNSUPPORTED')
+            try:values=dict(declaration.payload)
+            except (TypeError,ValueError):raise HarnessError('CONFIGURATION_INVALID') from None
+            if set(options)&set(values):raise HarnessError('CONFIGURATION_CONFLICT')
+            options.update(values)
+        try:return compile_config(options)
+        except (ConfigRefusal,ValueError,TypeError):raise HarnessError('CONFIGURATION_UNSUPPORTED') from None
 
+    def validate_profile(self,content):self._options(content)
 
-def describe() -> dict[str, Any]:
-    return {
-        "familyId": FAMILY_ID,
-        "channel": "loopback-http+sse",
-        "protocol": PROTOCOL,
-        "routes": [
-            "GET /global/health",
-            "GET /session",
-            "POST /session",
-            "GET /session/status",
-            "POST /session/:id/message",
-            "POST /session/:id/prompt_async",
-            "POST /session/:id/abort",
-            "GET /event",
-            "GET /global/event",
-        ],
-    }
+    def prepare(self,content,context):
+        compiled=self._options(content)
+        if type(context) is not PrepareContext:raise HarnessError('PREPARE_CONTEXT_REQUIRED')
+        if not set(self.descriptor.required_roots)<=set(context.private_dirs):raise HarnessError('APPROVED_ROOTS_UNAVAILABLE')
+        if not {'launcher','communicate'}<=set(context.endpoint_facts.get('members',())):
+            raise HarnessError('ENDPOINT_CAPABILITY_UNAVAILABLE')
+        if compiled['message_fields'] or compiled['project'] is not None or compiled['env_extra']:
+            raise HarnessError('SESSION_CONFIGURATION_UNAVAILABLE')
+        if context.credential_refs:raise HarnessError('CREDENTIAL_BINDING_UNAVAILABLE')
+        if context.session_bootstrap.mode!='fresh':raise HarnessError('SESSION_MODE_UNSUPPORTED')
+        environment=dict(context.launch_environment)
+        required=('HOME','PATH','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_STATE_HOME','XDG_CACHE_HOME','TMPDIR')
+        if any(not environment.get(key) for key in required):raise HarnessError('EXPLICIT_LAUNCH_ENVIRONMENT_REQUIRED')
+        if any(any(marker in key.upper() for marker in ('TOKEN','SECRET','PASSWORD','API_KEY','APIKEY')) for key in environment):
+            raise HarnessError('CREDENTIAL_REFERENCE_REQUIRED')
+        environment.update({'LANG':'C.UTF-8','LC_ALL':'C.UTF-8','TERM':'dumb','NO_COLOR':'1'})
+        environment.update({'OPENCODE_DISABLE_AUTOUPDATE':'1','OPENCODE_DISABLE_MODELS_FETCH':'1','OPENCODE_DISABLE_LSP_DOWNLOAD':'1'})
+        return LaunchPlan(context.command_prefix+('serve','--hostname','127.0.0.1','--port','0'),context.private_dirs['work'],
+            environment,(),(),context.prepared_configuration_refs,context.materials,context.session_bootstrap,('launcher','communicate'))
 
-
-class OpenCodeClient:
-    """Consumer of one local OpenCode server. Loopback only (G9/G12); no
-    auto-retry anywhere (G11); SSE disconnect is never completion (G6)."""
-
-    def __init__(self, channel: LoopbackHttpChannel):
-        self._channel = channel
-        self._events: list[SseEvent] = []
-
-    @classmethod
-    def connect(cls, base_url: str, *, timeout: float = 10.0) -> "OpenCodeClient":
-        """Connect to a loopback server URL. Non-loopback destinations raise
-        NonLoopbackRefused at construction (G9)."""
-        return cls(LoopbackHttpChannel(base_url, timeout=timeout))
-
-    # -- handshake ----------------------------------------------------------
-    def initialize(self, *, timeout: float | None = None) -> Mapping[str, Any]:
-        """Real handshake: ``GET /global/health`` (``{healthy, version}``)."""
-        status, body = self._channel.request_json("GET", "/global/health", timeout=timeout)
-        self._expect_ok("/global/health", status, body)
-        return body
-
-    # -- session identity ----------------------------------------------------
-    def create_session(
-        self,
-        *,
-        title: str | None = None,
-        parent_id: str | None = None,
-        timeout: float | None = None,
-    ) -> Mapping[str, Any]:
-        body: dict[str, Any] = {}
-        if title is not None:
-            body["title"] = title
-        if parent_id is not None:
-            body["parentID"] = parent_id
-        status, result = self._channel.request_json("POST", "/session", body=body, timeout=timeout)
-        self._expect_ok("POST /session", status, result)
-        return result
-
-    def session_status(self, *, timeout: float | None = None) -> Mapping[str, Any]:
-        status, result = self._channel.request_json("GET", "/session/status", timeout=timeout)
-        self._expect_ok("GET /session/status", status, result)
-        return result
-
-    # -- sending (receipts are not completion) --------------------------------
-    def send(self, session_id: str, parts: Any, *, timeout: float | None = None, **fields: Any) -> Any:
-        """``POST /session/:id/message``. The response records the message —
-        it is a receipt, NOT the assistant's completed answer (G6).
-        """
-        body: dict[str, Any] = {"parts": parts}
-        body.update(fields)
-        status, result = self._channel.request_json(
-            "POST", f"/session/{session_id}/message", body=body, timeout=timeout
-        )
-        self._expect_ok(f"POST /session/{session_id}/message", status, result)
-        return result
-
-    def send_async(self, session_id: str, parts: Any, *, timeout: float | None = None, **fields: Any) -> int:
-        """``POST /session/:id/prompt_async`` → 204 No Content accepted. The
-        204 is acceptance only; completion is observed via events."""
-        body: dict[str, Any] = {"parts": parts}
-        body.update(fields)
-        status, _ = self._channel.request_json(
-            "POST", f"/session/{session_id}/prompt_async", body=body, timeout=timeout
-        )
-        if status != 204:
-            raise OpenCodeApiError(f"POST /session/{session_id}/prompt_async", status)
-        return status
-
-    # -- events ----------------------------------------------------------------
-    def events(self, *, max_events: int | None = None) -> Iterator[SseEvent]:
-        """SSE bus events verbatim (unknown types preserved, G4).
-
-        The stream ENDING is not task completion: upstream documents abort as
-        the explicit stop and leaves SSE-disconnect semantics unspecified, so
-        callers must confirm state via protocol routes (G6 counter-example).
-        """
-        for event in self._channel.stream_events("/event", max_events=max_events):
-            self._events.append(event)
-            yield event
-
-    def global_events(self, *, max_events: int | None = None) -> Iterator[SseEvent]:
-        for event in self._channel.stream_events("/global/event", max_events=max_events):
-            self._events.append(event)
-            yield event
-
-    def seen_events(self) -> tuple[SseEvent, ...]:
-        return tuple(self._events)
-
-    # -- control ----------------------------------------------------------------
-    def cancel(self, session_id: str, *, timeout: float | None = None) -> Any:
-        """``POST /session/:id/abort`` — the documented explicit stop (G6)."""
-        status, result = self._channel.request_json(
-            "POST", f"/session/{session_id}/abort", timeout=timeout
-        )
-        self._expect_ok(f"POST /session/{session_id}/abort", status, result)
-        return result
-
-    def close(self) -> None:
-        """Release only this client's connection (G8)."""
-        self._channel.close()
-
-    # -- internals ---------------------------------------------------------------
-    @staticmethod
-    def _expect_ok(route: str, status: int, body: Any) -> None:
-        if status < 200 or status >= 300:
-            raise OpenCodeApiError(route, status, body)
-        if body is None and status != 204:
-            raise OpenCodeApiError(route, status, "empty body")
+    async def open_session(self,process,context):
+        if type(context) is not PrepareContext:raise HarnessError('PREPARE_CONTEXT_REQUIRED')
+        # Native HTTP/SSE is not ACP. No sidecar or raw HTTP fallback.
+        raise HarnessError('HTTP_BOOTSTRAP_UNAVAILABLE')
 
 
-# re-exported so family callers see one failure surface
-__all__ = [
-    "FAMILY_ID",
-    "PROTOCOL",
-    "ChannelClosed",
-    "OpenCodeApiError",
-    "OpenCodeClient",
-    "describe",
-]
+class OpenCodeProviderFactory:
+    def build(self,bindings):
+        if set(bindings)!={'definition_ref','implementation_digest'}:raise HarnessError('HARNESS_BINDINGS_INVALID')
+        return OpenCodeHarnessProvider(bindings['definition_ref'],bindings['implementation_digest'])
+
+
+factory=OpenCodeProviderFactory()

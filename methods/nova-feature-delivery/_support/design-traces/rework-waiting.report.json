@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "report_id": "synthetic-gerrit-wait-01",
+  "phase": "gerrit",
+  "reported_at": "2025-02-01T12:00:00Z",
+  "reporter": {
+    "actor_id": "example-contributor",
+    "role_claim": "contributor",
+    "reported_at": "2025-02-01T12:00:00Z"
+  },
+  "cycle": "synthetic-cycle",
+  "blueprint": {
+    "id": "synthetic-blueprint",
+    "url": "https://blueprints.launchpad.net/nova/+spec/synthetic-blueprint",
+    "status": "Approved",
+    "cycle": "synthetic-cycle"
+  },
+  "spec": {
+    "url": "https://specs.openstack.org/openstack/nova-specs/specs/2025.1/implemented/libvirt-virtiofs-attach-manila-shares.html",
+    "status": "Approved",
+    "cycle": "synthetic-cycle"
+  },
+  "decision": "Reviewer requested compatibility detail; patchset revision and reviewer response are awaited.",
+  "decision_record": {
+    "actor_id": "example-reviewer",
+    "role_claim": "Gerrit reviewer (synthetic claim)",
+    "decided_at": "2025-02-01T11:00:00Z",
+    "authority_ref": "https://review.opendev.org/",
+    "rationale_summary": "Synthetic negative review awaiting author revision and reviewer re-check."
+  },
+  "result": "waiting",
+  "summary": "Hold this review until compatibility notes and tests are updated; do not re-use prior patchset votes.",
+  "patchsets": [
+    "https://review.opendev.org/c/openstack/nova/+/000001/1"
+  ],
+  "gerrit": {
+    "change_url": "https://review.opendev.org/c/openstack/nova/+/000001",
+    "change_id": "I-synthetic",
+    "patchset": "1"
+  },
+  "blockers": [
+    {
+      "id": "compat-review",
+      "description": "Compatibility review comment requires a response.",
+      "owner": "example-contributor",
+      "opened_at": "2025-02-01T11:00:00Z",
+      "next_action": "Upload a revised patchset with compatibility test and reply to the Gerrit comment.",
+      "resume_condition": "Reviewer rechecks the new patchset and reports a decision.",
+      "source_url": "https://review.opendev.org/c/openstack/nova/+/000001"
+    }
+  ],
+  "predecessors": [],
+  "evidence_urls": [
+    "https://review.opendev.org/c/openstack/nova/+/000001"
+  ],
+  "limitations": [
+    "All identifiers, votes, and URLs are synthetic examples."
+  ],
+  "spec_required": true
+}

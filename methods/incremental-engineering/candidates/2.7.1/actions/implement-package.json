@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "action_id": "incremental.implement-package",
+  "inputs": [
+    {"name": "package", "value_kind": "package_ref"},
+    {"name": "profile", "value_kind": "profile_ref"},
+    {"name": "reviewer_profile", "value_kind": "profile_ref"},
+    {"name": "method", "value_kind": "method_ref"}
+  ],
+  "steps": [
+    {"step_id": "implement", "kind": "invoke", "name": "implement-approved-package", "inputs": [
+      {"name": "package", "source_kind": "action_input", "source_name": "package"},
+      {"name": "profile", "source_kind": "action_input", "source_name": "profile"},
+      {"name": "profile-selection-prompt", "source_kind": "resource", "source_name": "profile-selection-prompt"},
+      {"name": "implementation-prompt", "source_kind": "resource", "source_name": "implementation-prompt"}
+    ], "outputs": ["implementation_report"]},
+    {"step_id": "review", "kind": "invoke", "name": "independently-review-report", "inputs": [
+      {"name": "report", "source_kind": "step_output", "source_name": "implementation_report", "step_id": "implement"},
+      {"name": "package", "source_kind": "action_input", "source_name": "package"},
+      {"name": "reviewer_profile", "source_kind": "action_input", "source_name": "reviewer_profile"},
+      {"name": "method", "source_kind": "action_input", "source_name": "method"},
+      {"name": "criteria", "source_kind": "resource", "source_name": "implementation-review-criteria"},
+      {"name": "prompt", "source_kind": "resource", "source_name": "independent-review-prompt"},
+      {"name": "profile-selection", "source_kind": "resource", "source_name": "profile-selection-prompt"}
+    ], "outputs": ["review_result"]},
+    {"step_id": "disposition", "kind": "invoke", "name": "resolve-one-operation-disposition", "inputs": [
+      {"name": "report", "source_kind": "step_output", "source_name": "implementation_report", "step_id": "implement"},
+      {"name": "review", "source_kind": "step_output", "source_name": "review_result", "step_id": "review"},
+      {"name": "package", "source_kind": "action_input", "source_name": "package"},
+      {"name": "reviewer_profile", "source_kind": "action_input", "source_name": "reviewer_profile"},
+      {"name": "rework-prompt", "source_kind": "resource", "source_name": "rework-prompt"},
+      {"name": "method", "source_kind": "action_input", "source_name": "method"}
+      ,{"name": "method_schema", "source_kind": "resource", "source_name": "method-ref-schema"}
+    ], "outputs": ["operation_result"], "admission": [
+      {"kind": "review_complete", "inputs": ["review"]},
+      {"kind": "method_pin", "inputs": ["method", "review"]},
+      {"kind": "reviewer_independent", "inputs": ["report", "review", "package", "reviewer_profile", "method"]}
+    ]},
+    {"step_id": "record", "kind": "record", "name": "record-operation-result", "inputs": [
+      {"name": "result", "source_kind": "step_output", "source_name": "operation_result", "step_id": "disposition"}
+    ], "outputs": ["report_record"]}
+  ],
+  "outputs": [{"name": "report", "value_kind": "json_object", "step_id": "record", "output": "report_record"}],
+  "admission": [{"kind": "method_pin", "inputs": ["package", "method"]}],
+  "resources": ["profile-selection-prompt", "implementation-prompt", "independent-review-prompt",
+    "rework-prompt", "implementation-review-criteria", "review-result-schema",
+    "implementation-report-schema", "package-result-schema", "method-ref-schema"]
+}

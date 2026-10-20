@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "fixture_only": true,
+  "not_executed_as_application_tests": true,
+  "cases": [
+    {
+      "case_id": "duplicate_key",
+      "phase": "parse",
+      "resource_text": "schema_version: 1\nschema_version: 2\n",
+      "expected_error": "DUPLICATE_KEY"
+    },
+    {
+      "case_id": "yaml_alias",
+      "phase": "parse",
+      "resource_text": "a: &x [1]\nb: *x\n",
+      "expected_error": "METHOD_PARSE_ERROR"
+    },
+    {
+      "case_id": "path_escape",
+      "phase": "load",
+      "manifest_resource_path": "../secret.yaml",
+      "expected_error": "RESOURCE_ESCAPE"
+    },
+    {
+      "case_id": "remote_schema",
+      "phase": "validate",
+      "schema_fragment": {
+        "$ref": "https://example.invalid/schema.json"
+      },
+      "expected_error": "SCHEMA_INVALID"
+    },
+    {
+      "case_id": "capability_spoof",
+      "phase": "compatibility",
+      "required_capability": "python.eval",
+      "expected_error": "CAPABILITY_UNAVAILABLE"
+    },
+    {
+      "case_id": "pin_changed",
+      "phase": "compatibility",
+      "mutate": "catalog capability contract with same interface_version",
+      "expected_error": "CAPABILITY_CONTRACT_MISMATCH"
+    },
+    {
+      "case_id": "decision_threshold",
+      "phase": "validate",
+      "mutate": "add decision_policy to decision source-support",
+      "expected_error": "THRESHOLD_OUTSIDE_STANDARD"
+    },
+    {
+      "case_id": "loop",
+      "phase": "compile",
+      "mutate": "quality_review passed returns source_review",
+      "expected_error": "UNSUPPORTED_FLOW_FEATURE"
+    },
+    {
+      "case_id": "unhandled_outcome",
+      "phase": "compile",
+      "mutate": "delete request_approval pending mapping",
+      "expected_error": "UNHANDLED_OUTCOME"
+    },
+    {
+      "case_id": "user_approved_slot",
+      "phase": "compile",
+      "mutate": "request_approval inputs userApproved=true",
+      "expected_error": "UNSUPPORTED_FLOW_FEATURE"
+    },
+    {
+      "case_id": "unknown_option",
+      "phase": "decision_validation",
+      "mutate": "ChoiceAnswer selected_option_id arbitrary-text",
+      "expected_error": "RESPONSE_SCHEMA_MISMATCH"
+    },
+    {
+      "case_id": "truncation_unknown",
+      "phase": "decision_validation",
+      "mutate": "TruncationReport knowledge unknown with reject policy",
+      "expected_error": "TRUNCATION_UNVERIFIED"
+    },
+    {
+      "case_id": "frozen_compiled_program_mutated",
+      "phase": "snapshot_decode",
+      "mutate": "change compiled workflow entry without changing pinned compiled_plan_digest",
+      "expected_error": "METHOD_SNAPSHOT_MISMATCH",
+      "expected_cause": "COMPILED_PLAN_DIGEST_MISMATCH"
+    }
+  ]
+}

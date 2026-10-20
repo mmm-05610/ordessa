@@ -1,0 +1,73 @@
+{
+  "index_version": 1,
+  "retrieved_on": "2026-10-12",
+  "sources": [
+    {
+      "id": "nova-process",
+      "url": "https://docs.openstack.org/nova/latest/contributor/process.html",
+      "version": "nova 34.1.0.dev61 (latest; mutable)",
+      "observed_date": "2026-07-19",
+      "license": "CC-BY-3.0",
+      "used_for": [
+        "spec decision",
+        "cycle approval",
+        "review and freeze handling"
+      ]
+    },
+    {
+      "id": "nova-blueprints",
+      "url": "https://docs.openstack.org/nova/latest/contributor/blueprints.html",
+      "version": "latest; mutable",
+      "observed_date": "2023-10-02",
+      "license": "CC-BY-3.0",
+      "used_for": [
+        "blueprint and spec process"
+      ]
+    },
+    {
+      "id": "opendev-automated-testing",
+      "url": "https://docs.opendev.org/opendev/infra-manual/latest/developers.html#automated-testing",
+      "version": "latest; mutable",
+      "observed_date": "2026-10-12",
+      "license": "page does not state a license; independently summarized facts only",
+      "used_for": [
+        "Gerrit, Zuul check/gate and failure diagnosis"
+      ],
+      "observed_footer_last_modified": null,
+      "observed_date_kind": "retrieval_date_only"
+    },
+    {
+      "id": "nova-implemented-spec",
+      "url": "https://specs.openstack.org/openstack/nova-specs/specs/2025.1/implemented/libvirt-virtiofs-attach-manila-shares.html",
+      "version": "2025.1",
+      "observed_date": "2025-03-11",
+      "license": "CC-BY-3.0",
+      "used_for": [
+        "implemented example",
+        "cycle reproposal history"
+      ]
+    },
+    {
+      "id": "nova-blueprint-example",
+      "url": "https://blueprints.launchpad.net/nova/+spec/libvirt-virtiofs-attach-manila-shares",
+      "version": null,
+      "observed_date": null,
+      "license": "not reproduced",
+      "used_for": [
+        "upstream identifier only"
+      ],
+      "access_status": "robots-denied; completion date 2025-03-06 unverified"
+    },
+    {
+      "id": "nova-2025.1-release-notes",
+      "url": "https://docs.openstack.org/releasenotes/nova/2025.1.html",
+      "version": "2025.1 / Nova 31.0.0",
+      "observed_date": "2026-10-12",
+      "license": "CC-BY-3.0",
+      "used_for": [
+        "official release inclusion"
+      ],
+      "observed_footer_last_modified": "2026-10-10"
+    }
+  ]
+}

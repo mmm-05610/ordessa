@@ -2,18 +2,27 @@
 from dataclasses import dataclass
 from typing import Mapping
 from typing import Literal
+from .capabilities import CapabilityReport
 from .errors import EnvironmentRefused
-
-from .contracts import Capabilities
 
 
 @dataclass(frozen=True)
 class BackendObservation:
     backend_id: str
     state: str
-    capabilities: Capabilities
+    capabilities: CapabilityReport
     observed_at: str
     runtime_identity: str | None = None
+    endpoint_kind: Literal["local", "outbound", "inbound"] = "local"
+    health: Literal["ready", "degraded", "unreachable", "unknown"] = "unknown"
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.capabilities, CapabilityReport):
+            raise EnvironmentRefused("backend observation requires a capability report")
+        if self.endpoint_kind not in ("local", "outbound", "inbound"):
+            raise EnvironmentRefused("invalid backend observation endpoint kind")
+        if self.health not in ("ready", "degraded", "unreachable", "unknown"):
+            raise EnvironmentRefused("invalid backend observation health")
 
 
 @dataclass(frozen=True)
@@ -38,7 +47,7 @@ class EnvironmentOperationReceipt:
 
 
 @dataclass(frozen=True)
-class ProviderDescriptor:
+class ProviderFacts:
     identity: str
     adapter_version: str
     backend_version: str

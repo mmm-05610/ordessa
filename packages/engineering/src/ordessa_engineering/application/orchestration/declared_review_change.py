@@ -50,7 +50,7 @@ class DeclaredReviewChangeSteps:
     @property
     def runnable(self):
         """Both halves the declared steps need must be composed."""
-        return self.plan_factory is not None and self.review_run is not None
+        return callable(self.plan_factory) and callable(self.review_run)
 
     @staticmethod
     def _completed(result):

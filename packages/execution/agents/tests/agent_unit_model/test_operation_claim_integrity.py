@@ -6,14 +6,9 @@ Harness.  Staged operations have separate recipe-history checks.
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment.errors import GuaranteeUnavailableError, UnknownResultError
-from ordessa_execution_api.environment.operations import (
-    OperationIntent,
-    StepIntent,
-    UsageMutation,
-    operation_holder,
-    safe_json,
-)
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitOperationUnknown
+from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import (
@@ -163,18 +158,18 @@ def test_missing_current_row_fails_read_query_and_claim_without_writes(tmp_path)
         store._conn.commit()
         before = _counts(store)
 
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.read_operation(request)
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.read_operation_step(request, "tail")
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             _issuer(store, request, intent).issue_query(request, _DIGEST, "first")
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.claim_operation_step(
                 request, _DIGEST, intent.steps[0],
                 (_pending_usage(request, intent, "current-claim-usage"),),
             )
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.claim_operation_step(
                 request, _DIGEST, intent.steps[1],
                 (_pending_usage(request, intent, "next-claim-usage"),),
@@ -215,7 +210,7 @@ def test_missing_early_row_does_not_hide_current_tail_or_allow_reclaim(tmp_path)
         assert verified["query"] is True
 
         before = _counts(store)
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.claim_operation_step(
                 request, _DIGEST, intent.steps[0],
                 (_pending_usage(request, intent, "past-claim-usage"),),
@@ -244,11 +239,11 @@ def test_current_none_with_orphan_step_row_is_corrupt(tmp_path):
         store._conn.commit()
         before = _counts(store)
 
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.read_operation(request)
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.read_operation_step(request, "first")
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.claim_operation_step(request, _DIGEST, step)
 
         assert _counts(store) == before
@@ -272,7 +267,7 @@ def test_reserved_and_refused_no_claim_replay_survives_reopen(tmp_path):
         assert store.record_operation_outcome(
             request, _DIGEST, reserved.revision, "refused", {"evidenceRef": "controlled-refusal"}
         ) == refused
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             store.claim_operation_step(request, _DIGEST, intent.steps[0])
         assert store._conn.execute("SELECT COUNT(*) FROM env_request_steps").fetchone()[0] == 0
         assert store._conn.execute("SELECT COUNT(*) FROM env_usages").fetchone()[0] == 0
@@ -285,7 +280,7 @@ def test_reserved_and_refused_no_claim_replay_survives_reopen(tmp_path):
         assert reopened.record_operation_outcome(
             request, _DIGEST, 1, "refused", {"evidenceRef": "controlled-refusal"}
         ).status == "refused"
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             reopened.claim_operation_step(request, _DIGEST, intent.steps[0])
         assert reopened._conn.execute("SELECT COUNT(*) FROM env_request_steps").fetchone()[0] == 0
         assert reopened._conn.execute("SELECT COUNT(*) FROM env_usages").fetchone()[0] == 0
@@ -308,7 +303,7 @@ def test_existing_unknown_claim_is_not_reclaimed_and_valid_order_advances(tmp_pa
         before = _counts(store)
         assert store.claim_operation_step(request, _DIGEST, intent.steps[0]).step == unknown
         assert not store.claim_operation_step(request, _DIGEST, intent.steps[0]).claimed
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             store.claim_operation_step(request, _DIGEST, intent.steps[1])
         assert _counts(store) == before
 

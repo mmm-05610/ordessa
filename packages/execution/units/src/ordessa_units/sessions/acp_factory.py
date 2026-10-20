@@ -3,10 +3,10 @@ from dataclasses import dataclass, replace
 import os
 import asyncio
 
-from ordessa_environments import ProcessRequest, require_guarantees, PROCESS_CAPABILITY, BYTE_CHANNEL_CAPABILITY, FILE_AREA_CAPABILITY
+from ordessa_environments import ProcessRequest, require_capabilities, PROCESS_CAPABILITY, BYTE_CHANNEL_CAPABILITY, FILE_AREA_CAPABILITY
 from ordessa_execution_agents.preparation import PreparedAgent, PreparedHarness, ConfigurationResources
 from .sdk_client import SdkAcpClient
-from ordessa_execution_agents.harness.transport import ProcessChannel
+from .environment_channel import EnvironmentProcessChannel
 from ordessa_units.lifecycle.unit_lifecycle import UnitLifecycleRefused, same_reference
 
 
@@ -56,7 +56,7 @@ class AcpChannelFactory:
         if self.reference.get("environmentId") != self.instance.identity:
             raise UnitLifecycleRefused("Fixed Environment instance identity differs")
         self.environment = self.instance.acquire(self.agent_id, sharing=self.sharing)
-        require_guarantees(self.environment, [PROCESS_CAPABILITY, BYTE_CHANNEL_CAPABILITY, FILE_AREA_CAPABILITY])
+        require_capabilities(self.environment.capabilities, [PROCESS_CAPABILITY, BYTE_CHANNEL_CAPABILITY, FILE_AREA_CAPABILITY])
         harness = self.preparation.prepare(roots)
         if type(harness) is not PreparedHarness:
             raise UnitLifecycleRefused('Harness did not return a fixed preparation')
@@ -98,7 +98,7 @@ class AcpChannelFactory:
         spec = self.prepared_agent.harness.launch_spec
         process = self.environment.execution.start(ProcessRequest.build(spec.argv, cwd=spec.cwd, env=spec.env))
         self._record = AcpChannelRecord(object(), None, process, self.prepared_agent, self.environment.environment_id, self.environment.identity)
-        channel = ProcessChannel.attach(process, name='unit-acp', managed=True)
+        channel = EnvironmentProcessChannel(process, name='unit-acp', managed=True)
         self._record = replace(self._record, channel=channel)
         entry = SdkAcpClient(channel.bind_writer(channel.acquire_writer()), name='unit-acp', connect=False,
             require_effect_write_guard=self.effect_write_guard_required,

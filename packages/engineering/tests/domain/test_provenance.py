@@ -11,6 +11,7 @@ from ordessa_engineering.domain.artifacts.models import (
     ArtifactRevision, InlinePayload, MethodContent, MethodPayload,
 )
 from ordessa_engineering.domain.artifacts.provenance import (Claim, ClaimRef, EvidenceLink, ExcerptCapture, GenerationOrigin, SourceLocator, SourceRef, VersionCapture)
+from ordessa_engineering.domain.artifacts.provenance_codec import decode_source
 from ordessa_engineering.domain.common.models.selection import (ContentSelector)
 from ordessa_engineering.domain.artifacts.method_binding import (ExactMethodResourceRef)
 from ordessa_engineering.domain.common.mechanisms.codec import (projection)
@@ -167,6 +168,48 @@ def test_source_capture_ref_length_media_actor_time_and_url_are_checked() -> Non
     _reject(lambda: _source(captured_at="2026-10-09 12:00:00Z"), "INVALID_TIME")
     _reject(lambda: _source(original_url="https://user:secret@example.test/path"), "INVALID_SOURCE_URL")
     _reject(lambda: _source(original_url="file:///private/file"), "INVALID_SOURCE_URL")
+
+
+def test_content_identity_pins_external_version_and_digest_without_capture_metadata() -> None:
+    locator = SourceLocator("document", provider="project-files", document_id="alpha:design/DID.md")
+    first = _source(locator=locator, capture=VersionCapture("baseline-v1", _digest(b"baseline")),
+                    media_type="text/markdown", byte_length=44)
+    same_content = replace(first, source_id="another-record", captured_at="2026-10-10T12:00:00.000000Z",
+                           captured_by=ActorRef("other-capturer", "agent", "synthetic-test"),
+                           media_type="application/octet-stream", byte_length=99,
+                           original_url="https://example.test/elsewhere")
+    changed_digest = replace(first, capture=VersionCapture("baseline-v1", _digest(b"changed")))
+    changed_version = replace(first, capture=VersionCapture("baseline-v2", _digest(b"baseline")))
+
+    assert first.content_identity == same_content.content_identity
+    assert first.content_identity != changed_digest.content_identity
+    assert first.content_identity != changed_version.content_identity
+    assert decode_source(asdict(first)).content_identity == first.content_identity
+    assert not hasattr(first, "content")
+
+
+def test_excerpt_content_identity_retains_locator_version_digest_and_selector() -> None:
+    raw = b"excerpt bytes"
+    blob = _blob(raw, media_type="text/plain")
+    selector = ContentSelector("byte_range", start=0, end=len(raw))
+    capture = ExcerptCapture(blob, _digest(raw), selector, "upstream-v1")
+    source = _source(blob=blob, capture=capture, media_type="text/plain", byte_length=len(raw))
+    different_selector = replace(source, capture=replace(capture, selector=ContentSelector("whole_capture")))
+    different_excerpt = replace(source, capture=replace(capture, excerpt_digest=_digest(b"other")))
+    changed_blob_content = replace(
+        source,
+        capture=replace(capture, blob_ref=replace(blob, digest=_digest(b"other blob!"))),
+    )
+    relocated_blob = replace(
+        source,
+        capture=replace(capture, blob_ref=replace(blob, storage_object_id="blob-object-relocated")),
+    )
+
+    assert source.content_identity == decode_source(asdict(source)).content_identity
+    assert source.content_identity != different_selector.content_identity
+    assert source.content_identity != different_excerpt.content_identity
+    assert source.content_identity != changed_blob_content.content_identity
+    assert source.content_identity == relocated_blob.content_identity
 
 
 def test_claims_links_and_relations_are_typed_and_finite() -> None:

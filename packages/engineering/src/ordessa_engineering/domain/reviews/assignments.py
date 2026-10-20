@@ -54,7 +54,7 @@ class ReviewerAssignmentRef:
 
 
 @dataclass(frozen=True)
-class ReviewerAssignment:
+class HistoricalReviewerAssignment:
     scope: Scope
     assignment_id: str
     review_id: str
@@ -131,6 +131,72 @@ class ReviewerAssignment:
 
 
 @dataclass(frozen=True)
+class ReviewerAssignment:
+    """Version2 Agent role selection by the ORIGINAL Engineering issuer."""
+    scope: Scope
+    assignment_id: str
+    review_id: str
+    plan_digest: Digest
+    request_version: int
+    fence: int
+    method_ref: MethodRef
+    reviewer_agent_ref_bytes: bytes
+    author_agent_ref_bytes: bytes | None
+    roles: tuple[str,...]
+    issuer_principal_id: str
+    issuer_credential_epoch: int
+    assigned_at: str
+    digest: Digest = field(init=False)
+
+    def __post_init__(self):
+        from ..common.models.execution_refs import read_agent_instance_ref
+        if (type(self.scope) is not Scope or type(self.plan_digest) is not Digest
+                or type(self.method_ref) is not MethodRef or type(self.roles) is not tuple or not self.roles
+                or any(type(role) is not str for role in self.roles)):
+            raise ReferenceError('INVALID_SCHEMA')
+        for value in (self.assignment_id,self.review_id,self.issuer_principal_id):validate_id(value)
+        validate_version(self.request_version);validate_version(self.fence,positive=True)
+        validate_version(self.issuer_credential_epoch);utc_instant(self.assigned_at)
+        roles=tuple(sorted(self.roles))
+        if len(set(roles))!=len(roles):raise ReferenceError('INVALID_SCHEMA')
+        for role in roles:validate_id(role)
+        read_agent_instance_ref(self.reviewer_agent_ref_bytes)
+        if self.author_agent_ref_bytes is not None:read_agent_instance_ref(self.author_agent_ref_bytes)
+        object.__setattr__(self,'roles',roles)
+        object.__setattr__(self,'digest',record_digest('agent-reviewer-assignment-v2',self.hash_payload()))
+
+    def hash_payload(self):
+        from ordessa_infrastructure.encoding import decode_json
+        from ..common.mechanisms.codec import projection
+        return {'schemaVersion':'engineering-agent-reviewer-assignment/2',
+            'scope':projection(self.scope),'assignment_id':self.assignment_id,'review_id':self.review_id,
+            'plan_digest':projection(self.plan_digest),'request_version':self.request_version,'fence':self.fence,
+            'method_ref':projection(self.method_ref),'reviewer_agent_ref':decode_json(self.reviewer_agent_ref_bytes),
+            'author_agent_ref':None if self.author_agent_ref_bytes is None else decode_json(self.author_agent_ref_bytes),
+            'roles':list(self.roles),'issuer_principal_id':self.issuer_principal_id,
+            'issuer_credential_epoch':self.issuer_credential_epoch,'assigned_at':self.assigned_at}
+
+    @property
+    def ref(self):return ReviewerAssignmentRef(self.scope,self.assignment_id,self.digest)
+
+    @property
+    def reviewer_agent_ref(self):
+        from ordessa_infrastructure.encoding import decode_json
+        return decode_json(self.reviewer_agent_ref_bytes)
+
+    @property
+    def author_agent_ref(self):
+        from ordessa_infrastructure.encoding import decode_json
+        return None if self.author_agent_ref_bytes is None else decode_json(self.author_agent_ref_bytes)
+
+    def require_distinct_author(self):
+        from ..common.models.execution_refs import read_agent_instance_ref,agent_instance_identity
+        if self.author_agent_ref_bytes is not None and agent_instance_identity(read_agent_instance_ref(
+                self.author_agent_ref_bytes))==agent_instance_identity(read_agent_instance_ref(self.reviewer_agent_ref_bytes)):
+            raise ReferenceError('UNTRUSTED_REVIEWER')
+
+
+@dataclass(frozen=True)
 class ReviewerAssignmentControl:
     ref: ReviewerAssignmentRef
     state: str
@@ -152,4 +218,4 @@ class ReviewerAssignmentControl:
             validate_text(self.revoke_reason)
 
 
-__all__ = ["ReviewerAssignment", "ReviewerAssignmentControl", "ReviewerAssignmentRef"]
+__all__ = ["ReviewerAssignment", "HistoricalReviewerAssignment", "ReviewerAssignmentControl", "ReviewerAssignmentRef"]

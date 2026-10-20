@@ -1,6 +1,6 @@
 """Single-use staging handle for an exact HarnessCatalog registration batch."""
 
-from ordessa_execution_api.environment import AdmissionRefusedError
+from .errors import CatalogAdmissionRefused
 
 
 class HarnessRegistration:
@@ -21,7 +21,7 @@ class HarnessRegistration:
 
     def commit(self):
         if self._state != "staged":
-            raise AdmissionRefusedError("Harness registration is not retryable")
+            raise CatalogAdmissionRefused("Harness registration is not retryable")
         # Fence before delegating: an exception can follow partial admission,
         # so callers cannot safely replay commit against the same batch.
         self._state = "committing"
@@ -35,6 +35,6 @@ class HarnessRegistration:
 
     def rollback(self):
         if self._state != "staged":
-            raise AdmissionRefusedError("Harness registration can no longer roll back")
+            raise CatalogAdmissionRefused("Harness registration can no longer roll back")
         self._catalog._rollback(self._token, self._entries)
         self._state = "rolled_back"

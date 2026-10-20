@@ -1,0 +1,5096 @@
+{
+  "head": "e3522105105f1b3d2c8a172644bae4e9586d12e0",
+  "inputFindingModules": 116,
+  "counts": {
+    "retained_without_selected_root_import_path": 30,
+    "reachable_old_runtime_or_mixed_adapter": 79,
+    "historical_read_or_data_projection": 2,
+    "legitimate_current_environment_owner": 3,
+    "packaged_test_artifact": 2
+  },
+  "roots": [
+    "ordessa_server.__main__",
+    "ordessa_server.entrypoints.cli",
+    "ordessa_server.composition.packages_convergence",
+    "ordessa_server_product.composition"
+  ],
+  "modulesInGraph": 1226,
+  "staticReachableModules": 617,
+  "unresolvedDynamicImports": {
+    "ordessa_execution_agents.sdk": [
+      38
+    ],
+    "ordessa_interfaces.system_access.discovery": [
+      86
+    ]
+  },
+  "records": [
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_tools/owner_ports.py",
+      "module": "ordessa_server.composition.agent_tools.owner_ports",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [
+        195
+      ],
+      "symbolFindings": [
+        {
+          "line": 25,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        },
+        {
+          "line": 32,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 194,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        },
+        {
+          "line": 194,
+          "kind": "unit-module",
+          "value": "ordessa_units.records"
+        },
+        {
+          "line": 195,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/configuration/product_selection.py",
+      "module": "ordessa_server.composition.configuration.product_selection",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 5,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly.runtime.assembler"
+        },
+        {
+          "line": 10,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/configuration/request_integrity.py",
+      "module": "ordessa_server.composition.configuration.request_integrity",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 15,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.fingerprints"
+        },
+        {
+          "line": 16,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/engineering.py",
+      "module": "ordessa_server.composition.engineering",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.engineering"
+      ],
+      "reviewCallLines": [
+        190
+      ],
+      "symbolFindings": [
+        {
+          "line": 20,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 20,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly"
+        },
+        {
+          "line": 233,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/engineering_declared_work_case_assembly.py",
+      "module": "ordessa_server.composition.engineering_declared_work_case_assembly",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [
+        452
+      ],
+      "symbolFindings": [
+        {
+          "line": 395,
+          "kind": "unit-module",
+          "value": "ordessa_units.api"
+        },
+        {
+          "line": 546,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 546,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly"
+        },
+        {
+          "line": 548,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/engineering_method_unit_assembly.py",
+      "module": "ordessa_server.composition.engineering_method_unit_assembly",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 15,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 15,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly"
+        },
+        {
+          "line": 63,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/engineering_method_unit_sources.py",
+      "module": "ordessa_server.composition.engineering_method_unit_sources",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 90,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 167,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 167,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        },
+        {
+          "line": 168,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 168,
+          "kind": "unit-module",
+          "value": "ordessa_units.management"
+        },
+        {
+          "line": 169,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 169,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/engineering_native_dispatch_assembly.py",
+      "module": "ordessa_server.composition.engineering_native_dispatch_assembly",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [
+        163,
+        317,
+        452
+      ],
+      "symbolFindings": [
+        {
+          "line": 30,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 30,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly"
+        },
+        {
+          "line": 31,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 31,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        },
+        {
+          "line": 73,
+          "kind": "legacy-field",
+          "value": "unit_manager"
+        },
+        {
+          "line": 75,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 75,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 189,
+          "kind": "legacy-field",
+          "value": "unit_manager"
+        },
+        {
+          "line": 191,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 192,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 474,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 578,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/engineering_review_assembly.py",
+      "module": "ordessa_server.composition.engineering_review_assembly",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 18,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 18,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly"
+        },
+        {
+          "line": 51,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/engineering_submission_sources.py",
+      "module": "ordessa_server.composition.engineering_submission_sources",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [
+        280
+      ],
+      "symbolFindings": [
+        {
+          "line": 105,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 105,
+          "kind": "unit-module",
+          "value": "ordessa_units.management"
+        },
+        {
+          "line": 106,
+          "kind": "legacy-symbol",
+          "value": "EnvironmentUse"
+        },
+        {
+          "line": 108,
+          "kind": "legacy-symbol",
+          "value": "EnvironmentUse"
+        },
+        {
+          "line": 108,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 118,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 155,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 159,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/engineering_unit_reviewer_source.py",
+      "module": "ordessa_server.composition.engineering_unit_reviewer_source",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 119,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/engineering_work_assembly.py",
+      "module": "ordessa_server.composition.engineering_work_assembly",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 13,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 13,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly"
+        },
+        {
+          "line": 14,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        },
+        {
+          "line": 14,
+          "kind": "unit-module",
+          "value": "ordessa_units.records"
+        },
+        {
+          "line": 50,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 58,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        },
+        {
+          "line": 112,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 151,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 159,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/harness_registration.py",
+      "module": "ordessa_server.composition.harness_registration",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.harness_registration"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 5,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.generation"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/native_channels/action_factories.py",
+      "module": "ordessa_server.composition.native_channels.action_factories",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 2,
+          "kind": "legacy-symbol",
+          "value": "NativeSessionActionExecutor"
+        },
+        {
+          "line": 11,
+          "kind": "legacy-symbol",
+          "value": "NativeSessionActionExecutor"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/native_channels/native_action_executor.py",
+      "module": "ordessa_server.composition.native_channels.native_action_executor",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 11,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.actions"
+        },
+        {
+          "line": 12,
+          "kind": "unit-module",
+          "value": "ordessa_units.records.operation_journal"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/pi_selection.py",
+      "module": "ordessa_server.composition.pi_selection",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 11,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.profile_admission"
+        },
+        {
+          "line": 12,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly"
+        },
+        {
+          "line": 13,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        },
+        {
+          "line": 18,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly.process_input"
+        },
+        {
+          "line": 210,
+          "kind": "unit-module",
+          "value": "ordessa_units.api"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/product_native_configuration.py",
+      "module": "ordessa_server.composition.product_native_configuration",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 23,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/product_native_provider.py",
+      "module": "ordessa_server.composition.product_native_provider",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [
+        239,
+        268
+      ],
+      "symbolFindings": [
+        {
+          "line": 8,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.profile_admission"
+        },
+        {
+          "line": 30,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.fingerprints"
+        },
+        {
+          "line": 36,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly"
+        },
+        {
+          "line": 115,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/product_runtime.py",
+      "module": "ordessa_server.composition.product_runtime",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 13,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/product_unit_admission.py",
+      "module": "ordessa_server.composition.product_unit_admission",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.product_unit_admission"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 6,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        },
+        {
+          "line": 65,
+          "kind": "unit-module",
+          "value": "ordessa_units.persistence.sqlite"
+        },
+        {
+          "line": 66,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.context"
+        },
+        {
+          "line": 67,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.generation"
+        },
+        {
+          "line": 77,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 116,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 122,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/product_user_configuration.py",
+      "module": "ordessa_server.composition.product_user_configuration",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 24,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.context"
+        },
+        {
+          "line": 25,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        },
+        {
+          "line": 26,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 26,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly"
+        },
+        {
+          "line": 174,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/profile_history_views.py",
+      "module": "ordessa_server.composition.profile_history_views",
+      "classification": "historical_read_or_data_projection",
+      "reason": "Explicit historical Profile projection; current Profile ACL and fixed revision retained. Existing composed_profile_service import is a separate owner dependency to migrate.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 11,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/runtime.py",
+      "module": "ordessa_server.composition.runtime",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime"
+      ],
+      "reviewCallLines": [
+        496,
+        968,
+        1031
+      ],
+      "symbolFindings": [
+        {
+          "line": 814,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly.runtime.assembler"
+        },
+        {
+          "line": 869,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly.runtime.assembler"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/unit_admission.py",
+      "module": "ordessa_server.composition.unit_admission",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.product_unit_admission",
+        "ordessa_server.composition.unit_admission"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 3,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 5,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.context"
+        },
+        {
+          "line": 6,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.material_registration"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/unit_file_callback_approval.py",
+      "module": "ordessa_server.composition.unit_file_callback_approval",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 12,
+          "kind": "unit-module",
+          "value": "ordessa_units.api"
+        }
+      ]
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/unit_runtime.py",
+      "module": "ordessa_server.composition.unit_runtime",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.unit_runtime"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 3,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.context"
+        },
+        {
+          "line": 4,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/execution_profiles.py",
+      "module": "ordessa_engineering.adapters.execution_profiles",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [
+        204,
+        246
+      ],
+      "symbolFindings": [
+        {
+          "line": 187,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 187,
+          "kind": "unit-module",
+          "value": "ordessa_units.api"
+        },
+        {
+          "line": 189,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 200,
+          "kind": "legacy-symbol",
+          "value": "UnitSpec"
+        },
+        {
+          "line": 200,
+          "kind": "unit-module",
+          "value": "ordessa_units.api"
+        },
+        {
+          "line": 205,
+          "kind": "legacy-symbol",
+          "value": "UnitSpec"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/native_records/declared_review_runtime.py",
+      "module": "ordessa_engineering.adapters.native_records.declared_review_runtime",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [
+        146,
+        154
+      ],
+      "symbolFindings": [
+        {
+          "line": 21,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/native_records/declared_reviewer.py",
+      "module": "ordessa_engineering.adapters.native_records.declared_reviewer",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 280,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/native_records/local_bindings.py",
+      "module": "ordessa_engineering.adapters.native_records.local_bindings",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 18,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.contracts"
+        },
+        {
+          "line": 19,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 19,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        },
+        {
+          "line": 161,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 161,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly.local_owner"
+        },
+        {
+          "line": 162,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.owner_ports"
+        },
+        {
+          "line": 164,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        },
+        {
+          "line": 190,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/native_records/recorded_dispatch.py",
+      "module": "ordessa_engineering.adapters.native_records.recorded_dispatch",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [
+        403
+      ],
+      "symbolFindings": [
+        {
+          "line": 439,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        },
+        {
+          "line": 526,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 526,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        },
+        {
+          "line": 527,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 544,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.contracts"
+        },
+        {
+          "line": 768,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/native_records/selection.py",
+      "module": "ordessa_engineering.adapters.native_records.selection",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 13,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 13,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        },
+        {
+          "line": 32,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/orchestration/steps/declared_generation_dispatch.py",
+      "module": "ordessa_engineering.application.orchestration.steps.declared_generation_dispatch",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.engineering",
+        "ordessa_engineering.application.api",
+        "ordessa_engineering.application.api.service",
+        "ordessa_engineering.application.orchestration.steps.declared_generation_dispatch"
+      ],
+      "reviewCallLines": [
+        377
+      ],
+      "symbolFindings": [
+        {
+          "line": 518,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 530,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/orchestration/steps/declared_generation_port.py",
+      "module": "ordessa_engineering.application.orchestration.steps.declared_generation_port",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.engineering",
+        "ordessa_engineering.application.api",
+        "ordessa_engineering.application.api.service",
+        "ordessa_engineering.application.orchestration.steps.declared_generation_port"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 283,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 314,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 321,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/orchestration/steps/generation_format_rework.py",
+      "module": "ordessa_engineering.application.orchestration.steps.generation_format_rework",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.engineering",
+        "ordessa_engineering.application.api",
+        "ordessa_engineering.application.api.service",
+        "ordessa_engineering.application.orchestration.steps.generation_format_rework"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 43,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/orchestration/steps/implementation_dispatch.py",
+      "module": "ordessa_engineering.application.orchestration.steps.implementation_dispatch",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.engineering",
+        "ordessa_engineering.application.api",
+        "ordessa_engineering.application.usecases.owner_operations",
+        "ordessa_engineering.application.orchestration.steps.implementation_dispatch"
+      ],
+      "reviewCallLines": [
+        225
+      ],
+      "symbolFindings": [
+        {
+          "line": 86,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 97,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 262,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 263,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/usecases/changes/declared_report.py",
+      "module": "ordessa_engineering.application.usecases.changes.declared_report",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.engineering",
+        "ordessa_engineering.application.api",
+        "ordessa_engineering.application.api.service",
+        "ordessa_engineering.application.usecases.changes.declared_report"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 655,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 700,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 983,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 987,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1013,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1395,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1427,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1428,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1449,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1719,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1722,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/usecases/changes/dispatch_continuation.py",
+      "module": "ordessa_engineering.application.usecases.changes.dispatch_continuation",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.engineering",
+        "ordessa_engineering.application.api",
+        "ordessa_engineering.application.api.service",
+        "ordessa_engineering.application.usecases.changes.dispatch_continuation"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 359,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/usecases/changes/execution_capture.py",
+      "module": "ordessa_engineering.application.usecases.changes.execution_capture",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.engineering",
+        "ordessa_engineering.application.api",
+        "ordessa_engineering.application.api.service",
+        "ordessa_engineering.application.usecases.changes.declared_report",
+        "ordessa_engineering.application.usecases.changes.execution_capture"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 73,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/usecases/changes/report_content_rework.py",
+      "module": "ordessa_engineering.application.usecases.changes.report_content_rework",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.engineering",
+        "ordessa_engineering.application.api",
+        "ordessa_engineering.application.api.service",
+        "ordessa_engineering.application.usecases.changes.declared_report",
+        "ordessa_engineering.application.usecases.changes.report_content_rework"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 702,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 725,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 767,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/transport/effect_guard.py",
+      "module": "ordessa_execution_agents.harness.transport.effect_guard",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_execution_agents.harness.transport",
+        "ordessa_execution_agents.harness.transport.effect_guard"
+      ],
+      "reviewCallLines": [
+        69
+      ],
+      "symbolFindings": [
+        {
+          "line": 64,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/__init__.py",
+      "module": "ordessa_environments",
+      "classification": "legitimate_current_environment_owner",
+      "reason": "Environment/EnvironmentUse belongs to the Environment owner; its presence does not prove Agents retain it.",
+      "staticRootWitness": [
+        "ordessa_server.entrypoints.cli",
+        "ordessa_environments"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 57,
+          "kind": "legacy-symbol",
+          "value": "EnvironmentUse"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/management/__init__.py",
+      "module": "ordessa_environments.management",
+      "classification": "legitimate_current_environment_owner",
+      "reason": "Environment/EnvironmentUse belongs to the Environment owner; its presence does not prove Agents retain it.",
+      "staticRootWitness": [
+        "ordessa_server.entrypoints.cli",
+        "ordessa_environments",
+        "ordessa_environments.management"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 3,
+          "kind": "legacy-symbol",
+          "value": "EnvironmentUse"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/environments/src/ordessa_environments/management/resources.py",
+      "module": "ordessa_environments.management.resources",
+      "classification": "legitimate_current_environment_owner",
+      "reason": "Environment/EnvironmentUse belongs to the Environment owner; its presence does not prove Agents retain it.",
+      "staticRootWitness": [
+        "ordessa_server.entrypoints.cli",
+        "ordessa_environments",
+        "ordessa_environments.management",
+        "ordessa_environments.management.resources"
+      ],
+      "reviewCallLines": [
+        91
+      ],
+      "symbolFindings": [
+        {
+          "line": 10,
+          "kind": "legacy-symbol",
+          "value": "EnvironmentUse"
+        },
+        {
+          "line": 231,
+          "kind": "legacy-symbol",
+          "value": "EnvironmentUse"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/context.py",
+      "module": "ordessa_units.admission.context",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.product_unit_admission",
+        "ordessa_units.admission.context"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 5,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 6,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 7,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 8,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 119,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/fingerprint.py",
+      "module": "ordessa_units.admission.fingerprint",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.admission.fingerprint"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 10,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/generation.py",
+      "module": "ordessa_units.admission.generation",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.harness_registration",
+        "ordessa_units.admission.generation"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 32,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/invocation.py",
+      "module": "ordessa_units.admission.invocation",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.admission.invocation"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 20,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 21,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 24,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.contracts"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/local_state.py",
+      "module": "ordessa_units.admission.local_state",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.admission.local_state"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 7,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.harness_admission"
+        },
+        {
+          "line": 8,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 21,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.contracts"
+        },
+        {
+          "line": 22,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        },
+        {
+          "line": 23,
+          "kind": "unit-module",
+          "value": "ordessa_units.records.unit_records"
+        },
+        {
+          "line": 272,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 356,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 477,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/material_admission.py",
+      "module": "ordessa_units.admission.material_admission",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.bindings.material_operations",
+        "ordessa_units.admission.material_admission"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 4,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 5,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 92,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.materials"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/material_contracts.py",
+      "module": "ordessa_units.admission.material_contracts",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.admission.material_contracts"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 11,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 13,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.materials"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/material_registration.py",
+      "module": "ordessa_units.admission.material_registration",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.product_unit_admission",
+        "ordessa_server.composition.unit_admission",
+        "ordessa_units.admission.material_registration"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 13,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 14,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 15,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.materials"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/operations.py",
+      "module": "ordessa_units.admission.operations",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.admission.operations"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 8,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 10,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 13,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.publication"
+        },
+        {
+          "line": 14,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/owner_ports.py",
+      "module": "ordessa_units.admission.owner_ports",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.admission.owner_ports"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 50,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 50,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.manager"
+        },
+        {
+          "line": 51,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/owner_selection.py",
+      "module": "ordessa_units.admission.owner_selection",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.admission.owner_selection"
+      ],
+      "reviewCallLines": [
+        191
+      ],
+      "symbolFindings": [
+        {
+          "line": 10,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 130,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 131,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        },
+        {
+          "line": 131,
+          "kind": "unit-module",
+          "value": "ordessa_units.records"
+        },
+        {
+          "line": 132,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 132,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.manager"
+        },
+        {
+          "line": 133,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.instance"
+        },
+        {
+          "line": 152,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        },
+        {
+          "line": 191,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 201,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.fingerprints"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/run_permission.py",
+      "module": "ordessa_units.admission.run_permission",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.admission.run_permission"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 156,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 157,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/api/__init__.py",
+      "module": "ordessa_units.api",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.api"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 2,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 5,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 6,
+          "kind": "legacy-symbol",
+          "value": "UnitSpec"
+        },
+        {
+          "line": 6,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions"
+        },
+        {
+          "line": 7,
+          "kind": "unit-module",
+          "value": "ordessa_units.channels.acp_input"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/api/interaction.py",
+      "module": "ordessa_units.api.interaction",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.api",
+        "ordessa_units.api.interaction"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 4,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/api/unit.py",
+      "module": "ordessa_units.api.unit",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.api.unit"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 10,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/__init__.py",
+      "module": "ordessa_units.assembly",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 4,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/fresh_factory.py",
+      "module": "ordessa_units.assembly.fresh_factory",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.fresh_factory"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 7,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.owner_selection"
+        },
+        {
+          "line": 8,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.owner_ports"
+        },
+        {
+          "line": 9,
+          "kind": "unit-module",
+          "value": "ordessa_units.management"
+        },
+        {
+          "line": 10,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        },
+        {
+          "line": 33,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions"
+        },
+        {
+          "line": 68,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        },
+        {
+          "line": 68,
+          "kind": "unit-module",
+          "value": "ordessa_units.records"
+        },
+        {
+          "line": 69,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/instance.py",
+      "module": "ordessa_units.assembly.instance",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.service",
+        "ordessa_units.assembly.instance"
+      ],
+      "reviewCallLines": [
+        63,
+        74
+      ],
+      "symbolFindings": [
+        {
+          "line": 9,
+          "kind": "legacy-symbol",
+          "value": "UnitSpec"
+        },
+        {
+          "line": 9,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions"
+        },
+        {
+          "line": 10,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 10,
+          "kind": "unit-module",
+          "value": "ordessa_units.management"
+        },
+        {
+          "line": 11,
+          "kind": "unit-module",
+          "value": "ordessa_units.management"
+        },
+        {
+          "line": 12,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        },
+        {
+          "line": 13,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 14,
+          "kind": "unit-module",
+          "value": "ordessa_units.api.unit"
+        },
+        {
+          "line": 15,
+          "kind": "unit-module",
+          "value": "ordessa_units.api.interaction"
+        },
+        {
+          "line": 16,
+          "kind": "unit-module",
+          "value": "ordessa_units.records"
+        },
+        {
+          "line": 51,
+          "kind": "legacy-symbol",
+          "value": "UnitSpec"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/local_owner.py",
+      "module": "ordessa_units.assembly.local_owner",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner"
+      ],
+      "reviewCallLines": [
+        189,
+        514
+      ],
+      "symbolFindings": [
+        {
+          "line": 16,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 17,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 20,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.context"
+        },
+        {
+          "line": 21,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.profile_admission"
+        },
+        {
+          "line": 22,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.connection"
+        },
+        {
+          "line": 23,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.owner_ports"
+        },
+        {
+          "line": 24,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.owner_selection"
+        },
+        {
+          "line": 25,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.run_permission"
+        },
+        {
+          "line": 26,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.local_state"
+        },
+        {
+          "line": 27,
+          "kind": "legacy-symbol",
+          "value": "UnitSpec"
+        },
+        {
+          "line": 27,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions"
+        },
+        {
+          "line": 28,
+          "kind": "unit-module",
+          "value": "ordessa_units.api.unit"
+        },
+        {
+          "line": 29,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.manager"
+        },
+        {
+          "line": 30,
+          "kind": "unit-module",
+          "value": "ordessa_units.sessions.evidence"
+        },
+        {
+          "line": 66,
+          "kind": "unit-module",
+          "value": "ordessa_units.channels.acp_input"
+        },
+        {
+          "line": 124,
+          "kind": "legacy-symbol",
+          "value": "UnitSpec"
+        },
+        {
+          "line": 373,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        },
+        {
+          "line": 397,
+          "kind": "unit-module",
+          "value": "ordessa_units.records.unit_records"
+        },
+        {
+          "line": 428,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 477,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 482,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 488,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 493,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 514,
+          "kind": "legacy-symbol",
+          "value": "LocalUnitOwner"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/owner.py",
+      "module": "ordessa_units.assembly.owner",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.owner"
+      ],
+      "reviewCallLines": [
+        111
+      ],
+      "symbolFindings": [
+        {
+          "line": 13,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 15,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.owner_ports"
+        },
+        {
+          "line": 16,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.owner_selection"
+        },
+        {
+          "line": 22,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        },
+        {
+          "line": 23,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        },
+        {
+          "line": 23,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        },
+        {
+          "line": 23,
+          "kind": "unit-module",
+          "value": "ordessa_units.records"
+        },
+        {
+          "line": 33,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        },
+        {
+          "line": 34,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        },
+        {
+          "line": 63,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        },
+        {
+          "line": 79,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        },
+        {
+          "line": 111,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/process_input.py",
+      "module": "ordessa_units.assembly.process_input",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [
+        55,
+        84
+      ],
+      "symbolFindings": [
+        {
+          "line": 10,
+          "kind": "unit-module",
+          "value": "ordessa_units.management"
+        },
+        {
+          "line": 138,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/profile_selection.py",
+      "module": "ordessa_units.assembly.profile_selection",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.assembly.profile_selection"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 7,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 8,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.harness_admission"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/assembly/service.py",
+      "module": "ordessa_units.assembly.service",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.service"
+      ],
+      "reviewCallLines": [
+        13
+      ],
+      "symbolFindings": [
+        {
+          "line": 3,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 3,
+          "kind": "unit-module",
+          "value": "ordessa_units.api.manager"
+        },
+        {
+          "line": 13,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/assembly.py",
+      "module": "ordessa_units.bindings.assembly",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.bindings.assembly"
+      ],
+      "reviewCallLines": [
+        126,
+        128
+      ],
+      "symbolFindings": [
+        {
+          "line": 17,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 18,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 23,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.contracts"
+        },
+        {
+          "line": 24,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        },
+        {
+          "line": 25,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.publication"
+        },
+        {
+          "line": 80,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 111,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 111,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.manager"
+        },
+        {
+          "line": 113,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 155,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.staged_assembly"
+        },
+        {
+          "line": 292,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 294,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/contracts.py",
+      "module": "ordessa_units.bindings.contracts",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.bindings.contracts"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 4,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/dispatch_selection.py",
+      "module": "ordessa_units.bindings.dispatch_selection",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.bindings.dispatch_selection"
+      ],
+      "reviewCallLines": [
+        38,
+        209,
+        212,
+        435
+      ],
+      "symbolFindings": [
+        {
+          "line": 12,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 13,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 16,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        },
+        {
+          "line": 17,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.publication"
+        },
+        {
+          "line": 18,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        },
+        {
+          "line": 50,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 50,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.manager"
+        },
+        {
+          "line": 51,
+          "kind": "unit-module",
+          "value": "ordessa_units.sessions.sdk_client"
+        },
+        {
+          "line": 55,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 82,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 105,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 189,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.run_permission"
+        },
+        {
+          "line": 201,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 201,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.manager"
+        },
+        {
+          "line": 204,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 272,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 283,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 283,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.manager"
+        },
+        {
+          "line": 285,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 305,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 344,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 379,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 380,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 404,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 416,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.contracts"
+        },
+        {
+          "line": 417,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        },
+        {
+          "line": 418,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 418,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.manager"
+        },
+        {
+          "line": 422,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 479,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 495,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 561,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/harness_admission.py",
+      "module": "ordessa_units.bindings.harness_admission",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.admission.local_state",
+        "ordessa_units.bindings.harness_admission"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 5,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/manager_evidence.py",
+      "module": "ordessa_units.bindings.manager_evidence",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.bindings.manager_evidence"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 8,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 9,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 11,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        },
+        {
+          "line": 12,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.instance"
+        },
+        {
+          "line": 49,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 49,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.manager"
+        },
+        {
+          "line": 50,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 61,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 64,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 66,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 79,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 98,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.assembly"
+        },
+        {
+          "line": 106,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 116,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 119,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.assembly"
+        },
+        {
+          "line": 127,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 137,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 138,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 143,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 153,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.service"
+        },
+        {
+          "line": 173,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 179,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 189,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.publication"
+        },
+        {
+          "line": 208,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 210,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 217,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 226,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 236,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/material_consumption.py",
+      "module": "ordessa_units.bindings.material_consumption",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 45,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 46,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 47,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 50,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.material_contracts"
+        },
+        {
+          "line": 51,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        },
+        {
+          "line": 52,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.material_operations"
+        },
+        {
+          "line": 59,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.materials"
+        },
+        {
+          "line": 282,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.material_admission"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/material_operations.py",
+      "module": "ordessa_units.bindings.material_operations",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.bindings.material_operations"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 15,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 16,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 17,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 18,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 21,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.material_contracts"
+        },
+        {
+          "line": 22,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.contracts"
+        },
+        {
+          "line": 23,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        },
+        {
+          "line": 24,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.materials"
+        },
+        {
+          "line": 279,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.material_admission"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/materials.py",
+      "module": "ordessa_units.bindings.materials",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.bindings.materials"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 15,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 16,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 17,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 20,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.materials"
+        },
+        {
+          "line": 21,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.material_contracts"
+        },
+        {
+          "line": 27,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.contracts"
+        },
+        {
+          "line": 28,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/preparation_effects.py",
+      "module": "ordessa_units.bindings.preparation_effects",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.bindings.assembly",
+        "ordessa_units.bindings.staged_assembly",
+        "ordessa_units.bindings.preparation_effects"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 27,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 30,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.contracts"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/profile_admission.py",
+      "module": "ordessa_units.bindings.profile_admission",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.bindings.profile_admission"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 14,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 134,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.context"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/publication.py",
+      "module": "ordessa_units.bindings.publication",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.bindings.publication"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 28,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 33,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 34,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 40,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 242,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 300,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/staged_assembly.py",
+      "module": "ordessa_units.bindings.staged_assembly",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.bindings.assembly",
+        "ordessa_units.bindings.staged_assembly"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 31,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 33,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 36,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.staged_operations"
+        },
+        {
+          "line": 38,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.assembly"
+        },
+        {
+          "line": 42,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.publication"
+        },
+        {
+          "line": 43,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.preparation_effects"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/bindings/wire.py",
+      "module": "ordessa_units.bindings.wire",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.bindings.wire"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 24,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/channels/acp_input.py",
+      "module": "ordessa_units.channels.acp_input",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.channels.acp_input"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 14,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 48,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 102,
+          "kind": "unit-module",
+          "value": "ordessa_units.records"
+        },
+        {
+          "line": 118,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 156,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 165,
+          "kind": "unit-module",
+          "value": "ordessa_units.records"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/channels/contracts.py",
+      "module": "ordessa_units.channels.contracts",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.channels.contracts"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 11,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 38,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/channels/reservations.py",
+      "module": "ordessa_units.channels.reservations",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.channels.reservations"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 16,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 17,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 22,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 25,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.contracts"
+        },
+        {
+          "line": 26,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        },
+        {
+          "line": 152,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 229,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 235,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 242,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 315,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 329,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 337,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 339,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 386,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 386,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 417,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 432,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 437,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 458,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 540,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 572,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 658,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/acp_options.py",
+      "module": "ordessa_units.configuration.acp_options",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.admission.owner_selection",
+        "ordessa_units.management.instance",
+        "ordessa_units.configuration.acp_options"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 10,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/contracts.py",
+      "module": "ordessa_units.configuration.contracts",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.configuration.contracts"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 12,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 205,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 226,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 229,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 257,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 343,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.contracts"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/offers.py",
+      "module": "ordessa_units.configuration.offers",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.configuration.offers"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 18,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 19,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.profile_admission"
+        },
+        {
+          "line": 190,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.publication"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/references.py",
+      "module": "ordessa_units.configuration.references",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.configuration.references"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 13,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/service.py",
+      "module": "ordessa_units.configuration.service",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.configuration.service"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 14,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 15,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 20,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 27,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.contracts"
+        },
+        {
+          "line": 33,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        },
+        {
+          "line": 34,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.publication"
+        },
+        {
+          "line": 35,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.profile_admission"
+        },
+        {
+          "line": 99,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 100,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 109,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.contracts"
+        },
+        {
+          "line": 110,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 231,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 513,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 525,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 657,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 775,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.contracts"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/configuration/wire.py",
+      "module": "ordessa_units.configuration.wire",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.configuration.wire"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 31,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 33,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/__init__.py",
+      "module": "ordessa_units.definitions",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.definitions"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 3,
+          "kind": "legacy-symbol",
+          "value": "UnitSpec"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/execution.py",
+      "module": "ordessa_units.definitions.execution",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 14,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.materials"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/operations.py",
+      "module": "ordessa_units.definitions.operations",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.product_unit_admission",
+        "ordessa_units.admission.context",
+        "ordessa_units.definitions.operations"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 15,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/lifecycle/service.py",
+      "module": "ordessa_units.lifecycle.service",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.lifecycle.service"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 14,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 15,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.admission_identity"
+        },
+        {
+          "line": 16,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 19,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        },
+        {
+          "line": 20,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.publication"
+        },
+        {
+          "line": 79,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 79,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.manager"
+        },
+        {
+          "line": 81,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 140,
+          "kind": "unit-module",
+          "value": "ordessa_units.management.manager"
+        },
+        {
+          "line": 142,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 148,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 161,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.contracts"
+        },
+        {
+          "line": 165,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 167,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 214,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 214,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 262,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 315,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.publication"
+        },
+        {
+          "line": 331,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 356,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.publication"
+        },
+        {
+          "line": 367,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/lifecycle/unit_lifecycle.py",
+      "module": "ordessa_units.lifecycle.unit_lifecycle",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.fresh_factory",
+        "ordessa_units.lifecycle.unit_lifecycle"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 155,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 181,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 215,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 230,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 256,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 319,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 355,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/management/__init__.py",
+      "module": "ordessa_units.management",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.management"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 3,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/management/instance.py",
+      "module": "ordessa_units.management.instance",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.admission.owner_selection",
+        "ordessa_units.management.instance"
+      ],
+      "reviewCallLines": [
+        93,
+        159,
+        189,
+        304,
+        345
+      ],
+      "symbolFindings": [
+        {
+          "line": 7,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        },
+        {
+          "line": 8,
+          "kind": "unit-module",
+          "value": "ordessa_units.sessions.acp_factory"
+        },
+        {
+          "line": 9,
+          "kind": "unit-module",
+          "value": "ordessa_units.sessions.callbacks"
+        },
+        {
+          "line": 12,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        },
+        {
+          "line": 14,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions"
+        },
+        {
+          "line": 92,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 100,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 115,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 132,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 158,
+          "kind": "unit-module",
+          "value": "ordessa_units.sessions.sdk_client"
+        },
+        {
+          "line": 185,
+          "kind": "unit-module",
+          "value": "ordessa_units.sessions.acp_factory"
+        },
+        {
+          "line": 186,
+          "kind": "unit-module",
+          "value": "ordessa_units.sessions.sdk_client"
+        },
+        {
+          "line": 258,
+          "kind": "unit-module",
+          "value": "ordessa_units.sessions.prompt"
+        },
+        {
+          "line": 265,
+          "kind": "unit-module",
+          "value": "ordessa_units.sessions.sdk_client"
+        },
+        {
+          "line": 312,
+          "kind": "unit-module",
+          "value": "ordessa_units.sessions.sdk_client"
+        },
+        {
+          "line": 321,
+          "kind": "unit-module",
+          "value": "ordessa_units.sessions.acp_factory"
+        },
+        {
+          "line": 354,
+          "kind": "unit-module",
+          "value": "ordessa_units.sessions.sdk_client"
+        },
+        {
+          "line": 363,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        },
+        {
+          "line": 410,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 427,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 437,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.acp_options"
+        },
+        {
+          "line": 441,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.acp_options"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/management/manager.py",
+      "module": "ordessa_units.management.manager",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.management.manager"
+      ],
+      "reviewCallLines": [
+        175
+      ],
+      "symbolFindings": [
+        {
+          "line": 8,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        },
+        {
+          "line": 56,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 83,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 109,
+          "kind": "legacy-symbol",
+          "value": "UnitSpec"
+        },
+        {
+          "line": 109,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions"
+        },
+        {
+          "line": 110,
+          "kind": "legacy-symbol",
+          "value": "UnitSpec"
+        },
+        {
+          "line": 171,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 174,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 212,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 231,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 237,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 259,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 308,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 321,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 348,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.publication"
+        },
+        {
+          "line": 358,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        },
+        {
+          "line": 421,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 439,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/management/planning.py",
+      "module": "ordessa_units.management.planning",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.management.manager",
+        "ordessa_units.management.planning"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 6,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/persistence/sqlite/operation_records.py",
+      "module": "ordessa_units.persistence.sqlite.operation_records",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.product_unit_admission",
+        "ordessa_units.persistence.sqlite",
+        "ordessa_units.persistence.sqlite.store",
+        "ordessa_units.persistence.sqlite.operation_records"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 17,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 19,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.operations"
+        },
+        {
+          "line": 21,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.staged_operations"
+        },
+        {
+          "line": 287,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 291,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/persistence/sqlite/store.py",
+      "module": "ordessa_units.persistence.sqlite.store",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.product_unit_admission",
+        "ordessa_units.persistence.sqlite",
+        "ordessa_units.persistence.sqlite.store"
+      ],
+      "reviewCallLines": [
+        80,
+        91
+      ],
+      "symbolFindings": [
+        {
+          "line": 18,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 25,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 26,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions.staged_operations"
+        },
+        {
+          "line": 635,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/public.py",
+      "module": "ordessa_units.public",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public"
+      ],
+      "reviewCallLines": [
+        202
+      ],
+      "symbolFindings": [
+        {
+          "line": 8,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 17,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.wire"
+        },
+        {
+          "line": 18,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.wire"
+        },
+        {
+          "line": 19,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.wire"
+        },
+        {
+          "line": 20,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.wire"
+        },
+        {
+          "line": 21,
+          "kind": "unit-module",
+          "value": "ordessa_units.channels.wire"
+        },
+        {
+          "line": 22,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.contracts"
+        },
+        {
+          "line": 23,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.publication"
+        },
+        {
+          "line": 24,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.profile_admission"
+        },
+        {
+          "line": 25,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.operations"
+        },
+        {
+          "line": 26,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.service"
+        },
+        {
+          "line": 28,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.offers"
+        },
+        {
+          "line": 74,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.material_contracts"
+        },
+        {
+          "line": 83,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.assembly"
+        },
+        {
+          "line": 84,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.service"
+        },
+        {
+          "line": 85,
+          "kind": "unit-module",
+          "value": "ordessa_units.channels.reservations"
+        },
+        {
+          "line": 90,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.invocation"
+        },
+        {
+          "line": 95,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.material_operations"
+        },
+        {
+          "line": 100,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.owner_ports"
+        },
+        {
+          "line": 102,
+          "kind": "unit-module",
+          "value": "ordessa_units.channels.contracts"
+        },
+        {
+          "line": 154,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 175,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.manager_evidence"
+        },
+        {
+          "line": 178,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 202,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 252,
+          "kind": "legacy-symbol",
+          "value": "UnitServices"
+        },
+        {
+          "line": 293,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.contracts"
+        },
+        {
+          "line": 304,
+          "kind": "unit-module",
+          "value": "ordessa_units.bindings.materials"
+        },
+        {
+          "line": 322,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.references"
+        },
+        {
+          "line": 332,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.offers"
+        },
+        {
+          "line": 335,
+          "kind": "unit-module",
+          "value": "ordessa_units.admission.owner_selection"
+        },
+        {
+          "line": 342,
+          "kind": "unit-module",
+          "value": "ordessa_units.management"
+        },
+        {
+          "line": 343,
+          "kind": "unit-module",
+          "value": "ordessa_units.definitions"
+        },
+        {
+          "line": 346,
+          "kind": "legacy-symbol",
+          "value": "UnitManager"
+        },
+        {
+          "line": 346,
+          "kind": "unit-module",
+          "value": "ordessa_units.management"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/records/__init__.py",
+      "module": "ordessa_units.records",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.fresh_factory",
+        "ordessa_units.records"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 7,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        },
+        {
+          "line": 8,
+          "kind": "legacy-symbol",
+          "value": "UnitRecords"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/records/acp_turns.py",
+      "module": "ordessa_units.records.acp_turns",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.channels.acp_input",
+        "ordessa_units.records.acp_turns"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 61,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 76,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 82,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 147,
+          "kind": "unit-module",
+          "value": "ordessa_units.channels.acp_input"
+        },
+        {
+          "line": 148,
+          "kind": "unit-module",
+          "value": "ordessa_units.channels.reservations"
+        },
+        {
+          "line": 149,
+          "kind": "unit-module",
+          "value": "ordessa_units.channels.contracts"
+        },
+        {
+          "line": 152,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 163,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 171,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 183,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 200,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 201,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 397,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/records/native_evidence.py",
+      "module": "ordessa_units.records.native_evidence",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 13,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        },
+        {
+          "line": 18,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/records/unit_records.py",
+      "module": "ordessa_units.records.unit_records",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.records.unit_records"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 34,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        },
+        {
+          "line": 345,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        },
+        {
+          "line": 420,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 424,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 425,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 426,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 441,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 446,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 447,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 567,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 577,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 788,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 792,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 793,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1017,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1214,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1224,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1225,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1233,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1292,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1298,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1299,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1372,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1374,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1375,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1383,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1448,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1454,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1506,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1554,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 1557,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/sessions/acp_factory.py",
+      "module": "ordessa_units.sessions.acp_factory",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.admission.owner_selection",
+        "ordessa_units.management.instance",
+        "ordessa_units.sessions.acp_factory"
+      ],
+      "reviewCallLines": [
+        58,
+        99
+      ],
+      "symbolFindings": [
+        {
+          "line": 10,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/sessions/callbacks.py",
+      "module": "ordessa_units.sessions.callbacks",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.admission.owner_selection",
+        "ordessa_units.management.instance",
+        "ordessa_units.sessions.callbacks"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 12,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/sessions/evidence.py",
+      "module": "ordessa_units.sessions.evidence",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_units.assembly",
+        "ordessa_units.assembly.local_owner",
+        "ordessa_units.sessions.evidence"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 7,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        },
+        {
+          "line": 187,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 199,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/sessions/prompt.py",
+      "module": "ordessa_units.sessions.prompt",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_server.composition.configuration.request_integrity",
+        "ordessa_units.public",
+        "ordessa_units.admission.owner_selection",
+        "ordessa_units.management.instance",
+        "ordessa_units.sessions.prompt"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 2,
+          "kind": "unit-module",
+          "value": "ordessa_units.records"
+        },
+        {
+          "line": 3,
+          "kind": "unit-module",
+          "value": "ordessa_units.lifecycle.unit_lifecycle"
+        },
+        {
+          "line": 10,
+          "kind": "unit-module",
+          "value": "ordessa_units.channels.acp_input"
+        }
+      ]
+    },
+    {
+      "path": "packages/interfaces/channels/cli/src/ordessa_cli_runtime/commands/configuration.py",
+      "module": "ordessa_cli_runtime.commands.configuration",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 82,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 86,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 155,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 157,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        },
+        {
+          "line": 159,
+          "kind": "legacy-field",
+          "value": "unitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/interfaces/channels/cli/src/ordessa_cli_runtime/commands/nodes.py",
+      "module": "ordessa_cli_runtime.commands.nodes",
+      "classification": "retained_without_selected_root_import_path",
+      "reason": "No path in this bounded static graph. Retained implementation candidate, not a proof of unreachability through arbitrary injected ports or dynamic plugins.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 50,
+          "kind": "legacy-field",
+          "value": "harnessUnitRef"
+        }
+      ]
+    },
+    {
+      "path": "packages/interfaces/system-access/bindings/src/ordessa_system_access_bindings/agents.py",
+      "module": "ordessa_system_access_bindings.agents",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_system_access_bindings",
+        "ordessa_system_access_bindings.agents"
+      ],
+      "reviewCallLines": [
+        194
+      ],
+      "symbolFindings": [
+        {
+          "line": 6,
+          "kind": "unit-module",
+          "value": "ordessa_units.errors"
+        },
+        {
+          "line": 17,
+          "kind": "unit-module",
+          "value": "ordessa_units.public"
+        }
+      ]
+    },
+    {
+      "path": "packages/interfaces/system-access/bindings/src/ordessa_system_access_bindings/decision.py",
+      "module": "ordessa_system_access_bindings.decision",
+      "classification": "historical_read_or_data_projection",
+      "reason": "Read-only current Profile/Harness observations encoded as historical Decision DTOs; Unit import is OwnerProposalInput data, no UnitServices assembly.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_system_access_bindings",
+        "ordessa_system_access_bindings.decision"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 14,
+          "kind": "unit-module",
+          "value": "ordessa_units.configuration.proposal_input"
+        }
+      ]
+    },
+    {
+      "path": "packages/interfaces/system-access/bindings/src/ordessa_system_access_bindings/engineering.py",
+      "module": "ordessa_system_access_bindings.engineering",
+      "classification": "reachable_old_runtime_or_mixed_adapter",
+      "reason": "Static path exists from a named current composition/entry root, including conditional/lazy function imports. Requires branch/authority runtime qualification; presence does not prove execution.",
+      "staticRootWitness": [
+        "ordessa_server.__main__",
+        "ordessa_server.entrypoints.http",
+        "ordessa_server.bootstrap.data_root",
+        "ordessa_server.composition.runtime",
+        "ordessa_system_access_bindings",
+        "ordessa_system_access_bindings.engineering"
+      ],
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 22,
+          "kind": "unit-module",
+          "value": "ordessa_units.assembly"
+        }
+      ]
+    },
+    {
+      "path": "plugins/agents/resources/mcp/tests/harness_wiring/test_controlled_chain.py",
+      "module": null,
+      "classification": "packaged_test_artifact",
+      "reason": "Test file found beneath a broad declared source root; not itself an online runtime authority. Packaging exclusion requires separate inspection.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 33,
+          "kind": "legacy-symbol",
+          "value": "ConfigurationApplicationService"
+        },
+        {
+          "line": 34,
+          "kind": "unit-module",
+          "value": "ordessa_units.records.operation_journal"
+        },
+        {
+          "line": 36,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        },
+        {
+          "line": 36,
+          "kind": "unit-module",
+          "value": "ordessa_units.records.operation_journal"
+        },
+        {
+          "line": 160,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        },
+        {
+          "line": 161,
+          "kind": "legacy-symbol",
+          "value": "ConfigurationApplicationService"
+        }
+      ]
+    },
+    {
+      "path": "plugins/agents/resources/mcp/tests/integration/integration_helpers.py",
+      "module": null,
+      "classification": "packaged_test_artifact",
+      "reason": "Test file found beneath a broad declared source root; not itself an online runtime authority. Packaging exclusion requires separate inspection.",
+      "staticRootWitness": null,
+      "reviewCallLines": [],
+      "symbolFindings": [
+        {
+          "line": 64,
+          "kind": "legacy-symbol",
+          "value": "ConfigurationApplicationService"
+        },
+        {
+          "line": 66,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        },
+        {
+          "line": 66,
+          "kind": "unit-module",
+          "value": "ordessa_units.records.operation_journal"
+        },
+        {
+          "line": 620,
+          "kind": "legacy-symbol",
+          "value": "OperationJournal"
+        },
+        {
+          "line": 621,
+          "kind": "legacy-symbol",
+          "value": "ConfigurationApplicationService"
+        }
+      ]
+    }
+  ],
+  "acceptanceCriterion": "Old runtime authority must exit active composed and installed execution paths. Historical codecs, storage namespace keys and legitimate Environment ownership remain. No lexical-zero gate.",
+  "limitations": [
+    "Static graph over-approximates function/conditional imports and does not evaluate permission predicates.",
+    "Modules without a selected-root path can still be reachable through injected capabilities, entrypoint plugins or nonliteral dynamic imports.",
+    "Installed CLI/help import audits prove only their executed command paths, not all configured server runtime behavior.",
+    "This classification authorizes no source deletion and does not close the main integration gate."
+  ]
+}

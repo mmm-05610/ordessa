@@ -7,7 +7,7 @@ import pytest
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from pacthold.public import Environment,InstallationRecord
 from ordessa_units.public import AgentContributionSet
-from ordessa_execution_api.environment import AdmissionRefusedError
+from ordessa_execution_agents.harness.providers.registry.errors import CatalogAdmissionRefused
 
 
 
@@ -37,7 +37,7 @@ def test_independent_package_stage_commit_and_retire(module,class_name,family,tm
    definition_ref={'environmentNamespace':'units','definitionId':family,'revision':'1'},
    implementation_digest='sha256:'+'b'*64)
   stage=env.stage_activation(owner,AgentContributionSet(agent_runtime_providers=(provider,)))
-  with pytest.raises(AdmissionRefusedError): env.agent_runtime_contribution(provider.descriptor.definition_ref)
+  with pytest.raises(CatalogAdmissionRefused): env.agent_runtime_contribution(provider.descriptor.definition_ref)
   receipt=stage.commit()
   admitted=env.agent_runtime_contribution(provider.descriptor.definition_ref)
   assert admitted.provider is provider and admitted.owner_activation==receipt.activation
@@ -48,7 +48,7 @@ def test_independent_package_stage_commit_and_retire(module,class_name,family,tm
   env.retire_activation(receipt.activation)
   assert store.unresolved_provider_usages(
    'units', receipt.activation.plugin_id, receipt.activation.generation)==()
-  with pytest.raises(AdmissionRefusedError): env.agent_runtime_contribution(provider.descriptor.definition_ref)
+  with pytest.raises(CatalogAdmissionRefused): env.agent_runtime_contribution(provider.descriptor.definition_ref)
  finally: env.close()
 
 
@@ -68,7 +68,7 @@ def test_disable_one_independent_owner_does_not_retire_another(tmp_path,request)
   env.retire_activation(receipts[0].activation)
   assert store.unresolved_provider_usages(
    'units', receipts[0].activation.plugin_id, receipts[0].activation.generation)==()
-  with pytest.raises(AdmissionRefusedError): env.agent_runtime_contribution(refs[0])
+  with pytest.raises(CatalogAdmissionRefused): env.agent_runtime_contribution(refs[0])
   for ref,receipt in zip(refs[1:],receipts[1:],strict=True):
    assert env.agent_runtime_contribution(ref).owner_activation==receipt.activation
  finally: env.close()

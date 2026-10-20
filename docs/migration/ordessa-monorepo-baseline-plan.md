@@ -78,7 +78,7 @@ ordessa/
     desktop-platform/             通用加载/宿主/原生桥与公共契约
   plugins/
     harness/
-      src/                        Python 包建议使用 ordessa_harness
+      src/                        Python 包建议使用 pacthold.harness_kit
       adapters/acp-adapter/        当前维护的 Go 桥源码和测试
       packaging/                  构建与依赖准备
       tests/

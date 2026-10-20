@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "report_id": "synthetic-nospec-cycle-approval-01",
+  "phase": "cycle_approval",
+  "reported_at": "2025-01-08T12:00:00Z",
+  "reporter": {"actor_id": "example-contributor", "role_claim": "contributor", "reported_at": "2025-01-08T12:00:00Z"},
+  "cycle": "synthetic-cycle",
+  "blueprint": {"id": "synthetic-blueprint", "url": "https://blueprints.launchpad.net/nova/+spec/synthetic-blueprint", "status": "Approved (synthetic claim)", "cycle": "synthetic-cycle"},
+  "spec_required": false,
+  "spec": null,
+  "decision": "No-spec Blueprint approved for this cycle.",
+  "decision_record": {"actor_id": "example-driver", "role_claim": "Nova driver (synthetic claim)", "decided_at": "2025-01-08T12:00:00Z", "authority_ref": "https://docs.openstack.org/nova/latest/contributor/process.html", "rationale_summary": "Synthetic illustration: cycle approval records the no-spec screening result; no spec URL is expected."},
+  "result": "approved",
+  "summary": "Synthetic shape example proving the no-spec branch can reach cycle approval with spec null.",
+  "blockers": [],
+  "predecessors": [{"report_id": "synthetic-nospec-screening-01", "artifact_revision": "synthetic-revision-screening-01"}],
+  "evidence_urls": ["https://docs.openstack.org/nova/latest/contributor/process.html", "https://docs.openstack.org/nova/latest/contributor/blueprints.html"],
+  "limitations": ["Synthetic schema example only; no Nova decision was made or verified."]
+}

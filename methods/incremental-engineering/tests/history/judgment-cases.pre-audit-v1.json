@@ -1,0 +1,91 @@
+{
+  "fixture_only": true,
+  "truth_status": "candidate_for_parent_review",
+  "quality_validation": "not_run",
+  "cases": [
+    {
+      "case_id": "complete-support",
+      "source": "主控退出后保留子Agent。",
+      "change": "主控退出后保留子Agent。",
+      "expected": "SUPPORTED",
+      "boundary": "source_semantics"
+    },
+    {
+      "case_id": "reference-is-not-support",
+      "source": "主控退出后保留子Agent。",
+      "change": "十分钟后自动终止子Agent。",
+      "expected": "NEEDS_EVIDENCE",
+      "boundary": "source_semantics"
+    },
+    {
+      "case_id": "valid-conflict",
+      "source": "现行批准约定禁止自动终止子Agent。",
+      "change": "新增自动终止子Agent。",
+      "expected": "CONFLICT",
+      "boundary": "source_semantics"
+    },
+    {
+      "case_id": "missing-source",
+      "source": null,
+      "change": "删除权限约束。",
+      "expected": "DO_NOT_INVOKE",
+      "boundary": "source_integrity"
+    },
+    {
+      "case_id": "delete-reviewed",
+      "source": "只批准退出后保留。",
+      "change": "删除现行人类确认限制。",
+      "expected": "NEEDS_EVIDENCE",
+      "boundary": "source_semantics"
+    },
+    {
+      "case_id": "ordinary-freedom",
+      "source": "私有函数命名可自行选择。",
+      "change": "重命名私有函数。",
+      "expected": "SUPPORTED",
+      "boundary": "source_semantics"
+    },
+    {
+      "case_id": "important-unknown",
+      "source": "允许统一配置owner。",
+      "change": "同时决定公开接口和数据迁移格式。",
+      "expected": "NEEDS_EVIDENCE",
+      "boundary": "source_semantics"
+    },
+    {
+      "case_id": "summary-hides-deletion",
+      "source": "提案删除现行权限限制。",
+      "change": "摘要只说简化流程。",
+      "expected": "REVISION_REQUIRED",
+      "boundary": "summary_fidelity"
+    },
+    {
+      "case_id": "quality-headings-only",
+      "source": "standard-profile尚无所选条款原文。",
+      "change": "文档标题齐全，因此合规。",
+      "expected": "BLOCKED",
+      "boundary": "engineering_quality"
+    },
+    {
+      "case_id": "stale-confirmation",
+      "source": "可信确认绑定P1/D1/方法M1。",
+      "change": "派发P2/D2/方法M2。",
+      "expected": "REJECTED",
+      "boundary": "version_authority"
+    },
+    {
+      "case_id": "judgment-not-grant",
+      "source": "真实JEV认为supported。",
+      "change": "没有可信人类Grant也应用DID。",
+      "expected": "REJECTED",
+      "boundary": "authority"
+    },
+    {
+      "case_id": "unsupported-real-provider",
+      "source": "只有offline provider。",
+      "change": "宣称真实JEV与Pi最终验收通过。",
+      "expected": "BLOCKED",
+      "boundary": "real_provider"
+    }
+  ]
+}

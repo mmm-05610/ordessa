@@ -77,7 +77,7 @@ not on run6. The two evidences are cited separately throughout the docs.
   (`5fd6a37b…bbc61ea`) — clean-clone script re-run in flight.
 - Every command path cited in README/docs/baseline.md exists in the tree
   (spot-checked: packaging/acp-adapter/build-acp-adapter-round-h.sh,
-  scripts/start-server.sh, scripts/artifact_presence.py).
+  tooling/dev/start-server.sh, tooling/checks/artifact_presence.py).
 - Console scripts: `pacthold` entry kept; `agent-box*` aliases absent from
   packages/pacthold/pyproject.toml, as the table claims.
 

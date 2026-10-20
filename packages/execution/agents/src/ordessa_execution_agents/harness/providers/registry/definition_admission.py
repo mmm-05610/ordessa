@@ -5,15 +5,10 @@ from dataclasses import dataclass, field
 import re
 
 from ordessa_execution_agents.harness.definitions.errors import CoreDTOError
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    EnvironmentId,
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
-)
-from ordessa_execution_api.environment.operations import safe_json, sealed_mapping
-from ordessa_execution_api.environment.identity import ActivationRef
+from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef, validate_namespace
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_execution_agents.harness.definitions.runtime_providers import RUNTIME_PROVIDER_VERSION
+from .errors import CatalogAdmissionRefused, CatalogIdentityConflict, CatalogUnavailable
 from .registration import HarnessRegistration
 
 HARNESS_DEFINITION_VERSION = "harness-definition/1"
@@ -44,7 +39,7 @@ class HarnessDefinitionDescriptor:
             "environmentNamespace", "definitionId", "revision"
         }:
             raise ValueError("complete definition reference required")
-        EnvironmentId(self.definition_ref["environmentNamespace"])
+        validate_namespace(self.definition_ref["environmentNamespace"])
         if not all(_text(self.definition_ref[key]) for key in ("definitionId", "revision")):
             raise ValueError("invalid definition identity")
         if not isinstance(self.implementation_digest, str) or not re.fullmatch(
@@ -144,7 +139,7 @@ def harness_registration_snapshot(declaration, *, phase="stage"):
 
 @dataclass(frozen=True)
 class AdmittedHarnessDefinition:
-    owner_activation: ActivationRef
+    owner_activation: HarnessActivationRef
     descriptor: HarnessDefinitionDescriptor
 
     @property
@@ -176,8 +171,8 @@ class _CatalogEntry:
 
     @property
     def owner_activation(self):
-        return ActivationRef(self.snapshot.descriptor.definition_ref["environmentNamespace"],
-                             self.owner_id, self.generation)
+        return HarnessActivationRef(self.snapshot.descriptor.definition_ref["environmentNamespace"],
+                                    self.owner_id, self.generation)
 
 
 class HarnessCatalog:
@@ -185,13 +180,13 @@ class HarnessCatalog:
 
     def __init__(self, environment_namespace, *, policy, principal_scope="local",
                  admission_lock=None, retirement_guard=None):
-        EnvironmentId(environment_namespace)
+        validate_namespace(environment_namespace)
         if policy is None or not callable(getattr(policy, "admit_object_access", None)):
-            raise GuaranteeUnavailableError("Harness catalog access policy required")
+            raise CatalogUnavailable("Harness catalog access policy required")
         if not _text(principal_scope):
-            raise IdentityMismatchError("explicit Harness principal scope required")
+            raise CatalogIdentityConflict("explicit Harness principal scope required")
         if retirement_guard is not None and not callable(retirement_guard):
-            raise GuaranteeUnavailableError("trusted Harness retirement guard required")
+            raise CatalogUnavailable("trusted Harness retirement guard required")
         from threading import RLock
         self.environment_namespace = environment_namespace
         self._policy, self._principal_scope = policy, principal_scope
@@ -204,26 +199,26 @@ class HarnessCatalog:
 
     def _require_open(self):
         if self._closed:
-            raise GuaranteeUnavailableError("Harness catalog is closed")
+            raise CatalogUnavailable("Harness catalog is closed")
 
     def _permission(self):
         self._require_open()
         if not self._policy.admit_object_access(
             self._principal_scope, f"{self.environment_namespace}:agents.runtime", "read"
         ):
-            raise AdmissionRefusedError("Harness discovery refused")
+            raise CatalogAdmissionRefused("Harness discovery refused")
 
     @staticmethod
     def _owner(owner_id, generation):
         if not isinstance(owner_id, str) or not re.fullmatch(r"[a-z][a-z0-9._-]{0,63}", owner_id):
-            raise IdentityMismatchError("valid Harness owner id required")
+            raise CatalogIdentityConflict("valid Harness owner id required")
         if type(generation) is not int or generation < 1:
-            raise IdentityMismatchError("valid Harness owner generation required")
+            raise CatalogIdentityConflict("valid Harness owner generation required")
 
     def stage(self, owner_id, generation, installation_id, manifest_digest, declarations):
         self._owner(owner_id, generation)
         if not _text(installation_id) or not re.fullmatch(r"(?:sha256:)?[0-9a-f]{64}", manifest_digest or ""):
-            raise IdentityMismatchError("original Harness installation identity required")
+            raise CatalogIdentityConflict("original Harness installation identity required")
         if type(declarations) is not tuple or not declarations:
             raise CoreDTOError("non-empty immutable Harness declarations required")
         snapshots = tuple(harness_registration_snapshot(item) for item in declarations)
@@ -231,7 +226,7 @@ class HarnessCatalog:
             item.definition_ref["environmentNamespace"] != self.environment_namespace
             for item in (snapshot.descriptor for snapshot in snapshots)
         ):
-            raise IdentityMismatchError("Harness declaration belongs to another environment")
+            raise CatalogIdentityConflict("Harness declaration belongs to another environment")
         refs = [safe_json(item.descriptor.definition_ref) for item in snapshots]
         ids = [item.descriptor.provider_id for item in snapshots]
         if len(set(refs)) != len(refs) or len(set(ids)) != len(ids):
@@ -240,12 +235,12 @@ class HarnessCatalog:
             self._require_open()
             for existing in (*self._entries, *(entry for batch in self._staged.values() for entry in batch)):
                 if existing.owner_id == owner_id and existing.generation == generation:
-                    raise AdmissionRefusedError("Harness owner generation already registered")
+                    raise CatalogAdmissionRefused("Harness owner generation already registered")
                 if existing.state != "retired" and (
                     safe_json(existing.snapshot.descriptor.definition_ref) in refs
                     or existing.snapshot.descriptor.provider_id in ids
                 ):
-                    raise AdmissionRefusedError("Harness definition already admitted")
+                    raise CatalogAdmissionRefused("Harness definition already admitted")
             entries = tuple(
                 _CatalogEntry(owner_id, generation, installation_id, manifest_digest, declaration, snapshot)
                 for declaration, snapshot in zip(declarations, snapshots)
@@ -258,13 +253,13 @@ class HarnessCatalog:
     def _recheck(self, entries, phase):
         for entry in entries:
             if harness_registration_snapshot(entry.declaration, phase=phase) != entry.snapshot:
-                raise AdmissionRefusedError("Harness declaration changed after staging")
+                raise CatalogAdmissionRefused("Harness declaration changed after staging")
 
     def _commit(self, token, entries):
         with self._lock:
             self._require_open()
             if self._staged.get(token) is not entries:
-                raise AdmissionRefusedError("original staged Harness registration unavailable")
+                raise CatalogAdmissionRefused("original staged Harness registration unavailable")
             self._recheck(entries, "commit")
             for entry in entries:
                 entry.state = "active"
@@ -276,7 +271,7 @@ class HarnessCatalog:
     def _rollback(self, token, entries):
         with self._lock:
             if self._staged.get(token) is not entries:
-                raise AdmissionRefusedError("original staged Harness registration unavailable")
+                raise CatalogAdmissionRefused("original staged Harness registration unavailable")
             del self._staged[token]
 
     def _resolve(self, definition_ref, *, allow_draining=False, pinned_provider_ref=None):
@@ -284,22 +279,22 @@ class HarnessCatalog:
         if not isinstance(definition_ref, Mapping) or set(definition_ref) != {
             "environmentNamespace", "definitionId", "revision"
         }:
-            raise IdentityMismatchError("complete definition reference required")
+            raise CatalogIdentityConflict("complete definition reference required")
         if definition_ref["environmentNamespace"] != self.environment_namespace:
-            raise IdentityMismatchError("Harness definition scope differs")
+            raise CatalogIdentityConflict("Harness definition scope differs")
         allowed = ("active", "draining") if allow_draining else ("active",)
         matches = []
         for entry in self._entries:
             if entry.state not in allowed or safe_json(entry.snapshot.descriptor.definition_ref) != safe_json(definition_ref):
                 continue
             if harness_registration_snapshot(entry.declaration, phase="read") != entry.snapshot:
-                raise AdmissionRefusedError("Harness declaration changed after admission")
+                raise CatalogAdmissionRefused("Harness declaration changed after admission")
             admitted = AdmittedHarnessDefinition(entry.owner_activation, entry.snapshot.descriptor)
             if pinned_provider_ref is not None and safe_json(admitted.provider_ref) != safe_json(pinned_provider_ref):
                 continue
             matches.append((admitted, entry))
         if len(matches) != 1:
-            raise AdmissionRefusedError("exact active Harness definition unavailable")
+            raise CatalogAdmissionRefused("exact active Harness definition unavailable")
         return matches[0]
 
     def describe(self, definition_ref):
@@ -308,13 +303,13 @@ class HarnessCatalog:
 
     def describe_for_cleanup(self, definition_ref, pinned_provider_ref):
         if not isinstance(pinned_provider_ref, Mapping):
-            raise IdentityMismatchError("complete cleanup provider pin required")
+            raise CatalogIdentityConflict("complete cleanup provider pin required")
         with self._lock:
             admitted, _entry = self._resolve(
                 definition_ref, allow_draining=True, pinned_provider_ref=pinned_provider_ref
             )
             if safe_json(admitted.provider_ref) != safe_json(pinned_provider_ref):
-                raise AdmissionRefusedError("cleanup provider pin differs from original activation")
+                raise CatalogAdmissionRefused("cleanup provider pin differs from original activation")
             return admitted
 
     def list(self):
@@ -334,11 +329,11 @@ class HarnessCatalog:
             snapshot = entry.snapshot
         observation = snapshot.observer(installation_ref)
         if type(observation) is not HarnessInstallationObservation:
-            raise AdmissionRefusedError("original installation observation required")
+            raise CatalogAdmissionRefused("original installation observation required")
         with self._lock:
             current, current_entry = self._resolve(definition_ref)
             if current != admitted or current_entry is not entry or entry.snapshot != snapshot:
-                raise AdmissionRefusedError("installation admission changed during observation")
+                raise CatalogAdmissionRefused("installation admission changed during observation")
             return sealed_mapping({
                 "definitionRef": admitted.descriptor.definition_ref,
                 "providerRef": admitted.provider_ref,
@@ -356,31 +351,31 @@ class HarnessCatalog:
             self._require_open()
             entries = [e for e in self._entries if e.owner_id == owner_id and e.generation == generation]
             if not entries or any(e.state != "active" for e in entries):
-                raise AdmissionRefusedError("active Harness generation unavailable to drain")
+                raise CatalogAdmissionRefused("active Harness generation unavailable to drain")
             for entry in entries:
                 entry.state = "draining"
 
     def retire(self, owner_id, generation):
         self._owner(owner_id, generation)
         if self._retirement_guard is None:
-            raise GuaranteeUnavailableError("trusted Harness retirement guard unavailable")
+            raise CatalogUnavailable("trusted Harness retirement guard unavailable")
         # Acquire the owner lifecycle guard before catalog state lock to keep a
         # single lock order with activation teardown.
         with self._retirement_guard(owner_id, generation) as permit:
             if permit is not None:
-                raise AdmissionRefusedError("Harness retirement guard returned an invalid permit")
+                raise CatalogAdmissionRefused("Harness retirement guard returned an invalid permit")
             with self._lock:
                 self._require_open()
                 entries = [e for e in self._entries if e.owner_id == owner_id and e.generation == generation]
                 if not entries or any(e.state != "draining" for e in entries):
-                    raise AdmissionRefusedError("Harness generation must be drained before retirement")
+                    raise CatalogAdmissionRefused("Harness generation must be drained before retirement")
                 for entry in entries:
                     entry.state = "retired"
 
     def close(self):
         with self._lock:
             if any(entry.state != "retired" for entry in self._entries) or self._staged:
-                raise AdmissionRefusedError("Harness catalog still owns staged or live definitions")
+                raise CatalogAdmissionRefused("Harness catalog still owns staged or live definitions")
             self._closed = True
 
 
@@ -390,7 +385,7 @@ class HarnessAdmission:
     def __init__(self, context):
         catalog = getattr(context, "harness_catalog", None)
         if not isinstance(catalog, HarnessCatalog):
-            raise GuaranteeUnavailableError("context HarnessCatalog binding required")
+            raise CatalogUnavailable("context HarnessCatalog binding required")
         self._catalog = catalog
 
     def describe(self, definition_ref):

@@ -6,7 +6,7 @@ mutations in their active UoW, and trusted application ports admit evidence.
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.domain.artifacts.refs import (ArtifactRevisionRef)
 from ordessa_engineering.domain.changes.refs import (ProposalRef)
-from ordessa_engineering.domain.reviews.refs import (ReviewRef)
+from ordessa_engineering.domain.reviews.refs import (ReviewRef, SubmissionRef)
 from ordessa_engineering.domain.common.models.values import (Digest, validate_id)
 from ordessa_engineering.domain.common.models.identity import (Scope)
 from ordessa_engineering.domain.common.outcomes.diagnostics import (ReferenceError)
@@ -118,6 +118,22 @@ class SQLiteReviewRepository:
                 # remain available.
                 if requirement.schema_version != 2 or target.ref.scope != requirement.scope:
                     _fail('UNSUPPORTED_REFERENCE_KIND')
+            elif type(target.ref) is SubmissionRef:
+                if (getattr(self.access._connection, '_ordessa_schema_version', None)
+                        != WORK_DISPATCH_SCHEMA_VERSION or requirement.schema_version != 2
+                        or requirement.method_ref.schema_version != 2):
+                    _fail('UNSUPPORTED_REFERENCE_KIND')
+                # Resolve the immutable report in this same UoW. Method, Work,
+                # assignment and current trust admission stay with their owners.
+                from .submission_repository import SQLiteSubmissionRepository
+                submission = SQLiteSubmissionRepository(self.access).resolve(target.ref)
+                from ordessa_engineering.domain.changes.agent_submission_report import AgentSubmissionReport
+                if type(submission) is AgentSubmissionReport:
+                    if submission.ref != target.ref or submission.scope != requirement.scope:
+                        _fail('UNSUPPORTED_REFERENCE_KIND')
+                else:
+                    if submission.schema_version != 2:
+                        _fail('UNSUPPORTED_REFERENCE_KIND')
             elif type(target.ref) is not ArtifactRevisionRef:
                 _fail('UNSUPPORTED_REFERENCE_KIND')
         for key in requirement.required_check_keys if checks is None else checks:

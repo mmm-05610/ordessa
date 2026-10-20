@@ -6,10 +6,11 @@ from dataclasses import dataclass
 
 import pytest
 
-from ordessa_execution_api.environment import AdmissionRefusedError, IdentityMismatchError, GuaranteeUnavailableError
+from ordessa_execution_agents.harness.providers.registry.errors import CatalogAdmissionRefused, CatalogIdentityConflict, CatalogUnavailable
 from pacthold.public import Environment, InstallationRecord
 from pacthold.core.registration import CoreRegistry
-from ordessa_execution_api.c1.errors import CoreDTOError, RegistrationConflictError
+from pacthold.core.registration import RegistrationConflictError
+from ordessa_execution_agents.harness.definitions.errors import CoreDTOError
 from ordessa_execution_agents.harness.providers.registry.contributions import AgentContributionSet, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS
 
 
@@ -32,7 +33,7 @@ def test_staged_not_visible_commit_has_host_activation_not_author():
     env, _ = installed()
     provider = Provider()
     stage = env.stage_activation("fixture.plugin", AgentContributionSet(agent_runtime_providers=(provider,)))
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         env.agent_runtime_contribution(provider.descriptor.definition_ref)
     receipt = stage.commit()
     admitted = env.agent_runtime_contribution(provider.descriptor.definition_ref)
@@ -65,7 +66,7 @@ def test_same_registry_rejects_duplicate_id_or_route_including_staged(provider_i
     registry = CoreRegistry(resource_extension_snapshot=_test_resource_snapshot)
     pending = registry.stage("first", AgentContributionSet(agent_runtime_providers=(Provider(),)))
     candidate = Provider(descriptor(provider_id, definition_id))
-    with pytest.raises(RegistrationConflictError):
+    with pytest.raises(CatalogAdmissionRefused):
         registry.stage("second", AgentContributionSet(agent_runtime_providers=(candidate,)))
     registry.rollback(pending)
     replacement = registry.stage("second", AgentContributionSet(agent_runtime_providers=(candidate,)))
@@ -97,7 +98,7 @@ def test_payload_changes_after_publication_are_refused(mutate):
     if mutate == "descriptor": provider.descriptor = descriptor("different", "different")
     if mutate == "method": provider.prepare = None
     if mutate == "owner": provider.owner = "fake"
-    with pytest.raises(AdmissionRefusedError): env.agent_runtime_contribution(original)
+    with pytest.raises(CatalogAdmissionRefused): env.agent_runtime_contribution(original)
 
 
 def test_drain_revokes_new_runtime_discovery_and_old_generation_not_reused(tmp_path, request):
@@ -106,7 +107,7 @@ def test_drain_revokes_new_runtime_discovery_and_old_generation_not_reused(tmp_p
     receipt = env.activate("fixture.plugin", AgentContributionSet(agent_runtime_providers=(provider,)))
     admitted = env.agent_runtime_contribution(provider.descriptor.definition_ref)
     env.drain(receipt.activation)
-    with pytest.raises(AdmissionRefusedError): env.agent_runtime_contribution(provider.descriptor.definition_ref)
+    with pytest.raises(CatalogAdmissionRefused): env.agent_runtime_contribution(provider.descriptor.definition_ref)
     env.retire(receipt.activation)
     assert env._store.unresolved_provider_usages(
         env.environment_id, receipt.activation.plugin_id, receipt.activation.generation) == ()
@@ -120,12 +121,12 @@ def test_drain_revokes_new_runtime_discovery_and_old_generation_not_reused(tmp_p
 
 def test_cross_environment_and_current_permission_refused():
     env, policy = installed()
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(CatalogIdentityConflict):
         env.stage_activation("fixture.plugin", AgentContributionSet(agent_runtime_providers=(Provider(descriptor(environment="other-env")),)))
     provider = Provider()
     env.activate("fixture.plugin", AgentContributionSet(agent_runtime_providers=(provider,)))
     policy.allowed = False
-    with pytest.raises(AdmissionRefusedError): env.agent_runtime_contribution(provider.descriptor.definition_ref)
+    with pytest.raises(CatalogAdmissionRefused): env.agent_runtime_contribution(provider.descriptor.definition_ref)
 
 
 def test_missing_method_is_not_empty_implementation():
@@ -139,9 +140,9 @@ def test_disable_between_stage_and_commit_leaves_no_published_provider():
     provider = Provider()
     stage = env.stage_activation("fixture.plugin", AgentContributionSet(agent_runtime_providers=(provider,)))
     env.disable("fixture.plugin")
-    with pytest.raises(AdmissionRefusedError): stage.commit()
+    with pytest.raises(CatalogAdmissionRefused): stage.commit()
     assert env.registry_snapshot.agent_runtime_provider_ids == ()
-    with pytest.raises(AdmissionRefusedError): env.agent_runtime_contribution(provider.descriptor.definition_ref)
+    with pytest.raises(CatalogAdmissionRefused): env.agent_runtime_contribution(provider.descriptor.definition_ref)
     stage.rollback()
 
 
@@ -177,7 +178,7 @@ def test_canonical_core_owner_contract_with_version_is_reserved():
     class Contract:
         contract_id = "pacthold.agents@1"
     env, _ = installed()
-    with pytest.raises(RegistrationConflictError):
+    with pytest.raises(CatalogAdmissionRefused):
         env.stage_activation("fixture.plugin", AgentContributionSet(contracts=(Contract,)))
     assert env.registry_snapshot.contract_ids == ()
 
@@ -221,7 +222,7 @@ def test_concurrent_same_definition_has_one_staged_claim():
         contributions = AgentContributionSet(agent_runtime_providers=(Provider(),))
         barrier.wait(timeout=3)
         try: return registry.stage(owner, contributions)
-        except RegistrationConflictError: return None
+        except CatalogAdmissionRefused: return None
     with ThreadPoolExecutor(2) as pool:
         results = list(pool.map(reserve, ("first", "second")))
     assert sum(item is not None for item in results) == 1
@@ -232,6 +233,6 @@ def test_storeless_runtime_owner_cannot_prove_idle_retirement():
     env, _ = installed()
     receipt = env.activate("fixture.plugin",
                            AgentContributionSet(agent_runtime_providers=(Provider(),)))
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(CatalogUnavailable):
         env.retire_activation(receipt.activation)
     assert env.registry_snapshot.agent_runtime_provider_ids == ("fixture.runtime",)

@@ -1,6 +1,6 @@
 schema_version: 1
 policy_id: ordessa.incremental-engineering.unit-submission-review
-policy_revision: 1
+policy_revision: 2
 declaration_kind: method_strategy_not_host_capability_or_authorization
 consumer_status: unsupported_until_original_owner_binding
 fixed_delivery:
@@ -24,7 +24,20 @@ roles:
   reviewer: independent_review_unit
   selection_authority: original host generic identity matching/constraint mechanism,
     driven by this method policy
-  identity_constraint: original_author_unit_identity_must_differ_from_original_reviewer_unit_identity
+  identity_constraint:
+    contract: ordessa.review.authorship-policy/1
+    source_rules:
+      native_unit: different_original_unit
+      authenticated_material_submitter: separately_assigned_reviewer_role
+    unknown_source: refuse
+  phase_overrides:
+    record_submission: original_author_unit_identity_must_differ_from_original_reviewer_unit_identity
+    acceptance_review: original_author_unit_identity_must_differ_from_original_reviewer_unit_identity
+  authenticated_material_submitter_evidence:
+    source: original_journal_and_key
+    required: authenticated_principal_and_completed_command_bound_to_exact_fixed_artifact_revision
+    establishes_human_identity: false
+    establishes_native_unit_identity: false
   self_declared_role_is_not_authentication: true
   semantic_judge: method-bound Decision answers through the selected independent review; no separate matching-evaluation gate
   mechanical_checks: original reference/source integrity as applicable; no requirement
@@ -86,9 +99,9 @@ fact_provenance:
     observations
   review_result_and_verified_fact_are_distinct: true
   references_or_role_labels_do_not_upgrade_truth: true
-applies_when: Unit-authored delivery at an original Work step requiring the declared
-  method review; standards/requirements selected by its exact phase, not universal
-  acceptance criteria on all deliveries
+applies_when: a method-declared original Work review phase; source identity policy is
+  selected by that exact frozen phase, while standards/requirements remain phase-specific
+  rather than universal acceptance criteria on all deliveries
 review_output:
   document_type: unit-review-result
   schema_version: 1

@@ -5,16 +5,13 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
-)
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch
 from ordessa_infrastructure.database.records import DomainStorePort
-from ordessa_execution_api.environment.operations import OperationStorePort, sealed_mapping
+from ordessa_units.definitions.operations import OperationStorePort
+from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
 
 from ordessa_units.bindings.publication import decode_node_ref
-from ordessa_execution_api.environment.operations import operation_holder, node_holder
+from ordessa_units.definitions.operations import operation_holder, node_holder
 
 
 OPERATION_IDENTITIES = "core.operation-identities"
@@ -53,24 +50,24 @@ class AgentOperations:
         with env._admission_lock:
             if closed_inventory:
                 if not env._closed:
-                    raise GuaranteeUnavailableError("closed operation inventory requires the admission cut")
+                    raise UnitGuaranteeUnavailable("closed operation inventory requires the admission cut")
             else:
                 env._check_open()
             if (not isinstance(operation_ref, str) or not operation_ref
                     or operation_ref.strip() != operation_ref or len(operation_ref) > 256
                     or any(ord(char) < 32 for char in operation_ref)):
-                raise IdentityMismatchError("complete operation identity required")
+                raise UnitIdentityMismatch("complete operation identity required")
             store = env._store
             if (not isinstance(store, OperationStorePort)
                     or not isinstance(store, DomainStorePort)):
-                raise GuaranteeUnavailableError("same-store operation and identity reads required")
+                raise UnitGuaranteeUnavailable("same-store operation and identity reads required")
             if (env._policy is None
                     or not env._policy.admit_object_access(
                         env._principal_scope,
                         f"{env.environment_id}:operation:{operation_ref}",
                         "read",
                     )):
-                raise AdmissionRefusedError("operation read refused")
+                raise UnitAdmissionRefused("operation read refused")
 
             identity = store.read_domain(
                 env.environment_id, OPERATION_IDENTITIES, operation_ref
@@ -118,7 +115,7 @@ class AgentOperations:
                     try:
                         node_facts = (self._nodes._read_for_closed_inventory(node_ref)
                                       if closed_inventory else self._nodes.read(node_ref))
-                    except AdmissionRefusedError:
+                    except UnitAdmissionRefused:
                         # The operation object may be readable while its Node
                         # is not. Hide that association the same way as an
                         # absent operation from this principal.
@@ -143,13 +140,13 @@ class AgentOperations:
                 return sealed_mapping(projection)
             except OperationNotFound:
                 raise
-            except AdmissionRefusedError:
+            except UnitAdmissionRefused:
                 # Operation ACL is checked before any identity lookup.
                 raise
-            except GuaranteeUnavailableError:
+            except UnitGuaranteeUnavailable:
                 raise
             except Exception:
-                raise GuaranteeUnavailableError("stored operation identity or target is inconsistent") from None
+                raise UnitGuaranteeUnavailable("stored operation identity or target is inconsistent") from None
 
     def unresolved_snapshot(self) -> AgentUnresolvedSnapshot:
         """Inspect original durable obligations without advancing an operation."""
@@ -174,12 +171,12 @@ class AgentOperations:
         with env._admission_lock:
             if closed_inventory:
                 if not env._closed:
-                    raise GuaranteeUnavailableError("closed inventory requires Environment admission cut")
+                    raise UnitGuaranteeUnavailable("closed inventory requires Environment admission cut")
             else:
                 env._check_open()
             store = env._store
             if not isinstance(store, OperationStorePort) or not isinstance(store, DomainStorePort):
-                raise GuaranteeUnavailableError("same-store Unit inventory unavailable")
+                raise UnitGuaranteeUnavailable("same-store Unit inventory unavailable")
             operations = []
             usages = set()
             for row in store.list_domain(env.environment_id, OPERATION_IDENTITIES):
@@ -198,7 +195,7 @@ class AgentOperations:
                         continue
                     operation = store.read_operation(request)
                     if operation is None or operation.intent.operation_ref != row["record_id"]:
-                        raise GuaranteeUnavailableError("stored operation inventory is inconsistent")
+                        raise UnitGuaranteeUnavailable("stored operation inventory is inconsistent")
                     # Read and validate rights before classifying a lifecycle
                     # row whose generic status remains `running` after its
                     # concluded step. A residual active/unknown Usage always
@@ -209,7 +206,7 @@ class AgentOperations:
                     for usage in holder_usages:
                         if (usage["state"] not in {"active", "unknown", "released"}
                                 or type(usage["usageId"]) is not str or not usage["usageId"]):
-                            raise GuaranteeUnavailableError("stored Usage inventory is inconsistent")
+                            raise UnitGuaranteeUnavailable("stored Usage inventory is inconsistent")
                         if usage["state"] != "released":
                             usages.add(usage["usageId"])
                             active_holder_usages = True
@@ -223,7 +220,7 @@ class AgentOperations:
                     if not lifecycle_concluded or active_holder_usages:
                         operations.append(row["record_id"])
                 except (KeyError, TypeError, ValueError):
-                    raise GuaranteeUnavailableError("stored operation inventory is inconsistent") from None
+                    raise UnitGuaranteeUnavailable("stored operation inventory is inconsistent") from None
             nodes = (self._nodes._list_for_closed_inventory_if_present() if closed_inventory
                      else self._nodes.list())
             for node in nodes:
@@ -232,7 +229,7 @@ class AgentOperations:
                                                node_holder(ref.environment, ref.instance_id, ref.generation)):
                     if (usage["state"] not in {"active", "unknown", "released"}
                             or type(usage["usageId"]) is not str or not usage["usageId"]):
-                        raise GuaranteeUnavailableError("stored Usage inventory is inconsistent")
+                        raise UnitGuaranteeUnavailable("stored Usage inventory is inconsistent")
                     if usage["state"] != "released":
                         usages.add(usage["usageId"])
             return AgentUnresolvedSnapshot(tuple(sorted(operations)), tuple(sorted(usages)))

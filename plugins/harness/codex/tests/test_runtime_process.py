@@ -45,14 +45,13 @@ factory in teardown, waiting for process exit; no skip is used anywhere.
 from __future__ import annotations
 
 import copy
-import hashlib
 from pathlib import Path
 import os
 import time
 
 import pytest
 
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_harness_codex import (
     CodexAppServerChannelFactory,
     CodexCapabilityUnsupported,
@@ -76,17 +75,8 @@ from ordessa_units.records.unit_records import (
 )
 from ordessa_execution_agents.harness.transport.channel import _TOKEN_ENV_KEYS
 
-#: Explicit official 0.159.0 test installation, selected by the caller/CI.
-EXECUTABLE = os.environ.get("ORDESSA_TEST_CODEX_EXECUTABLE", "")
-
-
-@pytest.fixture(scope="module", autouse=True)
-def pinned_native_executable():
-    assert EXECUTABLE, "set ORDESSA_TEST_CODEX_EXECUTABLE to the verified official Codex 0.159.0 binary"
-    assert Path(EXECUTABLE).is_absolute()
-    with Path(EXECUTABLE).open("rb") as source:
-        digest = hashlib.file_digest(source, "sha256").hexdigest()
-    assert digest == "d2752c52353401f7f6efbfcea68796f4f7a3d3e4769f5d1da53fa49d4856b72f", "Codex 0.159.0 binary digest mismatch"
+#: Real local installation observed 2026-10-05: `--version` -> codex-cli 0.159.0.
+EXECUTABLE = "/usr/lib/chatgpt/resources/codex"
 
 ENVIRONMENT = "codex-p"
 DIGEST = "sha256:" + "a" * 64

@@ -25,8 +25,8 @@ from __future__ import annotations
 import inspect
 from pathlib import Path
 
-from ordessa_server.bootstrap import build_runtime
-from ordessa_server.bootstrap import runtime as runtime_module
+from ordessa_server.composition.runtime import build_runtime
+from ordessa_server.composition import runtime as runtime_module
 
 BUSINESS_KWARGS = (
     "harnesses", "execution", "execution_factory", "home_concurrency",
@@ -49,7 +49,7 @@ def test_build_runtime_signs_none_of_the_compat_business_kwargs():
 
 def test_the_host_no_forwards_business_composition_facts():
     source = (Path(__file__).resolve().parents[4] / "apps" / "server" / "src"
-              / "ordessa_server" / "bootstrap" / "runtime.py").read_text(encoding="utf-8")
+              / "ordessa_server" / "composition" / "runtime.py").read_text(encoding="utf-8")
     # The docstring may NAME the removed parameters (this slice's record);
     # the call graph may not: no `composition.default_plugins(<kwarg>)`
     # forwarding survives.
@@ -60,10 +60,18 @@ def test_the_host_no_forwards_business_composition_facts():
 
 
 def test_the_product_funnel_is_the_single_route_for_a_business_fact(tmp_path):
-    """The deletion moved the route, not the reach: a sentinel injected
-    through the product's `default_plugins` still lands on the plugin that
-    owns the execution domain, and nowhere on the host."""
-    from ordessa_server_product.composition import create_composition
+    """032: the execution domain retired with `ordessa.server-compat` — the
+    product funnel still accepts the fact for call-site compatibility
+    (`_COMPAT_KWARGS` in `products/server`), but no plugin owns it anymore.
+
+    A sentinel injected through the product's `compatibility_plugins` lands
+    nowhere: no `execution.port` is provided by any active plugin, and the
+    host keeps no reference to the injected object. The S1d guarantee holds
+    in its honest-retirement form — the route is still the product's alone
+    (the host names no such kwarg, pinned by the two gates above), and the
+    retired reach is asserted as absence, not silently re-homed.
+    """
+    from ordessa_server.composition.configuration.product_selection import create_host_product_composition as create_composition
 
     class _Port:
         def stop(self, timeout=None):
@@ -76,9 +84,9 @@ def test_the_product_funnel_is_the_single_route_for_a_business_fact(tmp_path):
     )
     try:
         assert runtime.plugin_host.active_ids() == (
-            "ordessa.workspace", "ordessa.server-compat", "ordessa.harness.acp")
-        compat = runtime.plugin_host.active("ordessa.server-compat")
-        assert compat.registration.provided_ports["execution.port"] is port
+            "ordessa.workspace", "ordessa.harness.acp")
+        assert "ordessa.server-compat" not in runtime.plugin_host.active_ids()
+        assert runtime.plugin_host.provided_port("execution.port") is None
         # The host itself keeps no reference to the injected object: the
         # runtime gained no execution attribute on the way.
         assert not hasattr(runtime, "execution")

@@ -10,8 +10,8 @@ import sqlite3
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError, UnknownResultError
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
 from ordessa_units.persistence.sqlite.store import SqliteUnitStore
 from ordessa_units.bindings.contracts import DirectoryBindingRef
@@ -107,7 +107,7 @@ def test_reservation_fixed_native_capture_and_repeat_never_dispatches(managed):
 
 def test_same_request_changed_native_correlation_conflicts(managed):
     first = reserve(managed)
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         reserve(managed, native_correlation={**managed[10], "requestId": "different"})
     assert managed[0].read_operation(managed[9]) == first
 
@@ -117,7 +117,7 @@ def test_same_draft_new_request_cannot_evade_unresolved_attempt(managed, change_
     first = reserve(managed)
     capture_ref = new_capture(managed) if change_revision else managed[5]
     new_request = RequestKey("env", "principal", "new-request")
-    with pytest.raises(UnknownResultError): reserve(managed, request=new_request, captured_ref=capture_ref)
+    with pytest.raises(UnitOperationUnknown): reserve(managed, request=new_request, captured_ref=capture_ref)
     assert managed[0].read_operation(new_request) is None
     assert managed[0].read_operation(managed[9]) == first
 
@@ -130,10 +130,10 @@ def test_unknown_after_claim_blocks_new_revision_and_claim_is_not_repeated(manag
     assert step.outcome == "possibly-dispatched"
     assert context.facts["inputDigest"] == operation.digest
     assert context.facts["action"] == "submitInput"
-    with pytest.raises(UnknownResultError): inputs.claim_dispatch(request, issuer)
+    with pytest.raises(UnitOperationUnknown): inputs.claim_dispatch(request, issuer)
     store.record_operation_step(request, operation.digest, "native-input", operation.digest, step.revision, "unknown", {})
     captured = new_capture(managed)
-    with pytest.raises(UnknownResultError): reserve(managed, request=RequestKey("env", "principal", "second"), captured_ref=captured)
+    with pytest.raises(UnitOperationUnknown): reserve(managed, request=RequestKey("env", "principal", "second"), captured_ref=captured)
     assert store.read_operation(managed[9]).status == "unknown"
 
 
@@ -142,7 +142,7 @@ def test_terminal_old_attempt_requires_strictly_new_draft_revision(managed, outc
     store = managed[0]
     first = reserve(managed)
     store.record_operation_outcome(managed[9], first.digest, first.revision, outcome, {"evidenceRef": source(first.intent.steps[0].pinned_provider_ref, "controlled-refusal")})
-    with pytest.raises(IdentityMismatchError): reserve(managed, request=RequestKey("env", "principal", "second"))
+    with pytest.raises(UnitIdentityMismatch): reserve(managed, request=RequestKey("env", "principal", "second"))
     capture_ref = new_capture(managed)
     second = reserve(managed, request=RequestKey("env", "principal", "second"), captured_ref=capture_ref)
     assert second.status == "reserved" and second.intent.context_ref["draftRevision"] == 2
@@ -153,8 +153,8 @@ def test_policy_revocation_refuses_replay_and_claim_before_any_dispatch(managed)
     store, _, policy, _, _, _, _, _, inputs, request, _, _, _, issuer, _ = managed
     operation = reserve(managed)
     policy.allowed = False
-    with pytest.raises(AdmissionRefusedError): reserve(managed)
-    with pytest.raises(AdmissionRefusedError): inputs.claim_dispatch(request, issuer)
+    with pytest.raises(UnitAdmissionRefused): reserve(managed)
+    with pytest.raises(UnitAdmissionRefused): inputs.claim_dispatch(request, issuer)
     assert store.read_operation_step(request, "native-input") is None
     assert store.read_operation(request) == operation
 
@@ -184,10 +184,10 @@ def test_atomic_reservation_sqlite_failure_leaves_no_new_draft_fence_or_input(ma
 def test_missing_capture_native_or_unpublished_node_refuses(managed):
     _, env, _, nodes, _, _, _, _, _, *_ = managed
     for capture, native in ((None, managed[7]), (managed[6], None)):
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             ManagedInputReservations(env, nodes, capture, native).reserve(managed[9], managed[4], managed[5], managed[10])
-    from ordessa_execution_api.environment import ParticipantInstanceRef
-    with pytest.raises(GuaranteeUnavailableError): reserve(managed, node_ref=ParticipantInstanceRef("env", "absent", 1))
+    from ordessa_units.definitions.admission_identity import AgentNodeRef
+    with pytest.raises(UnitGuaranteeUnavailable): reserve(managed, node_ref=AgentNodeRef("env", "absent", 1))
 
 
 def test_claim_one_shot_consumption_is_authority_only_without_native_io(managed):
@@ -201,13 +201,13 @@ def test_claim_one_shot_consumption_is_authority_only_without_native_io(managed)
     assert native.calls == before + 1  # explicit read-only current binding recheck.
     assert native.dispatch_calls == 0  # claim/verify does not submit input.
     assert store.read_operation_step(request, "native-input").outcome == "possibly-dispatched"
-    with pytest.raises(UnknownResultError): inputs.claim_dispatch(request, issuer)
+    with pytest.raises(UnitOperationUnknown): inputs.claim_dispatch(request, issuer)
 
 
 @pytest.mark.parametrize("port", ["capture", "native"])
 def test_trusted_port_failure_is_typed_and_does_not_leak_secret(managed, port):
     managed[6 if port == "capture" else 7].failure = True
-    with pytest.raises(GuaranteeUnavailableError) as error: reserve(managed)
+    with pytest.raises(UnitGuaranteeUnavailable) as error: reserve(managed)
     assert "private-" not in str(error.value)
     assert managed[0].read_operation(managed[9]) is None
 
@@ -227,7 +227,7 @@ def test_foreign_store_issuer_cannot_claim_another_ledger(managed, tmp_path):
         # authority to swap out this Environment's sole operation journal.
         other.reserve_operation(managed[9], original.digest, original.intent)
         issuer = InvocationIssuer(other, managed[11], managed[12], clock=lambda: 50)
-        with pytest.raises(GuaranteeUnavailableError): managed[8].claim_dispatch(managed[9], issuer)
+        with pytest.raises(UnitGuaranteeUnavailable): managed[8].claim_dispatch(managed[9], issuer)
         assert other.read_operation_step(managed[9], "native-input") is None
         assert managed[0].read_operation_step(managed[9], "native-input") is None
     finally: other.close()
@@ -245,7 +245,7 @@ def test_current_native_evidence_change_before_claim_refuses_without_claim(manag
         "directory": {"directory_binding_ref": replace(state.directory_binding_ref, binding_revision=2)},
     }
     managed[7].state = replace(state, **changes[field])
-    with pytest.raises((AdmissionRefusedError, IdentityMismatchError, GuaranteeUnavailableError)):
+    with pytest.raises((UnitAdmissionRefused, UnitIdentityMismatch, UnitGuaranteeUnavailable)):
         managed[8].claim_dispatch(managed[9], managed[13])
     assert managed[0].read_operation_step(managed[9], "native-input") is None
     assert managed[0].read_operation(managed[9]) == operation
@@ -270,7 +270,7 @@ def test_unresolved_draft_fence_cannot_be_repointed_to_another_terminal_operatio
         (safe_json(corrupted), DRAFT_ATTEMPTS, fence["record_id"]))
     captured = new_capture(managed)
     next_key = RequestKey("env", "principal", "new-key")
-    with pytest.raises(GuaranteeUnavailableError): reserve(managed, request=next_key, captured_ref=captured)
+    with pytest.raises(UnitGuaranteeUnavailable): reserve(managed, request=next_key, captured_ref=captured)
     assert store.read_operation(next_key) is None
     assert store.read_operation(managed[9]) == first
 
@@ -317,7 +317,7 @@ def test_digest_consistent_draft_fence_requires_exact_source_relationship(manage
     assert store.read_operation(other_key).status == "refused"
     new_key = RequestKey("env", "principal", "new-input")
     captured = new_capture(managed)
-    with pytest.raises(GuaranteeUnavailableError, match="source identity"):
+    with pytest.raises(UnitGuaranteeUnavailable, match="source identity"):
         reserve(managed, request=new_key, captured_ref=captured)
     assert store.read_operation(new_key) is None
     assert store.read_operation(managed[9]) == first
@@ -334,7 +334,7 @@ def test_concluded_and_published_attempt_allows_only_new_draft_revision(managed)
     latest = store.read_operation(request)
     store.publish_operation(request, operation.digest, latest.revision, ("native-input",), (), (),
         {"nodeRef": operation.intent.node_ref, "nativeAcceptedEvidenceRef": evidence})
-    with pytest.raises(IdentityMismatchError): reserve(managed, request=RequestKey("env", "principal", "next-input"))
+    with pytest.raises(UnitIdentityMismatch): reserve(managed, request=RequestKey("env", "principal", "next-input"))
     captured = new_capture(managed)
     next_attempt = reserve(managed, request=RequestKey("env", "principal", "next-input"), captured_ref=captured)
     assert next_attempt.status == "reserved"
@@ -356,9 +356,9 @@ def test_cold_restart_read_replay_does_not_restore_dispatch_authority(managed, t
         cold = ManagedInputReservations(cold_env, NodePublication(cold_env), capture, native,
                                         invocation_issuer=cold_issuer)
         assert cold.reserve(request, node, captured, correlation) == first
-        with pytest.raises(AdmissionRefusedError): cold.claim_dispatch(request, cold_issuer)
+        with pytest.raises(UnitAdmissionRefused): cold.claim_dispatch(request, cold_issuer)
         assert reopened.read_operation_step(request, "native-input") is None
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             cold.reserve(RequestKey("env", "principal", "cold-new-key"), node, captured, correlation)
         assert reopened.read_operation(RequestKey("env", "principal", "cold-new-key")) is None
         assert native.dispatch_calls == 0

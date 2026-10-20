@@ -25,16 +25,57 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from ordessa_server.bootstrap import build_runtime
-from ordessa_server.transport.http import create_app
+from ordessa_server.composition.runtime import build_runtime
+from ordessa_interfaces.http import create_app
 from server_plugin_api.wire_errors import FAMILIES
 
-T002_BASELINE_METHOD_COUNT = 70  # AR-1/W-1 后 53；S-03 装配 + PermissionsBackendPlugin 17 方法
+T002_BASELINE_METHOD_COUNT = 70  # AR-1/W-1 后 53；S-03 装配：providerModels 6 + modelProvider 7 + permissions 4
+# （旧注 “PermissionsBackendPlugin 17 方法” 是误记：17 是这三个面之和，
+# PermissionsBackendPlugin 本身只声明 permissions 4 方法。）
+#
+# 032 (server-compat 退役)：默认装配不再含 ordessa.server-compat 的业务面
+#（sessions.*、accounts.*、assets.*、providerArtifacts.*、approvals.*、
+# sendOutcome.* 等随旧超级 owner 一并退役），也不再含 skills 面；
+# modelProvider 面由 7 扩展到 9（import 对 + beginTurnApplication）。
+# 下面的 C0_METHOD_COUNT 按当前真实装配重算：以 59 个实测方法为基准，
+# 各命名面只做存在性断言，不再做加法算术。
 ACP_ADMISSION_METHOD_IDS = frozenset({
     "acp.submission.authorize", "acp.permission.authorize",
 })
 SANDBOX_DESCRIBE_METHOD_ID = "sandbox.describe"
-C0_METHOD_COUNT = T002_BASELINE_METHOD_COUNT + len(ACP_ADMISSION_METHOD_IDS) + 1
+#: The default Environment publishes the Pacthold-owned `/3` contract through
+#: the reserved core method owner. Pin all method ids by name so a changed
+#: schema cannot silently balance the live count.
+AGENT_CORE_METHOD_IDS = frozenset({
+    "agents.capabilities",
+    "agents.profiles.list", "agents.profiles.read", "agents.profiles.readEntry",
+    "agents.profiles.create", "agents.profiles.edit", "agents.profiles.clone",
+    "agents.profiles.rename", "agents.profiles.archive", "agents.profiles.restore",
+    "agents.profiles.preview",
+    "agents.providers.list", "agents.providers.describe",
+    "agents.nodes.prepare", "agents.nodes.queryPreparation",
+    "agents.nodes.list", "agents.nodes.read",
+    "agents.nodes.configuration.describe", "agents.nodes.configuration.inspect",
+    "agents.nodes.configuration.apply", "agents.nodes.configuration.query",
+    "agents.nodes.applyProfile", "agents.nodes.acquireAccess",
+    "agents.nodes.recover", "agents.nodes.stop", "agents.nodes.release",
+    "agents.operations.read",
+})
+MODEL_PROVIDER_IMPORT_METHOD_IDS = frozenset({
+    "modelProvider.importApiKey", "modelProvider.queryApiKeyImport",
+})
+#: The two pin-drift ids 002 froze (identity-map `wireMethods.pinDrift`):
+#: the live default composition is 88 while the old pin arithmetic stopped
+#: at 86. Pinned here by name like every face above.
+MODEL_PROVIDER_TURN_APPLICATION_METHOD_IDS = frozenset({
+    "modelProvider.beginTurnApplication",
+})
+ACP_SESSION_HISTORY_METHOD_ID = "acp.sessions.list"
+#: Current recomputation: 1 host + 5 workspace + 5 ACP + 16 model-provider
+#: + 1 sandbox + 4 permissions + 27 Pacthold Agent `/3` methods.
+#: Every face is asserted by name in the gate below, so a drift fails HERE
+#: as a missing/unexpected id, not as silent re-balancing of arithmetic.
+C0_METHOD_COUNT = 59
 
 
 def _collect_live_method_ids() -> tuple[str, ...]:
@@ -76,15 +117,31 @@ def _post_wire(client, headers, method, params, request_id="t023-loop"):
 
 def test_the_live_registry_holds_t002_baseline_acp_and_sandbox_describe_ids():
     """The loopback count is re-measured in this run and pinned against the
-    T002 on-site baseline of 67 plus exactly two C0 ACP admission methods and
-    the Q5 sandbox read-only query; a
-    registry drift must fail HERE loudly, not silently shrink parametrization."""
+    032 recomputation of 57: the compat business faces (sessions.*,
+    accounts.*, assets.*, providerArtifacts.*, approvals.*, sendOutcome.*)
+    retired with ordessa.server-compat, so the old T002-baseline-plus-faces
+    arithmetic no longer applies. Every remaining face is asserted BY NAME —
+    a registry drift must fail HERE loudly, not silently shrink
+    parametrization. The retired faces are asserted ABSENT (compat leaves no
+    hidden fallback); their guarantee moved to the per-domain suites."""
     assert len(LIVE_METHOD_IDS) == C0_METHOD_COUNT, (
         f"live registry collected {len(LIVE_METHOD_IDS)} method ids this run; "
-        f"T002 baseline plus ACP admission and sandbox.describe is {C0_METHOD_COUNT}")
+        f"032 recomputation is {C0_METHOD_COUNT}")
     assert len(set(LIVE_METHOD_IDS)) == len(LIVE_METHOD_IDS)
     assert ACP_ADMISSION_METHOD_IDS <= set(LIVE_METHOD_IDS)
     assert SANDBOX_DESCRIBE_METHOD_ID in LIVE_METHOD_IDS
+    # The count alone would still balance if a pinned id were dropped and an
+    # unpinned one added in its place, so the added faces are asserted by name.
+    assert AGENT_CORE_METHOD_IDS <= set(LIVE_METHOD_IDS)
+    assert MODEL_PROVIDER_IMPORT_METHOD_IDS <= set(LIVE_METHOD_IDS)
+    assert MODEL_PROVIDER_TURN_APPLICATION_METHOD_IDS <= set(LIVE_METHOD_IDS)
+    assert ACP_SESSION_HISTORY_METHOD_ID in LIVE_METHOD_IDS
+    assert not any(method.startswith(("profiles.v2.", "agent.")) for method in LIVE_METHOD_IDS)
+    for retired in ("sessions.list", "sessions.createAndSend", "sendOutcome.query",
+                    "accounts.importAsset", "assets.publishSkill",
+                    "providerArtifacts.install", "approvals.decide"):
+        assert retired not in LIVE_METHOD_IDS, (
+            f"{retired} survived the server-compat retirement")
 
 
 def test_sandbox_describe_is_owned_by_the_selected_backend(loopback):

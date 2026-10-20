@@ -5,7 +5,7 @@ declaration, material digest, provider pin, an inserted or reordered action
 is refused before dispatch, typed, item by item.
 Gate 5 (s6.5): the core never learns brands: effect steps carry only
 action_id/input_digest/material_ref; every serialized output is scanned.
-Unknown verification facts raise UnknownResultError so the caller keeps its
+Unknown verification facts raise UnitOperationUnknown so the caller keeps its
 original occupation (no append, no seal, no call).
 """
 from dataclasses import FrozenInstanceError
@@ -14,8 +14,8 @@ import json
 
 import pytest
 
-from ordessa_execution_api.environment.errors import IdentityMismatchError, UnknownResultError
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_units.errors import UnitIdentityMismatch, UnitOperationUnknown
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.bindings.preparation_effects import (
     EffectStep, FixedEffectScope, PreparationEffectPlan, verify_preparation_effect,
@@ -225,7 +225,7 @@ def test_gate1_changed_facts_are_refused_before_dispatch(case):
         plan = _plan(steps=(_step("alpha", material=material, correlation="operation.start"),
                             _step("beta", depends=("alpha",))),
                      materials=(material,))
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         verify_preparation_effect(plan, **facts)
 
 
@@ -258,7 +258,7 @@ def test_unknown_verification_facts_keep_occupation(case):
         facts["approved_action_ids"] = None
     elif case == "correlations":
         facts["step_correlations"] = None
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         verify_preparation_effect(plan, **facts)
 
 
@@ -271,7 +271,7 @@ def test_material_free_plan_passes_without_a_verified_set():
 
 def test_non_mapping_verified_material_is_unknown_not_passed():
     plan = _plan(materials=(_material(),))
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         verify_preparation_effect(plan, **_facts(plan, verified_materials=("raw",)))
 
 

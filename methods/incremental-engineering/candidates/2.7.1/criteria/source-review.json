@@ -1,0 +1,33 @@
+{
+  "contract": "engineering-source-review/1",
+  "action_id": "incremental.review-change",
+  "criterion_id": "explicit-change-review",
+  "reviewer_roles": ["reviewer"],
+  "criteria_resource_id": "change-review-criteria",
+  "prompt_resource_id": "change-review-prompt",
+  "result_schema_resource_id": "review-result-schema",
+  "check": {
+    "capability_id": "ordessa.decision.evaluate",
+    "interface_version": "1.0.0"
+  },
+  "options": {
+    "passed": {
+      "description": "The exact candidate is sufficiently supported by the baseline, scope and method criteria.",
+      "status": "satisfied"
+    },
+    "not_passed": {
+      "description": "The exact candidate has a material unsupported claim or design gap.",
+      "status": "violated"
+    },
+    "unknown": {
+      "description": "The supplied evidence is insufficient for a decision.",
+      "status": "unknown"
+    }
+  },
+  "dispositions": {
+    "satisfied": "pass",
+    "violated": "block",
+    "insufficient": "insufficient",
+    "unknown": "insufficient"
+  }
+}

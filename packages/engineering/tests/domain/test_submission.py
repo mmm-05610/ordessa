@@ -104,3 +104,32 @@ def test_effect_unknown_is_kept_as_a_fact_not_converted_to_reverted():
     roundtripped = decode_submission(encode_submission(value))
     assert roundtripped.effect_observations[0].observed_state == 'unknown'
     assert roundtripped.checkpoint_ref is None
+
+
+def test_report_submission_roundtrips_existing_checkpoint_without_host_facts():
+    from ordessa_engineering.domain.artifacts.method_binding import ExactMethodResourceRef, MethodRef
+    from ordessa_engineering.domain.artifacts.models import MethodContent
+
+    original = record()
+    output = blob('6')
+    schema = ExactMethodResourceRef(MethodRef('method-a', '2.7.2', 1, d('7')),
+                                   'report.schema.json', d('8'), 'implementation-report-schema')
+    report = replace(original, baseline_snapshots=(), test_evidence=(),
+        effect_observations=(), output_refs=(output,), schema_version=2,
+        coverage=(SubmissionCoverage(original.change_set.proposal_refs[0],
+                                     (output,), (), (), 'implemented'),),
+        method_content=MethodContent.from_value(schema, {'report': 'fixture'}, rendered_body_ref=output))
+    checkpoint = blob('9')
+    corrected = replace(report, checkpoint_ref=checkpoint)
+    assert decode_submission(encode_submission(corrected)) == corrected
+    assert corrected.digest != report.digest
+    assert corrected.execution_ref == original.execution_ref
+    assert corrected.method_content == report.method_content
+    for forbidden in ({'baseline_snapshots': original.baseline_snapshots},
+                      {'test_evidence': original.test_evidence},
+                      {'effect_observations': original.effect_observations},
+                      {'method_content': None}):
+        with pytest.raises(ReferenceError, match='INVALID_SUBMISSION_REPORT'):
+            replace(corrected, **forbidden)
+    with pytest.raises(ReferenceError, match='INVALID_SUBMISSION'):
+        replace(corrected, checkpoint_ref={'digest': 'untrusted'})

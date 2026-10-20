@@ -1,4 +1,13 @@
 # 交付报告 — transport-only Harness 接入链（HD-002 第四轮 / 实施轮）
+> **Current owner and evidence note (2026-10-10).** This document contains earlier migration/review evidence. Its body is preserved; old paths and test outcomes below describe the recorded historical snapshot and are not current execution instructions or fresh validation. Current ownership and path mapping:
+>
+> - `runtime/access-entry.mjs` and the prior plugin-local access chain → `apps/server/src/ordessa_server/composition/native_channels/access_entry.mjs`; it selects brand declarations through `selected_launch_ports.mjs` and uses the Agent transport at `packages/execution/agents/src/ordessa_execution_agents/harness/transport/acp.mjs`.
+> - `plugins/harness/tests/access/*.test.mjs` → `tests/integration/harness/access/*.test.mjs`; controlled peer/marker fixtures → `tests/fixtures/harness/access/`; shared sidecar support → `tests/integration/harness/access/support/sidecar_harness.mjs`.
+> - `plugins/harness/tests/access/test_acp_boundaries.py` → `tests/architecture/harness/test_acp_boundaries.py`; `plugins/harness/packaging/tests/test_acp_schema_drift_target.py` → `tests/integration/harness/packaging/test_acp_schema_drift_target.py`.
+> - Historical shared `packaging/<brand>` npm roots → each leaf's `plugins/harness/<brand>/tooling/npm/`; actual launch declarations remain owned by their brand leaf and are selected by the Server port.
+>
+> The source-owner receipt `docs/verification/overnight-upper-structure-20261009/harness-access-test-owner-root-applied.json` records 14 source mappings applied. Four shared discovery/CI files were subsequently integrated in `docs/verification/overnight-upper-structure-20261009/current-test-discovery-root-applied.json`; unsafe `verify-clean.sh` remains held and unrun. It is a migration receipt, not a test result. No suite was run for this documentation candidate. Historical wire names, identifiers, and raw results below remain historical evidence.
+
 
 **状态：IMPLEMENTATION_REVIEW_READY。** 插件范围内的实施与验证已完成，等待主会话审核。
 未 push、未合并 main、未 `git add`（`git diff --cached` 为空）。

@@ -88,7 +88,7 @@ assert management['transport'] == 'wire/1'
 assert management['methods']['agents.operations.read']['action'] == 'operationRead'
 
 # The old owner ID remains reserved by the existing Environment authority.
-from ordessa_execution_api.c1.errors import RegistrationConflictError
+from pacthold.core.registration import RegistrationConflictError
 from pacthold.environment import Environment
 try:
     Environment('owner-cutover-check').stage_activation('pacthold.agents')

@@ -5,7 +5,8 @@ import sys
 import pytest
 from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore, ProcessRequest
 from ordessa_environments_local import LocalEnvironmentResourceProvider
-from ordessa_execution_agents.harness.transport import ProcessChannel, ChannelClosed, RequestTimeout, WriterLeaseRefused
+from ordessa_execution_agents.harness.transport import ChannelClosed, RequestTimeout, WriterLeaseRefused
+from ordessa_units.sessions.environment_channel import EnvironmentProcessChannel
 
 
 def owned(tmp_path, command):
@@ -14,7 +15,7 @@ def owned(tmp_path, command):
     instance=manager.create('local',{'root':str(tmp_path)})
     use=instance.acquire('channel-test',sharing=True)
     process=use.execution.start(ProcessRequest.build([sys.executable,'-u','-c',command],cwd=str(tmp_path),env={}))
-    channel=ProcessChannel.attach(process,name='controlled',managed=True)
+    channel=EnvironmentProcessChannel(process,name='controlled',managed=True)
     return use,process,channel,channel.bind_writer(channel.acquire_writer())
 
 

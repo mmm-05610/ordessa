@@ -1,0 +1,108 @@
+{
+  "basisHead": "6386d4ef0931991e08ef18ef622673c646d046b9",
+  "mainBefore": "b4bf7cd90951d0fa9bcf3a3de2e66b7db6a62aa0",
+  "scopeAuthority": "User2026-10-19 11:19UTC: Engineering redesign deferred; shared lower/layout/preservation/main/cleanup only. FINAL-SCOPE.md.",
+  "layout": {
+    "projects": 53,
+    "pythonFilesParsed": 1366,
+    "syntaxErrors": 0
+  },
+  "sharedEntry": {
+    "freshWheels": 15,
+    "sourceSnapshotFiles": 2888,
+    "sourceBeforeEqualsAfter": true,
+    "checks": 4,
+    "exits": [
+      0,
+      0,
+      0,
+      2
+    ],
+    "ownerModules": [
+      57,
+      57,
+      82,
+      86
+    ],
+    "noOldRuntimeImports": true,
+    "missingTrustedHttpBindingsRefusesBeforeWrites": true,
+    "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-shared-entry"
+  },
+  "historicalPreflight": {
+    "commit": "91d0a9ca10",
+    "passed": 5,
+    "skipped": 0,
+    "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/historical-preflight-v1/HANDOFF.json"
+  },
+  "deferredEngineering": {
+    "preservationCommit": "6386d4ef09",
+    "sourceBackup": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-deferred-source-preservation/manifest.json",
+    "ordinaryReport": "2real positives and19isolated negatives; not finalized; multi-caseSIGSEGV unresolved",
+    "independentReview": "1failed positive; subsequent7file fixes untested; actualcut/revoke/reviewCOMMIT unqualified",
+    "registry": "127 frozen earlier; later Engineering source closure not accepted",
+    "productionActivation": false
+  },
+  "fullProductAcceptance": false,
+  "pipCheck": {
+    "returncode": 1,
+    "stdout": "ordessa-server 2.0.0a1 requires secretstorage, which is not installed.\n",
+    "stderr": "WARNING: The directory '/home/maoqh/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\n"
+  },
+  "sourceConflictLedger": {
+    "resolved": 212,
+    "pendingDeferred": 11,
+    "total": 223
+  },
+  "cleanupPlan": {
+    "archiveInactive": [
+      "architecture-review",
+      "execution-sdk-fix-20261018",
+      "nightly-restructure-20261009"
+    ],
+    "retainActive": [
+      "primary checkout: running user services",
+      "packages-convergence-20261019: active execution processes and offline dependency runtime",
+      "main-consolidation-20261019: target main checkout"
+    ],
+    "occupancyEvidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/inactive-worktree-occupancy-check.json"
+  },
+  "noPush": true,
+  "localMainAdvancedTo": "bd248744d0699dd019793370a76c561ec1e472a5",
+  "cleanupCompleted": {
+    "receipt": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/cleanup-receipt.json",
+    "archived": [
+      {
+        "oldPath": "/home/maoqh/projects/ordessa/worktree/architecture-review",
+        "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/architecture-review/tree",
+        "head": "db34f9057e220a2fc8e423b5c2fc2c9ab6703ef7",
+        "rawIndexSha256": "5a75d19076f378f9be9eaac5b7e748fa2e62541e7a8dfd0c1889abfd786d25e3",
+        "originalBackupStatusMatches": true,
+        "rawIndexStillMatches": true
+      },
+      {
+        "oldPath": "/home/maoqh/projects/ordessa/worktree/execution-sdk-fix-20261018",
+        "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/execution-sdk-fix-20261018/tree",
+        "head": "d7979bd34f9a84ad337545c9c0d09cb09c85f631",
+        "rawIndexSha256": "404dd979ca00721890f8644e603fd21c511378ff5c31dabd7f9c73bd35f55c3c",
+        "originalBackupStatusMatches": true,
+        "rawIndexStillMatches": true
+      },
+      {
+        "oldPath": "/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009",
+        "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/nightly-restructure-20261009/tree",
+        "head": "84b9ca02c662b52bada44e6404e2cea9c8a1ecf3",
+        "rawIndexSha256": "a4df6376bc9fe0f2efe50b4751cc1395144353acb110d523a7ef5304cfd4ba87",
+        "originalBackupStatusMatches": true,
+        "rawIndexStillMatches": true
+      }
+    ],
+    "registeredWorktreesRemaining": 3,
+    "occupiedOldTreesRetained": 2,
+    "allSourceAndIgnoredFilesPreserved": true,
+    "supersededBy": "ROOT-MAIN-HANDOFF.json: repository root is sole registered worktree; all auxiliary directories archived."
+  },
+  "rootMainHandoff": "ROOT-MAIN-HANDOFF.json",
+  "developmentRoot": "/home/maoqh/projects/ordessa",
+  "registeredWorktreesRemaining": 1,
+  "remainingOccupiedTreesToArchive": 0
+}

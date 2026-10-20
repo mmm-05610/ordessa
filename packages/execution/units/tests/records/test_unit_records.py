@@ -25,7 +25,7 @@ from agent_tools_fixtures.unit_records import (
 )
 
 def test_managed_turn_record_is_revisioned_and_tied_to_original_confirmed_session(tmp_path):
-    from ordessa_execution_api.environment.operations import safe_json
+    from ordessa_infrastructure.encoding.immutable_json import safe_json
     p = parts(tmp_path, managed_turn_opt_in=True)
     service, _, _, _, _, _ = p
     assert service.managed_turn_available
@@ -718,4 +718,197 @@ def test_reconcile_termination_recovers_after_restart(tmp_path):
     with pytest.raises(UnitRecordsRefused):
         restarted.begin_termination(
             unit.unit_ref, verifier.issue('stop', 'native-stop', 'stop-input'),
+            input_digest='stop-input', action='stop')
+
+
+# -- reopened history: read-only termination projection, execution fenced -----
+
+def _confirmed_stop(p, unit):
+    service, _journal, verifier, *_ = p
+    ticket = service.begin_termination(
+        unit.unit_ref, verifier.issue('stop', 'native-stop', 'stop-input'),
+        input_digest='stop-input', action='stop')
+    return service.record_termination(
+        ticket, expected_source_revision=1, state='confirmed',
+        evidence={'terminationEvidenceRef': 'sha256:stop-proof'})
+
+
+class _NoLiveScope:
+    """A reopened host whose live scope index is genuinely gone."""
+
+    def verify_scope(self, *_args, **_kwargs):
+        return False
+
+
+def _historical_view(p, unit, *, termination=None, scope_authority=None):
+    """The host's verified reopen: same journal, every old Unit fenced."""
+    from ordessa_units.records.operation_journal import OperationJournal
+    service, journal, verifier, scope, native, epoch = p
+    reopened = OperationJournal.reopen_for_new_units(
+        journal.path, namespace='env', validate_owner=lambda: None,
+        managed_turn_opt_in=False, acp_turn_opt_in=False)
+    assert unit.unit_ref in reopened.historical_unit_ids
+    view = UnitRecords(reopened, scope_authority=scope_authority or scope,
+                       native_evidence=native, verifier=verifier, epoch_port=epoch,
+                       termination_evidence=termination or TermEvidence())
+    return view, reopened
+
+
+def test_reopened_history_owner_read_termination_is_read_only(tmp_path):
+    import hashlib
+    term = TermEvidence()
+    p, unit = _terminable(tmp_path, termination=term)
+    _confirmed_stop(p, unit)
+    read_only = TermEvidence()
+    view, journal = _historical_view(p, unit, termination=read_only)
+    before = hashlib.sha256(journal.path.read_bytes()).hexdigest()
+    record = view.owner_read_termination(unit.unit_ref, 'stop')
+    assert record['projection'] == 'owner-read' and record['state'] == 'confirmed'
+    assert record['action'] == 'stop'
+    assert dict(record['outcome'])  # the original persisted proof, not fabricated
+    assert view.owner_read_termination(unit.unit_ref, 'release') is None
+    # No termination validator was consulted to supply the proof again.
+    assert read_only.calls == []
+    after = hashlib.sha256(journal.path.read_bytes()).hexdigest()
+    assert after == before
+    # The historical Unit stays fenced for every execution path.
+    with pytest.raises(UnitRecordsRefused, match='historical Unit stays fenced'):
+        view.begin_termination(unit.unit_ref,
+            p[2].issue('release', 'native-release', 'release-input'),
+            input_digest='release-input', action='release')
+
+
+def _termination_row(journal, unit):
+    with journal._connect() as db:
+        return db.execute(
+            'SELECT * FROM harness_unit_terminations WHERE unit_ref=? AND action=?',
+            (unit.unit_ref, 'stop')).fetchone()
+
+
+def test_reopened_history_owner_read_termination_refuses_damage(tmp_path):
+    import hashlib
+    import json as _json
+
+    def _rewrite(payload, *, digest_too=True):
+        text = _json.dumps(payload, sort_keys=True)
+        return text, hashlib.sha256(text.encode()).hexdigest() if digest_too else None
+
+    cases = ('identity-bytes', 'outcome', 'state-revision', 'missing-proof',
+             'scope-key', 'identity-unit-ref')
+    for case in cases:
+        root = tmp_path / case
+        root.mkdir()
+        p, unit = _terminable(root, termination=TermEvidence())
+        _confirmed_stop(p, unit)
+        view, journal = _historical_view(p, unit)
+        with journal._connect() as db:
+            row = _termination_row(journal, unit)
+            identity = _json.loads(row['identity_json'])
+            if case == 'identity-bytes':
+                text, digest = _rewrite(dict(identity, inputDigest='tampered-input'),
+                                        digest_too=False)
+                db.execute('UPDATE harness_unit_terminations SET identity_json=? WHERE unit_ref=?',
+                           (text, unit.unit_ref))
+            elif case == 'outcome':
+                db.execute('UPDATE harness_unit_terminations SET outcome_json=? WHERE unit_ref=?',
+                           (_json.dumps({'terminationEvidenceRef': 'sha256:forged'}),
+                            unit.unit_ref))
+            elif case == 'state-revision':
+                db.execute("UPDATE harness_unit_terminations SET state='opening' WHERE unit_ref=?",
+                           (unit.unit_ref,))
+            elif case == 'missing-proof':
+                db.execute('UPDATE harness_unit_terminations SET outcome_json=NULL, '
+                           'outcome_digest=NULL WHERE unit_ref=?', (unit.unit_ref,))
+            elif case == 'scope-key':
+                db.execute("UPDATE harness_unit_reservations SET scope_key='{}' WHERE unit_ref=?",
+                           (unit.unit_ref,))
+            elif case == 'identity-unit-ref':
+                other = dict(identity, unitRef=dict(identity['unitRef'], unitId='other-unit'))
+                text, digest = _rewrite(other)
+                db.execute('UPDATE harness_unit_terminations SET identity_json=?, identity_digest=? '
+                           'WHERE unit_ref=?', (text, digest, unit.unit_ref))
+            db.commit()
+        with pytest.raises(UnitRecordsRefused):
+            view.owner_read_termination(unit.unit_ref, 'stop')
+
+
+# -- pure identity read for historical ACP queries ---------------------------
+
+def test_owner_read_unit_for_query_returns_the_immutable_identity(tmp_path):
+    import hashlib
+    p, unit = _terminable(tmp_path, termination=TermEvidence())
+    view, journal = _historical_view(p, unit)
+    ref = dict(unit.public_ref)
+    before = hashlib.sha256(journal.path.read_bytes()).hexdigest()
+    found = view.owner_read_unit_for_query(ref)
+    assert found.public_ref == unit.public_ref
+    assert found.unit_ref == unit.unit_ref
+    assert found.intent_json == unit.intent_json
+    assert hashlib.sha256(journal.path.read_bytes()).hexdigest() == before
+    # Identity only: the historical Unit stays fenced for execution, and the
+    # existing owner read keeps its own fence.
+    with pytest.raises(UnitRecordsRefused, match='historical Unit stays fenced'):
+        view.owner_read_unit(unit.unit_ref)
+    with pytest.raises(UnitRecordsRefused, match='historical Unit stays fenced'):
+        view.begin_termination(unit.unit_ref,
+            p[2].issue('stop', 'native-stop', 'stop-input'),
+            input_digest='stop-input', action='stop')
+
+
+def test_owner_read_unit_for_query_refuses_wrong_or_tampered_identity(tmp_path):
+    import hashlib
+    import json as _json
+
+    p, unit = _terminable(tmp_path, termination=TermEvidence())
+    view, journal = _historical_view(p, unit)
+    ref = dict(unit.public_ref)
+
+    with pytest.raises(UnitRecordsRefused, match='complete owner-bound'):
+        view.owner_read_unit_for_query(unit.unit_ref)
+    with pytest.raises(UnitRecordsRefused, match='complete owner-bound'):
+        view.owner_read_unit_for_query({key: value for key, value in ref.items()
+                                        if key != 'sourceRevision'})
+    with pytest.raises(UnitRecordsRefused, match='complete owner-bound'):
+        view.owner_read_unit_for_query(dict(ref, unitId=''))
+    with pytest.raises(UnitRecordsRefused, match='differs from original owner source'):
+        view.owner_read_unit_for_query(dict(ref, sourceRevision='sha256:' + '0' * 64))
+    with pytest.raises(UnitRecordsRefused, match='differs from original owner source'):
+        view.owner_read_unit_for_query(dict(ref, environmentNamespace='other-env'))
+    with pytest.raises(UnitRecordsRefused, match='unit missing or immutable facts damaged'):
+        view.owner_read_unit_for_query(dict(ref, unitId='other-unit'))
+
+    # A tampered reservation is damage even though the public ref matches.
+    with journal._connect() as db:
+        db.execute('UPDATE harness_unit_reservations SET intent_json=? WHERE unit_ref=?',
+                   ('{}', unit.unit_ref))
+        db.commit()
+    with pytest.raises(UnitRecordsRefused, match='unit missing or immutable facts damaged'):
+        view.owner_read_unit_for_query(ref)
+
+
+def test_reopened_history_reads_without_a_live_scope_index(tmp_path):
+    """The reopened journal has no live scope index; identity reads still work.
+
+    ``verify_scope`` is False on this authority; the live read path must keep
+    refusing it, while both historical read ports work from the persisted
+    canonical facts alone.
+    """
+    p, unit = _terminable(tmp_path, termination=TermEvidence())
+    _confirmed_stop(p, unit)
+    view, journal = _historical_view(p, unit, scope_authority=_NoLiveScope())
+    record = view.owner_read_termination(unit.unit_ref, 'stop')
+    assert record['state'] == 'confirmed' and dict(record['outcome'])
+    found = view.owner_read_unit_for_query(dict(unit.public_ref))
+    assert found.public_ref == unit.public_ref
+    # The live verification is untouched: the same facts under a missing live
+    # scope index are refused by the ordinary path.
+    with journal._connect() as db:
+        with pytest.raises(UnitRecordsRefused, match='scope authority'):
+            view._reservation(db, unit.unit_ref)
+    # No execution path is re-enabled for the historical Unit.
+    with pytest.raises(UnitRecordsRefused, match='historical Unit stays fenced'):
+        view.owner_read_unit(unit.unit_ref)
+    with pytest.raises(UnitRecordsRefused, match='historical Unit stays fenced'):
+        view.begin_termination(unit.unit_ref,
+            p[2].issue('stop', 'native-stop', 'stop-input'),
             input_digest='stop-input', action='stop')

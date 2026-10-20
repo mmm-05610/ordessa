@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@ordessa/extension-api": [
+        "../../../../../packages/interfaces/channels/workbench/extension-api/src/index.ts"
+      ],
+      "@extensions/ordessa.contracts/contract.js": [
+        "../../../../../packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/contract.ts"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "tests"
+  ]
+}

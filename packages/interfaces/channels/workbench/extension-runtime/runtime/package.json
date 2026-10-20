@@ -1,0 +1,27 @@
+{
+  "name": "@ordessa/extension-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Extension runtime state store, task scope and UI storage. The loader and host are independent leaves (@ordessa/extension-loader / @ordessa/extension-host) since 032.",
+  "exports": {
+    "./state": "./src/state/stateStore.ts",
+    "./tasks": "./src/state/tasks.ts",
+    "./ui-storage": "./src/state/uiStorage.ts",
+    "./call-lease": "./src/call-lease.ts",
+    "./commands": "./src/commands.ts",
+    "./commands-view": "./src/commands-view.ts"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1",
+    "typecheck": "tsc --noEmit -p ../host/tsconfig.json"
+  },
+  "dependencies": {
+    "@lumino/coreutils": "2.2.3",
+    "@ordessa/extension-api": "0.1.0",
+    "@ordessa/interface-contracts": "0.1.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}

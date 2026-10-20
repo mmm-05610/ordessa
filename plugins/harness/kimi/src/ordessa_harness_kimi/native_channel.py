@@ -476,7 +476,7 @@ def compile_config(materials: Mapping[str, Any]) -> dict:
     return {"args": args, "plan": plan, "deferred": deferred}
 
 
-def capability_matrix() -> dict[str, dict]:
+def _historical_capability_matrix() -> dict[str, dict]:
     """declared/implemented/observed per capability; never all-true (seams §4).
 
     The CLI is not installed, so this package has observed nothing of the real
@@ -532,3 +532,12 @@ def capability_matrix() -> dict[str, dict]:
             "observed": "unknown",
         },
     }
+
+
+def capability_matrix() -> dict[str, dict]:
+    """Current SDK migration state; historical protocol declarations are retained."""
+    matrix = _historical_capability_matrix()
+    for item in matrix.values():
+        if 'implemented' in item and ('client' in item['implemented'] or item['implemented'] in ('yes','reply-no-auto','prepared-only')):
+            item['implemented'] = 'unavailable (original-owner native protocol port pending); historical requirement: ' + item['implemented']
+    return matrix

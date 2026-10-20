@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.records.unit_records import (
     INPUT_SESSION_ASSOCIATION_VERSION, UNIT_CONFIRMATION_VERSION, UnitRecordsRefused,
 )

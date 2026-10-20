@@ -7,7 +7,6 @@ required_input_slots:
 - submission_ref
 - fixed_delivery_refs
 - executor_report
-- independent_review_observations
 - acceptance_mapping
 iteration: once
 questions:
@@ -17,7 +16,7 @@ questions:
   criterion_refs:
   - resource: standard.acceptance
     criterion_id: test_evidence
-  instructions: 独立判断每项要求的测试是否针对固定交付版本实际执行并成功。执行者的测试声明不等于经核实的结果；未知、缺失、版本不匹配或不足以核验的材料不能回答supported。
+  instructions: 独立审核Unit在本次检查中形成观察，判断每项要求的测试是否针对固定交付版本实际执行并成功。执行者的测试声明不等于经核实的结果；未知、缺失、版本不匹配或不足以核验的材料不能回答supported。
   answer_definition:
     from_criterion:
       resource: standard.acceptance

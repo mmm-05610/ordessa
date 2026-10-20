@@ -1,0 +1,131 @@
+{
+  "resolvedTargets": 212,
+  "pendingTargets": 11,
+  "items": [
+    {
+      "target": "apps/cli/tests/integration/test_bca_longitudinal.py",
+      "incomingPath": "products/agent-tools/tests/integration/test_bca_longitudinal.py",
+      "kind": "owner relocation required",
+      "conflictEvents": 1,
+      "diffLines": 0,
+      "nightlySha256": null,
+      "incomingSha256": "99d11c28bc3831d9cab559d22c4c824b9b48c0de0c2bfd33c9f273a1969a0a12"
+    },
+    {
+      "target": "apps/cli/tests/integration/test_staged_agent_assembly.py",
+      "incomingPath": "products/agent-tools/tests/integration/test_staged_agent_assembly.py",
+      "kind": "owner relocation required",
+      "conflictEvents": 1,
+      "diffLines": 0,
+      "nightlySha256": null,
+      "incomingSha256": "5b5da1bbc7ddfab42f2eb190d2b7aeb3cfffda5bdeb723e7a011cfe485d403c6"
+    },
+    {
+      "target": "apps/server/deployment/default-product/src/ordessa_server_product/acp_channel/profile_owner.py",
+      "incomingPath": "products/server/src/ordessa_server_product/acp_channel/profile_owner.py",
+      "kind": "owner relocation required",
+      "conflictEvents": 1,
+      "diffLines": 0,
+      "nightlySha256": null,
+      "incomingSha256": "ad593a66e78b76c3aa1cbdedbc6f346cd03face984a027b6e9cb04f6140c9064"
+    },
+    {
+      "target": "apps/server/deployment/default-product/src/ordessa_server_product/harness_adapters/application/__init__.py",
+      "incomingPath": "products/server/src/ordessa_server_product/harness_adapters/application/__init__.py",
+      "kind": "behavior/content",
+      "conflictEvents": 1,
+      "diffLines": 10,
+      "nightlySha256": "23b5ad34b179630f15635cb992144052ab09677ee42781a694cc0010b4a965c1",
+      "incomingSha256": "8177ff85f48506105eda8265cf87d2bdbfb54763802ae1d7e62ffc38e5c33f8c"
+    },
+    {
+      "target": "apps/server/deployment/default-product/src/ordessa_server_product/harness_adapters/application/configuration_service.py",
+      "incomingPath": "products/server/src/ordessa_server_product/harness_adapters/application/configuration_service.py",
+      "kind": "owner relocation required",
+      "conflictEvents": 1,
+      "diffLines": 0,
+      "nightlySha256": null,
+      "incomingSha256": "f536a9e12fe424c85b8c3a7681b0ab17716fd3be0a44c470bd3b27e43d5fbd0b"
+    },
+    {
+      "target": "apps/server/deployment/default-product/src/ordessa_server_product/harness_adapters/application/native_evidence.py",
+      "incomingPath": "products/server/src/ordessa_server_product/harness_adapters/application/native_evidence.py",
+      "kind": "owner relocation required",
+      "conflictEvents": 1,
+      "diffLines": 0,
+      "nightlySha256": null,
+      "incomingSha256": "fb6bc466a0ae08fa4dcdfb252692cdcaeafa60f5a6c059588080f610dcb8c7df"
+    },
+    {
+      "target": "apps/server/deployment/default-product/src/ordessa_server_product/harness_adapters/configuration/model/backend.py",
+      "incomingPath": "products/server/src/ordessa_server_product/harness_adapters/configuration/model/backend.py",
+      "kind": "owner relocation required",
+      "conflictEvents": 1,
+      "diffLines": 0,
+      "nightlySha256": null,
+      "incomingSha256": "8785cc2ca01ceaff92928dd00ebf6a051d362b39180f4eed0ef40367bf6ed104"
+    },
+    {
+      "target": "apps/server/deployment/default-product/src/ordessa_server_product/harness_adapters/configuration/model/bridge.py",
+      "incomingPath": "products/server/src/ordessa_server_product/harness_adapters/configuration/model/bridge.py",
+      "kind": "owner relocation required",
+      "conflictEvents": 1,
+      "diffLines": 0,
+      "nightlySha256": null,
+      "incomingSha256": "eaac005ef523dbb0ca0a5217c24ea46ce848ddd540db282f69d44ce021cefeca"
+    },
+    {
+      "target": "apps/server/deployment/default-product/src/ordessa_server_product/harness_adapters/configuration/model/live_service.py",
+      "incomingPath": "products/server/src/ordessa_server_product/harness_adapters/configuration/model/live_service.py",
+      "kind": "owner relocation required",
+      "conflictEvents": 1,
+      "diffLines": 0,
+      "nightlySha256": null,
+      "incomingSha256": "2bfccb5776f0759d0543ac086768e2c2d7e247c17fab6ced544be5495b6af81c"
+    },
+    {
+      "target": "apps/server/deployment/default-product/src/ordessa_server_product/turn_application.py",
+      "incomingPath": "products/server/src/ordessa_server_product/turn_application.py",
+      "kind": "behavior/content",
+      "conflictEvents": 1,
+      "diffLines": 200,
+      "nightlySha256": "d01de87250794594e0634e5ae33fbfb1280dc5de999b8e4d411d6a16319a799e",
+      "incomingSha256": "c67d47177bf15c40a4362c7c8de21f85ec9586005b84aab9a2a472f28284c2e1"
+    },
+    {
+      "target": "apps/server/pyproject.toml",
+      "incomingPath": "apps/server/pyproject.toml",
+      "kind": "distribution metadata",
+      "conflictEvents": 1,
+      "diffLines": 42,
+      "nightlySha256": "636aac17e34c9065b1500dfab56e31d95630684558320c64090ccce2ee01f1b7",
+      "incomingSha256": "131804e9bbb5802d287a7a3c023c27ff02f1d143beab885dd1c56c0b05dbffb7"
+    }
+  ],
+  "closedThisCheckpoint": {
+    "apps/cli/tests/integration/test_directory_binding.py": {
+      "commit": "0a2e1149e7",
+      "owner": "plugins/agents/workspace/tests/test_directory_binding.py",
+      "validation": {
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 20,
+        "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/workspace-conflict-final.xml"
+      }
+    },
+    "packages/execution/agents/tests/test_harness_discovery_consumer.py": {
+      "commit": "f166a17cdc",
+      "owner": "packages/execution/environments/tests/test_sandbox_discovery_consumer.py",
+      "validation": {
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 3,
+        "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/assertion-discovery-owner-v3/sandbox-discovery-root.xml"
+      }
+    }
+  }
+}

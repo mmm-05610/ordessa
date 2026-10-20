@@ -1,8 +1,11 @@
 """Scoped EnvironmentManager and stable resource facade."""
 import uuid
+from threading import RLock
+from weakref import WeakKeyDictionary
 
+from ..definitions.capabilities import CapabilityReport
 from ..definitions.errors import BackendNotFound, EnvironmentOperationUnknown, EnvironmentRefused
-from ..definitions.models import EnvironmentOperationReceipt
+from ..definitions.models import EnvironmentOperationReceipt, EnvironmentSnapshot
 from .store import encode_observation, decode_observation
 from .usages import EnvironmentUse
 
@@ -11,6 +14,10 @@ class EnvironmentManager:
     def __init__(self, *, store, providers):
         self.store = store
         self.providers = dict(providers)
+        self._view_lock = RLock()
+        self._issued_views = WeakKeyDictionary()
+        self._owned_use_handles = {}
+        self._owned_process_handles = {}
         for key, provider in self.providers.items():
             if not isinstance(key, str) or not key or provider.identity != key:
                 raise EnvironmentRefused('provider registry binding differs from its identity')
@@ -22,9 +29,59 @@ class EnvironmentManager:
         except KeyError:
             raise EnvironmentRefused('environment provider is not bound') from None
 
+    def _issue_instance(self, identity):
+        instance = EnvironmentInstance(self, identity)
+        with self._view_lock:
+            self._issued_views[instance] = identity
+        return instance
+
+    def validate_instance(self, instance, *, expected_snapshot):
+        """Prove a current view belongs to this manager and selected stored resource.
+
+        This is a point-in-time stored-state proof, not a permission, lease, or
+        hold. It does not inspect the external provider. Active-use counts and
+        observation timestamps may change without changing the selected
+        resource facts; identity, provider/backend, generation, runtime,
+        isolation capabilities, and observed state must remain fixed.
+        """
+        if type(instance) is not EnvironmentInstance or type(expected_snapshot) is not EnvironmentSnapshot:
+            raise EnvironmentRefused('issued Environment view and exact snapshot required')
+        with self._view_lock:
+            issued_identity = self._issued_views.get(instance)
+        if (not isinstance(issued_identity, str) or not issued_identity
+                or instance._manager is not self
+                or instance.identity != issued_identity
+                or expected_snapshot.identity != issued_identity
+                or expected_snapshot.phase != 'ready'
+                or type(expected_snapshot.generation) is not int or expected_snapshot.generation < 0
+                or expected_snapshot.operation is not None
+                or not isinstance(expected_snapshot.provider_id, str) or not expected_snapshot.provider_id
+                or not isinstance(expected_snapshot.backend_id, str) or not expected_snapshot.backend_id
+                or expected_snapshot.observation is None
+                or expected_snapshot.observation.backend_id != expected_snapshot.backend_id):
+            raise EnvironmentRefused('expected snapshot is not a confirmed ready selected resource')
+        current = self.store.snapshot(issued_identity)
+        expected_observation = expected_snapshot.observation
+        current_observation = current.observation
+        if (current.identity != expected_snapshot.identity
+                or current.provider_id != expected_snapshot.provider_id
+                or current.backend_id != expected_snapshot.backend_id
+                or current.phase != 'ready' or current.operation is not None
+                or current.generation != expected_snapshot.generation
+                or current_observation is None
+                or current_observation.backend_id != expected_observation.backend_id
+                or current_observation.state != expected_observation.state
+                or current_observation.runtime_identity != expected_observation.runtime_identity
+                or current_observation.capabilities != expected_observation.capabilities):
+            raise EnvironmentRefused('Environment view no longer matches the selected resource snapshot')
+        return current
+
     def create(self, provider_id, reference):
+        return self._create(provider_id, reference, identity='environment/' + uuid.uuid4().hex,
+                            operation_id=uuid.uuid4().hex)
+
+    def _create(self, provider_id, reference, *, identity, operation_id):
         provider = self._provider(provider_id)
-        identity, operation_id = 'environment/' + uuid.uuid4().hex, uuid.uuid4().hex
         # Durable intent precedes any remote effect. A failed initial commit
         # does not dispatch create. Never persist configuration/credentials.
         self.store.insert(identity, provider_id, operation_id=operation_id)
@@ -50,16 +107,18 @@ class EnvironmentManager:
                 pass
             raise EnvironmentOperationUnknown('create outcome requires explicit inspection',
                 identity=identity, backend_id=backend_id) from error
-        return EnvironmentInstance(self, identity)
+        return self._issue_instance(identity)
 
     def register(self, provider_id, backend_id):
+        return self._register(provider_id, backend_id, identity='environment/' + uuid.uuid4().hex)
+
+    def _register(self, provider_id, backend_id, *, identity):
         provider = self._provider(provider_id)
         observation = provider.inspect(backend_id)
         if observation.backend_id != backend_id:
             raise EnvironmentRefused('registration resolved a different immutable backend ID')
-        identity = 'environment/' + uuid.uuid4().hex
         self.store.insert(identity, provider_id, observation=observation)
-        return EnvironmentInstance(self, identity)
+        return self._issue_instance(identity)
 
     def reconcile_creation(self, identity, backend_id=None):
         """Explicitly bind the evidence from an uncertain create; never create again."""
@@ -84,7 +143,7 @@ class EnvironmentManager:
 
     def get(self, identity):
         self.store.snapshot(identity)
-        return EnvironmentInstance(self, identity)
+        return self._issue_instance(identity)
 
     def list(self):
         return tuple(self.store.snapshot(identity) for identity in self.store.identities())
@@ -141,9 +200,11 @@ class EnvironmentInstance:
         return self.snapshot
 
     def acquire(self, owner_id, *, sharing):
+        return self._acquire(owner_id, sharing=sharing, use_id='environment-use/' + uuid.uuid4().hex)
+
+    def _acquire(self, owner_id, *, sharing, use_id):
         self.inspect()
         store = self._manager.store
-        use_id = 'environment-use/' + uuid.uuid4().hex
         backend_id, generation = store.reserve_use(self.identity, use_id, owner_id, sharing=sharing)
         snapshot = self.snapshot
         provider = self._manager._provider(snapshot.provider_id)
@@ -161,8 +222,14 @@ class EnvironmentInstance:
             store.release_use(use_id)
             raise
         store.end_use_effect(use_id)
+        # The live backend use may refine the report it was opened with (for
+        # example a file-area helper probe). A backend that only exposes the
+        # legacy handle capabilities inherits the confirmed observation report.
+        use_capabilities = getattr(backend_use, 'capabilities', None)
+        if not isinstance(use_capabilities, CapabilityReport):
+            use_capabilities = snapshot.observation.capabilities
         return EnvironmentUse(store, self.identity, use_id, generation, backend_use,
-            getattr(backend_use, 'capabilities', snapshot.observation.capabilities))
+            use_capabilities)
 
     def _operate(self, operation, *, allow_in_use=False):
         store = self._manager.store

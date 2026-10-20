@@ -6,7 +6,7 @@ catalog_created: false
 wait_event_names_are_placeholders: false
 wait_event: engineering.work.current_condition
 wait_resume_contract: ordessa.engineering.current-work/1
-wait_source_status: candidate declares all 21 exact waits and input fields; original source binding and runtime qualification pending
+wait_source_status: candidate declares all 32 exact waits and input fields; original source binding and runtime qualification pending
 requires_is_incomplete_until_all_owner_bindings_are_registered_and_qualified: true
 work_input_document: documents/work-inputs/schema.json
 work_input_binding: explicit engineering.work.bind_inputs CAS on immutable ArtifactRevisionRef; no implicit accepted-head lookup
@@ -110,10 +110,10 @@ semantic_decision_mappings:
   candidate_question_sets:
   - criterion_id: output_scope
     resource: decision.output_scope
-    input_slots: [submission_ref, fixed_delivery_refs, executor_report, independent_review_observations]
+    input_slots: [submission_ref, fixed_delivery_refs, executor_report]
   - criterion_id: test_evidence
     resource: decision.test_evidence
-    input_slots: [submission_ref, fixed_delivery_refs, executor_report, independent_review_observations, acceptance_mapping]
+    input_slots: [submission_ref, fixed_delivery_refs, executor_report, acceptance_mapping]
   - criterion_id: intent_binding
     resource: decision.intent_binding
     input_slots: [proposal_ref, implementation_intent, method_content]
@@ -377,3 +377,45 @@ adoption_input_bindings:
     wait_projection_field: event.acceptance_receipt_ref
     status: original owner readback/correlation still required
   outputs_are_projection_only: true
+review_phase_groups90:
+  status: method_declarations_only_not_publication_or_source_qualification
+  expected_exact_wait_count: 32
+  proposal_reviews:
+    anchor: source_review
+    members: [source_review, quality_review, quality_content_review, summary_review]
+    final_gate: await_quality_gate
+    ordered_advance_waits: true
+    summary_source: original_Proposal_frozen_ExactArtifactRevisionSelector
+    unresolved:
+    - actual Work reader and caller must bind the unique method-matching frozen summary revision; independent source qualification remains required
+  package_reviews:
+    anchor: package_review
+    members: [package_review, package_content_review]
+    final_gate: await_package_gate
+    unresolved:
+    - package draft ArtifactRevision is not proof of the frozen original Package association; absent original owner proof must refuse
+  submission_acceptance:
+    anchor: acceptance_review
+    target_source: original Submission.output_refs filtered to document_type submission and role output
+    missing_outputs: refuse_target_resolution
+    observations_source: current_independent_review_not_a_prerequisite
+    unresolved:
+    - independent reviewer must produce observations and fixed-version test evidence; model answers alone do not prove test execution
+  correction_review:
+    anchor: rework_review
+    target_source: correction_plan_ref document_type correction-plan role primary
+    plan_wait_match: [submission_ref, acceptance_review_id, applied_did_ref, package_ref, method_ref]
+    event_supplies_revalidated: [review_ref, plan_digest, request_version, fence, correction_plan_ref, correction_plan_content, review_plan]
+    unresolved:
+    - original ReviewRecord/command correlation and correction-plan facts must be re-read by actual selected original source; input document fields are not proof
+  qualification: not_run
+  publication_allowed: false
+  execution_allowed: false
+
+work_input_append_only_policy:
+  contract: ordessa.append-only-work-inputs/2
+  event_values: immutable_once_present
+  round_events: events_by_round
+  round_source: original_MethodRun_inputs_rounds_only
+  status: declaration_only_original_source_must_enforce
+  unresolved: external source, review, and execution bindings remain independently unqualified

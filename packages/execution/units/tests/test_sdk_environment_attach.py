@@ -7,6 +7,7 @@ import pytest
 from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore, ProcessRequest
 from ordessa_environments_local import LocalEnvironmentResourceProvider
 from ordessa_execution_agents.harness.transport import ProcessChannel, LostReceipt, WriterLeaseRefused
+from ordessa_units.sessions.environment_channel import EnvironmentProcessChannel
 from ordessa_units.sessions.sdk_client import SdkAcpClient
 
 PEER = r'''
@@ -77,7 +78,7 @@ def attached(tmp_path,monkeypatch,request):
     assert not hasattr(handle,'pid') and not hasattr(handle,'returncode')
     def forbidden(*a,**k):raise AssertionError('SDK attach cannot spawn')
     monkeypatch.setattr(ProcessChannel,'launch',forbidden)
-    channel=ProcessChannel.attach(handle,name='controlled-acp',managed=True)
+    channel=EnvironmentProcessChannel(handle,name='controlled-acp',managed=True)
     client=SdkAcpClient(channel.bind_writer(channel.acquire_writer()))
     try:yield instance,use,process,channel,client
     finally:
@@ -173,4 +174,4 @@ def test_native_extension_payloads_and_original_request_ids_survive_sdk(attached
 
 
 def test_missing_async_process_surface_refused():
-    with pytest.raises(ValueError):ProcessChannel.attach(object(),name='invalid')
+    with pytest.raises(ValueError):EnvironmentProcessChannel(object(),name='invalid')

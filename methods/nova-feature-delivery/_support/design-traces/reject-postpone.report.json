@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "report_id": "synthetic-deferred-cycle-01",
+  "phase": "cycle_approval",
+  "reported_at": "2025-02-03T12:00:00Z",
+  "reporter": {
+    "actor_id": "example-contributor",
+    "role_claim": "contributor",
+    "reported_at": "2025-02-03T12:00:00Z"
+  },
+  "cycle": "synthetic-cycle",
+  "blueprint": {
+    "id": "synthetic-blueprint",
+    "url": "https://blueprints.launchpad.net/nova/+spec/synthetic-blueprint",
+    "status": "New",
+    "cycle": "synthetic-cycle"
+  },
+  "spec": {
+    "url": "https://specs.openstack.org/openstack/nova-specs/specs/2025.1/implemented/libvirt-virtiofs-attach-manila-shares.html",
+    "status": "Needs Review",
+    "cycle": "synthetic-cycle"
+  },
+  "decision": "Current-cycle approval deferred; proposal needs safety/upgrade detail and a new cycle review.",
+  "decision_record": {
+    "actor_id": "example-driver",
+    "role_claim": "Nova driver (synthetic claim)",
+    "decided_at": "2025-02-03T12:00:00Z",
+    "authority_ref": "https://wiki.openstack.org/wiki/Meetings/Nova",
+    "rationale_summary": "Synthetic example of deferral pending design evidence, not a final rejection."
+  },
+  "result": "deferred",
+  "summary": "No implementation is authorized for this cycle; owner may re-propose after resolving stated issues.",
+  "release": null,
+  "blockers": [
+    {
+      "id": "upgrade-impact",
+      "description": "Upgrade impact is unresolved.",
+      "owner": "example-contributor",
+      "opened_at": "2025-02-03T12:00:00Z",
+      "next_action": "Clarify schema migration and rollback behavior before re-proposal.",
+      "resume_condition": "Nova drivers review the updated spec for a later cycle.",
+      "source_url": "https://specs.openstack.org/openstack/nova-specs/specs/2025.1/implemented/libvirt-virtiofs-attach-manila-shares.html"
+    }
+  ],
+  "predecessors": [],
+  "evidence_urls": [
+    "https://wiki.openstack.org/wiki/Meetings/Nova"
+  ],
+  "limitations": [
+    "Synthetic example only; upstream decision has not happened.",
+    "No release is claimed."
+  ],
+  "spec_required": true
+}

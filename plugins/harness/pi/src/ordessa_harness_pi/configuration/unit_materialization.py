@@ -15,7 +15,8 @@ import re
 
 from ordessa_execution_agents.preparation import PreparedAgent, ConfigurationResources
 from ordessa_execution_agents.profiles import decode_revision, encode_revision_ref, ProfileRevisionRef
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_execution_agents.harness.definitions.model_compilation import RequestParams
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_harness_pi.acp_model_facts import render_pi_provider, translate_protocol
 from .initial import initial_model_params
 
@@ -118,10 +119,12 @@ class PiUnitProfileMaterializer:
 
     Catalogue IDs validate selection; they are not native model definitions.
     Native provider/model declarations stay owned by the selected Pi version.
+    Initial ``requestParams.retry`` is projected through the pinned Pi settings
+    file shape; every other request-parameter family remains unsupported here.
     credential_environment_variable is an optional name only; its value is never
-    read. Secret references and other declarations require their real owner and
-    are explicitly unsupported here. The returned applied fact proves matching
-    file readback only, never live Pi/native model selection or authentication.
+    read. Secret references and unowned declarations remain unsupported here.
+    The returned applied fact proves matching file readback only, never live
+    Pi/native model selection or authentication.
     """
     def __init__(self, *, fixed_revision, harness_definition_ref, model_declaration_id, model_catalogue,
                  credential_environment_variable=None, native_model_definition=None):
@@ -173,14 +176,32 @@ class PiUnitProfileMaterializer:
                     or set(payload) - {"provider", "model", "endpoint", "protocol", "credentialRef", "authentication", "brandFields", "requestParams"}
                     or payload.get("credentialRef") is not None):
                 _refuse()
-            params = initial_model_params(payload, None, models=list(self.model_catalogue))
+            request_params = RequestParams.from_record(payload.get("requestParams"))
+            if (request_params.reasoning_effort is not None
+                    or request_params.max_tokens is not None
+                    or request_params.timeout_ms is not None):
+                _refuse()
+            retry_settings = None
+            if request_params.retry is not None:
+                retry = request_params.retry
+                retry_settings = {
+                    "enabled": retry["enabled"],
+                    "maxRetries": retry["maxRetries"],
+                    "provider": {
+                        "maxRetries": retry["provider"]["maxRetries"],
+                        "maxRetryDelayMs": retry["provider"]["maxRetryDelayMs"],
+                    },
+                }
+            initial_payload = dict(payload)
+            initial_payload.pop("requestParams", None)
+            params = initial_model_params(initial_payload, None, models=list(self.model_catalogue))
             native_definition = None
             if self.native_model_definition is not None:
                 _, api = translate_protocol("pi", payload["protocol"])
                 native_definition = _native_model_definition(self.native_model_definition,
                     provider=payload["provider"], model=params["model"],
                     endpoint=params["provider"]["baseUrl"], api=api)
-            return payload, params, native_definition
+            return payload, params, native_definition, retry_settings
         except PiProfileMaterializationRefused:
             raise
         except Exception:
@@ -193,7 +214,7 @@ class PiUnitProfileMaterializer:
         supported thinking payload. The caller binds this result into its own
         immutable launch plan; this function neither starts nor authenticates.
         """
-        payload, params, _ = self._selected(snapshot)
+        payload, params, _, _ = self._selected(snapshot)
         return {"provider": payload["provider"], "model": params["model"]}
 
     def __call__(self, agent, use, invocation_facts, snapshot):
@@ -205,7 +226,7 @@ class PiUnitProfileMaterializer:
                 or invocation_facts.get("query") is not False
                 or agent.profile_revision != safe_json(encode_revision_ref(self.fixed_revision))):
             _refuse()
-        payload, params, native_definition = self._selected(snapshot)
+        payload, params, native_definition, retry_settings = self._selected(snapshot)
         try:
             # Both rendering and actual startup must bind the same declaration.
             # A correctly written catalogue cannot excuse a different/default
@@ -243,6 +264,12 @@ class PiUnitProfileMaterializer:
             relative = posixpath.relpath(location, root)
             if files.path(relative) != location:
                 _refuse()
+            settings_target = posixpath.join(relative, "settings.json")
+            if retry_settings is not None and files.exists(settings_target):
+                # Never merge with or replace an existing instance's Pi
+                # settings. This Unit's initial declaration has no authority
+                # over pre-existing configuration in the same private area.
+                _refuse()
         except PiProfileMaterializationRefused:
             raise
         except Exception:
@@ -255,4 +282,10 @@ class PiUnitProfileMaterializer:
         files.write_text(target, content)
         if files.read_text(target) != content:
             _refuse()
+        if retry_settings is not None:
+            settings_content = json.dumps({"retry": retry_settings}, sort_keys=True,
+                                          indent=2, allow_nan=False) + "\n"
+            files.write_text(settings_target, settings_content)
+            if files.read_text(settings_target) != settings_content:
+                _refuse()
         return ConfigurationResources(agent.harness.resources.kind, location, True)

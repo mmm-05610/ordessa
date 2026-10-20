@@ -27,6 +27,37 @@ _DIGEST = re.compile(r"[0-9a-f]{64}\Z")
 _ACTIVE = ("applying", "verifying", "unknown")
 
 
+BASE_SCHEMA_SQL = """
+                CREATE TABLE IF NOT EXISTS plans (
+                    plan_id TEXT PRIMARY KEY, principal TEXT NOT NULL,
+                    plan_json TEXT NOT NULL, fingerprint TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS operations (
+                    operation_id TEXT PRIMARY KEY, principal TEXT NOT NULL,
+                    server_id TEXT NOT NULL, session_id TEXT NOT NULL,
+                    channel_id TEXT NOT NULL, runtime_generation INTEGER NOT NULL,
+                    operation_key TEXT NOT NULL, plan_id TEXT NOT NULL,
+                    fingerprint TEXT NOT NULL, state TEXT NOT NULL,
+                    result_json TEXT NOT NULL,
+                    UNIQUE(principal, server_id, session_id, channel_id,
+                           runtime_generation, operation_key),
+                    FOREIGN KEY(plan_id) REFERENCES plans(plan_id)
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS one_active_session_operation
+                ON operations(server_id, session_id, channel_id)
+                WHERE state IN ('applying', 'verifying', 'unknown');
+                CREATE TABLE IF NOT EXISTS native_evidence (
+                    operation_id TEXT PRIMARY KEY REFERENCES operations(operation_id),
+                    manifest_digest TEXT NOT NULL,
+                    receipt_json TEXT
+                );
+                CREATE TABLE IF NOT EXISTS native_verifications (
+                    operation_id TEXT PRIMARY KEY REFERENCES operations(operation_id),
+                    readback_evidence_ref TEXT NOT NULL
+                );
+            """
+
+
 class JournalError(ValueError):
     """Malformed journal input or impossible transition."""
 
@@ -123,6 +154,9 @@ class OperationJournal:
 
     def __init__(self, path: Path, *, managed_turn_opt_in: bool = False, acp_turn_opt_in: bool = False):
         self.path = Path(path)
+        self._new_units_namespace = None
+        self._reopen_owner_check = None
+        self.historical_unit_ids = frozenset()
         self._admission_guard = None
         self._admission_guard_lock = RLock()
         if not self.path.parent.is_dir():
@@ -144,6 +178,60 @@ class OperationJournal:
             raise JournalError('ACP turn schema requires explicit pristine journal opt-in')
         self._acp_turn_opt_in = acp_turn_opt_in
         self._initialize()
+
+    @classmethod
+    def reopen_for_new_units(cls, path: Path, *, namespace: str, validate_owner,
+                             managed_turn_opt_in=False, acp_turn_opt_in=False):
+        """Explicit host-locked admission for new Units on an existing journal.
+
+        ``validate_owner`` is a trusted deployment capability, not a caller DTO.
+        It must retain the same root lock, namespace and exact store/journal
+        identities throughout this object's life. Ordinary construction keeps
+        its pristine-only schema opt-in. No old live authority is reconstructed.
+        """
+        if (not isinstance(namespace, str) or not namespace or not callable(validate_owner)
+                or type(managed_turn_opt_in) is not bool or type(acp_turn_opt_in) is not bool):
+            raise JournalError('explicit new-Units-only host admission required')
+        validate_owner()
+        path = Path(path)
+        initial = path.lstat()
+        if not stat.S_ISREG(initial.st_mode) or initial.st_size == 0:
+            raise JournalError('existing original regular journal required')
+        from .reopen import validate_existing_journal
+        historical = validate_existing_journal(path, namespace,
+            managed_turn_opt_in=managed_turn_opt_in, acp_turn_opt_in=acp_turn_opt_in)
+        validate_owner()
+        current = path.lstat()
+        if (initial.st_dev, initial.st_ino) != (current.st_dev, current.st_ino):
+            raise JournalError('existing journal identity changed during validation')
+        journal = object.__new__(cls)
+        journal.path = path
+        journal._admission_guard = None
+        journal._admission_guard_lock = RLock()
+        journal._initial_file_identity = (initial.st_dev, initial.st_ino)
+        journal._initial_file_pristine = False
+        journal._managed_turn_opt_in = managed_turn_opt_in
+        journal._acp_turn_opt_in = acp_turn_opt_in
+        journal._new_units_namespace = namespace
+        journal._reopen_owner_check = validate_owner
+        journal.historical_unit_ids = historical
+        return journal
+
+    @property
+    def reopened_for_new_units(self):
+        return self._new_units_namespace is not None
+
+    def new_unit_admission_valid(self, namespace):
+        if self._initial_file_pristine:
+            return self.preopened_file_identity_valid
+        if not self.reopened_for_new_units or self._new_units_namespace != namespace:
+            return False
+        self._reopen_owner_check()
+        return self.preopened_file_identity_valid
+
+    def _require_legacy_mutation(self):
+        if self.reopened_for_new_units:
+            raise JournalError('reopened journal admits only fresh Unit claims; historical effects stay fenced')
 
     @property
     def preopened_file_identity_valid(self):
@@ -198,7 +286,17 @@ class OperationJournal:
         return table is None or db.execute("SELECT 1 FROM harness_unit_reservations LIMIT 1").fetchone() is None
 
     def _connect(self) -> sqlite3.Connection:
+        if self.reopened_for_new_units:
+            if not self.new_unit_admission_valid(self._new_units_namespace):
+                raise JournalError('new Unit journal admission is no longer current')
         connection = sqlite3.connect(self.path, timeout=5.0, isolation_level=None)
+        if self.reopened_for_new_units:
+            try:
+                if not self.new_unit_admission_valid(self._new_units_namespace):
+                    raise JournalError('new Unit journal identity changed while opening')
+            except BaseException:
+                connection.close()
+                raise
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys=ON")
         connection.execute("PRAGMA busy_timeout=5000")
@@ -209,37 +307,10 @@ class OperationJournal:
         with self._connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             db.execute("PRAGMA synchronous=FULL")
-            db.executescript("""
-                CREATE TABLE IF NOT EXISTS plans (
-                    plan_id TEXT PRIMARY KEY, principal TEXT NOT NULL,
-                    plan_json TEXT NOT NULL, fingerprint TEXT NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS operations (
-                    operation_id TEXT PRIMARY KEY, principal TEXT NOT NULL,
-                    server_id TEXT NOT NULL, session_id TEXT NOT NULL,
-                    channel_id TEXT NOT NULL, runtime_generation INTEGER NOT NULL,
-                    operation_key TEXT NOT NULL, plan_id TEXT NOT NULL,
-                    fingerprint TEXT NOT NULL, state TEXT NOT NULL,
-                    result_json TEXT NOT NULL,
-                    UNIQUE(principal, server_id, session_id, channel_id,
-                           runtime_generation, operation_key),
-                    FOREIGN KEY(plan_id) REFERENCES plans(plan_id)
-                );
-                CREATE UNIQUE INDEX IF NOT EXISTS one_active_session_operation
-                ON operations(server_id, session_id, channel_id)
-                WHERE state IN ('applying', 'verifying', 'unknown');
-                CREATE TABLE IF NOT EXISTS native_evidence (
-                    operation_id TEXT PRIMARY KEY REFERENCES operations(operation_id),
-                    manifest_digest TEXT NOT NULL,
-                    receipt_json TEXT
-                );
-                CREATE TABLE IF NOT EXISTS native_verifications (
-                    operation_id TEXT PRIMARY KEY REFERENCES operations(operation_id),
-                    readback_evidence_ref TEXT NOT NULL
-                );
-            """)
+            db.executescript(BASE_SCHEMA_SQL)
 
     def register_plan(self, principal: str, plan: Plan) -> None:
+        self._require_legacy_mutation()
         if not isinstance(principal, str) or not principal.strip() or not isinstance(plan, Plan):
             raise JournalError("authenticated principal and Plan required")
         if not _DIGEST.fullmatch(plan.desired_digest):
@@ -307,6 +378,7 @@ class OperationJournal:
     def reserve_new(self, principal: str, plan_id: str, operation_key: str,
                     observed: FenceObservation, *, now: datetime) -> tuple[OperationRecord | Refused, bool]:
         """Return (row, newly_reserved) so only one caller may execute effects."""
+        self._require_legacy_mutation()
         if not isinstance(principal, str) or not principal.strip() or not isinstance(operation_key, str) or not operation_key.strip():
             raise JournalError("principal and operation key required")
         if not isinstance(observed, FenceObservation):
@@ -387,6 +459,7 @@ class OperationJournal:
     def bind_native_manifest(self, principal: str, target: ApplicationTarget,
                              operation_id: str, manifest_digest: str) -> None:
         """Durably fix the published generation manifest before native activation."""
+        self._require_legacy_mutation()
         if not isinstance(manifest_digest, str) or not _DIGEST.fullmatch(manifest_digest):
             raise JournalError("invalid generation manifest digest")
         with self._connect() as db:
@@ -406,6 +479,7 @@ class OperationJournal:
     def record_native_receipt(self, principal: str, target: ApplicationTarget,
                               receipt: NativeActivationReceipt) -> None:
         """Persist owner evidence; an old operation with no receipt stays Unknown."""
+        self._require_legacy_mutation()
         if not isinstance(receipt, NativeActivationReceipt) or receipt.target != target:
             raise JournalError("native receipt target mismatch")
         with self._connect() as db:
@@ -434,6 +508,7 @@ class OperationJournal:
     def record_native_verification(self, principal: str, target: ApplicationTarget,
                                    operation_id: str, readback_evidence_ref: str) -> None:
         """Persist independent readback proof after adapter Match and before Confirmed."""
+        self._require_legacy_mutation()
         if not isinstance(readback_evidence_ref, str) or not readback_evidence_ref:
             raise JournalError("readback verification evidence required")
         with self._connect() as db:
@@ -463,6 +538,7 @@ class OperationJournal:
     def record_result(self, principal: str, target: ApplicationTarget,
                       operation_id: str, result: Confirmed | Unknown) -> OperationRecord:
         """Persist a caller-observed outcome; DB failure leaves prior Unknown."""
+        self._require_legacy_mutation()
         if not isinstance(result, (Confirmed, Unknown)) or result.operation_id != operation_id:
             raise JournalError("result identity mismatch")
         if isinstance(result, Confirmed) and result.runtime_generation != target.runtime_generation:

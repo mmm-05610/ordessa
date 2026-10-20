@@ -105,7 +105,7 @@
 
 **阶段三：切换后验证与回报**
 
-10. 在正式根按 `docs/baseline.md` 完整重跑：npm 侧（ci/typecheck/test/build）；Python 侧（venv + lockfile + editable 安装 + 四套件，`scripts/verify-clean.sh` 已版本化可直接以其门禁参数对账）；桥重建 sha256 比对。
+10. 在正式根按 `docs/baseline.md` 完整重跑：npm 侧（ci/typecheck/test/build）；Python 侧（venv + lockfile + editable 安装 + 四套件，`tooling/checks/verify-clean.sh` 已版本化可直接以其门禁参数对账）；桥重建 sha256 比对。
 11. 回报 `BASELINE_ESTABLISHED_WITH_KNOWN_ISSUES`（或未完成项）。worktree/服务腿退役 = **[USER GATE B]**；`runtime/` 等运行数据迁移 = **[USER GATE C]**。
 
 ## 4. 回滚步骤（任一步失败即停，逐步反向；全部为同文件系统 rename，无覆盖）

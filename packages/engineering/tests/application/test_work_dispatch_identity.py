@@ -233,6 +233,10 @@ class _DispatchOwner(_Owner):
 
     def dispatch_declared_work(self, *args, **kwargs):
         self.calls += 1
+        # This controlled owner attests only its fixed test recipe. Real
+        # method/package assembly is covered by test_work_package_dispatch_v2.
+        if args[6] != {'task': 'frozen'}:
+            raise ApplicationError('DISPATCH_WORK_INPUT_CHANGED')
         return self.view
 
 
@@ -354,7 +358,8 @@ def _view(key, binding, *, phase, result_ref=None, **overrides):
     value = {'identity': key, 'step_id': binding.step_id, 'attempt': binding.attempt,
              'phase': phase,
              'result_blob_ref': None if result_ref is None else asdict(result_ref),
-             'binding_digest': {'algorithm': binding.digest.algorithm, 'hex': binding.digest.hex}}
+             'binding_digest': {'algorithm': binding.digest.algorithm, 'hex': binding.digest.hex},
+             'params_assembly': 'VERIFIED_DECLARED_WORK_PACKAGE_METHOD_UNIT'}
     value.update(overrides)
     return value
 
@@ -395,10 +400,10 @@ def test_the_same_identity_and_content_read_back_consistently(tmp_path):
             assert result.engineering_completed is False and result.accepted is False
             assert result.value['binding'] == binding
             assert result.value['observation_ref'] == result_ref
-            # The caller's params have no trusted assembly to be checked
-            # against here, and the result says so instead of implying it.
+            # The explicitly controlled owner checked the fixed fixture recipe;
+            # this read-back test is not a production input-authority proof.
             assert result.value['params_assembly'] == (
-                'NOT_VERIFIED_AGAINST_TRUSTED_WORK_ASSEMBLY')
+                'VERIFIED_DECLARED_WORK_PACKAGE_METHOD_UNIT')
         assert first == second
         with factory.begin(SCOPE, 'read') as uow:
             assert uow.work_dispatch.get(identity, STEP, 1, SCOPE)['binding_bytes'] == raw

@@ -1,0 +1,90 @@
+{
+  "schema": "ordessa-release-installed/1",
+  "status": "PASS",
+  "artifactDirectory": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/current-cli-release-503b5889",
+  "wheels": [
+    {
+      "path": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/current-cli-release-503b5889/cli/ordessa_agent_tools-0.1.0a2-py3-none-any.whl",
+      "sha256": "10dd5cd36a21e70d90845bc0366e4d7452623b5eb80c9d3ee068bec4248146b2",
+      "recordVerified": true
+    },
+    {
+      "path": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/current-cli-release-503b5889/cli/ordessa_cli_runtime-0.1.0-py3-none-any.whl",
+      "sha256": "af762f4391226e3497af0a7fe55197a8bfcbbe13eb90ebb0bef9218ccb580a1d",
+      "recordVerified": true
+    },
+    {
+      "path": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/current-cli-release-503b5889/cli/ordessa_system_access_client-0.1.0-py3-none-any.whl",
+      "sha256": "81142608d87d8741cab5e036c6c1fba2613fae3a046ecefc20ad6f30146e37cd",
+      "recordVerified": true
+    }
+  ],
+  "checksumEntriesVerified": 13,
+  "installation": {
+    "site": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/release-installed-temp/test_installed_three_wheels_cu0/isolated/lib/python3.12/site-packages",
+    "packageFilesMatched": 23,
+    "distributions": {
+      "ordessa-agent-tools": "0.1.0a2",
+      "ordessa-cli-runtime": "0.1.0",
+      "ordessa-system-access-client": "0.1.0"
+    }
+  },
+  "venv": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/release-installed-temp/test_installed_three_wheels_cu0/isolated",
+  "entrypoint": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/release-installed-temp/test_installed_three_wheels_cu0/isolated/bin/ordessa-agent",
+  "entrypointSha256": "fd39a24e4e02033a9a60efab9377f578c38aa840ed4eb6d0013bc1504c8840d5",
+  "installCommand": [
+    "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/release-installed-temp/test_installed_three_wheels_cu0/isolated/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "--no-index",
+    "--no-deps",
+    "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/current-cli-release-503b5889/cli/ordessa_agent_tools-0.1.0a2-py3-none-any.whl",
+    "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/current-cli-release-503b5889/cli/ordessa_cli_runtime-0.1.0-py3-none-any.whl",
+    "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/current-cli-release-503b5889/cli/ordessa_system_access_client-0.1.0-py3-none-any.whl"
+  ],
+  "pipCheck": {
+    "exitCode": 0,
+    "stdout": "No broken requirements found."
+  },
+  "httpRequestCount": 18,
+  "operations": [
+    "profiles.capabilities",
+    "profiles.create",
+    "profiles.capabilities",
+    "profiles.read",
+    "profiles.capabilities",
+    "profiles.list",
+    "profiles.capabilities",
+    "profiles.preview",
+    "profiles.capabilities",
+    "profiles.rename",
+    "profiles.capabilities",
+    "profiles.rename",
+    "profiles.capabilities",
+    "profiles.rename",
+    "profiles.capabilities",
+    "profiles.archive",
+    "profiles.capabilities",
+    "profiles.restore"
+  ],
+  "sourceRebuild": false,
+  "runtimeSourceFallback": false,
+  "externalNetwork": false,
+  "models": false,
+  "qualification": "Existing release ZIPs were installed directly. Controlled test authority and loopback HTTP adapter exercise original SQLite Profile owner. This proves only the three-wheel CLI closure; Server/Engineering metadata conflicts remain.",
+  "acceptance": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "durationSeconds": 4.21,
+    "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/release-installed.log",
+    "logSha256": "6fae9338bb6fd97caba00cfa347c412d014ea0186fc729c9f9e33027960f567a",
+    "testFile": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/test_existing_release_installed.py",
+    "testFileSha256": "09ca196eda7e12eef42b8cfed36dda027038befb7fb064eb1e39b0923273193c",
+    "scope": "same original installed acceptance assertions; only wheel source changed from test rebuild to existing release, and byte/pip-check evidence appended"
+  },
+  "command": "/home/maoqh/projects/ordessa/worktree/packages-convergence-20261019/.venv-convergence/bin/python -I -S /tmp/ordessa-cli-release-agent-run.py test /home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/test_existing_release_installed.py --basetemp=/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/release-installed-temp",
+  "checksBeforeInstall": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-gates-v2/release-installed-precheck.json",
+  "previousFinalGatesUnmodified": true
+}

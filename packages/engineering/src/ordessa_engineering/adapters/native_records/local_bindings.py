@@ -55,7 +55,8 @@ class _LocalDispatchQueryFactory:
         if self._access.current_context() is not context:
             raise ApplicationError('ACCESS_AUTHORITY_UNAVAILABLE')
         last_denial = None
-        for operation in (EXECUTION_DISPATCH, IMPLEMENTATION_COMMANDS[0]):
+        for operation in (EXECUTION_DISPATCH, IMPLEMENTATION_COMMANDS[0],
+                          'engineering.submissions.record_report'):
             try:
                 self._access.require(context, operation)
                 break
@@ -194,7 +195,7 @@ def _validated_local_owner(unit_owner, access):
 
 
 def _build_local_dispatch_bindings(unit_owner, access, *, prompt_parameters,
-                                   query_factory=None):
+                                   query_factory=None, workspace_scope_guard=None):
     """Return the original live selection, source and receipt-query ports.
 
     ``prompt_parameters`` supplies the exact caller's native ACP parameters for
@@ -264,6 +265,24 @@ def _build_local_dispatch_bindings(unit_owner, access, *, prompt_parameters,
                                   prompt_digest_key, request_id='dispatch-source-read-' + uuid4().hex)
         return result
 
+    def work_binding_resolver(context, package, unit_ref, authorization, params):
+        context = query_factory._current(context)
+        if (not query_factory._same_scope(package.scope, context.scope)
+                or authorization.scope != context.scope
+                or authorization.package_ref != package.ref):
+            raise ApplicationError('DISPATCH_SELECTION_BINDING_INVALID')
+        value, _unit, snapshot = query_factory._original_unit(unit_ref)
+        fixed = _plain(params)
+        _reject_callbacks(fixed)
+        if (not isinstance(fixed, Mapping) or not snapshot.get('sessionId')
+                or fixed.get('sessionId') != snapshot['sessionId']):
+            raise ApplicationError('RECORDED_DISPATCH_SESSION_MISMATCH')
+        native = records.acp_prompt_input_digest(value, fixed)
+        if type(native) is not str or not native.startswith('sha256:') or len(native) != 71:
+            raise ApplicationError('RECORDED_DISPATCH_INPUT_DIGEST_INVALID')
+        return query_factory._read_invocation(context, value, context.request_id,
+            Digest('sha256', native[7:]), request_id='dispatch-source-read-' + uuid4().hex)
+
     @contextmanager
     def guard_dispatch_input(context, package, unit_ref, recipe):
         query_factory._current(context)
@@ -286,10 +305,61 @@ def _build_local_dispatch_bindings(unit_owner, access, *, prompt_parameters,
             dispatch_input.reset(token)
 
     selection = OriginalDispatchSelection(services,
-        unit_owner.permission.profile_revision, binding_resolver=binding_resolver)
+        unit_owner.permission.profile_revision, binding_resolver=binding_resolver,
+        work_binding_resolver=work_binding_resolver,
+        workspace_scope_guard=workspace_scope_guard)
     sources = NativeDispatchSources(services, binding_resolver,
                                    dispatch_input_guard=guard_dispatch_input)
     return selection, sources, query_factory
+
+
+def _historical_query_request(binding, records, *, environment_namespace, principal_scope):
+    """Derive the exact historical read request from the frozen binding alone.
+
+    The request identity comes from the stored binding bytes and the original
+    records' own query digest — never from a live Unit, a caller-supplied id or
+    the execution fence. This is a pure derivation: it authorizes nothing.
+    """
+    if (type(binding) is not DispatchBinding or binding.binding_version != 2
+            or type(binding.subject) is not dict
+            or binding.subject.get('subject_kind') != 'frozen_package'):
+        raise ApplicationError('CONTINUATION_QUERY_BINDING_INVALID')
+    try:
+        unit = decode_json(binding.unit_ref_bytes)
+    except Exception as exc:
+        raise ApplicationError('CONTINUATION_QUERY_BINDING_INVALID') from exc
+    expected = 'sha256:' + binding.prompt_input_digest.hex
+    digest = records.acp_turn_query_digest(unit, binding.execution_operation_ref, expected)
+    if type(digest) is not str or digest != binding.expected_query_digest:
+        raise ApplicationError('CONTINUATION_QUERY_BINDING_INVALID')
+    key = hashlib.sha256(canonical_bytes({
+        'unit': unit, 'operation': binding.execution_operation_ref,
+        'prompt': expected, 'binding_digest': binding.digest.hex})).hexdigest()
+    return unit, RequestKey(environment_namespace, principal_scope,
+                            'history-query-' + key[:48]), digest
+
+
+def build_historical_dispatch_query_factory(unit_owner, access):
+    """Authorized historical receipt reads for a frozen continuation origin.
+
+    The origin Unit is normally closed and may be fenced as historical. This
+    factory therefore derives the read request from the frozen binding and issues
+    it through the original owner's ``authorize_acp_turn_query``; it never calls
+    ``manager.get`` or ``resolve_unit_reference``, and it adds no authority.
+    """
+    records, _services = _validated_local_owner(unit_owner, access)
+
+    def query(binding):
+        unit, request, _query_digest = _historical_query_request(
+            binding, records,
+            environment_namespace=unit_owner.admission.environment_namespace,
+            principal_scope=unit_owner.permission.principal_scope)
+        return unit_owner.authorize_acp_turn_query(
+            unit_owner.authorization(), request, unit,
+            binding.execution_operation_ref,
+            expected_prompt_input_digest='sha256:' + binding.prompt_input_digest.hex)
+
+    return query
 
 
 def build_local_dispatch_query_factory(unit_owner, access):
@@ -304,11 +374,12 @@ def build_local_dispatch_query_factory(unit_owner, access):
 
 
 def build_local_dispatch_bindings(unit_owner, access, *, prompt_parameters,
-                                  query_factory=None):
+                                  query_factory=None, workspace_scope_guard=None):
     """Build dispatch ports and optionally reuse the previously captured query."""
     return _build_local_dispatch_bindings(
         unit_owner, access, prompt_parameters=prompt_parameters,
-        query_factory=query_factory)
+        query_factory=query_factory, workspace_scope_guard=workspace_scope_guard)
 
 
-__all__ = ['build_local_dispatch_bindings', 'build_local_dispatch_query_factory']
+__all__ = ['build_local_dispatch_bindings', 'build_local_dispatch_query_factory',
+           'build_historical_dispatch_query_factory']

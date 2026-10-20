@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "candidate_release": "2.3.0",
+  "status": "independent_frozen_candidate_nominal_mapping_approved_quality_and_runtime_pending",
+  "baseline": "methods/incremental-engineering/candidates/2.2.0",
+  "baseline_snapshot_sha256": "fef3b88ea4db0336ab9a081960c092ada7b0550d1978e0be85fbf8680f0a39d4",
+  "decision_capture": {
+    "received_date": "2026-10-12",
+    "source_thread_id": "01a118bc-dd26-7553-b5b6-cf5137c070d6",
+    "source_kind": "explicit_parent_approval_in_delegated_user_instruction",
+    "available_message_refs": [],
+    "source_limitations": "Parent approval text is available in this delegated user message; no original platform message ID or independent verification was provided.",
+    "approved_nominal_map": {"supported":"satisfied", "contradicted":"violated", "insufficient":"insufficient"},
+    "approved_constraints": [
+      "Create a new independent candidate, preserving immutable 2.1/2.2",
+      "Keep original question and options",
+      "Tie/missing/truncation cannot become pass",
+      "Nominal conversion does not exempt matching validated evaluation",
+      "Missing evaluation remains manual/indeterminate, cannot generate pass or Grant",
+      "No zero threshold or fabricated calibration"
+    ]
+  },
+  "contract_capture": {
+    "source_thread_id": "01a1292f-d25b-7765-b7bb-1537beda50b7",
+    "source_kind": "original_engineering_rule_owner_frozen_declaration_handoff",
+    "available_message_refs": [],
+    "declaration_location": "claim_support.checks[0].bindings",
+    "declaration_contracts": ["ordessa.nominal-choice-status/1", "ordessa.review-quality-admission/1"],
+    "declaration_fixture": "tests/declared-contract.json",
+    "resolver_name": "nominal_criterion_answer",
+    "resolver_return_type": "NominalCriterionResolution",
+    "resolver_implementation_verified_by_method_owner": false,
+    "quality_owner_available": false,
+    "missing_quality_reason": "MODEL_EVALUATION_UNAVAILABLE"
+  },
+  "owner_implementation_choice": {"method_release":"2.3.0", "source_standard_revision":"2.3.0", "reason":"Separate immutable candidate from 2.2.0 per approval"},
+  "original_design_sources": [
+    "docs/implementation/nightly/design-source/ordessa-design/DESIGN.md",
+    "docs/implementation/nightly/evidence/engineering-convergence-20261011/v1-authorization/nominal-choice-status-contract-candidate.md",
+    "methods/incremental-engineering/docs/proposals/source-choice-status-v1/README.md"
+  ],
+  "quality_admission": "matching_validated_evaluation_required_not_exempted",
+  "thresholds_selected": false,
+  "calibration_profile_fabricated": false,
+  "historical_synthetic_reclassified_formal": false,
+  "production_publication": "not_run",
+  "real_jev_quality": "not_validated",
+  "real_pi_end_to_end": "not_validated",
+  "final_acceptance": "not_complete"
+}

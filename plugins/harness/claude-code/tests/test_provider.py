@@ -26,10 +26,11 @@ def provider(**kwargs):
 
 
 def definition_declaration(runtime):
-    """Test-only declaration assembled from runtime descriptor fields.
+    """The frozen declaration carrying exactly this provider's registry identity.
 
-    This checks fixture field agreement, without asserting a production
-    declaration/runtime link or the retired self-contribution contract.
+    The retired provider self-contribution (``contributions().agent_runtime_providers``)
+    is gone: a provider is published through the server plugin's frozen
+    ``HarnessDefinitionDeclaration`` instead.
     """
     def observer(installation_ref):
         return HarnessInstallationObservation("unknown")
@@ -38,9 +39,10 @@ def definition_declaration(runtime):
         runtime.descriptor.implementation_digest, CLAUDE_PROTOCOL_ID, CLAUDE_ADAPTER_VERSION), observer)
 
 
-def test_runtime_descriptor_matches_manual_declaration_identity():
+def test_contribution_is_same_core_registry_contract_no_author_identity():
     runtime = provider()
-    # Check the public runtime type and this manually assembled fixture identity.
+    # The provider is the same core runtime-registry contract, and the frozen
+    # declaration is the registration vehicle that carries exactly its identity.
     assert isinstance(runtime, RuntimeProvider)
     declaration = definition_declaration(runtime)
     assert type(declaration) is HarnessDefinitionDeclaration

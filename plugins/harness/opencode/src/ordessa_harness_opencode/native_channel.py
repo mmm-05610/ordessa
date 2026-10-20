@@ -151,15 +151,15 @@ def compile_config(materials: Mapping[str, Any]) -> dict:
 def capability_matrix() -> dict[str, dict]:
     """declared/implemented/observed; nothing observed (no local artifact)."""
     return {
-        "prompt": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "cancel": {"declared": "yes", "implemented": "yes", "observed": "no"},
+        "prompt": {"declared": "yes", "implemented": "unsupported(native-http-owner-missing)", "observed": "no"},
+        "cancel": {"declared": "yes", "implemented": "unsupported(native-http-owner-missing)", "observed": "no"},
         "resume": {"declared": "no", "implemented": "no", "observed": "no"},
-        "approvalCallback": {"declared": "yes", "implemented": "reply", "observed": "no"},
+        "approvalCallback": {"declared": "yes", "implemented": "unsupported(native-http-owner-missing)", "observed": "no"},
         "steer": {"declared": "no", "implemented": "no", "observed": "no"},
-        "modelConfig": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "sessionPersist": {"declared": "yes", "implemented": "route-only", "observed": "no"},
-        "unknownExtensions": {"declared": "yes", "implemented": "yes", "observed": "no"},
+        "modelConfig": {"declared": "yes", "implemented": "unsupported(native-http-owner-missing)", "observed": "no"},
+        "sessionPersist": {"declared": "yes", "implemented": "unsupported(native-http-owner-missing)", "observed": "no"},
+        "unknownExtensions": {"declared": "yes", "implemented": "unsupported(native-http-owner-missing)", "observed": "no"},
         "transportFence": {"declared": "no", "implemented": "no", "observed": "no"},
-        "requestReconciliation": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "sseDisconnectSemantics": {"declared": "unknown", "implemented": "not-completion", "observed": "no"},
+        "requestReconciliation": {"declared": "yes", "implemented": "unsupported(native-http-owner-missing)", "observed": "no"},
+        "sseDisconnectSemantics": {"declared": "unknown", "implemented": "unsupported(native-http-owner-missing)", "observed": "no"},
     }

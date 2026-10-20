@@ -62,7 +62,7 @@ def test_actual_factory_and_sdk_binding_drift_refuses_before_reserve(change,tmp_
             with pytest.raises(EffectWriteRefused): unit.require_effect_write_guard(factory)
             lease=unit.lease_port.grant(ref)
             with pytest.raises(EffectWriteRefused):
-                unit.prompt_recorded(ref,lease,operation_ref='preflight-refused',prompt=[])
+                unit.prompt(ref,lease,operation_ref='preflight-refused',prompt=[])
             assert turn_count(j)==0
         assert unit.require_effect_write_guard(factory) is None
         assert j.events.count('spawn')==1

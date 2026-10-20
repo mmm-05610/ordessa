@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "candidate_release": "2.4.0",
+  "status": "independent_candidate_assets_verified_consumer_and_real_reply_pending",
+  "baseline": "methods/incremental-engineering/candidates/2.3.0",
+  "baseline_snapshot_sha256": "5e1f1312e06446d83cd7813547fc99db498d40969002729b7a99249e66cd60f9",
+  "decision_capture": {
+    "received_date": "2026-10-12",
+    "source_thread_id": "01a118bc-dd26-7553-b5b6-cf5137c070d6",
+    "source_kind": "explicit_parent_approval_in_delegated_user_instruction",
+    "available_message_refs": [],
+    "source_limitations": "Parent approval is available as delegated instruction; original platform message ID not supplied. No actual human review reply was supplied or fabricated.",
+    "approved_constraints": [
+      "Independent human semantic review may use real agent-attested Q&A under exact Plan/full CheckKeys/version/policy/current role source constraints",
+      "satisfied maps to pass, violated/insufficient maps to fail, unknown maps to indeterminate",
+      "Explicit complete-checklist whole-plan answer can be faithfully expanded only after complete list was shown",
+      "Continue implementation does not imply review approval",
+      "Review is separate from implementation Grant",
+      "Mechanical byte/version errors cannot be overridden",
+      "Automatic JEV remains manual without validated matching evaluation",
+      "Preserve old 2.1/2.2/2.3 and real evidence"
+    ]
+  },
+  "contract_capture": {
+    "source_thread_id": "01a1292f-d25b-7765-b7bb-1537beda50b7",
+    "source_kind": "original_engineering_owner_frozen_field_contract",
+    "contracts": ["ordessa.human-review-admission/1", "ordessa.human-review-policy/1"],
+    "criterion_scope": ["claim_coverage", "claim_support"],
+    "source_integrity_override": false,
+    "quality_criteria_added": [],
+    "reference": "consumer-contract.md",
+    "consumer_name": "EngineeringHumanReviewAdmission",
+    "consumer_implementation_verified": false
+  },
+  "policy_selection_authority": "product_composition_and_configured_engineering_admission",
+  "policy_actual_product_selection": "not_verified",
+  "actual_human_reply_recorded": false,
+  "ReviewRecord_created": false,
+  "Grant_created": false,
+  "automatic_jev_quality_admission": "unchanged",
+  "models_called": 0,
+  "calibration_data_created": false,
+  "historical_synthetic_reclassified_formal": false,
+  "final_acceptance": "not_complete"
+}

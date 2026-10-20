@@ -1,0 +1,16 @@
+{
+  "name": "@ordessa/status-board",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles/board.css"
+  },
+  "dependencies": {
+    "@ordessa/ui": "0.1.0",
+    "@ordessa/system-access-client": "0.1.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}

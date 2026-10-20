@@ -1,123 +1,52 @@
-# Independent DeepSeek dsh AgentUnit provider
+# ordessa-harness-dsh
 
-Distribution `ordessa-harness-dsh`, import `ordessa_harness_dsh`,
-provider/family ID `dsh` (identical to the `harnesses.toml`
-driver/harness_type, profile id and launch id — no rename anywhere). Import
-has no registration or process effects and no dependency on sibling
-providers, old Harness internals, Server, or Agent Tools. Authority:
-`docs/implementation/agent-tools/dsh-package-freeze-v1.md` (frozen 2026-10-07).
+Actual runtime replacement: `DshHarnessProvider` and `factory` are exposed via
+`ordessa.harness_providers`. Only `ordessa_execution_agents.sdk` is an Ordessa
+runtime import. All original Unit RuntimeProvider, projection, lease/grant,
+termination ledger, direct ProcessChannel/client and server-plugin adapters are
+physically retired. No old class aliases, fallback or second instance owner.
 
-## Channel
+Profile validation fixes the exact Harness definition ref. Prepare is pure;
+native argv is approved command prefix plus
+`--profile acp`. Context must supply the standard approved work/home/XDG/tmp roots
+and distinct `dsh-home` root, explicit PATH/HOME/XDG/TMPDIR/DSH_HOME, and no
+credential-shaped environment keys or CredentialRefs. Native home cannot alias
+HOME. Physical directory/source verification belongs to external preparation and
+current lifecycle authority, never plugin `stat`, login lookup or ambient env.
 
-Chosen native channel: **ACP stdio subprocess**, `dsh --profile acp` — the
-same subprocess channel shape as codex/pi. The frozen argv plan is
-`dsh_acp_argv(executable) -> (executable, "--profile", "acp")`. The wire is
-ACP JSON-RPC 2.0 over stdio (one JSON object per LF line); every frame THIS
-client emits carries `jsonrpc: "2.0"`. The provider label for this channel is
-`dsh-acp/1` (`PROTOCOL` in `client.py`) — this package's own wire label, not a
-claim of upstream version negotiation.
+Async open_session delegates exactly to original-owner
+`ManagedProcess.open_acp_session` and returns that original session observation.
+No invocation, raw fd/writer, grant, resource or Use enters this provider.
+Only fresh bootstrap is supported. Existing native initialization facts included
+an `initialized` notification and non-negotiating peers; current original-owner
+integer-v1 two-phase bootstrap has NOT been validated against this real brand.
+No claim of real session, model call, permission callback or production acceptance
+is made by pure provider tests.
 
-`DshRuntimeProvider` consumes host-supplied definition ref/digest and explicit
-original UnitRecords plus trusted projection, InvocationVerifier, native
-channel factory, and authority lease ports. It publishes an
-`agent-runtime/2` descriptor for the sole CoreRegistry; it has no provider
-registry, daemon, database, or actual configuration cache. The host remains
-activation/owner authority.
+Pinned model-configuration facts remain intentionally empty: dialect absent,
+native target None, version range empty. Channel pins do not create model facts.
+`compile_config` accepts only an empty map and otherwise refuses
+MODEL_CONFIGURATION_UNAVAILABLE. No old AdapterContext/intent/target runtime is
+retained. Model readback, custom configuration, credentials, authenticate,
+resume/load, reverse permission replies, cancellation, list/close and recovery
+remain unavailable unless implemented by the original Agent owner explicitly.
+DSH management/session quota activity is separate and was not accessed at all.
 
-## Version pin
+Packaged native ACP artifacts, registration bytes and model/dialect facts remain
+explicit offline inputs, not active registration/readiness or runtime fallbacks.
+Pure production/settings/YAML rendering is retained for explicit offline callers; its historical capability-key tuple is document vocabulary, not a live registry.
 
-Pinned **npm `@deepseek-ai/dsh` `0.1.5-rc.1`** — the locked repository value:
-`tooling/npm/package-lock.json` resolves
-`https://registry.npmmirror.com/@deepseek-ai/dsh/-/dsh-0.1.5-rc.1.tgz` with
-integrity
-`sha512-rmNmzQCg3oIc1z8xH7izRSOuy1TNzq+/NILyfM+7e8DKOyV+yBtg47WEsqR2SiIe1ATec3L/rUa1YhIcfQ2XEg==`.
-The npm **latest `0.2.0-rc.2` is deliberately NOT chased**: its ACP face has
-zero in-repo evidence. The `harnesses.toml` `version` field stays untouched
-this round (static registration, comment already declares its nature). The
-PyPI SDK `deepseek-harness-sdk==0.1.5rc1` is an INDEPENDENT version track and
-is NOT a dependency of this package (no `sdk` extra); see `REUSE.md`.
-
-## Descriptor and digest rules (zero forgery)
-
-`RuntimeProviderDescriptor("dsh", RUNTIME_PROVIDER_VERSION, definition_ref,
-implementation_digest, tuple(methods))`. `implementation_digest` is a
-**required keyword-only parameter with no default**: this package never
-generates or guesses it; an empty/non-string digest is refused outright.
-Production digests are injected by the deployment fingerprint gate. **Until
-that gate is backfilled, the dsh provider must not appear in any production
-assembly** (freeze §3/§5). Test digests (`sha256:` + `a`*64) are explicit
-non-real fixtures.
-
-`supported_methods` starts with the four discovery methods and grows only with
-explicit ports (same gating as codex). The four configuration methods
-(`describe_configuration`, `inspect_configuration`, `apply_configuration`,
-`query_change`) are **absent in this version** — no configuration evidence
-port is pinned for dsh in this tree; calling any of them raises a typed
-refusal.
-
-## Recovery: permanently absent
-
-dsh rejects `session/load`. Therefore:
-
-- the client has **no load method, no load constant and no load fallback**;
-- `describe_definition` reports `"recovery": "unsupported"`;
-- `provider.recover(...)` is permanently typed-refused, with the reason
-  naming the bridge continuation contract `agent-box.dsh-continuation@1`;
-- `session/resume` exists as a CLIENT frame only; it never enters provider
-  supported methods, and resume is never a recovery fallback (dsh resume does
-  not replay history — that fact belongs to the bridge continuation gate).
-
-## Fences
-
-- **No retry, ever** (G11): a lost receipt keeps its original id; the outcome
-  stays unknown; a late receipt is recovered read-only (`recover_request`);
-  nothing is ever resent automatically.
-- **Receipt ≠ completion**: `session/prompt` responses are accepted as turn
-  outcomes only when structurally terminal (`end_turn` / `error` /
-  `cancelled` — the vocabulary pinned by this repository's ACP bridge
-  evidence). `error`/`cancelled` raise typed `PromptTurnFailed` with the raw
-  response kept; malformed/non-terminal/unknown responses stay `LostReceipt`
-  (unknown), never a success.
-- **Unknown preserved** (G4): unknown methods and events surface verbatim in
-  `events()`.
-- **Unknown keeps its hold**: provider unknown outcomes retain the original
-  ticket/hold; a concurrently confirmed original binding is never downgraded.
-- **Zero real process in tests**: package tests launch a controlled fake dsh
-  peer (a generated Python script standing in for `dsh --profile acp`) through
-  the REAL factory (real isolation, managed writer fence, real reap path).
-  The real dsh binary is never executed by this package (rules 6/9);
-  real-process verification is registered NOT_RUN in
-  `tests/runtime-process-evidence.md`.
-
-## Status: PARTIAL
-
-This is a partial provider implementation. Verified here (C level, controlled
-fixtures/fake peer): descriptor shape and zero-forge digest rule, ACP framing
-and correlation, no-retry/unknown/receipt fences, session/load absence in all
-three mechanisms, isolated launch plan, lease cut, termination evidence logic.
-NOT verified / NOT_RUN: real dsh `0.1.5-rc.1` process behaviour (initialize /
-`session/new` / `session/load` rejection / resume-no-replay against the real
-binary), production assembly inclusion (blocked on the fingerprint gate),
-`harnesses.toml` registration round, deployment templates, SDK extra. Real
-production evidence/continuation ports remain the deployment's responsibility;
-no native atomic configuration guarantee is asserted anywhere.
-
-## Optional Server host binding
-
-`ordessa_harness_dsh.server_plugin.DshServerPlugin(provider_factory)` is an
-explicit optional binding to the existing `pacthold.contributions` point. The
-factory receives the host's unique `EnvironmentId` and returns this package's
-provider with matching definition namespace and explicit implementation
-digest/ports. The host supplies owner activation; the wrapper does not
-install, activate, issue authority, create a store or launch a native
-process. Owner ID remains `dsh`. Server API imports are lazy and the
-dependency is in the `server` extra; base provider imports and wheel
-conversion need no Server API.
-
-## Upgrade revalidation
-
-CLI bumps and any future SDK adoption follow the frozen six-item set in
-`REUSE.md` (lock hash, fake-endpoint full-chain gate rerun including
-load-still-rejected/resume-still-no-replay, toml update per gate evidence,
-capability_declarations sync, settings re-verification, evidence registration).
-`observed` may only be backfilled from gate evidence — never inferred.
+All original test files and assertions remain untouched. Current source counts
+(non-parametrized definitions, not passing case counts):
+client 26, prepared client 23, Unit provider 27,
+runtime process 21, termination 14, server plugin 9,
+configuration 10, model configuration 16, distribution 1
+, production template 15.
+They target retired APIs and require migration to original Agent/endpoint owners;
+the historical assertion inventory is preserved, with no skip/delete/fake-green.
+In particular frame correlation, no retry, original source/authority, receipt vs
+completion, unknown handling, caller-decided permission and termination proof
+must survive that migration. New `tests/test_sdk_provider.py` covers only pure
+SDK pins/plans/refusals/import boundaries and restricted bootstrap delegation.
+No tests/install/build, model/network/management call or Git write was run by
+this migration slice. Full brand migration acceptance remains incomplete.

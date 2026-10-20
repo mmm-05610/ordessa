@@ -13,7 +13,7 @@ from dataclasses import replace
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import IdentityMismatchError
+from ordessa_units.errors import UnitIdentityMismatch
 from ordessa_units.configuration.contracts import (
     ApplicationPolicy, ConfigurationChangeRequest, ConfigurationContractError,
     ConfigurationRevisionConflict,
@@ -49,7 +49,7 @@ def _profile(parts, declarations=(DECLARATION,), name='profile-applied'):
 def _base_ref(parts):
     """The Node's frozen preparation manifest is the update's base source."""
     import json
-    from ordessa_execution_api.environment.operations import safe_json
+    from ordessa_infrastructure.encoding.immutable_json import safe_json
     coordinator, node = parts[3], parts[4]
     return decode_revision_ref(json.loads(safe_json(coordinator._nodes.read(node)['lineage']['profileSnapshotRef'])))
 
@@ -71,7 +71,7 @@ def test_same_request_with_different_content_conflicts(setup):
                               'native-1', ApplicationPolicy(), base_profile_ref=_base_ref(setup))
     _, other = _profile(setup, declarations=({**DECLARATION, 'payload': {'modelId': 'other'}},),
                         name='profile-other')
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         coordinator.apply_profile(key, node, other.current_revision,
                                   'native-1', ApplicationPolicy(), base_profile_ref=_base_ref(setup))
     assert state['calls'] == 1  # the conflicting request never dispatched again
@@ -103,7 +103,7 @@ def test_foreign_or_malformed_profile_ref_is_refused(setup):
         coordinator.apply_profile(RequestKey('env', 'principal', 'apply-profile-foreign'),
             node, ProfileRevisionRef('foreign-environment', 'profile', 1, 'sha256:' + 'a' * 64),
             'native-1', ApplicationPolicy(), base_profile_ref=_base_ref(setup))
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         coordinator.apply_profile(RequestKey('env', 'principal', 'apply-profile-shape'),
             node, {'profileId': 'not-a-profile-ref'}, 'native-1', ApplicationPolicy(), base_profile_ref=_base_ref(setup))
     assert state['calls'] == 0

@@ -13,9 +13,10 @@ import pytest
 from test_sessionless_input import first_input, node_fixture, reserve
 from agent_tools_fixtures.node_publication import source
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import GuaranteeUnavailableError, IdentityMismatchError, UnknownResultError
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown
 from ordessa_infrastructure.database.records import DomainRevisionConflict
-from ordessa_execution_api.environment.operations import UsageMutation, OperationRevisionConflict, operation_holder, node_holder, safe_json
+from ordessa_units.definitions.operations import UsageMutation, OperationRevisionConflict, operation_holder, node_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.channels.reservations import (ManagedInputReservations, FirstInputObservation, NativeInputState,
                                   FIRST_SESSION_ATTEMPTS, FIRST_INPUT_RESULT_VERSION)
 from ordessa_units.admission.invocation import InvocationAuthorityRefused
@@ -103,7 +104,7 @@ def test_concluded_crash_retains_hold_and_cold_read_publishes_without_claim(publ
     with pytest.raises(RuntimeError): inputs.reconcile_first_input(op.request, p[8])
     step = p[0].read_operation_step(op.request, 'native-input')
     assert step.outcome == 'concluded' and marker(p)['value']['state'] == 'held'
-    with pytest.raises(UnknownResultError): reserve(p, key='later', draft='later')
+    with pytest.raises(UnitOperationUnknown): reserve(p, key='later', draft='later')
     monkeypatch.setattr(p[0], 'publish_operation', publish)
     cold = ManagedInputReservations(p[1], p[5]._nodes, None, None, owner,
                                     invocation_issuer=p[8])
@@ -139,7 +140,7 @@ def test_missing_or_wrong_dual_facts_do_not_conclude_or_release(publication, dam
         elif damage == 'wrong-holder': owner.reply = replace(reply, usages=(replace(usage, holder_ref=node_holder('env', 'node', 1)),))
         else: owner.reply = replace(reply, usages=reply.usages * 2)
     before = p[0].read_operation_step(op.request, 'native-input')
-    with pytest.raises((GuaranteeUnavailableError, IdentityMismatchError, UnknownResultError)):
+    with pytest.raises((UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown)):
         inputs.reconcile_first_input(op.request, p[8])
     assert p[0].read_operation_step(op.request, 'native-input') == before
     assert marker(p)['value']['state'] == 'held' and len(usages(p)) == 1
@@ -159,7 +160,7 @@ def test_missing_explicit_ports_refuse_without_observing(publication, resource, 
         other = SqliteStorePort(tmp_path / 'different.sqlite')
         issuer = InvocationIssuer(other, p[6], p[7], clock=lambda: 50)
     try:
-        with pytest.raises(GuaranteeUnavailableError): inputs.reconcile_first_input(op.request, issuer)
+        with pytest.raises(UnitGuaranteeUnavailable): inputs.reconcile_first_input(op.request, issuer)
         assert owner.calls == 0 and marker(p)['value']['state'] == 'held'
     finally:
         if other is not None: other.close()
@@ -200,7 +201,7 @@ def test_published_first_input_cannot_be_reopened_or_used_for_another_session(pu
         later_session(p, owner)
         p[4].state = replace(p[4].state, **({'session_ref': source(p[4].state.provider_ref, 'another-session')}
                                          if change == 'session' else {'source_revision': 3}))
-    with pytest.raises(GuaranteeUnavailableError): reserve(p, key='second', draft='second')
+    with pytest.raises(UnitGuaranteeUnavailable): reserve(p, key='second', draft='second')
     assert p[0].read_operation(RequestKey('env', 'principal', 'second')) is None
 
 
@@ -211,7 +212,7 @@ def test_forged_resolved_marker_is_not_publication(publication):
     p[0]._conn.execute('UPDATE env_domain_records SET revision=2,payload=? WHERE namespace=?',
                        (safe_json(value), FIRST_SESSION_ATTEMPTS))
     later_session(p, owner)
-    with pytest.raises(GuaranteeUnavailableError): reserve(p, key='second', draft='second')
+    with pytest.raises(UnitGuaranteeUnavailable): reserve(p, key='second', draft='second')
     assert p[0].read_operation(op.request).status == 'unknown'
 
 
@@ -225,7 +226,7 @@ def test_publication_conflict_rolls_back_marker_result_and_usage(publication, mo
         else: transfers = ()
         return original(request, digest, revision, required, writes, transfers, result)
     monkeypatch.setattr(p[0], 'publish_operation', conflict)
-    with pytest.raises((DomainRevisionConflict, OperationRevisionConflict, IdentityMismatchError)):
+    with pytest.raises((DomainRevisionConflict, OperationRevisionConflict, UnitIdentityMismatch)):
         inputs.reconcile_first_input(op.request, p[8])
     assert p[0].read_operation_step(op.request, 'native-input').outcome == 'concluded'
     assert p[0].read_operation(op.request).status == 'running' and p[0].read_operation(op.request).result is None
@@ -245,18 +246,18 @@ def test_concluded_or_published_recovery_cannot_refresh_original_receipt(publica
     monkeypatch.setattr(p[0], 'publish_operation', original)
     reply = owner.reply
     owner.reply = replace(reply, effect_evidence_ref=source(reply.identity['providerRef'], 'different-receipt'))
-    with pytest.raises(IdentityMismatchError): inputs.reconcile_first_input(op.request, p[8])
+    with pytest.raises(UnitIdentityMismatch): inputs.reconcile_first_input(op.request, p[8])
     assert p[0].read_operation_step(op.request, 'native-input') == before and marker(p)['value']['state'] == 'held'
     owner.reply = reply
     published = inputs.reconcile_first_input(op.request, p[8])
     owner.reply = replace(reply, usages=())
-    with pytest.raises(IdentityMismatchError): inputs.reconcile_first_input(op.request, p[8])
+    with pytest.raises(UnitIdentityMismatch): inputs.reconcile_first_input(op.request, p[8])
     assert p[0].read_operation(op.request) == published
 
 
 @pytest.mark.parametrize('window', ['owner', 'concluded'])
 def test_core_policy_revocation_rechecked_before_conclusion_and_publication(publication, monkeypatch, window):
-    from ordessa_execution_api.environment import AdmissionRefusedError
+    from ordessa_units.errors import UnitAdmissionRefused
     p, op, owner, inputs = publication
     policy = p[1]._policy
     if window == 'owner': owner.after = lambda: setattr(policy, 'allowed', False)
@@ -267,7 +268,7 @@ def test_core_policy_revocation_rechecked_before_conclusion_and_publication(publ
             policy.allowed = False
             return result
         monkeypatch.setattr(p[0], 'record_operation_step', record)
-    with pytest.raises(AdmissionRefusedError): inputs.reconcile_first_input(op.request, p[8])
+    with pytest.raises(UnitAdmissionRefused): inputs.reconcile_first_input(op.request, p[8])
     assert marker(p)['value']['state'] == 'held' and p[0].read_operation(op.request).result is None
     assert p[0].read_operation_step(op.request, 'native-input').outcome == ('unknown' if window == 'owner' else 'concluded')
 
@@ -295,7 +296,7 @@ def test_unaccounted_unknown_usage_prevents_publication_without_releasing_any_ho
     step = p[0].read_operation_step(op.request, 'native-input')
     p[0].record_operation_step(op.request, op.digest, 'native-input', op.digest, step.revision, 'unknown',
                               {'evidenceRef': source(owner.reply.identity['providerRef'], 'unknown-extra')}, usages=(extra,))
-    with pytest.raises(IdentityMismatchError): inputs.reconcile_first_input(op.request, p[8])
+    with pytest.raises(UnitIdentityMismatch): inputs.reconcile_first_input(op.request, p[8])
     assert marker(p)['value']['state'] == 'held' and p[0].read_operation(op.request).result is None
     assert all(json.loads(u['holder_ref'])['kind'] == 'operation' for u in usages(p) if u['usage_id'] != 'resource')
     assert next(u for u in usages(p) if u['usage_id'] == extra.usage_id)['state'] == 'unknown'
@@ -310,7 +311,7 @@ def test_missing_usage_reply_can_be_completed_by_original_read_only_recovery(pub
                               {'evidenceRef': source(owner.reply.identity['providerRef'], 'unknown-extra')}, usages=(extra,))
     before = p[0].read_operation_step(op.request, 'native-input')
     before_usages = usages(p)
-    with pytest.raises(IdentityMismatchError): inputs.reconcile_first_input(op.request, p[8])
+    with pytest.raises(UnitIdentityMismatch): inputs.reconcile_first_input(op.request, p[8])
     assert p[0].read_operation_step(op.request, 'native-input') == before and usages(p) == before_usages
     original_extra = replace(extra, expected_revision=1, expected_holder_ref=extra.holder_ref, state='active')
     owner.reply = replace(owner.reply, usages=owner.reply.usages + (original_extra,))
@@ -327,7 +328,7 @@ def test_published_operation_with_held_marker_is_damage_not_recoverable_publicat
     value['state'] = 'held'
     p[0]._conn.execute('UPDATE env_domain_records SET revision=1,payload=? WHERE namespace=?',
                        (safe_json(value), FIRST_SESSION_ATTEMPTS))
-    with pytest.raises(GuaranteeUnavailableError): inputs.reconcile_first_input(op.request, p[8])
+    with pytest.raises(UnitGuaranteeUnavailable): inputs.reconcile_first_input(op.request, p[8])
     assert marker(p)['value']['state'] == 'held'
 
 
@@ -357,14 +358,14 @@ def test_session_request_cannot_be_reinterpreted_as_first_input(publication):
     inputs.reconcile_first_input(op.request, p[8])
     later_session(p, owner)
     session_op = reserve(p, key='session-request', draft='session-draft')
-    with pytest.raises(GuaranteeUnavailableError): inputs.reconcile_first_input(session_op.request, p[8])
+    with pytest.raises(UnitGuaranteeUnavailable): inputs.reconcile_first_input(session_op.request, p[8])
     assert p[0].read_operation_step(session_op.request, 'native-input') is None
 
 
 def test_ack_shape_is_not_known_dual_fact(publication):
     p, op, owner, inputs = publication
     owner.reply = {'accepted': True}
-    with pytest.raises(UnknownResultError): inputs.reconcile_first_input(op.request, p[8])
+    with pytest.raises(UnitOperationUnknown): inputs.reconcile_first_input(op.request, p[8])
     assert p[0].read_operation_step(op.request, 'native-input').outcome == 'unknown'
     assert first_marker_state(p) == 'held'
 
@@ -387,7 +388,7 @@ def test_existing_active_usage_omission_keeps_step_and_can_recover(publication):
     p[0].record_operation_step(op.request, op.digest, 'native-input', op.digest, step.revision, 'unknown',
                               {'evidenceRef': source(owner.reply.identity['providerRef'], 'active-held-extra')}, usages=(extra,))
     before_step, before_usages = p[0].read_operation_step(op.request, 'native-input'), usages(p)
-    with pytest.raises(IdentityMismatchError): inputs.reconcile_first_input(op.request, p[8])
+    with pytest.raises(UnitIdentityMismatch): inputs.reconcile_first_input(op.request, p[8])
     assert p[0].read_operation_step(op.request, 'native-input') == before_step and usages(p) == before_usages
     owner.reply = replace(owner.reply, usages=owner.reply.usages + (
         replace(extra, expected_revision=1, expected_holder_ref=extra.holder_ref),))

@@ -1,0 +1,151 @@
+{
+  "baseline-agent-env-before-sdk": {
+    "pass": 86,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "details": []
+  },
+  "baseline-lower-before-sdk": {
+    "pass": 0,
+    "fail": 0,
+    "error": 10,
+    "skip": 0,
+    "details": [
+      {
+        "case": "::packages.execution.decision.tests.contracts.test_canonical_vectors",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::packages.execution.decision.tests.contracts.test_public_surface",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::packages.execution.decision.tests.contracts.test_schema_declaration",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::packages.execution.decision.tests.runtime.test_adversarial_runtime",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::packages.execution.decision.tests.runtime.test_manager",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::packages.execution.decision.tests.runtime.test_runtime",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::packages.execution.decision.tests.evidence.test_evidence",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::packages.execution.decision.tests.evidence.test_evidence_attacks",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::packages.execution.decision.tests.evidence.test_historical_reader",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::packages.execution.decision.tests.compatibility.test_upstream",
+        "status": "error",
+        "message": "collection failure"
+      }
+    ]
+  },
+  "lower-sdk-wheel-interface-after": {
+    "pass": 434,
+    "fail": 0,
+    "error": 0,
+    "skip": 1,
+    "details": [
+      {
+        "case": "packages.execution.environments.tests.test_envctl::test_openshell_gateway_roundtrip",
+        "status": "skip",
+        "message": "openshell gateway absent: no standalone authenticated SandboxClient bootstrap exists in this design; set ENVCTL_OPENSHELL_GATEWAY to a real gateway binding to exercise a round trip"
+      }
+    ]
+  },
+  "brand-sdk-native-after": {
+    "pass": 0,
+    "fail": 0,
+    "error": 5,
+    "skip": 0,
+    "details": [
+      {
+        "case": "::plugins.harness.claude-code.tests.test_provider",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::plugins.harness.claude-code.tests.test_sdk",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::plugins.harness.codex.tests.test_provider",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::plugins.harness.dsh.tests.test_provider",
+        "status": "error",
+        "message": "collection failure"
+      },
+      {
+        "case": "::plugins.harness.grok-build.tests.test_provider",
+        "status": "error",
+        "message": "collection failure"
+      }
+    ]
+  },
+  "brand-current-sdk-native-after": {
+    "pass": 319,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "details": []
+  },
+  "interface-cli-before-fix-reproduced": {
+    "pass": 0,
+    "fail": 1,
+    "error": 0,
+    "skip": 0,
+    "details": [
+      {
+        "case": "packages.interfaces.tests.test_host_cli::test_list_describe_and_dashdash_separator",
+        "status": "fail",
+        "message": "ModuleNotFoundError: No module named 'ordessa_interfaces.channels.system_access'"
+      }
+    ]
+  },
+  "interface-host-mcp-after": {
+    "pass": 53,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "details": []
+  },
+  "moduleOrigins": {
+    "lower": 102,
+    "unexpectedFirstPartyOrigins": 0,
+    "allowedSources": "this integration tree + the exact interface wheel site built in this batch"
+  },
+  "threadDiagnostic": {
+    "restrictedStdlibProgram": "asyncio.run(asyncio.to_thread(...)) hangs on shutdown, timeout 124; no project imports",
+    "sameInterpreterOutsideRestriction": "exit 0; completed after asyncio.run",
+    "testApproval": "local offline tests outside restriction approved by automatic review; external pip and model-management restrictions not retried"
+  },
+  "scope": "lower current APIs and controlled protocols; original assertion migrations and default/installed full product remain pending"
+}

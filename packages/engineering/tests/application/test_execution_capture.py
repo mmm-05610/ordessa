@@ -137,7 +137,7 @@ flow=next(generator)
 library=EngineeringLibrary.create((directory/'engineering.sqlite').resolve(),library_id='capture-original',schema_version=7)
 try:
  ref,lease=original.start(flow)
- result=flow.instance.prompt_recorded(ref,lease,operation_ref='capture-1',timeout=2,prompt=[])
+ result=flow.instance.prompt(ref,lease,operation_ref='capture-1',timeout=2,prompt=[])
  def forbidden(*args,**kwargs):raise AssertionError('cold read cannot open a live channel')
  cold=UnitRecords(OperationJournal(flow.records.journal.path),scope_authority=original.helpers.Scope(),
    native_evidence=SimpleNamespace(verify_binding=forbidden),verifier=flow.authority,

@@ -223,7 +223,7 @@ function assertPlainTree(root) {
 export function treeSummary(directory) {
   const result = artifactIdentityResult(directory,{sourceRoots:[
     path.resolve(REPO,"../..","packages/execution/agents/src"),
-    path.resolve(REPO,"../..","packages/interfaces/execution/c1-api/src")
+    path.resolve(REPO,"../..","packages/infrastructure/src")
   ]})
   if (result.status !== 0) {
     const diagnostic = `${result.stderr ?? ""}`.trim()

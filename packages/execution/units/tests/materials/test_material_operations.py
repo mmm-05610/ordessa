@@ -1,31 +1,20 @@
-"""019 material-step coordination on one Environment, Registry and SQLite.
+"""019 material-step coordination on a Unit context and SQLite.
 
 The provider below is a controlled registered contribution. These tests prove
 the kernel/store/issuer contract only; they do not represent a production
 material service, Harness, or native consumer.
 """
-from dataclasses import dataclass
-from typing import ClassVar
 import hashlib
+from threading import RLock
 
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
-    UnknownResultError,
-)
-from ordessa_execution_api.environment.operations import (
-    OperationIntent,
-    StepIntent,
-    UsageMutation,
-    operation_holder,
-    safe_json,
-)
-from ordessa_execution_api.environment.identity import ParticipantInstanceRef
-from pacthold.adapters.sqlite.environment.store import SqliteStorePort
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown
+from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
+from ordessa_units.definitions.admission_identity import AgentNodeRef, MaterialProviderActivationRef
+from ordessa_units.persistence.sqlite.store import SqliteUnitStore
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import (
     InvocationAuthorityRefused,
@@ -50,24 +39,18 @@ from ordessa_units.public import (
     ResourceMaterialDescriptor,
     ResourceRef,
     MaterialUseTarget,
-    unit_services,
     material_invocation_target,
     material_operation_facts,
     material_provider_ref,
     material_reservation_usages,
 )
-from pacthold.public import (
-    CoreContributionSet,
-    Environment,
-    InstallationRecord,
-    ReconcileSupport,
-    ResourceProviderDescriptor,
-)
-
-
-
-
-from ordessa_units.admission.material_admission import material_registration_snapshot as _test_resource_snapshot
+from ordessa_units.admission.context import UnitAdmissionContext
+from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
+from ordessa_units.admission.material_admission import MaterialAdmission
+from ordessa_units.admission.material_registration import MaterialCatalog
+from ordessa_units.bindings.material_operations import MaterialOperations
+from ordessa_units.definitions.materials import ReconcileSupport, ResourceProviderDescriptor
+from ordessa_execution_agents.harness.providers.registry import HarnessCatalog
 
 _ENV = "env"
 _PRINCIPAL = "principal"
@@ -75,11 +58,6 @@ _OUTER_DIGEST = "operation-request-digest"
 _CONTRACT_ID = "sample.alpha@1"
 _STEP_ID = "material-fetch"
 _OPERATION_KIND = "material-operation-fixture"
-
-
-@dataclass(frozen=True)
-class AlphaContract:
-    contract_id: ClassVar[str] = _CONTRACT_ID
 
 
 class ReadPolicy:
@@ -292,14 +270,34 @@ def _setup(tmp_path, *, provider_capability=True, with_issuer=True,
            request_epoch=4, operation_epoch=4, step_epoch=None,
            policy_allowed=True, request_id="material-request"):
     db_path = tmp_path / f"{request_id}.sqlite"
-    store = SqliteStorePort(db_path)
+    store = SqliteUnitStore(db_path)
     policy = ReadPolicy(allowed=policy_allowed)
-    environment = Environment(
-        _ENV, store=store, policy=policy, principal_scope=_PRINCIPAL
-    , resource_extension_snapshot=_test_resource_snapshot)
-    environment.install(InstallationRecord("contracts.owner", "a" * 64))
-    environment.enable("contracts.owner")
-    environment.activate("contracts.owner", CoreContributionSet(contracts=(AlphaContract,)))
+    admission_lock = RLock()
+    harness_catalog = HarnessCatalog(
+        _ENV, policy=policy, principal_scope=_PRINCIPAL,
+        admission_lock=admission_lock,
+    )
+    context_ref = {}
+    material_catalog = MaterialCatalog(
+        _ENV,
+        admission_lock=admission_lock,
+        retirement_guard=lambda owner, generation: context_ref[
+            "context"
+        ].provider_retirement_guard(owner, generation),
+    )
+    unit_context = UnitAdmissionContext(
+        _ENV,
+        store=store,
+        policy=policy,
+        fingerprint_port=ProtectedFingerprintHmac(
+            {"test": b"material-operations-fixture"}, active_key_id="test"
+        ),
+        harness_catalog=harness_catalog,
+        material_catalog=material_catalog,
+        principal_scope=_PRINCIPAL,
+        admission_lock=admission_lock,
+    )
+    context_ref["context"] = unit_context
 
     capability = (MaterialCapability(AGENT_MATERIAL_CONTRACT_VERSION,
                     provider_lifetimes, provider_capability, "both")
@@ -307,11 +305,10 @@ def _setup(tmp_path, *, provider_capability=True, with_issuer=True,
     provider = ControlledMaterialProvider("provider.material", capability,
                                           version=provider_version)
     owner_id = "owner.material"
-    environment.install(InstallationRecord(owner_id, "b" * 64))
-    environment.enable(owner_id)
-    activation = environment.activate(
-        owner_id, CoreContributionSet(resource_providers=(provider,))
-    ).activation
+    activation = MaterialProviderActivationRef(_ENV, owner_id, 1)
+    material_catalog.stage(
+        owner_id, activation.generation, (provider,), (_CONTRACT_ID,)
+    ).commit()
 
     authority = Authority()
     directory = DirectoryBindingRef(
@@ -326,7 +323,7 @@ def _setup(tmp_path, *, provider_capability=True, with_issuer=True,
         activation,
     )
     target = MaterialUseTarget(
-        ParticipantInstanceRef(_ENV, "planned-node", 1),
+        AgentNodeRef(_ENV, "planned-node", 1),
         directory,
         request_epoch,
         "profile-material",
@@ -385,7 +382,10 @@ def _setup(tmp_path, *, provider_capability=True, with_issuer=True,
     current = CurrentState(material_provider_ref(pin), directory, epoch=request_epoch)
     if with_issuer:
         issuer = InvocationIssuer(store, authority, current, clock=lambda: 50)
-    services = unit_services(environment, invocation_issuer=issuer)
+    operations = MaterialOperations(unit_context, invocation_issuer=issuer)
+    admission = MaterialAdmission(unit_context)
+    admitted = admission.material_provider_contribution(provider.provider_id)
+    assert admitted.resource_provider.owner_activation == activation
     provider.descriptor = fixed_descriptor
     provider.material_provider = material_provider_ref(pin)
     provider.material_target = material_invocation_target(material_request)
@@ -393,14 +393,17 @@ def _setup(tmp_path, *, provider_capability=True, with_issuer=True,
     return {
         "db_path": db_path,
         "store": store,
-        "environment": environment,
+        "context": unit_context,
+        "material_catalog": material_catalog,
+        "harness_catalog": harness_catalog,
+        "admission": admission,
         "policy": policy,
         "provider": provider,
         "activation": activation,
         "authority": authority,
         "current": current,
         "issuer": issuer,
-        "services": services,
+        "operations": operations,
         "request_key": request_key,
         "operation_digest": operation_digest,
         "intent": intent,
@@ -438,7 +441,6 @@ def _assert_two_original_holds(parts, expected_state="active", expected_revision
 def _close(parts):
     if parts["issuer"] is not None:
         parts["issuer"].close()
-    parts["environment"].close()
     parts["store"].close()
 
 
@@ -447,7 +449,7 @@ def test_registered_provider_resolves_exact_fixed_request_and_updates_two_existi
     provider = parts["provider"]
     try:
         _assert_two_original_holds(parts)
-        step = parts["services"].material_operations.acquire(
+        step = parts["operations"].acquire(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert step.outcome == "concluded"
@@ -475,7 +477,7 @@ def test_success_receipt_with_provenance_different_from_fixed_descriptor_is_unkn
             parts["material_request"], parts["descriptor"],
             provenance_ref=forged_provenance,
         )
-        step = parts["services"].material_operations.acquire(
+        step = parts["operations"].acquire(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert step.outcome == "unknown"
@@ -491,10 +493,10 @@ def test_existing_claim_replay_requires_query_authority_but_never_calls_provider
     parts = _setup(tmp_path)
     provider = parts["provider"]
     try:
-        original = parts["services"].material_operations.acquire(
+        original = parts["operations"].acquire(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
-        replay = parts["services"].material_operations.acquire(
+        replay = parts["operations"].acquire(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert replay == original
@@ -521,9 +523,9 @@ def test_first_dispatch_authority_or_current_binding_refusal_has_no_claim_or_pro
         else:
             parts["current"].epoch = 5
 
-        with pytest.raises((AdmissionRefusedError, InvocationAuthorityRefused,
-                            GuaranteeUnavailableError, UnknownResultError)):
-            parts["services"].material_operations.acquire(
+        with pytest.raises((UnitAdmissionRefused, InvocationAuthorityRefused,
+                            UnitGuaranteeUnavailable, UnitOperationUnknown)):
+            parts["operations"].acquire(
                 parts["request_key"], parts["operation_digest"], _STEP_ID
             )
         assert parts["store"].read_operation_step(parts["request_key"], _STEP_ID) is None
@@ -539,8 +541,8 @@ def test_missing_issuer_and_missing_query_coverage_fail_before_claim_or_describe
     no_issuer = _setup(tmp_path, with_issuer=False, request_id="no-issuer")
     provider = no_issuer["provider"]
     try:
-        with pytest.raises((GuaranteeUnavailableError, InvocationAuthorityRefused)):
-            no_issuer["services"].material_operations.acquire(
+        with pytest.raises((UnitGuaranteeUnavailable, InvocationAuthorityRefused)):
+            no_issuer["operations"].acquire(
                 no_issuer["request_key"], no_issuer["operation_digest"], _STEP_ID
             )
         assert no_issuer["store"].read_operation_step(no_issuer["request_key"], _STEP_ID) is None
@@ -552,8 +554,8 @@ def test_missing_issuer_and_missing_query_coverage_fail_before_claim_or_describe
     no_query = _setup(tmp_path, provider_capability=False, request_id="no-query-coverage")
     provider = no_query["provider"]
     try:
-        with pytest.raises(GuaranteeUnavailableError):
-            no_query["services"].material_operations.acquire(
+        with pytest.raises(UnitGuaranteeUnavailable):
+            no_query["operations"].acquire(
                 no_query["request_key"], no_query["operation_digest"], _STEP_ID
             )
         assert no_query["store"].read_operation_step(no_query["request_key"], _STEP_ID) is None
@@ -576,7 +578,7 @@ def test_unresolved_existing_claim_without_query_coverage_remains_held_without_p
         assert original_claim is not None and original_claim.outcome == "possibly-dispatched"
         before_usages = _usage_rows(parts)
 
-        result = parts["services"].material_operations.reconcile(
+        result = parts["operations"].reconcile(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert result == original_claim
@@ -592,8 +594,8 @@ def test_unsupported_fixed_material_lifetime_fails_before_claim_or_effect(tmp_pa
     parts = _setup(tmp_path, provider_lifetimes=("dynamic",), request_id="unsupported-lifetime")
     provider = parts["provider"]
     try:
-        with pytest.raises((GuaranteeUnavailableError, AdmissionRefusedError)):
-            parts["services"].material_operations.acquire(
+        with pytest.raises((UnitGuaranteeUnavailable, UnitAdmissionRefused)):
+            parts["operations"].acquire(
                 parts["request_key"], parts["operation_digest"], _STEP_ID
             )
         assert parts["store"].read_operation_step(parts["request_key"], _STEP_ID) is None
@@ -614,8 +616,8 @@ def test_descriptor_drift_wrong_pin_and_wrong_step_fail_closed_without_provider_
     provider = parts["provider"]
     try:
         provider.descriptor = changed_descriptor
-        with pytest.raises((AdmissionRefusedError, IdentityMismatchError, GuaranteeUnavailableError)):
-            parts["services"].material_operations.acquire(
+        with pytest.raises((UnitAdmissionRefused, UnitIdentityMismatch, UnitGuaranteeUnavailable)):
+            parts["operations"].acquire(
                 parts["request_key"], parts["operation_digest"], _STEP_ID
             )
         assert parts["store"].read_operation_step(parts["request_key"], _STEP_ID) is None
@@ -627,8 +629,8 @@ def test_descriptor_drift_wrong_pin_and_wrong_step_fail_closed_without_provider_
     wrong_pin = _setup(tmp_path, request_pin_version="9.9", request_id="wrong-pin")
     provider = wrong_pin["provider"]
     try:
-        with pytest.raises((AdmissionRefusedError, IdentityMismatchError, GuaranteeUnavailableError)):
-            wrong_pin["services"].material_operations.acquire(
+        with pytest.raises((UnitAdmissionRefused, UnitIdentityMismatch, UnitGuaranteeUnavailable)):
+            wrong_pin["operations"].acquire(
                 wrong_pin["request_key"], wrong_pin["operation_digest"], _STEP_ID
             )
         assert wrong_pin["store"].read_operation_step(wrong_pin["request_key"], _STEP_ID) is None
@@ -640,8 +642,8 @@ def test_descriptor_drift_wrong_pin_and_wrong_step_fail_closed_without_provider_
     wrong_step = _setup(tmp_path, request_id="wrong-step")
     provider = wrong_step["provider"]
     try:
-        with pytest.raises((IdentityMismatchError, AdmissionRefusedError, GuaranteeUnavailableError)):
-            wrong_step["services"].material_operations.acquire(
+        with pytest.raises((UnitIdentityMismatch, UnitAdmissionRefused, UnitGuaranteeUnavailable)):
+            wrong_step["operations"].acquire(
                 wrong_step["request_key"], wrong_step["operation_digest"], "not-the-fixed-step"
             )
         assert wrong_step["store"].read_operation_step(wrong_step["request_key"], _STEP_ID) is None
@@ -656,7 +658,7 @@ def test_postclaim_current_state_change_leaves_unknown_claim_and_both_holds(tmp_
     provider = parts["provider"]
     try:
         parts["current"].fail_on = 2
-        result = parts["services"].material_operations.acquire(
+        result = parts["operations"].acquire(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert result.outcome == "unknown"
@@ -670,20 +672,25 @@ def test_postclaim_current_state_change_leaves_unknown_claim_and_both_holds(tmp_
         _close(parts)
 
 
-def test_provider_retired_during_authority_callback_is_rechecked_before_resolve(tmp_path):
+def test_provider_drained_during_authority_callback_is_rechecked_before_resolve(tmp_path):
     parts = _setup(tmp_path)
     provider = parts["provider"]
-    retired = []
+    drained = []
     try:
-        def retire_after_claim_revalidation(call):
+        def drain_after_claim_revalidation(call):
             if call == 2:
-                retired.append(parts["environment"].retire_activation(parts["activation"]))
+                parts["material_catalog"].drain(
+                    parts["activation"].plugin_id, parts["activation"].generation
+                )
+                drained.append((parts["activation"].plugin_id,
+                                parts["activation"].generation))
 
-        parts["authority"].on_revalidate = retire_after_claim_revalidation
-        result = parts["services"].material_operations.acquire(
+        parts["authority"].on_revalidate = drain_after_claim_revalidation
+        result = parts["operations"].acquire(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
-        assert retired == [("retired", ())]
+        assert drained == [(parts["activation"].plugin_id,
+                            parts["activation"].generation)]
         assert result.outcome == "unknown"
         assert result.evidence == {"materialOperation": "unknown"}
         _assert_two_original_holds(parts, expected_state="unknown")
@@ -700,14 +707,14 @@ def test_lost_receipt_reconcile_queries_original_request_without_lease(tmp_path)
         provider.resolve_response = MaterialResult(
             MaterialOutcome.UNKNOWN, parts["material_request"].correlation
         )
-        unresolved = parts["services"].material_operations.acquire(
+        unresolved = parts["operations"].acquire(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert unresolved.outcome == "unknown"
         _assert_two_original_holds(parts, expected_state="unknown")
         assert provider.resolve_calls == 1 and provider.query_calls == 0
 
-        reconciled = parts["services"].material_operations.reconcile(
+        reconciled = parts["operations"].reconcile(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert reconciled.outcome == "concluded"
@@ -732,7 +739,7 @@ def test_query_success_without_provider_verifier_is_unknown_and_keeps_holds(tmp_
         provider.resolve_response = MaterialResult(
             MaterialOutcome.UNKNOWN, parts["material_request"].correlation
         )
-        unresolved = parts["services"].material_operations.acquire(
+        unresolved = parts["operations"].acquire(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert unresolved.outcome == "unknown"
@@ -744,7 +751,7 @@ def test_query_success_without_provider_verifier_is_unknown_and_keeps_holds(tmp_
             return _success_result(request, parts["descriptor"])
 
         provider.query_material = unverified_query
-        recovered = parts["services"].material_operations.reconcile(
+        recovered = parts["operations"].reconcile(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert recovered.outcome == "unknown"
@@ -763,7 +770,7 @@ def test_stale_query_observation_cannot_overwrite_newer_step_without_usage_updat
         provider.resolve_response = MaterialResult(
             MaterialOutcome.UNKNOWN, parts["material_request"].correlation
         )
-        first = parts["services"].material_operations.acquire(
+        first = parts["operations"].acquire(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert first.outcome == "unknown"
@@ -780,7 +787,7 @@ def test_stale_query_observation_cannot_overwrite_newer_step_without_usage_updat
             ))
 
         provider.on_query = concurrent_update
-        replay = parts["services"].material_operations.reconcile(
+        replay = parts["operations"].reconcile(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert len(concurrent_steps) == 1
@@ -803,8 +810,8 @@ def test_provider_success_then_sqlite_conclusion_failure_keeps_claim_and_holds(t
             "WHEN NEW.outcome='concluded' BEGIN SELECT RAISE(ABORT, 'controlled persistence failure'); END"
         )
         store._conn.commit()
-        with pytest.raises(GuaranteeUnavailableError):
-            parts["services"].material_operations.acquire(
+        with pytest.raises(UnitGuaranteeUnavailable):
+            parts["operations"].acquire(
                 parts["request_key"], parts["operation_digest"], _STEP_ID
             )
 
@@ -816,7 +823,7 @@ def test_provider_success_then_sqlite_conclusion_failure_keeps_claim_and_holds(t
 
         store._conn.execute("DROP TRIGGER reject_material_conclusion")
         store._conn.commit()
-        recovered = parts["services"].material_operations.reconcile(
+        recovered = parts["operations"].reconcile(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert recovered.outcome == "concluded"
@@ -827,7 +834,7 @@ def test_provider_success_then_sqlite_conclusion_failure_keeps_claim_and_holds(t
         _close(parts)
 
 
-def test_sqlite_reopen_preserves_unknown_facts_and_new_activation_cannot_replace_old_pin(tmp_path):
+def test_sqlite_reopen_preserves_unknown_facts_and_new_generation_cannot_replace_old_pin(tmp_path):
     parts = _setup(tmp_path, request_id="cold-material-query")
     provider = parts["provider"]
     path = parts["db_path"]
@@ -835,7 +842,7 @@ def test_sqlite_reopen_preserves_unknown_facts_and_new_activation_cannot_replace
         provider.resolve_response = MaterialResult(
             MaterialOutcome.UNKNOWN, parts["material_request"].correlation
         )
-        step = parts["services"].material_operations.acquire(
+        step = parts["operations"].acquire(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert step.outcome == "unknown"
@@ -847,10 +854,9 @@ def test_sqlite_reopen_preserves_unknown_facts_and_new_activation_cannot_replace
     finally:
         if parts["issuer"] is not None:
             parts["issuer"].close()
-        parts["environment"].close()
         parts["store"].close()
 
-    reopened = SqliteStorePort(path)
+    reopened = SqliteUnitStore(path)
     try:
         stored_operation = reopened.read_operation(parts["request_key"])
         assert stored_operation == before_operation
@@ -862,26 +868,34 @@ def test_sqlite_reopen_preserves_unknown_facts_and_new_activation_cannot_replace
         ) == before_usages
         assert (provider.resolve_calls, provider.query_calls) == counts
 
-        # A newly composed Environment has a new Host activation. The old
-        # operation pin remains fixed; a same-name/new-generation provider
-        # cannot query or replace it. This is SQLite recovery evidence only,
-        # not a production Host restart or activation rehydration test.
+        # A newly composed controlled Unit context has a new provider pin. The
+        # old operation pin remains fixed; this is SQLite recovery evidence,
+        # not production Host restart or activation rehydration evidence.
         policy = ReadPolicy()
-        new_environment = Environment(
-            _ENV, store=reopened, policy=policy, principal_scope=_PRINCIPAL
-        , resource_extension_snapshot=_test_resource_snapshot)
-        new_environment.install(InstallationRecord("contracts.owner", "a" * 64))
-        new_environment.enable("contracts.owner")
-        new_environment.activate("contracts.owner", CoreContributionSet(contracts=(AlphaContract,)))
         owner_id = "owner.material"
-        new_environment.install(InstallationRecord(owner_id, "b" * 64))
-        new_environment.enable(owner_id)
-        generation_one = new_environment.activate(owner_id, CoreContributionSet()).activation
-        assert new_environment.retire_activation(generation_one)[0] == "retired"
-        generation_two = new_environment.activate(
-            owner_id, CoreContributionSet(resource_providers=(provider,))
-        ).activation
-        assert generation_two.generation != parts["activation"].generation
+        generation_two = MaterialProviderActivationRef(
+            _ENV, owner_id, parts["activation"].generation + 1
+        )
+        new_lock = RLock()
+        new_harness_catalog = HarnessCatalog(
+            _ENV, policy=policy, principal_scope=_PRINCIPAL, admission_lock=new_lock
+        )
+        new_material_catalog = MaterialCatalog(_ENV, admission_lock=new_lock)
+        new_context = UnitAdmissionContext(
+            _ENV,
+            store=reopened,
+            policy=policy,
+            fingerprint_port=ProtectedFingerprintHmac(
+                {"test": b"material-operations-reopened"}, active_key_id="test"
+            ),
+            harness_catalog=new_harness_catalog,
+            material_catalog=new_material_catalog,
+            principal_scope=_PRINCIPAL,
+            admission_lock=new_lock,
+        )
+        new_material_catalog.stage(
+            owner_id, generation_two.generation, (provider,), (_CONTRACT_ID,)
+        ).commit()
 
         new_authority = Authority()
         new_directory = parts["material_request"].target.directory_binding_ref
@@ -890,12 +904,12 @@ def test_sqlite_reopen_preserves_unknown_facts_and_new_activation_cannot_replace
         ))
         new_current = CurrentState(new_provider_ref, new_directory, epoch=4)
         new_issuer = InvocationIssuer(reopened, new_authority, new_current, clock=lambda: 50)
-        new_services = unit_services(new_environment, invocation_issuer=new_issuer)
+        new_operations = MaterialOperations(new_context, invocation_issuer=new_issuer)
         provider.verifier = new_issuer.verifier()
         provider.material_provider = new_provider_ref
-        with pytest.raises((AdmissionRefusedError, InvocationAuthorityRefused,
-                            GuaranteeUnavailableError, UnknownResultError)):
-            new_services.material_operations.reconcile(
+        with pytest.raises((UnitAdmissionRefused, InvocationAuthorityRefused,
+                            UnitGuaranteeUnavailable, UnitOperationUnknown)):
+            new_operations.reconcile(
                 parts["request_key"], parts["operation_digest"], _STEP_ID
             )
         assert reopened.read_operation(parts["request_key"]) == before_operation
@@ -908,17 +922,15 @@ def test_sqlite_reopen_preserves_unknown_facts_and_new_activation_cannot_replace
     finally:
         if "new_issuer" in locals():
             new_issuer.close()
-        if "new_environment" in locals():
-            new_environment.close()
         reopened.close()
 
 
-@pytest.mark.parametrize("denial", ["resources-read", "epoch", "retired-provider"])
+@pytest.mark.parametrize("denial", ["resources-read", "epoch", "drained-provider"])
 def test_historical_step_result_is_not_returned_without_current_query_authority(tmp_path, denial):
     parts = _setup(tmp_path)
     provider = parts["provider"]
     try:
-        original = parts["services"].material_operations.acquire(
+        original = parts["operations"].acquire(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert original.outcome == "concluded"
@@ -930,11 +942,13 @@ def test_historical_step_result_is_not_returned_without_current_query_authority(
         elif denial == "epoch":
             parts["current"].epoch = 5
         else:
-            assert parts["environment"].retire_activation(parts["activation"])[0] == "retired"
+            parts["material_catalog"].drain(
+                parts["activation"].plugin_id, parts["activation"].generation
+            )
 
-        with pytest.raises((AdmissionRefusedError, InvocationAuthorityRefused,
-                            GuaranteeUnavailableError, UnknownResultError)):
-            parts["services"].material_operations.acquire(
+        with pytest.raises((UnitAdmissionRefused, InvocationAuthorityRefused,
+                            UnitGuaranteeUnavailable, UnitOperationUnknown)):
+            parts["operations"].acquire(
                 parts["request_key"], parts["operation_digest"], _STEP_ID
             )
         assert parts["store"].read_operation_step(parts["request_key"], _STEP_ID) == before_operation
@@ -954,7 +968,7 @@ def test_terminal_receipt_replay_requires_both_intact_original_holds(
     parts = _setup(tmp_path, request_id=f"hold-replay-{replay_method}-{corruption}")
     provider, store = parts["provider"], parts["store"]
     try:
-        original = parts["services"].material_operations.acquire(
+        original = parts["operations"].acquire(
             parts["request_key"], parts["operation_digest"], _STEP_ID
         )
         assert original.outcome == "concluded"
@@ -982,8 +996,8 @@ def test_terminal_receipt_replay_requires_both_intact_original_holds(
             dict(provider.c1_calls),
         )
 
-        with pytest.raises((GuaranteeUnavailableError, AdmissionRefusedError)):
-            getattr(parts["services"].material_operations, replay_method)(
+        with pytest.raises((UnitGuaranteeUnavailable, UnitAdmissionRefused)):
+            getattr(parts["operations"], replay_method)(
                 parts["request_key"], parts["operation_digest"], _STEP_ID
             )
         assert store.read_operation_step(parts["request_key"], _STEP_ID) == before_step

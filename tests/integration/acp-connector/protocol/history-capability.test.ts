@@ -4,8 +4,8 @@ import { connectTarget } from '../fixtures/target-seam'
 
 /**
  * History targets R19–R22 and R26: LIST and LOAD are two different capabilities, tested against
- * whatever the peer actually advertises over the project-bound channel (binding a project is what
- * establishes the channel and runs the `initialize` whose answer carries these capabilities). An
+ * whatever the peer advertises when an explicit history operation establishes the scoped channel
+ * and runs the `initialize` whose answer carries these capabilities. Project selection opens none. An
  * absent capability must show as absent — the connector may not keep a parallel frontend history.
  * A failed restore is a restore the PEER refused, not one the frontend pre-vetoed: absence from
  * a list never licenses refusing `session/load` (R22 vs R26 draw that line from both sides).
@@ -13,7 +13,7 @@ import { connectTarget } from '../fixtures/target-seam'
 
 it('R19 without session/list the history list honestly reports it cannot read one', async () => {
   const { peer, client } = await connectTarget({ capabilities: {} })
-  await client.openWorkspace!('ws_app') // the capability read exists only from this initialize answer
+  await client.openWorkspace!('ws_app') // the following explicit history call reads capabilities
   await expect(client.refreshSessions()).rejects.toBeInstanceOf(Error)
   const state = client.getSnapshot()
   expect(state.sessionList).toBe('error')
@@ -30,7 +30,7 @@ it('R19b with no project bound, asking for history is a quiet no-op — not a fa
   const { client, closeAll } = await connectTarget({ capabilities: { sessionCapabilities: { list: {} } } })
   await expect(client.refreshSessions()).resolves.toBeUndefined()
   expect(client.getSnapshot().sessionList).toBe('unknown')
-  // Binding a project afterwards reaches the real list path, which can still answer honestly.
+  // Choosing a project still creates no channel; explicit refresh reaches the real list path.
   await client.openWorkspace!('ws_app')
   await client.refreshSessions()
   expect(client.getSnapshot().sessionList).toBe('ready')

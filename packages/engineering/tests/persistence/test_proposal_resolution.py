@@ -3,7 +3,6 @@ from __future__ import annotations
 from ordessa_engineering.application.usecases.material_closure import verify_material
 from ordessa_engineering.application.usecases.proposal_closure import validate_create
 
-from dataclasses import asdict
 from contextlib import contextmanager
 import hashlib
 import importlib.util
@@ -75,9 +74,10 @@ def environment(tmp_path: Path):
 
 def test_repository_consumes_change_set_result_with_actual_persisted_controls(environment):
     _library, factory, access, method_ref, base_ref, proposed_ref, claim = environment
-    receipt = proposal_fixtures._create(factory, access, method_ref, base_ref, proposed_ref,
-                                        claim, "change-set-result", template=False)
-    ref = proposal_fixtures._proposal_ref(receipt.result["proposal_ref"])
+    # Historical v1 records remain readable and controllable, but current
+    # ProposalUseCases.create only accepts the external-source schema2 contract.
+    ref = _seed_historical_v1(factory, method_ref, base_ref, proposed_ref, claim,
+                              proposal_id="change-set-result", change_id="historical-change-set")
     with factory.begin(SCOPE, "read") as uow:
         change_set = uow.proposals.validate_change_set((ref,))
         assert type(change_set) is ChangeSet
@@ -139,15 +139,15 @@ class _ResolutionProbe:
 
 def _create_from_draft(factory, access, method_ref, base_ref, proposed_ref, claim, *, request_id, template=False,
                        extra_templates=()):
-    draft = proposal_fixtures._draft(method_ref, base_ref, proposed_ref, claim, template=template)
-    if extra_templates:
-        draft["review_requirement_templates"] = [asdict(item) for item in extra_templates]
-    result = proposal_fixtures._usecases(factory, access).create(
-        {"change_id": None, "expected_version": 0, "draft": draft},
-        proposal_fixtures._ctx(request_id=request_id),
-    )
-    assert result.status == "completed"
-    return proposal_fixtures._proposal_ref(result.result["proposal_ref"])
+    # This fixture seeds immutable historical schema1 rows directly through the
+    # original repository/UoW. It deliberately does not exercise the retired v1
+    # application writer or create a command-journal entry.
+    templates = tuple(extra_templates)
+    if template:
+        templates = (proposal_fixtures._template(method_ref), *templates)
+    return _seed_historical_v1(factory, method_ref, base_ref, proposed_ref, claim,
+                               proposal_id=f"historical-{request_id}",
+                               change_id=f"historical-change-{request_id}", templates=templates)
 
 
 def _self_template(method_ref, index):
@@ -174,16 +174,12 @@ def test_many_self_templates_share_one_real_sqlite_proposal_method_and_source_re
 ):
     library, factory, access, method_ref, base_ref, proposed_ref, claim = environment
     templates = tuple(_self_template(method_ref, index) for index in range(COUNT))
-    probe = _ResolutionProbe(library, monkeypatch)
-    probe.reset()
     ref = _create_from_draft(factory, access, method_ref, base_ref, proposed_ref, claim,
                              request_id="many-self-templates", extra_templates=templates)
-    # Include the actual create -> ensure_requirement path, not only a later
-    # query. Two Change membership SELECTs, identity lookup and real row reread.
-    assert probe.selects_from("eng_proposals") == 4
-    assert probe.selects_from("eng_proposal_mutations") == 1
-    assert probe.snapshot_loads == 1
-    assert probe.snapshot_blob_reads == 2
+    probe = _ResolutionProbe(library, monkeypatch)
+    probe.reset()
+    # Historical-v1 closure reads use the same original repository budget; this
+    # assertion is about persisted-record resolution, not current proposal creation.
     with factory.begin(SCOPE, "read") as uow:
         probe.reset()
         resolved = uow.proposals.get_proposal(ref)
@@ -228,6 +224,22 @@ def _unvalidated_proposal(proposal_id, change_id, *, method_ref, base_ref, propo
         SCOPE, proposal_id, proposal_fixtures.CREATED_AT, proposal_fixtures.ACTOR, change_id,
         "t", description, (mutation,), (), (claim_ref,), (), method_ref, templates, None, (),
     )
+
+
+def _seed_historical_v1(factory, method_ref, base_ref, proposed_ref, claim, *,
+                        proposal_id, change_id, templates=()):
+    """Seed an explicitly historical schema1 Proposal for read/control tests."""
+    record = _unvalidated_proposal(proposal_id, change_id, method_ref=method_ref,
+                                   base_ref=base_ref, proposed_ref=proposed_ref,
+                                   claim=claim, templates=templates)
+    with factory.begin(SCOPE, "write") as uow:
+        uow.proposals.create_change(Change(SCOPE, change_id, proposal_fixtures.CREATED_AT))
+        budget = uow.proposals.validated_budget()
+        requirements = validate_create(record, uow.proposals, budget)
+        ref = uow.proposals.create_proposal(record, expected_version=0,
+                                            budget=budget, requirements=requirements)
+        uow.commit()
+    return ref
 
 
 def test_proposal_create_requires_application_triggered_validation(environment):

@@ -21,12 +21,14 @@ from __future__ import annotations
 
 import re
 import sqlite3
+import pytest
 
-from pacthold_runtime_compat.legacy_migrations import MIGRATIONS_DIR
-from pacthold_runtime_compat.legacy_migrations import db as wc
-from pacthold_runtime_compat.legacy_migrations import register_legacy_migrations
+from ordessa_server.bootstrap.migrations.legacy_source import MIGRATIONS_DIR
+from ordessa_infrastructure.database import migrations as wc
+from ordessa_server.bootstrap.migrations import source_selection
+from ordessa_server.bootstrap.migrations.legacy_source import register_legacy_migrations
 
-# Post-T009 the historical chain is PRODUCT-ASSEMBLED (specs/010 plan §43:
+# Post-T009 the historical chain is PRODUCT-ASSEMBLED (docs/implementation/specifications/010 plan §43:
 # 「B 默认产品显式装配旧迁移集」) and SEALED inside the compat distribution:
 # the SQL files this gate walks moved from the kernel tree to
 # `pacthold_runtime_compat.legacy_migrations.MIGRATIONS_DIR` (byte-for-byte
@@ -38,7 +40,19 @@ from pacthold_runtime_compat.legacy_migrations import register_legacy_migrations
 # namespace before every `_run_migrations` — `register_legacy_migrations()`
 # is idempotent. Without it the legacy namespace is simply absent, which is
 # exactly the OperationalError family T022b closes.
-register_legacy_migrations()
+@pytest.fixture(autouse=True)
+def registered_historical_source():
+    # Isolate the registration per test: other owner suites reset their own
+    # assembled sources and must not erase this module's import-time snapshot.
+    previous = wc.registered_migration_sources(registry=source_selection.registry)[:-1]
+    setattr(source_selection, "registry", source_selection.create_migration_registry())
+    register_legacy_migrations()
+    try:
+        yield
+    finally:
+        setattr(source_selection, "registry", source_selection.create_migration_registry())
+        for source in previous:
+            wc.register_migration_source(source, registry=source_selection.registry)
 
 _MIG = re.compile(r"^(\d{3})_.*\.sql$")
 
@@ -74,7 +88,7 @@ def _signature(conn):
 def _fresh():
     conn = sqlite3.connect(":memory:")
     conn.execute("PRAGMA foreign_keys = ON")
-    wc._run_migrations(conn)
+    wc.apply_registered_migrations(conn, registry=source_selection.registry)
     return conn
 
 
@@ -91,7 +105,7 @@ def test_fresh_install_ledger_is_full_and_idempotent():
     conn = _fresh()
     assert _ledger(conn) == list(range(1, _max_version() + 1))
     before = _signature(conn)
-    wc._run_migrations(conn)                       # re-run: no-op, no error
+    wc.apply_registered_migrations(conn, registry=source_selection.registry)                       # re-run: no-op, no error
     assert _ledger(conn) == list(range(1, _max_version() + 1))
     assert _signature(conn) == before
 
@@ -113,7 +127,7 @@ def test_upgrade_with_legacy_data_equals_fresh_structure_and_maps_state():
                  "provider_correlation_ref,created_at,updated_at) "
                  "VALUES ('d1','e1','k1','started','ref','t','t')")
     conn.commit()
-    wc._run_migrations(conn)                        # applies 005..009
+    wc.apply_registered_migrations(conn, registry=source_selection.registry)                        # applies 005..009
 
     assert _ledger(conn) == list(range(1, _max_version() + 1))
     row = conn.execute("SELECT state,inputs_digest FROM core_dispatches WHERE id='d1'").fetchone()

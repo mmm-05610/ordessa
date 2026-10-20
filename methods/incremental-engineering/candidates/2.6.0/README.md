@@ -6,7 +6,7 @@
 
 release_version 2.6.0；manifest schema1；完整原47个资源沿2.4，另增独立审核Unit skill，包含DID/决定/提案/摘要/apply receipt/完整Spec Kit包/反馈/标准profile/confirmation的schemas/templates/skills和全部标准。本轮还在未发布2.5内更新submission方法正文schema2、模板/skills与acceptance标准revision2.5.0的Unit审核输入来源；2.6.0新增独立Decision结果到方法既有有限nominal映射的策略声明：完整、精确且满足证据/来源/版本/独立审核与当前权限约束的supported答案可按criterion政策进入pass；contradicted/insufficient按原block处理，unknown/tie/missing/incomplete/truncated/unmapped仍unknown/manual。此修订不把Decision正文当Grant或真实性证明。source-review的claim_support仅在2.6.0显式改为supported→satisfied/pass；其余来源完整性和coverage规则保持。提案来源 docs/proposals/request-wait-composition-v1 与原软件工程Harness设计；父最新指示明确不得额外增加不必要审批。
 
-2.5.0 曾由主协调者实际使用 public loader、validation 与 compiler 检查：19 项 requires 与原型 descriptor 精确匹配，并保留 fixture-trust warning；这不构成 production source registration、snapshot 或发布。2.6.0 是新候选，source78 已由真实 public loader/validator/compiler 在 fixture-trust descriptor 下受控检查，并保留 FIXTURE_CAPABILITIES_ONLY warning；相关收据在 Engineering 交接目录，不能代替 production catalog/source 资格。其 method.yaml 继承 57 项 manifest resources/19 项 requires 并按本版本资源重新计算摘要。复制的 `validation.json` 与 revision notes 是2.5历史资料，不是2.6验收。原型 descriptor 不等于 production catalog，也没有 MethodRef snapshot。候选 **未封存、未发布、不可执行**；candidate-index 仅列字节，不证明运行或注册。
+2.5.0 曾由主协调者实际使用 public loader、validation 与 compiler 检查：19 项 requires 与原型 descriptor 精确匹配，并保留 fixture-trust warning；这不构成 production source registration、snapshot 或发布。2.6.0 的较早 source78 字节曾由 public loader/validator/compiler 在 fixture-trust descriptor 下受控检查，并保留 FIXTURE_CAPABILITIES_ONLY warning；本次90阶段更新了工作流、工作输入和方法绑定声明，该早期收据不覆盖当前字节，当前候选尚未重新校验。其 method.yaml 当前含59项manifest resources和19项requires，并按本版本资源摘要声明。复制的 `validation.json` 与 revision notes 是2.5历史资料，不是2.6验收。原型 descriptor 不等于 production catalog，也没有 MethodRef snapshot。候选 **未封存、未发布、不可执行**；candidate-index 仅列字节，不证明运行或注册。
 
 ## 实际与待绑定的数据边界
 
@@ -14,9 +14,9 @@ method.yaml现在绑定13个由EngineeringService.operation_capabilities()实际
 
 reviews.request输入仅plan；completed进入专属审核wait，不进入passed分支。approvals.prepare_intent输入intent；approvals.request输入intent_id/intent_digest；completed进入pending challenge等待，不出现granted分支。changes.apply输入approval_ref。主Agent通过原artifacts.create/append_revision记录完整材料；真实reviews.record及record_conversation由各原来源入口在等待期间调用，业务原owner重新查记录和gate。
 
-pending-bindings.yaml记录generic Decision与deterministic schema/submission check descriptors已可由真实owner函数提供；三个语义专用ID由方法question sets调用generic Decision，没有新增具名业务checker。freeze与record_report有精确core descriptors；dispatch有conditional owner descriptor。2.6现在声明21个精确wait selector及经`work-inputs` schema限制的event字段。候选尚未证明生产Service选择了该SQLitePersistedMethodWorkSource、同authority BlobStore以及与选中bundle匹配的owner sources。`await_implementation_permission`的`dispatch_input`由方法输入提供，但wait只确认数据和package引用；canonical dispatch仍必须验证完整实际action tuple和当前Grant。`await_intent_ref`声明以原授权仓库按`intent_id`读取真实Intent，并核对方法引用及`intent_digest`；文档输入自身不是Intent证明。`await_execution_capture`声明以`submission_record`定位原生报告入口，Work source必须从原Submission解析真实Execution记录/query producer，并核验对应Unit、operation、prompt、query、blob及完成状态；来源或捕获缺失、结果未知时保持等待/拒绝。以上声明仍待生产source选择与运行资格验证。detached descriptors不是production catalog注册；Submission正向Qualification和末端采纳职责仍未闭合，因此publication/execution保持false。
+pending-bindings.yaml记录generic Decision与deterministic schema/submission check descriptors已可由真实owner函数提供；三个语义专用ID由方法question sets调用generic Decision，没有新增具名业务checker。freeze与record_report有精确core descriptors；dispatch有conditional owner descriptor。2.6现在声明32个精确wait selector及经`work-inputs` schema限制的event字段。候选尚未证明生产Service选择了该SQLitePersistedMethodWorkSource、同authority BlobStore以及与选中bundle匹配的owner sources。`await_implementation_permission`的`dispatch_input`由方法输入提供，但wait只确认数据和package引用；canonical dispatch仍必须验证完整实际action tuple和当前Grant。`await_intent_ref`声明以原授权仓库按`intent_id`读取真实Intent，并核对方法引用及`intent_digest`；文档输入自身不是Intent证明。`await_execution_capture`声明以`submission_record`定位原生报告入口，Work source必须从原Submission解析真实Execution记录/query producer，并核验对应Unit、operation、prompt、query、blob及完成状态；来源或捕获缺失、结果未知时保持等待/拒绝。以上声明仍待生产source选择与运行资格验证。detached descriptors不是production catalog注册；Submission正向Qualification和末端采纳职责仍未闭合，因此publication/execution保持false。
 
-所有21个wait node现在有精确的`metadata.work_source.waits`声明：审核wait以原ReviewPlan/phase gate核验，授权wait以原Intent/ApprovalRef/动作和grant control核验，普通/结果wait只解析声明的原始精确引用。match值来自已选上下文槽；bind值来自经方法schema验证的`work-inputs`数据，raw reviewer response只用同一原BlobStore的BlobRef读取。Work inputs以新Artifact revision创建后，必须调用原`engineering.work.bind_inputs`，按expected row digest和ordinal CAS绑定具体revision；不隐式读取artifact head。`dispatch_input`在实施wait仅是参数数据，不代表获准；原dispatch owner仍验证完整动作tuple和当前Grant。通知只能唤醒，不能推进。以上是候选方法声明，不证明该版本已被生产Service选择或完成source/runtime qualification，publication/execution仍为false。
+所有32个wait node现在有精确的`metadata.work_source.waits`声明，并显式选择静态`events`或loop专用`events_by_round`：审核wait以原ReviewPlan/phase gate核验，授权wait以原Intent/ApprovalRef/动作和grant control核验，普通/结果wait只解析声明的原始精确引用。loop事件按原MethodRun行的`rounds`值读取；缺少当轮记录拒绝，已有轮次字段不可改写。match值来自已选上下文槽；bind值来自经方法schema验证的`work-inputs`数据，raw reviewer response只用同一原BlobStore的BlobRef读取。Work inputs以新Artifact revision创建后，必须调用原`engineering.work.bind_inputs`，按expected row digest和ordinal CAS绑定具体revision；不隐式读取artifact head。`dispatch_input`在实施wait仅是参数数据，不代表获准；原dispatch owner仍验证完整动作tuple和当前Grant。通知只能唤醒，不能推进。以上是候选方法声明，不证明该版本已被生产Service选择或完成source/runtime qualification，publication/execution仍为false。
 
 ## 完整流程及权限
 
@@ -32,7 +32,22 @@ pending-bindings.yaml记录generic Decision与deterministic schema/submission ch
 
 `validation.json`仍是旧的候选校验记录；当前loader/validation/compiler通过结果由主协调者串行验证并报告，不能把它解释为注册或发布。前一轮compiler拒绝证据保存在docs/validation.before-unit-policy.json，属于历史验证。boundary-vectors.json仍是待执行的运行边界，等待owner合同后由原SQLite/installed及真实来源验证。没有模型/数据库发布调用。未创建fixture catalog或使用fixture发布。
 
-2026-10-12边界修正：正常提交不要求宿主前置采集全部文件/test/effect事实；独立Unit按固定版本核实，未核实测试事实保持asserted。author!=reviewer是本方法策略，宿主只提供通用身份匹配/约束机制。详见docs/unit-submission-host-contract.md。
+2026-10-12边界修正：正常提交不要求宿主前置采集全部文件/test/effect事实；独立review按固定版本核实，未核实测试事实保持asserted。审核者独立性按本方法声明的来源策略确定，宿主只提供原始来源关联及角色分配机制。详见docs/unit-submission-host-contract.md。
+
+### 审核作者来源策略
+
+`source_review`、`quality_review`、`package_review` 使用
+`ordessa.review.authorship-policy/1` 条件策略：真实 `native_unit` 作者来源要求
+审核者是不同的原始 Unit；`authenticated_material_submitter` 来源要求另行分配的
+审核角色。该来源只由原 journal/key 证明认证 Principal 与已完成命令绑定的精确
+固定 ArtifactRevision；它不证明该 Principal 是人类，也不构造或声明 native UnitRef。
+来源缺失或未知时拒绝继续。三处均发生在执行派发之前，不能假造原生执行作者。
+
+执行后的 `record_submission` 及 `acceptance_review` 继续要求原生作者 Unit 与审核
+Unit 不同，并以原 UnitRecords 查询验证双方身份；不能用 material submitter 来源替代。
+此策略不会降低 Submission、完整审核集合、固定材料版本、当前授权、证据或采纳条件。
+候选中的声明仍须由公开策略解析器、实际来源装配和独立原生审核路径分别验证；它不构成
+production 注册、角色授予或发布依据。
 
 ## 76：明确采纳输入与有界普通修正
 
@@ -65,12 +80,21 @@ budget，不可重用已消耗额度或替换 package 的 authorization refs。�
 本 loop 必须拒绝推进；需要另行授权并冻结的新包，不会由此 loop 自动生成。不确定的
 外部执行效果仍必须先由原来源协调；本 loop 不允许重放或重试未知副作用。
 
+`work-inputs` schema v2 以不可变 ArtifactRevision 与显式 CAS 绑定。每个 wait 在固定方法元数据中明确选择 `events` 或 `events_by_round`；loop wait 只读取原 Work 行 `inputs.rounds` 指定的规范十进制轮次，缺少当轮记录时拒绝，不回退旧的静态事件。所有先前轮次已写入的事件字段保持不可变，round counter 仍只由原 MethodRun 步骤事务推进。既有冻结方法若没有 `event_map` 与 v2 修订声明，仍按其 schema v1/static `events` 契约读取，不升级旧快照。此声明定义了第二轮输入的传输方式，不单独证明外部来源、审核或执行绑定已通过资格验证。
+
 以上流程图和待接线描述从 2.5.0 继承，是历史基线，不代表 2.6.0 已经接线或验证；
 本修订的可信当前来源、完整原审核响应、来源关联和 production capability 注册仍须
-单独接线与资格验证。2.6.0 的 loader、validator、compiler 与政策测试已在受控 fixture 来源下运行；仍未
-发布或创建 production snapshot，完整五阶段与真实 Pi/JEV 没有闭环证据。
+单独接线与资格验证。此前某一组 2.6.0 候选字节的 loader、validator、compiler 与政策测试曾在受控 fixture 来源下运行；90阶段更新后的当前字节尚未重新运行这些检查。候选仍未发布或创建 production snapshot，完整五阶段与真实 Pi/JEV 没有闭环证据。
 
 
 ## 2.6.0 策略边界
 
 2.6.0是显式新方法版本，不改写2.5.0、2.4.0或更早历史。它删除此候选之前复制的 `matching_validated_evaluation_required` 子策略；方法结果由本方法定义的 Decision questions、complete CheckKey answers、有限nominal转换和criterion disposition驱动。`semantic_consistency` 与 `semantic_drift` 使用显式有限 Choice v1 选项：coverage 的 `conflicting/partial/complete` 分别映射为 `violated/insufficient/satisfied`；drift 的 `drift_detected/no_drift_detected` 分别映射为 `violated/satisfied`。不将分数或原生布尔答案伪装成离散等级，也不使用阈值。缺失、tie、不完整、截断或未映射一律unknown/manual。正向结果仍须由原owner基于精确请求、方法/问题/材料版本、完整证据、独立review来源及当前Grant/guard决定是否推进；Decision本身不是Grant或verified事实。
+
+## 90：声明审核阶段，不推断来源
+
+未发布候选的 `proposal_reviews` 以 `source_review` 为锚点，按单标准、单 ReviewPlan 的顺序执行 source、quality、engineering-content、summary 四个 request/response/record 成员。source 成员记录后先经过原 source-only gate，再等待 quality ReviewPlan；其余成员通过显式 `advance_waits` 指定后续计划等待，summary record 才进入组最终 gate。每次响应使用精确 request/version/fence 与同库 BlobRef，记录操作只接受原 review owner 可解析的响应。`package_reviews` 同样声明 quality 与 engineering-content 两个单计划成员；候选的 package draft 目标引用不等于 original Package proof，生产来源仍缺时必须拒绝。
+
+Proposal targets 声明原 proposal 的 did/did-change proposed revisions，并把 `summary_ref` 声明为独立 `session-summary`/`support` target。当前原 Proposal/TemplateTarget 来源没有独立 summary ArtifactRevision selector；不能拿 claim-owner 或 Proposal 正文替代，故这组声明尚未由生产来源证明。Acceptance targets 只从原 Submission.output_refs 投影真实 submission ArtifactRevision；缺少报告输出时拒绝。独立审核观察由本次 acceptance Unit 在其审核输入中形成，不要求预先存在 ReviewRef 或 ReviewRecord；实际角色与原始证据来源仍由原 reviewer authority/source 校验。
+
+`rework_review` 是 correction-plan 单成员组。等待新计划时，match 只关联已绑定的 Submission、acceptance request、applied DID、package 与 method；新 acceptance ReviewRef、plan digest/version/fence 及 correction-plan refs 是该事件的输入，由原来源重新校验，不再把同一事件输入同时作为旧上下文 match。材料映射只引用声明的原槽或同类型记录；它不创建 Artifact 或记录。上述方法声明不替代原 ReviewPlan 完整 CheckKey 集合、当前权限、来源/角色真实性及原库事务 guard。候选 `publication_allowed` 与 `execution_allowed` 仍为 false，尚未运行候选校验或产品发布。

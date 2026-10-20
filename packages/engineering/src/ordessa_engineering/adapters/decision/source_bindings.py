@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from urllib.parse import urljoin
 
 from jsonschema import Draft202012Validator
@@ -12,6 +13,7 @@ from ordessa_engineering.application.contracts.reviewer_admission import SourceR
 from ordessa_engineering.domain.artifacts.method_binding import ExactMethodResourceRef
 from ordessa_engineering.domain.artifacts.provenance import SourceRef
 from ordessa_engineering.domain.common.models.values import Digest, RelativePath
+from ordessa_engineering.domain.common.mechanisms.hashing import record_digest
 from ordessa_engineering.domain.reviews.models import (
     AggregationPolicy, CheckKey, CheckPolicy, CriterionSetRef, ReviewPlan,
     ReviewRequirement, Target, TargetSet,
@@ -21,6 +23,7 @@ from ordessa_engineering.methods.definitions.models import (
     ReductionSpec, StandardDefinition, freeze_value,
 )
 from ordessa_engineering.methods.loading.parsing import parse_document
+from .source_sections import CONTRACT as SECTIONS_CONTRACT
 
 
 _BINDING_CONTRACT = "engineering-source-review/1"
@@ -63,7 +66,8 @@ class DeclaredSourceReviewBindings:
                  candidate, action_id, binding_resource_id,
                  criteria_resource_id, prompt_resource_id,
                  result_schema_resource_id, reviewer_roles,
-                 caller_input_schema_resource_id=None, caller_materials_ref=None):
+                 caller_input_schema_resource_id=None, caller_materials_ref=None,
+                 question_materials_ref=None):
         self.factory = factory
         self.method_guard = method_guard
         self.scope = scope
@@ -79,6 +83,9 @@ class DeclaredSourceReviewBindings:
         if caller_materials_ref is not None and type(caller_materials_ref) is not SourceRef:
             raise ValueError("SOURCE_REVIEW_MATERIAL_REF_INVALID")
         self.caller_materials_ref = caller_materials_ref
+        if question_materials_ref is not None and type(question_materials_ref) is not SourceRef:
+            raise ValueError("SOURCE_REVIEW_SECTION_REF_INVALID")
+        self.question_materials_ref = question_materials_ref
         self.reviewer_roles = tuple(reviewer_roles)
 
     def plan(self, context, review_id) -> ReviewPlan:
@@ -102,7 +109,8 @@ class DeclaredSourceReviewBindings:
                     "result_schema": inputs["result_schema"],
                     "caller_input_schema": inputs.get("caller_input_schema"),
                     "schema_documents": inputs.get("schema_documents", {}),
-                    "caller_materials_ref": self.caller_materials_ref}
+                    "caller_materials_ref": self.caller_materials_ref,
+                    "question_materials_ref": self.question_materials_ref}
 
     def _build(self, context, review_id, definition):
         if context.scope != self.scope:
@@ -173,7 +181,8 @@ class DeclaredSourceReviewBindings:
                    or policy["evaluation_scope"] != "baseline_candidate_pair"):
             raise ValueError("SOURCE_REVIEW_MATERIALS_REQUIRED")
         if not v2 and (self.caller_input_schema_resource_id is not None
-                       or self.caller_materials_ref is not None):
+                       or self.caller_materials_ref is not None
+                       or self.question_materials_ref is not None):
             raise ValueError("SOURCE_REVIEW_V1_MATERIALS_UNSUPPORTED")
         check = policy["check"]
         if (type(check) is not dict or check != {"capability_id": _DECISION_CAPABILITY,
@@ -224,6 +233,20 @@ class DeclaredSourceReviewBindings:
                        "resource_digest": bound_ref.resource_digest.hex,
                        "resource_id": bound_ref.resource_id,
                    }}
+        representation = None if self.question_materials_ref is None else {
+            "contract": SECTIONS_CONTRACT,
+            "question_materials_ref": asdict(self.question_materials_ref),
+        }
+        if representation is not None:
+            binding["input_representation"] = representation
+        derived_version = 3 if representation is not None else (2 if v2 else 1)
+        standard_id = f"{self.action_id}-source-review"
+        if representation is not None:
+            # CriterionSet.digest remains the actual method resource digest:
+            # the original admission guard verifies that exact resource. The
+            # derived standard identity pins host context without inventing a
+            # replacement method resource or weakening that guard.
+            standard_id += '-' + record_digest('source-review-input', representation).hex
         check_definitions = policy.get("required_checks") if v2 else None
         if v2:
             if (type(check_definitions) is not list or len(check_definitions) != len(_REQUIRED_V2_CHECKS)
@@ -260,8 +283,8 @@ class DeclaredSourceReviewBindings:
                                        insufficient="insufficient", unknown="insufficient"),
             ),)
         standard = StandardDefinition(
-            schema_version=1, standard_id=f"{self.action_id}-source-review",
-            revision="2" if v2 else "1", criteria=criteria_defs,
+            schema_version=1, standard_id=standard_id,
+            revision=str(derived_version), criteria=criteria_defs,
             reduction=ReductionSpec(required_criteria="all_applicable",
                                     empty_applicable_set="error",
                                     priority=("block", "manual", "pass")),
@@ -276,9 +299,9 @@ class DeclaredSourceReviewBindings:
                      for target in targets.targets)
         requirement = ReviewRequirement(
             scope=self.scope, requirement_id=f"{self.action_id}-source-review",
-            requirement_version=2 if v2 else 1, purpose="provenance_support",
+            requirement_version=derived_version, purpose="provenance_support",
             expected_targets=targets, method_ref=self.method_ref,
-            criterion_set_ref=CriterionSetRef(standard.standard_id, 2 if v2 else 1, self._digest(bound_ref)),
+            criterion_set_ref=CriterionSetRef(standard.standard_id, derived_version, self._digest(bound_ref)),
             required_check_keys=keys, eligible_reviewer_roles=roles,
             phase_key=self.action_id, schema_version=2,
             method_resource_refs=tuple(refs.values()),

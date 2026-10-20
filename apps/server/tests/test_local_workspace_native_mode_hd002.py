@@ -13,14 +13,14 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_server.errors import ServerError
-from ordessa_server.idempotency import IdempotentRecords
+from server_plugin_api.internal_errors import ServerError
+from ordessa_server.bootstrap.system_access.idempotent_records import IdempotentRecords
 from ordessa_workspace.local_environment import (
     EXECUTION_MODES, LocalEnvironmentProvider,
 )
 from ordessa_workspace.records import WorkspaceRecords
 from ordessa_workspace.service import WorkspaceService
-from pacthold_runtime_compat.storage import Database
+from ordessa_server.bootstrap.storage.product_database import Database
 
 UNAVAILABLE = {"status": "unavailable", "code": "sandbox_provider_unresolved"}
 LOCAL_ENVIRONMENT = {"kind": "local", "host": None, "user": None}

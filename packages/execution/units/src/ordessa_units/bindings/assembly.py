@@ -14,12 +14,9 @@ from collections.abc import Mapping
 from typing import Protocol
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
-)
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, UsageMutation, OperationRevisionConflict, operation_holder, node_holder, safe_json, sealed_mapping
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch
+from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, OperationRevisionConflict, operation_holder, node_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_execution_agents.profiles.definitions.models import ProfileRevision, ProfileRevisionRef
 from ordessa_execution_agents.profiles.definitions.codec import decode_content
 from ordessa_execution_agents.profiles.definitions.validation import ProfileValidationError, canonical_content
@@ -39,7 +36,7 @@ def public_parameters(value):
         if isinstance(item, dict):
             for name, child in item.items():
                 if name.lower().replace("_", "").replace("-", "") in private:
-                    raise IdentityMismatchError("preparation accepts owner references, not caller host paths or commands")
+                    raise UnitIdentityMismatch("preparation accepts owner references, not caller host paths or commands")
                 inspect(child)
         elif isinstance(item, list):
             for child in item: inspect(child)
@@ -121,7 +118,7 @@ class AgentAssembly:
     def _admitted(self, definition_ref):
         from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessAdmission
         if not self._manager_bound():
-            raise GuaranteeUnavailableError("original Unit Manager preparation owner required")
+            raise UnitGuaranteeUnavailable("original Unit Manager preparation owner required")
         return HarnessAdmission(self._environment).describe(definition_ref)
 
     def _dispatch(self, step, argument, invocation):
@@ -129,12 +126,12 @@ class AgentAssembly:
             return self._unit_manager.create(argument, invocation).prepared_unit
         if step.step_id == "start":
             return self._unit_manager.start(argument, invocation)
-        raise GuaranteeUnavailableError("Manager root step is unavailable")
+        raise UnitGuaranteeUnavailable("Manager root step is unavailable")
 
     def capabilities(self):
         try:
             store = self._nodes._store()
-        except GuaranteeUnavailableError:
+        except UnitGuaranteeUnavailable:
             return {"nodePreparation": False}
         return {"nodePreparation": isinstance(self._issuer, InvocationIssuer) and self._issuer._store is store
                 and self._environment._fingerprint_port is not None
@@ -162,7 +159,7 @@ class AgentAssembly:
         env = self._environment
         env._check_open()
         if not isinstance(request, RequestKey) or request.principal_scope != env._principal_scope:
-            raise AdmissionRefusedError("preparation principal differs from authenticated realm")
+            raise UnitAdmissionRefused("preparation principal differs from authenticated realm")
         env._check_environment(request.environment_namespace)
         self._nodes._permission(request=request, action=None if query else "prepare")
         self._nodes._store()
@@ -171,19 +168,19 @@ class AgentAssembly:
                 or not callable(getattr(self._nodes._evidence_port, "inspect", None))
                 or not callable(getattr(self._context_port, "resolve", None))
                 or not callable(getattr(self._observation_port, "observe", None))):
-            raise GuaranteeUnavailableError("explicit preparation authorities on the same store required")
+            raise UnitGuaranteeUnavailable("explicit preparation authorities on the same store required")
 
     def _resolve(self, request, manifest, admitted, node, context, options):
         try:
             resolved = self._context_port.resolve(request, manifest, admitted, node, context, options)
         except Exception:
-            raise GuaranteeUnavailableError("authorized preparation context unavailable") from None
+            raise UnitGuaranteeUnavailable("authorized preparation context unavailable") from None
         if (type(resolved) is not PreparationContext
                 or resolved.directory_binding_ref.environment_namespace != request.environment_namespace
                 or not _same_reference(resolved.private_context.get("nodeRef"), node)):
-            raise IdentityMismatchError("trusted preparation context identity differs")
+            raise UnitIdentityMismatch("trusted preparation context identity differs")
         if "directoryBindingRef" in context and not _same_reference(context["directoryBindingRef"], resolved.directory_binding_ref.to_dict()):
-            raise IdentityMismatchError("resolved DirectoryBinding differs from requested reference")
+            raise UnitIdentityMismatch("resolved DirectoryBinding differs from requested reference")
         return resolved
 
     def _plan(self, request, manifest, admitted, node, context, options, operation_ref):
@@ -196,7 +193,7 @@ class AgentAssembly:
             digest = self._environment._fingerprint_port.fingerprint(
                 request, "pacthold.agents.nodes.plan", hashed(plan))
         except Exception:
-            raise GuaranteeUnavailableError("fixed provider preparation plan unavailable") from None
+            raise UnitGuaranteeUnavailable("fixed provider preparation plan unavailable") from None
         return resolved, plan, digest
 
     def reserve(self, request, profile_ref, context, options, profile_manifest=None):
@@ -216,7 +213,7 @@ class AgentAssembly:
             if (profile_ref is None) == (profile_manifest is None):
                 raise ProfileValidationError("exactly one configuration source required")
             if not isinstance(context, Mapping) or not isinstance(options, Mapping):
-                raise IdentityMismatchError("explicit preparation parameters required")
+                raise UnitIdentityMismatch("explicit preparation parameters required")
             snapshot_write = None
             if profile_ref is None:
                 if not isinstance(profile_manifest, Mapping):
@@ -228,7 +225,7 @@ class AgentAssembly:
                 manifest = ProfileRevision(profile_ref,
                     decode_content(profile_manifest, env.environment_id))
             elif type(profile_ref) is not ProfileRevisionRef:
-                raise IdentityMismatchError("fixed Profile and explicit preparation parameters required")
+                raise UnitIdentityMismatch("fixed Profile and explicit preparation parameters required")
             else:
                 manifest = self._profiles.get_revision(profile_ref)
             fixed = {"profileRef": encode_revision_ref(profile_ref), "context": public_parameters(context),
@@ -237,7 +234,7 @@ class AgentAssembly:
             prior = env._store.read_operation(request)
             if prior is not None:
                 if prior.digest != digest or prior.intent.kind != "agent-preparation":
-                    raise IdentityMismatchError("spent preparation request differs")
+                    raise UnitIdentityMismatch("spent preparation request differs")
                 return prior
             def unresolved(value):
                 if isinstance(value, Mapping):
@@ -246,7 +243,7 @@ class AgentAssembly:
                 if isinstance(value, (list, tuple)): return any(unresolved(item) for item in value)
                 return False
             if unresolved(encode_content(manifest.content)):
-                raise GuaranteeUnavailableError("C1 material acquisition and authorized SecretRef resolution not composed")
+                raise UnitGuaranteeUnavailable("C1 material acquisition and authorized SecretRef resolution not composed")
             admitted = self._admitted(encode_content(manifest.content)["harnessDefinitionRef"])
             identity = hashed({"environmentNamespace": request.environment_namespace,
                                "principalScope": request.principal_scope, "requestId": request.request_id})[7:55]
@@ -273,7 +270,7 @@ class AgentAssembly:
         manifest = self._profiles.get_revision(decode_revision_ref(plain(operation.intent.profile_snapshot_ref)))
         admitted = self._admitted(encode_content(manifest.content)["harnessDefinitionRef"])
         if not _same_reference(admitted.provider_ref, operation.intent.steps[0].pinned_provider_ref):
-            raise AdmissionRefusedError("prepared provider activation changed")
+            raise UnitAdmissionRefused("prepared provider activation changed")
         fixed = operation.intent.context_ref["preparationRequest"]
         resolved, plan, digest = self._plan(request, manifest, admitted, operation.intent.node_ref,
                                           fixed["context"], fixed["options"], operation.intent.operation_ref)
@@ -281,7 +278,7 @@ class AgentAssembly:
         if (digest != original["planDigest"] or not _same_reference(resolved.source_refs, original["contextSources"])
                 or not _same_reference(resolved.directory_binding_ref.to_dict(), original["directoryBindingRef"])
                 or resolved.management_epoch != operation.intent.management_epoch):
-            raise AdmissionRefusedError("fixed preparation sources changed before dispatch")
+            raise UnitAdmissionRefused("fixed preparation sources changed before dispatch")
         return admitted, plan
 
     def _observe(self, operation, step, reply):
@@ -290,19 +287,19 @@ class AgentAssembly:
                 or not _same_reference(observation.provider_ref, step.pinned_provider_ref)
                 or observation.input_digest != step.input_digest
                 or observation.recovery_correlation != step.recovery_correlation):
-            raise IdentityMismatchError("original preparation receipt correlation differs")
+            raise UnitIdentityMismatch("original preparation receipt correlation differs")
         self._nodes._owner_ref(observation.evidence_ref, step.pinned_provider_ref, label="preparation step evidence")
         if not isinstance(observation.prepared_unit.get("unitRef"), Mapping):
-            raise GuaranteeUnavailableError("original prepared Unit reference unavailable")
+            raise UnitGuaranteeUnavailable("original prepared Unit reference unavailable")
         unit_ref = observation.prepared_unit["unitRef"]
         self._nodes._owner_ref(unit_ref, step.pinned_provider_ref, label="prepared Unit")
         if step.step_id == "prepare" and not any(_same_reference(usage.target_ref, unit_ref) and "use" in usage.rights
                                                  for usage in observation.usages):
-            raise GuaranteeUnavailableError("prepared Unit must be held before native start")
+            raise UnitGuaranteeUnavailable("prepared Unit must be held before native start")
         for usage in observation.usages:
             if (usage.expected_revision != 0 or usage.expected_holder_ref is not None or usage.state != "active"
                     or not _same_reference(usage.holder_ref, operation_holder(operation.request, operation.intent.operation_ref))):
-                raise IdentityMismatchError("preparation observation must acquire original operation holds")
+                raise UnitIdentityMismatch("preparation observation must acquire original operation holds")
             _safe_projection(usage.target_ref)
         return observation
 
@@ -326,10 +323,10 @@ class AgentAssembly:
             try:
                 reply = self._dispatch(frozen_step, argument, invocation)
                 if not self._issuer.verified_consumption(invocation):
-                    raise GuaranteeUnavailableError("provider did not consume the original invocation")
+                    raise UnitGuaranteeUnavailable("provider did not consume the original invocation")
                 observed = self._observe(operation, frozen_step, reply)
                 if frozen_step.step_id == "start" and not _same_reference(observed.prepared_unit, argument):
-                    raise IdentityMismatchError("start receipt changed the original prepared Unit")
+                    raise UnitIdentityMismatch("start receipt changed the original prepared Unit")
                 evidence = {"evidenceRef": plain(observed.evidence_ref), "preparedUnit": plain(observed.prepared_unit),
                             "acquiredUsages": [self._usage_source(item) for item in observed.usages]}
             except Exception:
@@ -363,7 +360,7 @@ class AgentAssembly:
             self._permission(request, query=True)
             operation = env._store.read_operation(request)
             if operation is not None and operation.intent.kind != "agent-preparation":
-                raise IdentityMismatchError("request belongs to another operation")
+                raise UnitIdentityMismatch("request belongs to another operation")
             return operation
 
     def _record_step(self, operation, step, expected_revision, outcome, evidence, usages=()):

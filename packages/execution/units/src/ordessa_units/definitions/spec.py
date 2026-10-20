@@ -3,7 +3,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from ordessa_execution_agents.profiles import ProfileRevisionRef
-from ordessa_execution_api.environment.operations import sealed_mapping
+from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
 
 
 @dataclass(frozen=True)

@@ -33,6 +33,196 @@ ACTION_INSTANCES = (("edit_repository", "first-case-edit-1"),)
 INVOCATION_KEY = bytes.fromhex("a1" * 32)
 
 
+@pytest.mark.parametrize('grant_attestor', [True, False])
+def test_native_cut_revalidates_only_the_original_conversation_source_capability(grant_attestor):
+    attestor, unrelated = 'engineering.conversation.attest', 'engineering.reviews.record'
+    grants = (DISPATCH, unrelated, *((attestor,) if grant_attestor else ()))
+    authority = InstanceAccessAuthority(lambda: 'controlled-source-token',
+        principal_id='source-instance', legacy_principal=None,
+        grants=(AccessGrant(SCOPE, grants),))
+    caller = authority.authenticate('Bearer controlled-source-token')
+    original_grants, original_epoch = caller.grants, caller.credential_epoch
+    access = EngineeringCommandAccess(authority)
+    queue, errors, done = Queue(), [], Event()
+    def write():
+        try:
+            context, token = queue.get(timeout=3)
+            with access.consume_effect_write(token, context,
+                    invocation_key=INVOCATION_KEY, action_instances=ACTION_INSTANCES):
+                if grant_attestor:
+                    with access.guard_current_capability(context, SCOPE, attestor) as current:
+                        assert current is caller
+                        access.require(context, DISPATCH)
+                else:
+                    with pytest.raises(ApplicationError, match='ACCESS_DENIED'):
+                        with access.guard_current_capability(context, SCOPE, attestor):
+                            pytest.fail('missing original source authority was invented')
+                with pytest.raises(ApplicationError):
+                    with access.guard_current_capability(context, SCOPE, unrelated):
+                        pytest.fail('bounded source read delegated another operation')
+                captured = copy_context()
+            with pytest.raises(ApplicationError):
+                captured.run(lambda: _enter_source_guard(access, context, attestor))
+        except BaseException as error:
+            errors.append(error)
+        finally:
+            done.set()
+    worker = Thread(target=write, name='controlled-original-source-cut')
+    worker.start()
+    try:
+        with access.admit(caller, SCOPE, DISPATCH,
+                          request_id='source-cut', trace_id='source-cut') as context:
+            with access.handoff_effect_write(context, invocation_key=INVOCATION_KEY,
+                    action_instances=ACTION_INSTANCES, target_thread=worker,
+                    expires_at=time.monotonic()+3) as token:
+                queue.put((context, token))
+                assert done.wait(4)
+            access.require(context, DISPATCH)
+        assert not errors
+    finally:
+        worker.join(4)
+    assert not worker.is_alive()
+    reread = authority.authenticate('Bearer controlled-source-token')
+    assert reread.grants == original_grants
+    assert reread.credential_epoch == original_epoch
+
+
+@pytest.mark.parametrize('grant_attestor', [True, False])
+def test_source_authority_is_checked_before_the_record_barrier_and_native_bytes(grant_attestor):
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock, MagicMock
+    from ordessa_environments import ProcessHandle
+    from ordessa_execution_agents.harness.transport import EffectWriteGuard
+    from ordessa_units.sessions.environment_channel import EnvironmentProcessChannel
+
+    attestor = 'engineering.conversation.attest'
+    grants = (DISPATCH, *((attestor,) if grant_attestor else ()))
+    authority = InstanceAccessAuthority(lambda: 'controlled-byte-cut-token',
+        principal_id='source-instance', legacy_principal=None,
+        grants=(AccessGrant(SCOPE, grants),))
+    caller = authority.authenticate('Bearer controlled-byte-cut-token')
+    access = EngineeringCommandAccess(authority)
+    queue, errors, done = Queue(), [], Event()
+    state = {'record_barriers': 0, 'writes': 0}
+
+    def worker_body():
+        try:
+            context, token = queue.get(timeout=3)
+            async def exercise():
+                unit = {'environmentNamespace': 'controlled', 'unitId': 'source-cut',
+                        'ownerProviderRef': {}, 'sourceRevision': 'controlled'}
+                params = {'sessionId': 'controlled', 'prompt': []}
+                frame = (json.dumps({'jsonrpc': '2.0', 'id': 1,
+                    'method': 'session/prompt', 'params': params}) + '\n').encode()
+                process = MagicMock(spec=ProcessHandle)
+                process.observe.return_value = SimpleNamespace(state='running')
+                process.read_stderr = AsyncMock(return_value=b'')
+                async def write(data, *, timeout=None):
+                    assert data == frame and state['record_barriers'] == 1
+                    state['writes'] += 1
+                    return len(data)
+                process.write_stdin = write
+                transport = EnvironmentProcessChannel(process, name='controlled-source-cut', managed=True)
+                channel = transport.bind_writer(transport.acquire_writer())
+                @asynccontextmanager
+                async def acquire(identity, deadline):
+                    with access.consume_effect_write(token, context,
+                            invocation_key=INVOCATION_KEY, action_instances=ACTION_INSTANCES):
+                        with access.guard_current_capability(context, SCOPE, attestor):
+                            yield
+                guard = EffectWriteGuard(unit, 'source-cut', 'sha256:' + 'a' * 64,
+                                         params, acquire)
+                def before_write():
+                    state['record_barriers'] += 1
+                if grant_attestor:
+                    await channel.send_frame_async(frame, before_write=before_write,
+                                                   effect_write_guard=guard)
+                else:
+                    with pytest.raises(ApplicationError, match='ACCESS_DENIED'):
+                        await channel.send_frame_async(frame, before_write=before_write,
+                                                       effect_write_guard=guard)
+                    assert transport._unresolved
+                if transport._stderr_task is not None:
+                    await transport._stderr_task
+            asyncio.run(exercise())
+        except BaseException as error:
+            errors.append(error)
+        finally:
+            done.set()
+    worker = Thread(target=worker_body, name='controlled-source-byte-cut')
+    worker.start()
+    try:
+        with access.admit(caller, SCOPE, DISPATCH,
+                          request_id='source-byte-cut', trace_id='source-byte-cut') as context:
+            with access.handoff_effect_write(context, invocation_key=INVOCATION_KEY,
+                    action_instances=ACTION_INSTANCES, target_thread=worker,
+                    expires_at=time.monotonic()+3) as token:
+                queue.put((context, token))
+                assert done.wait(4)
+        assert errors == []
+    finally:
+        worker.join(4)
+    assert not worker.is_alive()
+    assert state == {'record_barriers': int(grant_attestor), 'writes': int(grant_attestor)}
+    reread = authority.authenticate('Bearer controlled-byte-cut-token')
+    assert reread.grants == caller.grants and reread.credential_epoch == caller.credential_epoch
+
+
+def _enter_source_guard(access, context, capability):
+    with access.guard_current_capability(context, SCOPE, capability):
+        pass
+
+
+def test_read_only_review_handoff_never_accepts_or_delegates_dispatch_actions():
+    review = 'engineering.reviews.request'
+    authority = InstanceAccessAuthority(lambda: 'controlled-review-token',
+        principal_id='review-instance', legacy_principal=None,
+        grants=(AccessGrant(SCOPE, (review, DISPATCH)),))
+    caller = authority.authenticate('Bearer controlled-review-token')
+    access = EngineeringCommandAccess(authority)
+    queue, errors, done = Queue(), [], Event()
+    def write():
+        try:
+            context, token = queue.get(timeout=3)
+            with access.consume_effect_write(token, context,
+                    invocation_key=INVOCATION_KEY, action_instances=()):
+                access.require(context, review)
+                _must_refuse(lambda: access.require(context, DISPATCH))
+            _must_refuse(lambda: _consume(access, token, context,
+                invocation_key=INVOCATION_KEY, action_instances=()))
+        except BaseException as error:
+            errors.append(error)
+        finally:
+            done.set()
+    worker = Thread(target=write)
+    worker.start()
+    try:
+        with access.admit(caller, SCOPE, review,
+                          request_id='review-native', trace_id='review-native') as context:
+            with pytest.raises(ApplicationError):
+                with access.handoff_effect_write(context, invocation_key=INVOCATION_KEY,
+                        action_instances=ACTION_INSTANCES, target_thread=worker,
+                        expires_at=time.monotonic()+2):
+                    pytest.fail('review borrowed implementation actions')
+            with access.handoff_effect_write(context, invocation_key=INVOCATION_KEY,
+                    action_instances=(), target_thread=worker,
+                    expires_at=time.monotonic()+2) as token:
+                queue.put((context, token))
+                assert done.wait(3)
+            access.require(context, review)
+        assert not errors
+        with access.admit(caller, SCOPE, DISPATCH,
+                          request_id='dispatch-empty', trace_id='dispatch-empty') as context:
+            with pytest.raises(ApplicationError):
+                with access.handoff_effect_write(context, invocation_key=INVOCATION_KEY,
+                        action_instances=(), target_thread=worker,
+                        expires_at=time.monotonic()+2):
+                    pytest.fail('dispatch lost its action binding')
+    finally:
+        worker.join(4)
+    assert not worker.is_alive()
+
+
 def _access():
     authority = InstanceAccessAuthority(
         lambda: "controlled-first-case-token",

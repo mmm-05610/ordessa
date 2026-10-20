@@ -19,10 +19,11 @@ from ordessa_execution_agents.harness.providers.registry import (
 from ordessa_units.public import UnitAdmissionContext, SqliteUnitStore
 from ordessa_units.admission.material_registration import MaterialCatalog
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import IdentityMismatchError, AdmissionRefusedError, GuaranteeUnavailableError, UnknownResultError
+from ordessa_units.errors import UnitIdentityMismatch, UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitOperationUnknown
 from ordessa_infrastructure.database.records import DomainRevisionConflict
-from ordessa_execution_api.environment.identity import ParticipantInstanceRef
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, UsageMutation, operation_holder, node_holder, safe_json
+from ordessa_units.definitions.admission_identity import AgentNodeRef
+from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, operation_holder, node_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.persistence.sqlite import KeyConflictError
 
 
@@ -56,9 +57,12 @@ def make_context(store, policy, *, principal_scope="principal", fingerprint_port
     context_owner = {}
     def retirement_guard(owner_id, generation):
         return context_owner["context"].provider_retirement_guard(owner_id, generation)
+    def harness_retirement_guard(owner_id, generation):
+        return context_owner["context"].harness_provider_retirement_guard(owner_id, generation)
+
     harness_catalog = HarnessCatalog(
         "env", policy=policy, principal_scope=principal_scope, admission_lock=admission_lock,
-        retirement_guard=retirement_guard,
+        retirement_guard=harness_retirement_guard,
     )
     material_catalog = MaterialCatalog(
         "env", admission_lock=admission_lock, retirement_guard=retirement_guard,
@@ -94,7 +98,7 @@ def setup(tmp_path):
     context, admitted = make_context(store, policy)
     provider = admitted.provider_ref
     request = RequestKey("env", "principal", "request")
-    ref = ParticipantInstanceRef("env", "node", 1)
+    ref = AgentNodeRef("env", "node", 1)
     step = StepIntent("prepare", provider, "input-digest", "fixed-correlation")
     intent = OperationIntent("operation", "prepare", {"environmentNamespace": "env", "profileId": "profile", "manifestRevision": 1, "contentDigest": "sha256:" + "b" * 64},
         {"environmentNamespace": "env", "directoryBindingRef": {"environmentNamespace": "env", "bindingId": "directory", "revision": 1}}, (step,), encode_node_ref(ref))

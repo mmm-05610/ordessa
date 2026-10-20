@@ -1,0 +1,82 @@
+{
+  "scope": "nine source conflict dispositions, original Server ID owner extraction, actual neutral namespaces and preserved canonical assertions",
+  "closedTargets": [
+    "apps/server/deployment/default-product/pyproject.toml",
+    "apps/server/deployment/default-product/src/ordessa_server_product/agent_owner.py",
+    "apps/server/deployment/default-product/src/ordessa_server_product/composition.py",
+    "apps/server/src/ordessa_server/adapters/decision/__init__.py",
+    "apps/server/src/ordessa_server/bootstrap/__init__.py",
+    "apps/server/src/ordessa_server/system_access/context.py",
+    "apps/server/src/ordessa_server/transport/http/__init__.py",
+    "apps/server/src/ordessa_server/transport/http/app.py",
+    "tests/contracts/test_canonical_encoding.py"
+  ],
+  "qualification": "Source owner resolution only, not default deployment configuration, full Engineering, legacy native configuration or installed release acceptance",
+  "proof": {
+    "serverIdOriginalAstUnchanged": true,
+    "originalServerIdentityTable": "server_bootstrap(singleton=1,server_id,created_at), original injected DatabasePort transaction; no second ID store or Unit runtime import",
+    "bootstrapRetainedVerifiedNightlyBytes": true,
+    "productionPythonSourcesScanned": 1185,
+    "staticImportsOfRetiredFacades": [],
+    "originalCanonicalAssertions": 28,
+    "currentCanonicalAssertions": 29,
+    "allOriginalCanonicalAssertAstsRetained": true,
+    "originalLibraryJsonTestBodyAstUnchanged": true
+  },
+  "validation": [
+    {
+      "label": "server-identity-owner",
+      "passed": 2,
+      "skip": 0
+    },
+    {
+      "label": "namespace-codec-final",
+      "passed": 32,
+      "skip": 0
+    },
+    {
+      "reference": "http-entrypoint-checkpoint.json",
+      "passed": 18,
+      "skip": 0,
+      "use": "previously committed current Product/Agent/HTTP owner verification"
+    }
+  ],
+  "counter": {
+    "resolvedTargets": 201,
+    "pendingTargets": 22
+  },
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/ordessa_server/composition/runtime.py",
+      "sha256": "f861a2af8191819f151b70bcd6dff29b0055840e632cef351f8bd951398e517b"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/bootstrap/server_identity.py",
+      "sha256": "86bd21c21c714130e915e18b60219f735a7f86ea6dda326d46497bbe9b6b8d4f"
+    },
+    {
+      "path": "apps/server/tests/platform/test_server_identity_owner.py",
+      "sha256": "9354be530370d3e56e823942a3751c32c6efbad58b45f4e179bb96c89096e8fc"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_bindings/native_access.py",
+      "sha256": "c4b1f85ca4c342d263dfaf569f4fdef5608c48514e1a79b6853fc48a07fb0942"
+    },
+    {
+      "path": "packages/interfaces/system-access/bindings/src/ordessa_system_access_bindings/engineering_access.py",
+      "sha256": "bb379dff021d75fde57613d0504300f349171b1fb82e8b6169c65077b243805d"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_original_access_handoff.py",
+      "sha256": "7ff2efa3237d996e39fa63d13bea04a5c6677a1ffe075c6e491641ad55a052ba"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_registry_http_unblocked.py",
+      "sha256": "e9fc2413155a1c152e1bbb6086eb0d4320038016ec724b0fd0ba74bfa1705bdc"
+    },
+    {
+      "path": "tests/contracts/test_canonical_encoding.py",
+      "sha256": "a59cc03e1071fd9338baa6f5996bdb07d9c5751a27bdcd34cf6a03cb81e2cf27"
+    }
+  ]
+}

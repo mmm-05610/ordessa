@@ -1,52 +1,58 @@
-"""Result-routed non-loop stop outcomes preserve declared terminal state."""
-from dataclasses import asdict
+"""Withdrawn compiled result-routing route, kept as an explicit record.
 
-from ordessa_engineering.application.contracts.method_work import WORK_CONTRACT, WAIT_EVENT
-from ordessa_engineering.application.contracts.run_waits import run_wait_row_digest
-from test_method_work import adopt_workflow_variant, call, env, query
+The previous suite asserted that an accepted result routed to a stop outcome
+finished as SLICE_DONE without spending a loop round, and inspected the
+persisted step receipt, round counter and cursor the compiled program produced.
+Those invariants belong to the withdrawn compiled route: creating and advancing
+a compiled run is no longer an advertised Service operation, and this stage keeps
+the persisted rows for reading only. The retired assertions are recorded here
+rather than silently dropped or weakened:
+
+  * accepted-result routing stops with the declared outcome (`SLICE_DONE`);
+  * loop rounds are consumed only where the compiled workflow declares them;
+  * one step receipt is written per recorded command step;
+  * the receipt carries the stop and result outcomes it was routed by.
+
+Re-establishing them needs a real declarative replacement for compiled step and
+result routing, which is not in this stage's scope.
+"""
+import pytest
+
+from ordessa_engineering.application.contracts.errors import ApplicationError
+from test_method_work import call, env, query, seed_historical_run
+
+WITHDRAWN = (
+    'engineering.work.bind_inputs',
+    'engineering.work.record_command_step',
+    'engineering.work.record_dispatch_step',
+    'engineering.runs.resume',
+    'engineering.runs.cancel',
+)
 
 
-def test_accepted_result_route_stops_without_spending_loop_round(env):
-    e=env
-    workflow={'schema_version':1,'workflow_id':'accepted-route-does-not-loop','entry':'seed',
-        'resume_contract':WORK_CONTRACT,
-        'context_slots':['kind','initial','artifact_ref'],'wait_kinds':['owner_reconciliation'],
-        'stop_outcomes':['accepted','rejected'],'outputs':{'primary_artifact':'artifact_ref'},
-        'steps':[
-            {'id':'seed','kind':'wait','event':WAIT_EVENT,
-             'bind':{'artifact_ref':'event.artifact_ref'},'next':'capture'},
-            {'id':'capture','kind':'operation','operation':'engineering.artifacts.create',
-             'inputs':{'kind':'kind','initial':'initial'},
-             'outcomes':{'completed':{'stop':'rejected'},'rejected':{'stop':'rejected'}},
-             'result_routing':{'path':'/revision_ref/project_id',
-                 'outcomes':{'project-1':{'next':'done'},'rework':{'next':'capture'}}}},
-            {'id':'done','kind':'stop','outcome':'accepted'},
-        ],
-        'loops':[{'loop_id':'retry-capture','from_step':'capture','to_step':'capture',
-                  'max_rounds':3,'on_exhausted':'rejected'}]}
-    adopt_workflow_variant(e,workflow,'test.current-work-accepted-result')
-    call(e,'engineering.work.start',{'run_id':'accepted-route-run'},'accepted-route-start')
-    ready=query(e,WAIT_EVENT,{'run_id':'accepted-route-run'})
-    call(e,'engineering.runs.resume',{'run_id':'accepted-route-run',
-        'expected_row_digest':ready['row_digest'],
-        'expected_condition_digest':ready['condition_digest'],
-        'expected_next_step_ordinal':ready['next_step_ordinal']},'accepted-route-resume')
-    row=query(e,'engineering.work.get',{'run_id':'accepted-route-run'})
-    result=call(e,'engineering.artifacts.create',{
-        'kind':row['inputs']['slots']['kind'],'initial':row['inputs']['slots']['initial']},
-        'accepted-route-command')
-    assert result.status=='completed'
-    current=e['lib'].run_row('accepted-route-run')
-    recorded=call(e,'engineering.work.record_command_step',{
-        'run_id':'accepted-route-run','operation_request_id':'accepted-route-command',
-        'expected_row_digest':asdict(run_wait_row_digest(current)),
-        'expected_next_step_ordinal':0},'accepted-route-record')
-    assert recorded.result['status']=='SLICE_DONE'
-    final=e['lib'].run_row('accepted-route-run')
-    assert final['status']=='SLICE_DONE' and final['inputs']['rounds']=={'retry-capture':1}
-    steps=e['lib'].step_rows('accepted-route-run')
-    assert len(steps)==1 and steps[0]['attempt']==1
-    with e['factory'].begin(e['scope'],'read') as uow:
-        receipt=uow.workflow.read(steps[0]['receipt_ref'])
-    assert receipt['stop_outcome']=='accepted'
-    assert receipt['result_outcome']=='project-1'
+def test_compiled_create_and_advance_routes_are_withdrawn(env):
+    """No advertised route reaches the compiled create/advance lifecycle."""
+    e = env
+    advertised = set(type(e['facade']).supported_commands)
+    for operation in WITHDRAWN:
+        assert operation not in advertised
+        with pytest.raises(ApplicationError) as refused:
+            call(e, operation, {'run_id': 'accepted-route-run'}, 'withdrawn-' + operation)
+        assert refused.value.code == 'OPERATION_UNAVAILABLE'
+
+
+def test_historical_compiled_row_stays_readable_and_unadvanced(env):
+    """A seeded historical row can still be read, and nothing advances it."""
+    e = env
+    seed_historical_run(e, 'historical-only-run')
+    listed = query(e, 'engineering.runs.list', {'limit': 8}, 'historical-list')
+    assert [row['run_id'] for row in listed['runs']] == ['historical-only-run']
+    assert listed['runs'][0]['status'] == 'WAITING_FOR_CONDITION'
+    assert listed['runs'][0]['execution'] == {'availability': 'unavailable'}
+    for operation in WITHDRAWN:
+        with pytest.raises(ApplicationError) as refused:
+            call(e, operation, {'run_id': 'historical-only-run'}, 'advance-' + operation)
+        assert refused.value.code == 'OPERATION_UNAVAILABLE'
+    final = e['lib'].run_row('historical-only-run')
+    assert final['status'] == 'WAITING_FOR_CONDITION'
+    assert not e['lib'].step_rows('historical-only-run')

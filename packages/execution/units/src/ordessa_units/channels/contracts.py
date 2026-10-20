@@ -8,8 +8,8 @@ from dataclasses import dataclass
 import re
 from typing import Mapping, Protocol
 
-from ordessa_execution_api.environment import GuaranteeUnavailableError
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_units.errors import UnitGuaranteeUnavailable
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 
 EXECUTION_EVIDENCE_VERSION = "workspace-managed-execute/1"
 
@@ -49,7 +49,7 @@ class WorkspaceExecutionEvidence:
                 or self.node_ref.get("environmentNamespace") != self.environment_namespace
                 or self.unit_ref.get("environmentNamespace") != self.environment_namespace
                 or self.capture_ref.get("environmentNamespace") != self.environment_namespace):
-            raise GuaranteeUnavailableError("Workspace execute evidence is incomplete")
+            raise UnitGuaranteeUnavailable("Workspace execute evidence is incomplete")
         return value
 
 

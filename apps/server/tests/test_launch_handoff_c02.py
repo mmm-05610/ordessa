@@ -40,7 +40,7 @@ def test_the_host_side_declares_the_same_five_codes():
     """The two halves are separate packages in separate languages; this is
     what stops them from drifting into two vocabularies for one failure."""
     declared = (
-        REPO_ROOT / "packages/desktop-platform/server-bridge/src/errors.ts"
+        REPO_ROOT / "apps/desktop/electron/server-bridge/src/errors.ts"
     ).read_text(encoding="utf-8")
     from ordessa_server.bootstrap.data_root import LAUNCH_ERROR_CODES
 

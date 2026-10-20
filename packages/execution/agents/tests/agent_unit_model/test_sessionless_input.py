@@ -16,8 +16,9 @@ from agent_tools_fixtures.node_publication import setup as node_fixture, source,
 from test_managed_input_reservations import Native
 from agent_tools_fixtures.invocation_authority import Authority, CurrentState
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import UnknownResultError, AdmissionRefusedError, GuaranteeUnavailableError
-from ordessa_execution_api.environment.operations import UsageMutation, operation_holder, node_holder, safe_json
+from ordessa_units.errors import UnitOperationUnknown, UnitAdmissionRefused, UnitGuaranteeUnavailable
+from ordessa_units.definitions.operations import UsageMutation, operation_holder, node_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_infrastructure.database.records import DomainRevisionConflict
 from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
 from ordessa_units.persistence.sqlite.store import SqliteUnitStore
@@ -105,7 +106,7 @@ def test_claim_and_original_verifier_use_complete_unit_target(first_input):
         p[4].state.unit_ref, op.digest)
     assert facts["targetRef"] == p[4].state.unit_ref and facts["query"] is False
     assert p[0].read_operation_step(op.request, "native-input").outcome == "possibly-dispatched"
-    with pytest.raises(UnknownResultError): p[5].claim_dispatch(op.request, p[8])
+    with pytest.raises(UnitOperationUnknown): p[5].claim_dispatch(op.request, p[8])
     assert p[4].dispatch_calls == 0
 
 
@@ -138,7 +139,7 @@ def test_other_draft_cannot_bypass_first_unit_hold_even_if_terminal(first_input,
     if outcome != "reserved":
         p[0].record_operation_outcome(op.request, op.digest, op.revision, outcome,
             {} if outcome == "unknown" else {"evidenceRef": source(p[4].state.provider_ref, "controlled-refusal")})
-    with pytest.raises(UnknownResultError): reserve(p, key="second", draft="draft-b")
+    with pytest.raises(UnitOperationUnknown): reserve(p, key="second", draft="draft-b")
     assert p[0].read_operation(RequestKey("env", "principal", "second")) is None
     assert len(p[0].list_domain("env", DRAFT_ATTEMPTS)) == 1
     assert p[0].list_domain("env", FIRST_SESSION_ATTEMPTS)[0]["value"]["state"] == "held"
@@ -151,8 +152,8 @@ def test_observed_session_does_not_release_unknown_first_input_or_fallback(first
     p[4].state = NativeInputState(old.node_ref, old.provider_ref, old.unit_ref,
         source(old.provider_ref, "actual-observed-session"), 1, old.management_epoch,
         old.directory_binding_ref, old.before_configuration_evidence)
-    with pytest.raises(UnknownResultError): reserve(p, key="second", draft="draft-b")
-    with pytest.raises(AdmissionRefusedError): p[5].claim_dispatch(op.request, p[8])
+    with pytest.raises(UnitOperationUnknown): reserve(p, key="second", draft="draft-b")
+    with pytest.raises(UnitAdmissionRefused): p[5].claim_dispatch(op.request, p[8])
     assert p[0].read_operation_step(op.request, "native-input") is None
     assert p[4].dispatch_calls == 0
 
@@ -166,7 +167,7 @@ def test_owner_binding_changes_refuse_before_claim(first_input, field):
     elif field == "directory_binding_ref": value = DirectoryBindingRef("env", "changed", 1, "sha256:" + "a" * 64)
     else: value = {**getattr(state, field), "sourceRevision": "changed"}
     p[4].state = replace(state, **{field: value})
-    with pytest.raises(AdmissionRefusedError): p[5].claim_dispatch(op.request, p[8])
+    with pytest.raises(UnitAdmissionRefused): p[5].claim_dispatch(op.request, p[8])
     assert p[0].read_operation_step(op.request, "native-input") is None
 
 
@@ -177,7 +178,7 @@ def test_configuration_source_boolean_owner_cannot_reuse_fixed_input_evidence(fi
     proof["ownerProviderRef"] = dict(proof["ownerProviderRef"], generation=True)
     assert proof == op.intent.context_ref["beforeConfigurationEvidence"]
     p[4].state = replace(p[4].state, before_configuration_evidence=proof)
-    with pytest.raises(AdmissionRefusedError): p[5].claim_dispatch(op.request, p[8])
+    with pytest.raises(UnitAdmissionRefused): p[5].claim_dispatch(op.request, p[8])
     assert p[0].read_operation_step(op.request, "native-input") is None
 
 
@@ -208,7 +209,7 @@ def test_concurrent_different_drafts_have_only_one_original_unit_reservation(fir
     p = first_input
     def attempt(i):
         try: return reserve(p, key=f"first-{i}", draft=f"draft-{i}")
-        except UnknownResultError: return None
+        except UnitOperationUnknown: return None
     with ThreadPoolExecutor(max_workers=2) as pool: outcomes = tuple(pool.map(attempt, (1, 2)))
     assert sum(item is not None for item in outcomes) == 1
     assert len(p[0].list_domain("env", FIRST_SESSION_ATTEMPTS)) == 1

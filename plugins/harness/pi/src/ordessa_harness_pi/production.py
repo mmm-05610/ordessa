@@ -45,7 +45,8 @@ from pathlib import Path
 import re
 from typing import Any, Mapping, Sequence
 
-from ordessa_execution_agents.harness.definitions.harness_capabilities import CANONICAL_CAPABILITY_IDS
+# Historical deployment-document fields only, not an active capability registry.
+CANONICAL_CAPABILITY_IDS=('start','observe','finish','attach','steer','stream','permissions','native_continuation')
 
 PI_PROVIDER = "deepseek"
 #: The product/ProviderModel model id the user confirmed. It must never change

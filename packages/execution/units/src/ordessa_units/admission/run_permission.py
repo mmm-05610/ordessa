@@ -15,7 +15,7 @@ from threading import RLock
 import time
 
 from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref
-from ordessa_execution_api.environment.operations import safe_json, sealed_mapping
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from .invocation import InvocationAuthorityRefused, InvocationGrant
 
 RUN_ACTIONS = frozenset({'prepare', 'start', 'interaction', 'stop', 'release'})

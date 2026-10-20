@@ -6,7 +6,7 @@ from ordessa_units.assembly import build_fresh_acp_unit_factory
 from ordessa_units.admission.owner_ports import AgentProviderView
 from ordessa_units.admission.owner_selection import AgentOwnerUnavailable
 from ordessa_units.admission.connection import ConnectionLeasePort
-from ordessa_execution_api.environment import EnvironmentId
+from ordessa_units.definitions.admission_identity import AdmissionNamespace
 
 
 def selected_factory(m, *, process_binding_factory=None):
@@ -46,7 +46,7 @@ def test_public_factory_builds_same_owner_units_and_process_binding_gates_origin
     factory = selected_factory(m, process_binding_factory=binding_factory)
     assert m.events.count('spawn') == 0 and bindings == []
     def create(plan):
-        unit = factory.create_instance(EnvironmentId('env'), plan,
+        unit = factory.create_instance(AdmissionNamespace('env'), plan,
                                       AgentProviderView(m.records, m.records.verifier))
         m.instances.append(unit)
         return unit
@@ -71,10 +71,10 @@ def test_public_factory_refuses_substituted_original_view_before_environment_eff
     factory = selected_factory(m)
     plan = m.bindings.resolve_plan(m.spec, m.authorization('refused'))
     with pytest.raises(AgentOwnerUnavailable):
-        factory.create_instance(EnvironmentId('env'), plan,
+        factory.create_instance(AdmissionNamespace('env'), plan,
                                 AgentProviderView(m.records, object()))
     with pytest.raises(AgentOwnerUnavailable):
-        factory.create_instance(EnvironmentId('other'), plan,
+        factory.create_instance(AdmissionNamespace('other'), plan,
                                 AgentProviderView(m.records, m.records.verifier))
     assert m.events.count('spawn') == 0
     assert m.environments.instance.snapshot.active_uses == 0

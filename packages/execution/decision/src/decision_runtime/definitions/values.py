@@ -1,71 +1,122 @@
-"""Immutable decision value codec (freeze/canonical) — decision-json/1."""
-from collections.abc import Mapping
-from dataclasses import fields, is_dataclass
-from types import MappingProxyType
+"""Canonical finite-JSON helpers shared by the decision definitions."""
+from __future__ import annotations
+
 import hashlib
 import json
-import math
+import re
+from collections.abc import Mapping
 
-from .errors import ContractError
+MAX_VALUE_BYTES = 512 * 1024
+MAX_JOB_DOCUMENT_BYTES = 8 * (512 * 1024) + 65536
 
-__all__ = ['ContractError', 'CODEC_VERSION', 'plain', 'freeze', 'canonical', 'decode',
-           'digest', 'name', 'revision']
 
-CODEC_VERSION = 'decision-json/1'
-
-def plain(value):
-    if is_dataclass(value):
-        return {f.name: plain(getattr(value, f.name)) for f in fields(value) if not f.name.startswith('_')}
-    if isinstance(value, Mapping):
-        return {k: plain(v) for k, v in value.items()}
-    if isinstance(value, (tuple, list)):
-        return [plain(v) for v in value]
+def job_document_bound(value=None):
+    """Explicit host document allocation; unrelated to model/output budgets."""
+    if value is None:
+        return MAX_VALUE_BYTES
+    if type(value) is not int or not 0 < value <= MAX_JOB_DOCUMENT_BYTES:
+        raise DecisionError("invalid_job_document_limit")
     return value
+_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$")
 
-def freeze(value, *, depth=0, max_depth=32, max_string=65536):
-    if depth > max_depth: raise ContractError('json_depth')
-    if value is None or type(value) is bool: return value
-    if type(value) is int: return value
-    if type(value) is float:
-        if not math.isfinite(value): raise ContractError('nonfinite')
-        return value
-    if type(value) is str:
-        if len(value.encode('utf-8')) > max_string: raise ContractError('string_size')
-        return value
-    if isinstance(value, Mapping):
-        if any(type(k) is not str for k in value): raise ContractError('json_key')
-        return MappingProxyType({k: freeze(v, depth=depth+1, max_depth=max_depth, max_string=max_string) for k, v in value.items()})
-    if type(value) in (tuple, list):
-        return tuple(freeze(v, depth=depth+1, max_depth=max_depth, max_string=max_string) for v in value)
-    raise ContractError('json_type')
 
-def canonical(value, *, max_bytes=262144):
-    data = json.dumps(plain(freeze(plain(value))), sort_keys=True, ensure_ascii=False, separators=(',', ':'), allow_nan=False).encode('utf-8')
-    if len(data) > max_bytes: raise ContractError('json_size')
-    return data
+class DecisionError(RuntimeError):
+    def __init__(self, code: str) -> None:
+        self.code = code if type(code) is str and _ID.fullmatch(code) else "invalid_error_code"
+        super().__init__(self.code)
 
-def decode(data, *, max_bytes=262144):
-    if len(data) > max_bytes: raise ContractError('json_size')
-    def pairs(items):
-        out = {}
-        for k,v in items:
-            if k in out: raise ContractError('duplicate_key')
-            out[k] = v
-        return out
-    def bad(_): raise ContractError('nonfinite')
-    try: return freeze(json.loads(data, object_pairs_hook=pairs, parse_constant=bad))
-    except (ValueError, UnicodeError, RecursionError) as exc: raise ContractError('json_invalid') from None
-
-def digest(domain, value):
-    if domain not in {'request','proposal','result','descriptor','runmanifest','question','answer','policy','feedback','event','flow'}:
-        raise ContractError('digest_domain')
-    return 'sha256:' + hashlib.sha256(('decision.'+domain+'\n'+CODEC_VERSION+'\n').encode()+canonical(value, max_bytes=2097152)).hexdigest()
 
 def name(value):
-    if type(value) is not str or not value or len(value)>256 or value.strip()!=value or any(ord(c)<32 for c in value):
-        raise ContractError('identity')
+    if type(value) is not str or not _ID.fullmatch(value):
+        raise DecisionError("invalid_identifier")
     return value
 
+
+def plain(value, *, depth: int = 0):
+    if depth > 32:
+        raise DecisionError("value_too_deep")
+    if value is None or type(value) in (bool, int, str):
+        return value
+    if type(value) is float:
+        if value != value or value in (float("inf"), float("-inf")):
+            raise DecisionError("nonfinite_number")
+        return value
+    if isinstance(value, Mapping):
+        out = {}
+        for key, item in value.items():
+            if type(key) is not str:
+                raise DecisionError("nonstring_key")
+            out[key] = plain(item, depth=depth + 1)
+        return out
+    if isinstance(value, (list, tuple)):
+        return [plain(item, depth=depth + 1) for item in value]
+    raise DecisionError("non_json_value")
+
+
+def canonical_bytes(value, *, maximum: int = MAX_VALUE_BYTES) -> bytes:
+    body = json.dumps(plain(value), sort_keys=True, separators=(",", ":"),
+                      ensure_ascii=False, allow_nan=False).encode("utf-8")
+    if len(body) > maximum:
+        raise DecisionError("value_too_large")
+    return body
+
+
+def decode_json(raw: bytes):
+    try:
+        value = json.loads(raw.decode("utf-8"), parse_constant=_reject)
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise DecisionError("invalid_json") from exc
+    if canonical_bytes(value) != raw:
+        raise DecisionError("noncanonical_json")
+    return value
+
+
+def digest_hex(value, *, maximum: int = MAX_VALUE_BYTES):
+    return hashlib.sha256(canonical_bytes(value, maximum=maximum)).hexdigest()
+
+
+def _reject(text):
+    raise DecisionError("nonfinite_number")
+
+
+class ContractError(DecisionError):
+    """Legacy-name refusal used by the decision provider adapters."""
+
+
+def canonical(value, *, max_string=65536, max_bytes=262144):
+    return canonical_bytes(value, maximum=max_bytes)
+
+
+def decode(data, *, max_bytes=262144):
+    if type(data) is not bytes:
+        raise ContractError("json_invalid")
+    try:
+        value = json.loads(data.decode("utf-8"), object_pairs_hook=_pairs,
+                           parse_constant=_reject)
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise ContractError("json_invalid") from exc
+    if canonical_bytes(value, maximum=max_bytes) != data:
+        raise ContractError("json_invalid")
+    return value
+
+
+def _pairs(items):
+    out = {}
+    for key, value in items:
+        if key in out:
+            raise ContractError("duplicate_key")
+        out[key] = value
+    return out
+
+
+def digest(domain, value, *, max_string=65536, max_bytes=2097152):
+    if domain not in {"descriptor", "question", "answer", "policy", "event", "feedback"}:
+        raise ContractError("digest_domain")
+    body = canonical_bytes({"domain": domain, "value": plain(value)}, maximum=max_bytes)
+    return "sha256:" + hashlib.sha256(body).hexdigest()
+
+
 def revision(value):
-    if value is not None: name(value)
+    if value is not None:
+        name(value)
     return value

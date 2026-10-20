@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import hashlib
 from threading import RLock
 
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.lifecycle.unit_lifecycle import same_reference, UnitLifecycleRefused
 
 

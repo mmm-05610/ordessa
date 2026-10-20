@@ -38,7 +38,12 @@ from pathlib import Path
 import re
 from typing import Any, Mapping, Sequence
 
-from ordessa_execution_agents.harness.definitions.harness_capabilities import CANONICAL_CAPABILITY_IDS
+# Historical deployment-document vocabulary, not a live capability registry.
+# New SDK provider readiness never derives from these offline template fields.
+DEPLOYMENT_CAPABILITY_KEYS = (
+    'start', 'observe', 'finish', 'attach', 'steer', 'stream', 'permissions',
+    'native_continuation',
+)
 
 OPENCODE_PROVIDER = "deepseek"
 #: 产品/ProviderModel 模型 id（用户确认过的那个），不得被静默改写。
@@ -128,10 +133,10 @@ def capability_claims(*, capabilities_for) -> dict[str, bool]:
     if not callable(capabilities_for):
         raise OpenCodeProductionTemplateError("OPENCODE_CAPABILITY_SOURCE_REQUIRED")
     claims = capabilities_for("opencode")
-    if (not isinstance(claims, Mapping) or set(claims) != set(CANONICAL_CAPABILITY_IDS)
-            or any(type(claims[key]) is not bool for key in CANONICAL_CAPABILITY_IDS)):
+    if (not isinstance(claims, Mapping) or set(claims) != set(DEPLOYMENT_CAPABILITY_KEYS)
+            or any(type(claims[key]) is not bool for key in DEPLOYMENT_CAPABILITY_KEYS)):
         raise OpenCodeProductionTemplateError("OPENCODE_CAPABILITY_CLAIMS_INVALID")
-    return {key: claims[key] for key in CANONICAL_CAPABILITY_IDS}
+    return {key: claims[key] for key in DEPLOYMENT_CAPABILITY_KEYS}
 
 
 def config_document() -> dict[str, Any]:

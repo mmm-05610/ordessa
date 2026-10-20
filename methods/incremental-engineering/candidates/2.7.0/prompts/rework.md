@@ -1,0 +1,1 @@
+Apply only a caller-approved, explicit rework request tied to the same package and operation. Return one updated implementation report for a new independent review. Do not retry automatically; cancellation and unknown evidence remain terminal for this operation.

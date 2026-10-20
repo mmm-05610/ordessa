@@ -1,0 +1,119 @@
+schema_version: 1
+standard_id: quality-review
+revision: 2.0.0
+purpose: quality
+criteria:
+- criterion_id: document_shape
+  statement: 方法正文应符合与文档类型绑定的结构。
+  applies_to:
+  - did
+  - implementation-package
+  - did-change
+  - spec-kit-package
+  required_inputs:
+  - method_content
+  checks:
+  - capability_id: ordessa.schema.validate
+    interface_version: 1.0.0
+    bindings:
+      schema_by_document_type:
+        did:
+          resource: document.did.schema
+        implementation-package:
+          resource: document.implementation_package.schema
+        did-change:
+          resource: document.did_change.schema
+        spec-kit-package:
+          resource: document.spec_kit_package.schema
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+- criterion_id: intent_binding
+  statement: 文档计划和 Proposal/ImplementationIntentSpec 或已推导 package 的精确范围及验收映射应一致。
+  applies_to:
+  - did
+  - implementation-package
+  - did-change
+  - spec-kit-package
+  required_inputs:
+  - proposal_ref
+  - implementation_intent
+  - method_content
+  checks:
+  - capability_id: ordessa.proposal.consistency
+    interface_version: 1.0.0
+    bindings: {}
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+- criterion_id: semantic_consistency
+  statement: 方案应覆盖要求并解释影响，不能遗漏必要条件。
+  applies_to:
+  - did
+  - did-change
+  required_inputs:
+  - proposal_ref
+  - method_content
+  - source_captures
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.change_consistency
+      question_ids:
+      - coverage
+  policy:
+    satisfied: manual
+    violated: block
+    insufficient: block
+    unknown: manual
+  answer_vocabulary:
+    kind: score
+    levels:
+    - level_id: conflicting
+      index: 0
+      description: 方案与明确要求矛盾或缺少关键内容。
+    - level_id: partial
+      index: 1
+      description: 方案大体相关但仍有未处理条件。
+    - level_id: complete
+      index: 2
+      description: 方案完整覆盖要求及必要影响。
+- criterion_id: semantic_drift
+  statement: 需识别是否含未解释且偏离当前意图的实质改动；法律上的 scope 校验仍由 domain 独立强制执行。
+  applies_to:
+  - did
+  - did-change
+  required_inputs:
+  - proposal_ref
+  - method_content
+  - source_captures
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.change_consistency
+      question_ids:
+      - drift
+  policy:
+    satisfied: manual
+    violated: block
+    insufficient: block
+    unknown: manual
+  answer_vocabulary:
+    kind: noul
+    true_description: 存在未解释且偏离已陈述意图的实质改动。
+    false_description: 未发现这种实质改动。
+reduction:
+  required_criteria: all_applicable
+  empty_applicable_set: error
+  priority:
+  - block
+  - manual
+  - pass

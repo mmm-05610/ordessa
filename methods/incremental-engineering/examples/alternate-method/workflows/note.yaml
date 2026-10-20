@@ -1,0 +1,41 @@
+schema_version: 1
+workflow_id: alternate-note-review
+entry: await_note
+context_slots:
+- note_ref
+- note_reviews
+steps:
+- id: await_note
+  kind: wait
+  event: engineering.note.created
+  bind:
+    note_ref: event.note_ref
+  next: review_note
+- id: review_note
+  kind: operation
+  operation: engineering.reviews.request
+  inputs:
+    target: note_ref
+  config:
+    purpose: quality
+    standards:
+    - resource: standard.note
+    output_slot: note_reviews
+  outcomes:
+    passed:
+      next: reviewed
+    blocked:
+      stop: revision_required
+    manual:
+      wait: reviewer_result
+    unknown:
+      wait: check_reconciliation
+- id: reviewed
+  kind: stop
+  outcome: reviewed
+stop_outcomes:
+- reviewed
+- revision_required
+wait_kinds:
+- reviewer_result
+- check_reconciliation

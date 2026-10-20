@@ -1,3 +1,8 @@
+> Current convergence note: the former Unit/runtime/client/lease/server chain
+> described below is retired. This document is retained as historical reuse
+> provenance, not an active architecture or readiness claim. See README.md for
+> the current SDK provider and explicit acceptance gaps.
+
 # dsh channel reuse decision (DeepSeek Harness Provider)
 
 Repository checkpoint: baseline `c47696b74b11863a9ee2fd1542033e72ce9b513b`
@@ -6,10 +11,10 @@ plus the frozen dsh package specification
 
 | Candidate | Fixed source evidence | Decision |
 | --- | --- | --- |
-| Official dsh ACP stdio face | DeepSeek real-interface check 2026-10-07: official `dsh` (developer preview) exposes an ACP stdio surface; npm `@deepseek-ai/dsh` locked at `0.1.5-rc.1` (`tooling/npm/package-lock.json` resolved URL + integrity `sha512-rmNmzQCg3oIc1z8xH7izRSOuy1TNzq+/NILyfM+7e8DKOyV+yBtg47WEsqR2SiIe1ATec3L/rUa1YhIcfQ2XEg==`); `harnesses.toml` static registration documents the ACP surface (`new/list/resume/close/prompt/cancel/set_config_option/request_permission`) and `dsh --profile acp`; npm latest `0.2.0-rc.2` has zero in-repo ACP evidence | **Selected**: native ACP stdio subprocess channel, frozen pin `0.1.5-rc.1`; ACP JSON-RPC 2.0 frames; every capability behind explicit deployment ports |
+| Official dsh ACP stdio face | DeepSeek real-interface check 2026-10-07: official `dsh` (developer preview) exposes an ACP stdio surface; npm `@deepseek-ai/dsh` locked at `0.1.5-rc.1` (`packaging/dsh/package-lock.json` resolved URL + integrity `sha512-rmNmzQCg3oIc1z8xH7izRSOuy1TNzq+/NILyfM+7e8DKOyV+yBtg47WEsqR2SiIe1ATec3L/rUa1YhIcfQ2XEg==`); `harnesses.toml` static registration documents the ACP surface (`new/list/resume/close/prompt/cancel/set_config_option/request_permission`) and `dsh --profile acp`; npm latest `0.2.0-rc.2` has zero in-repo ACP evidence | **Selected**: native ACP stdio subprocess channel, frozen pin `0.1.5-rc.1`; ACP JSON-RPC 2.0 frames; every capability behind explicit deployment ports |
 | PyPI SDK `deepseek-harness-sdk==0.1.5rc1` | Freeze §1: independent version track, not part of the initial dependency set; no in-repo artifact audit establishes a compatible SDK surface for this tree | **Not in initial dependencies** (no `sdk` extra). Future adoption must copy the claude-code extras pattern (lazy optional import, separately pinned) and re-verify independently; it must never be inferred together with the npm CLI track (see 禁双轨推断 below) |
-| Go ACP bridge (`plugins/harness/pi/vendor/acp-adapter`) | `harnesses.toml` dsh continuation block: `kind = "native_session"`, `contract_id = "agent-box.dsh-continuation@1"`, `target_provider = "dsh-continuation"`; dsh explicitly rejects `session/load`; resume does not replay history | **Wire/reference source only, not this brand's Go backend**: Go cmd supports Codex/Pi only. Own Python DshAcpClient emits session/resume under the historical agent-box.dsh-continuation@1 declaration; current provider.recover remains permanently typed-refused. No in-repo Go Dsh implementation or verified durable continuation provider is inferred. |
-| Legacy Harness paths / old direct-native wrappers | `docs/reference/index.md` history: retired `agent_box` code and old Harness provider internals import retired compat chains; the bridge's old paths reinterpret upstream natively | **Do not revive** legacy dependencies or route dsh through them; reuse identity knowledge only. No placeholder implementations in `main` |
+| Go ACP bridge (`adapters/acp-adapter`) | `harnesses.toml` dsh continuation block: `kind = "native_session"`, `contract_id = "agent-box.dsh-continuation@1"`, `target_provider = "dsh-continuation"`; dsh explicitly rejects `session/load`; resume does not replay history | **Retained for the continuation path only**: `session/resume` stays a client frame; it NEVER enters provider `supported_methods`, and `provider.recover` is permanently typed-refused. Bridge owns continuation semantics and its gate evidence |
+| Legacy Harness paths / old direct-native wrappers | `docs/reference-index.md` history: retired `agent_box` code and old Harness provider internals import retired compat chains; the bridge's old paths reinterpret upstream natively | **Do not revive** legacy dependencies or route dsh through them; reuse identity knowledge only. No placeholder implementations in `main` |
 
 ## Explicit injected ports (documented in provider.py)
 
@@ -28,7 +33,7 @@ in any production assembly.
 
 CLI bump 必须原子六事，缺一不可：
 
-1. **lock hash**：`tooling/npm/package-lock.json` 的 resolved/integrity 与
+1. **lock hash**：`packaging/dsh/package-lock.json` 的 resolved/integrity 与
    npm pin 同步更新（当前锁值 `0.1.5-rc.1` /
    `sha512-rmNmzQCg3oIc1z8xH7izRSOuy1TNzq+/NILyfM+7e8DKOyV+yBtg47WEsqR2SiIe1ATec3L/rUa1YhIcfQ2XEg==`）。
 2. **假端点全链门重跑**：受控假 dsh 端点跑完整链门，且必须包含两条不变量

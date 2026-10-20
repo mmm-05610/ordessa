@@ -1,0 +1,185 @@
+{
+  "headBeforeDocumentation": "990cd1931fbb74a87ecc007dbffc16bddd4b12df",
+  "main": "b4bf7cd90951d0fa9bcf3a3de2e66b7db6a62aa0",
+  "timeAsiaShanghai": "2026-10-19T16:59:49.318107+08:00",
+  "commits": {
+    "originalJobProofAndProfileReadAndWorkspaceConflict": "6c5639548b",
+    "cliRelease": "503b5889e1",
+    "sdkNativeOwner": "990cd1931f"
+  },
+  "sourceConflictAccounting": {
+    "resolved": 210,
+    "pending": 13,
+    "newlyClosed": [
+      {
+        "target": "apps/cli/deployment/__init__.py",
+        "incomingPath": "products/agent-tools/deployment/__init__.py",
+        "kind": "owner relocation required",
+        "conflictEvents": 1,
+        "diffLines": 0,
+        "nightlySha256": null,
+        "incomingSha256": "f95a0b4fc46ac1d850072ff16cfb72fa332ef689fbb50234940ae0912e51baea"
+      },
+      {
+        "target": "apps/cli/deployment/composition.py",
+        "incomingPath": "products/agent-tools/deployment/composition.py",
+        "kind": "owner relocation required",
+        "conflictEvents": 1,
+        "diffLines": 0,
+        "nightlySha256": null,
+        "incomingSha256": "e013ae3e349de971d18c31910d826d310e3a1c6d89f7969edba0274c946e2c87"
+      },
+      {
+        "target": "apps/cli/deployment/configuration.py",
+        "incomingPath": "products/agent-tools/deployment/configuration.py",
+        "kind": "owner relocation required",
+        "conflictEvents": 1,
+        "diffLines": 0,
+        "nightlySha256": null,
+        "incomingSha256": "79e8cbe6a6e8e1b3bec02354c426565383072bcecbca22c47c1e00430c8e4ced"
+      },
+      {
+        "target": "apps/cli/packaging/build_bundle.py",
+        "incomingPath": "products/agent-tools/packaging/build_bundle.py",
+        "kind": "owner relocation required",
+        "conflictEvents": 1,
+        "diffLines": 0,
+        "nightlySha256": null,
+        "incomingSha256": "7d8d0a868bd8ae8250cf2b4c60cf25607cdb22aa2beb408b2000f5a20ac64e6b"
+      },
+      {
+        "target": "apps/cli/pyproject.toml",
+        "incomingPath": "products/agent-tools/pyproject.toml",
+        "kind": "distribution metadata",
+        "conflictEvents": 1,
+        "diffLines": 23,
+        "nightlySha256": "e233f00875f2924f415307f3fa61c5572e7c7269f7947621a708fdcc377a63c9",
+        "incomingSha256": "bb20f2f99edaa2c35d011e4aeb1bdbff3ca787ac7dd7ddc6dc7cefb1d46eaa5a"
+      },
+      {
+        "target": "apps/cli/src/ordessa_agent_tools/cli.py",
+        "incomingPath": "products/agent-tools/src/ordessa_agent_tools/cli.py",
+        "kind": "behavior/content",
+        "conflictEvents": 1,
+        "diffLines": 152,
+        "nightlySha256": "1638ffaee114cfa61ac1464fedccb621f3ab2013aa387a580042b125376a23ad",
+        "incomingSha256": "a28d3202ade85b38b98ce82d1255784893155ae49039d82db26f7dea6bd106e7"
+      },
+      {
+        "target": "apps/cli/src/ordessa_agent_tools/client.py",
+        "incomingPath": "products/agent-tools/src/ordessa_agent_tools/client.py",
+        "kind": "owner relocation required",
+        "conflictEvents": 1,
+        "diffLines": 0,
+        "nightlySha256": null,
+        "incomingSha256": "dd92848de0fee4a976d0a4c8dec8eb5701c35e5a3df8ee2ab4ce1d3525f95ba4"
+      },
+      {
+        "target": "apps/cli/src/ordessa_agent_tools/native_clients/__init__.py",
+        "incomingPath": "products/agent-tools/src/ordessa_agent_tools/native_clients/__init__.py",
+        "kind": "owner relocation required",
+        "conflictEvents": 1,
+        "diffLines": 0,
+        "nightlySha256": null,
+        "incomingSha256": "b6ac4d7c5f8f727a13b4ee984eb59d04d6f77eeec2656ef5781b1617200f2fc5"
+      },
+      {
+        "target": "apps/server/deployment/default-product/scripts/seed-profile-ui-probe.py",
+        "incomingPath": "products/server/scripts/seed-profile-ui-probe.py",
+        "kind": "owner relocation required",
+        "conflictEvents": 1,
+        "diffLines": 0,
+        "nightlySha256": null,
+        "incomingSha256": "608667a2a4cfc46bc3e9f3046515887a15514fe8b42404e777bc9f48010357ad"
+      }
+    ],
+    "qualification": "Only CLI A8 and seed D1 owner dispositions close. Native E8, assertions B4 and manifest G1 stay pending despite partial implementation."
+  },
+  "checks": {
+    "cliAgentFocused": {
+      "passed": 33,
+      "skip": 0,
+      "qualification": "30 bundle/init + 2 existing Profile/seed + 1 installed controlled HTTP test; not all historical commands"
+    },
+    "rootCLIWithOriginalCommandSourceRetained": {
+      "passed": 31,
+      "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/cli-retained-originals.log"
+    },
+    "currentNativeOwnerSource": {
+      "passed": 13,
+      "skip": 0,
+      "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/native-config-agent/root-final-current-native.log"
+    },
+    "independentProfileSource": {
+      "passed": 23,
+      "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/engineering-profile-agent/current-source.log"
+    },
+    "engineeringOriginalJobProofAndDecisionReads": {
+      "passed": 13,
+      "skip": 0,
+      "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/source-job-proof-final.log"
+    },
+    "neutralDomainRequestAndWriterRelease": {
+      "passed": 31,
+      "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/domain-request-contract-guarded.log"
+    },
+    "workspaceFull": {
+      "passed": 21,
+      "errors": 1,
+      "skip": 0,
+      "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/workspace-conflict-full.log",
+      "error": "Original two-connections fixture takes over the first live SQL writer; original request/CAS assertions pass but original writer release correctly refuses mismatched owner."
+    },
+    "originalNativePorts": {
+      "passed": 30,
+      "failed": 8,
+      "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/native-config-agent/native-original-ports.log"
+    },
+    "realRetirementScan": {
+      "passed": 0,
+      "failed": 1,
+      "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/native-config-agent/retirement-real-path.log"
+    },
+    "originalEngineeringFlows": {
+      "collectionErrors": 3,
+      "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/engineering-profile-agent/inherited-flow.log"
+    }
+  },
+  "retainedSource": {
+    "cliLegacyCommandsAndMechanism": "Restored exact HEAD bytes rather than accepting incoming deletions before equivalent command migration. Current entry does not import them. Full command migration remains open.",
+    "nativeProfileOwnerRestoration": "Restored exact original profile_owner.py bytes; do not delete original provider restoration/readback merely because current SDK read cohort passes.",
+    "assertions": "149 assert and 43 raises across B4 retained, AST proof in assertion-agent/assertion-preservation.json; no skip/xfail added."
+  },
+  "artifact": {
+    "directory": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/current-cli-release-503b5889",
+    "files": [
+      {
+        "name": "ordessa_agent_tools-0.1.0a2-py3-none-any.whl",
+        "sha256": "10dd5cd36a21e70d90845bc0366e4d7452623b5eb80c9d3ee068bec4248146b2"
+      },
+      {
+        "name": "ordessa_cli_runtime-0.1.0-py3-none-any.whl",
+        "sha256": "af762f4391226e3497af0a7fe55197a8bfcbbe13eb90ebb0bef9218ccb580a1d"
+      },
+      {
+        "name": "ordessa_system_access_client-0.1.0-py3-none-any.whl",
+        "sha256": "81142608d87d8741cab5e036c6c1fba2613fae3a046ecefc20ad6f30146e37cd"
+      }
+    ]
+  },
+  "unchangedConstraints": [
+    "No external pip dependency retry",
+    "No DSH endpoint or credential access",
+    "No real model calls; budget remains unused",
+    "No main advancement, push, worktree removal or user-service changes"
+  ],
+  "remainingDesignSeams": [
+    "SourceReviewer still uses retired flow DTO/services and holds original method/trust locks across await. The new original-job proof reader is not reviewer admission and is not yet wired into this path.",
+    "Current capability validates against default 30s/64KiB host limits before runner construction; original source-review/2 allows 240s and complete captures. Do not truncate inputs or silently increase budgets.",
+    "A current provider send guard must revalidate original method/fence at the actual send in the same task/thread and release before response wait; do not replace it with a post-await check or long-held method lock.",
+    "Profile create-only versus Agent.start effects need explicit operation binding, not an automatic rename.",
+    "Deleted pi/codex/claude public native_model and registration ports lack established replacement for original preparation/registration/restoration behaviors.",
+    "Synchronous queue has no trusted AgentInstanceRef mapping/async dispatch binding.",
+    "Current default owner/HTTP inputs are still explicit and missing, not a reason to issue default authorization."
+  ]
+}

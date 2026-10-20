@@ -9,18 +9,16 @@ import hashlib
 import json
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
-)
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, safe_json, sealed_mapping
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitIdentityMismatch
+from ordessa_units.definitions.operations import OperationIntent, StepIntent
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_execution_agents.profiles import ProfileRevisionRef, decode_revision_ref, encode_revision_ref
 from ordessa_units.admission.invocation import InvocationIssuer
 from ordessa_units.bindings.publication import decode_node_ref
 from ordessa_units.lifecycle.unit_lifecycle import same_reference
 
 
-class UnitSelectionUnavailable(GuaranteeUnavailableError):
+class UnitSelectionUnavailable(UnitGuaranteeUnavailable):
     code = 'UNIT_SELECTION_SYNC_UNAVAILABLE'
 
 
@@ -38,7 +36,7 @@ def _source_locks(env, manager, live):
     try:
         for lock in (env._admission_lock, manager._lock, live._lifecycle_lock):
             if not lock.acquire(blocking=False):
-                raise GuaranteeUnavailableError('original live selection owner is busy')
+                raise UnitGuaranteeUnavailable('original live selection owner is busy')
             held.append(lock)
         yield
     finally:
@@ -57,19 +55,19 @@ def _live_selection_validator(services, unit_ref, *, expected_profile_revision,
     if (type(manager) is not UnitManager or manager is not services.assembly._unit_manager
             or manager.records is not records or manager.verifier is not records.verifier
             or not services.assembly._manager_bound()):
-        raise GuaranteeUnavailableError('original live Manager owner is unavailable')
+        raise UnitGuaranteeUnavailable('original live Manager owner is unavailable')
 
     def validate():
         with _source_locks(env, manager, expected_live):
             if manager._draining:
-                raise GuaranteeUnavailableError('original Unit Manager is draining')
+                raise UnitGuaranteeUnavailable('original Unit Manager is draining')
             try:
                 live = manager.find(unit_ref)
             except Exception:
-                raise IdentityMismatchError('original live Unit handle is unavailable') from None
+                raise UnitIdentityMismatch('original live Unit handle is unavailable') from None
             if (live is not expected_live or live.records is not records
                     or live._verifier is not manager.verifier):
-                raise IdentityMismatchError('original retained Unit owner changed')
+                raise UnitIdentityMismatch('original retained Unit owner changed')
             # Query capabilities are verified through the original UnitRecords
             # read before the Issuer accepts a continuation of that capability.
             # This preserves the original issued/verified-state transition.
@@ -77,15 +75,15 @@ def _live_selection_validator(services, unit_ref, *, expected_profile_revision,
                 unit_ref, query_invocation, input_digest=query_input_digest)
             unit, node, original = _source(services, records, unit_ref)
             if resolved_unit != unit:
-                raise IdentityMismatchError('original query resolved a different Unit source')
+                raise UnitIdentityMismatch('original query resolved a different Unit source')
             actual_profile = decode_revision_ref(dict(original.intent.profile_snapshot_ref))
             if (actual_profile != expected_profile_revision
                     or live.profile_revision != expected_profile_revision
                     or not same_reference(live.prepared_unit['unitRef'], unit.public_ref)):
-                raise IdentityMismatchError('fixed live Profile or Unit differs')
+                raise UnitIdentityMismatch('fixed live Profile or Unit differs')
             revision = services.profiles.get_revision(actual_profile)
             if revision.ref != actual_profile:
-                raise IdentityMismatchError('fixed immutable Profile revision is unavailable')
+                raise UnitIdentityMismatch('fixed immutable Profile revision is unavailable')
             # Revalidate the exact original query ticket/current state after
             # loading source and before checking retained process/use facts.
             facts = query_invocation.facts
@@ -99,14 +97,14 @@ def _live_selection_validator(services, unit_ref, *, expected_profile_revision,
                 local_context = original.intent.context_ref
                 admitted = HarnessAdmission(env).describe(local_context['harnessDefinitionRef'])
                 if safe_json(admitted.provider_ref) != safe_json(unit.facts['providerRef']):
-                    raise IdentityMismatchError('current LocalUnitOwner Harness pin differs')
+                    raise UnitIdentityMismatch('current LocalUnitOwner Harness pin differs')
             else:
-                raise IdentityMismatchError('unsupported Unit selection owner')
+                raise UnitIdentityMismatch('unsupported Unit selection owner')
             verified = records.verifier.verify_continuation(query_invocation, 'query',
                 unit.facts['providerRef'], unit.facts['nodeRef'], query_input_digest)
             if (not isinstance(read, Mapping) or safe_json(read.get('unitRef')) != safe_json(unit_ref)
                     or verified.get('inputDigest') != query_input_digest):
-                raise IdentityMismatchError('original ACP read authorization changed')
+                raise UnitIdentityMismatch('original ACP read authorization changed')
 
             record = live.channel_factory.owned_record
             use = live.channel_factory.environment
@@ -118,12 +116,12 @@ def _live_selection_validator(services, unit_ref, *, expected_profile_revision,
                     or record.environment_identity != use.environment_id
                     or record.environment_use_identity != use.identity
                     or live.channel_factory.instance.identity != use.environment_id):
-                raise GuaranteeUnavailableError('original live Environment/channel binding is unavailable')
+                raise UnitGuaranteeUnavailable('original live Environment/channel binding is unavailable')
             if original.intent.kind == 'unit-public-prepare':
                 local = original.intent.context_ref['localUnitRun']
                 if (local['environmentIdentity'] != use.environment_id
                         or local['environmentGeneration'] != use.generation):
-                    raise IdentityMismatchError('LocalUnitOwner Environment generation changed')
+                    raise UnitIdentityMismatch('LocalUnitOwner Environment generation changed')
                 generation = local['environmentGeneration']
             else:
                 # The Use carries the only original environment generation for
@@ -132,7 +130,7 @@ def _live_selection_validator(services, unit_ref, *, expected_profile_revision,
                 generation = use.generation
             check = getattr(use, 'check', None)
             if not callable(check):
-                raise GuaranteeUnavailableError('original Environment Use check unavailable')
+                raise UnitGuaranteeUnavailable('original Environment Use check unavailable')
             check(use.environment_id, generation, allow_unknown=False)
             if (session is None or session.state != 'confirmed'
                     or live._channels.get(unit.unit_ref) is not record.entry
@@ -141,15 +139,15 @@ def _live_selection_validator(services, unit_ref, *, expected_profile_revision,
                     or any(records.owner_read_termination(unit.unit_ref, action) is not None
                            for action in ('stop', 'release'))
                     or record.process.observe().state != 'running'):
-                raise GuaranteeUnavailableError('original Unit is not live and confirmed')
+                raise UnitGuaranteeUnavailable('original Unit is not live and confirmed')
             roots = unit.facts['privateRootFacts']
             if original.intent.kind == 'agent-preparation':
                 _admitted, plan = services.assembly._current_plan(original.request, original)
                 if not same_reference(plan['context']['privateRootFacts'], roots):
-                    raise IdentityMismatchError('original Node preparation resolution changed')
+                    raise UnitIdentityMismatch('original Node preparation resolution changed')
             if (not same_reference(live.channel_factory._roots, roots)
                     or live.prepared_agent.harness.launch_spec.cwd != roots['cwd']):
-                raise IdentityMismatchError('fixed live preparation roots changed')
+                raise UnitIdentityMismatch('fixed live preparation roots changed')
             try:
                 capabilities = use.capabilities
                 if capabilities.isolation != 'none':
@@ -161,7 +159,7 @@ def _live_selection_validator(services, unit_ref, *, expected_profile_revision,
                         or not files.exists(relative) or not os.path.isdir(files.path(relative))):
                     raise ValueError('original bound cwd is unavailable')
             except Exception:
-                raise GuaranteeUnavailableError('original bound Local file area is unavailable') from None
+                raise UnitGuaranteeUnavailable('original bound Local file area is unavailable') from None
 
             # Repeat the source/query/use cuts after potentially slow public
             # file and process observations. The Unit fence prevents stop,
@@ -170,7 +168,7 @@ def _live_selection_validator(services, unit_ref, *, expected_profile_revision,
             if (latest != unit or latest_original.revision != original.revision
                     or live.channel_factory.owned_record is not record
                     or record.process.observe().state != 'running'):
-                raise IdentityMismatchError('live Unit source changed during selection')
+                raise UnitIdentityMismatch('live Unit source changed during selection')
             check(use.environment_id, generation, allow_unknown=False)
             records.verifier.verify_continuation(query_invocation, 'query',
                 unit.facts['providerRef'], unit.facts['nodeRef'], query_input_digest)
@@ -209,10 +207,10 @@ def _live_unit_fence(services, env, records, unit_ref, *, expected_profile_revis
         # Resolve under the fixed owner lock order, nonblocking. No potentially
         # stale/cold Manager search is allowed to wait here.
         if not env._admission_lock.acquire(blocking=False):
-            raise GuaranteeUnavailableError('original live selection owner is busy')
+            raise UnitGuaranteeUnavailable('original live selection owner is busy')
         try:
             if not manager._lock.acquire(blocking=False):
-                raise GuaranteeUnavailableError('original live selection owner is busy')
+                raise UnitGuaranteeUnavailable('original live selection owner is busy')
             try:
                 live = manager.find(unit_ref)
             finally:
@@ -243,22 +241,22 @@ def _owner(services):
     env = services.nodes._environment
     bundle = getattr(env, '_agent_owner_ports', None)
     if bundle is None or getattr(env, '_agent_services', None) is not services:
-        raise GuaranteeUnavailableError('original Unit owner bundle is unavailable')
+        raise UnitGuaranteeUnavailable('original Unit owner bundle is unavailable')
     bundle.validate_for(env)
     if type(bundle.issuer) is not InvocationIssuer:
-        raise GuaranteeUnavailableError('original invocation issuer is unavailable')
+        raise UnitGuaranteeUnavailable('original invocation issuer is unavailable')
     return env, bundle.provider_view.records, bundle.issuer
 
 
 def _source(services, records, unit_ref):
     """Owner-only provenance read; caller permission is checked separately."""
     if not isinstance(unit_ref, dict) and not hasattr(unit_ref, 'items'):
-        raise IdentityMismatchError('complete Unit reference required')
+        raise UnitIdentityMismatch('complete Unit reference required')
     if set(unit_ref) != {'environmentNamespace', 'unitId', 'ownerProviderRef', 'sourceRevision'}:
-        raise IdentityMismatchError('complete Unit reference required')
+        raise UnitIdentityMismatch('complete Unit reference required')
     unit = records.owner_read_unit(unit_ref['unitId'])
     if safe_json(unit.public_ref) != safe_json(unit_ref):
-        raise IdentityMismatchError('Unit source differs from original owner')
+        raise UnitIdentityMismatch('Unit source differs from original owner')
     env = services.nodes._environment
     correlation = json.loads(unit.facts['correlation'])
     request = correlation['request']
@@ -267,14 +265,14 @@ def _source(services, records, unit_ref):
     if (original is None or original.status != 'published'
             or original.intent.operation_ref != correlation['operationRef']
             or safe_json(original.intent.node_ref) != safe_json(unit.facts['nodeRef'])):
-        raise IdentityMismatchError('original preparation source differs')
+        raise UnitIdentityMismatch('original preparation source differs')
     node = None
     if original.intent.kind == 'agent-preparation':
         node = services.nodes.read(decode_node_ref(unit.facts['nodeRef']))
         if (node is None or safe_json(node['binding']['harnessUnitRef']) != safe_json(unit_ref)
                 or safe_json(node['binding']['profileSnapshotRef']) != safe_json(original.intent.profile_snapshot_ref)
                 or safe_json(node['binding']['harnessProviderRef']) != safe_json(unit.facts['providerRef'])):
-            raise IdentityMismatchError('original preparation/Node provenance differs')
+            raise UnitIdentityMismatch('original preparation/Node provenance differs')
     elif original.intent.kind == 'unit-public-prepare':
         # Public LocalUnitOwner has no NodePublication row. Bind its actual
         # published preparation operation, original UnitManager reservation,
@@ -306,14 +304,14 @@ def _source(services, records, unit_ref):
                 or not isinstance(original.result, Mapping)
                 or safe_json(original.result.get('unitRef')) != safe_json(unit_ref)
                 or original.result.get('action') != 'prepare'):
-            raise IdentityMismatchError('original LocalUnitOwner preparation provenance differs')
+            raise UnitIdentityMismatch('original LocalUnitOwner preparation provenance differs')
     else:
-        raise IdentityMismatchError('unsupported original Unit preparation owner')
+        raise UnitIdentityMismatch('unsupported original Unit preparation owner')
     step = next((s for s in original.intent.steps if s.step_id == correlation['stepId']), None)
     if (step is None or step.input_digest != unit.facts['inputDigest']
             or step.management_epoch != unit.facts['managementEpoch']
             or safe_json(step.pinned_provider_ref) != safe_json(unit.facts['providerRef'])):
-        raise IdentityMismatchError('original preparation step differs from Unit')
+        raise UnitIdentityMismatch('original preparation step differs from Unit')
     return unit, node, original
 
 
@@ -321,7 +319,7 @@ def authorize_acp_turn_query(services, request, unit_ref, operation_ref, *, expe
     env, records, issuer = _owner(services)
     with env._admission_lock:
         if type(request) is not RequestKey:
-            raise IdentityMismatchError('original request identity required')
+            raise UnitIdentityMismatch('original request identity required')
         services.nodes._permission(request=request)
         if (type(operation_ref) is not str or not operation_ref or len(operation_ref) > 512
                 or any(ord(c) < 32 for c in operation_ref)
@@ -329,7 +327,7 @@ def authorize_acp_turn_query(services, request, unit_ref, operation_ref, *, expe
                 or not expected_prompt_input_digest.startswith('sha256:')
                 or len(expected_prompt_input_digest) != 71
                 or any(c not in '0123456789abcdef' for c in expected_prompt_input_digest[7:])):
-            raise IdentityMismatchError('exact ACP operation and prompt digest required')
+            raise UnitIdentityMismatch('exact ACP operation and prompt digest required')
         unit, node, original = _source(services, records, unit_ref)
         digest = records.acp_turn_query_digest(unit_ref, operation_ref, expected_prompt_input_digest)
         # Drained providers may serve original acquired-target reads, but only
@@ -364,7 +362,7 @@ def guard_unit_selection(services, unit_ref, *, expected_profile_revision,
                          query_invocation, query_input_digest, require_live):
     env, records, issuer = _owner(services)
     if type(require_live) is not bool:
-        raise IdentityMismatchError('selection mode must be an explicit bool')
+        raise UnitIdentityMismatch('selection mode must be an explicit bool')
     if require_live:
         with _live_authority_guard(issuer):
             with _live_unit_fence(services, env, records, unit_ref,
@@ -382,7 +380,7 @@ def guard_unit_selection(services, unit_ref, *, expected_profile_revision,
                 or safe_json(read['unitRef']) != safe_json(unit_ref)
                 or query_input_digest != records.acp_turn_query_digest(
                     unit_ref, read['operationRef'], read['expectedPromptInputDigest'])):
-            raise IdentityMismatchError('selection requires the exact original ACP read recipe')
+            raise UnitIdentityMismatch('selection requires the exact original ACP read recipe')
         request = facts['request']
         _, node, original = _source(services, records, unit_ref)
         if original.intent.kind == 'agent-preparation':
@@ -390,7 +388,7 @@ def guard_unit_selection(services, unit_ref, *, expected_profile_revision,
                 request['environmentNamespace'], request['principalScope'], request['requestId']))
         actual_profile = decode_revision_ref(dict(original.intent.profile_snapshot_ref))
         if type(expected_profile_revision) is not ProfileRevisionRef or expected_profile_revision != actual_profile:
-            raise IdentityMismatchError('fixed complete Profile revision differs from original preparation')
+            raise UnitIdentityMismatch('fixed complete Profile revision differs from original preparation')
         services.profiles.get_revision(actual_profile)
         # Revalidate last, after the immutable source reads. This timestamp and
         # original grant/epoch versions describe this permission cut only.
@@ -425,9 +423,9 @@ def snapshot_live_unit_selection(services, unit_ref, *, expected_profile_revisio
             or manager is not env._agent_owner_ports.unit_manager
             or manager.records is not records or manager.verifier is not records.verifier
             or not services.assembly._manager_bound()):
-        raise GuaranteeUnavailableError('original live Manager owner is unavailable')
+        raise UnitGuaranteeUnavailable('original live Manager owner is unavailable')
     if type(expected_directory_binding_ref) is not DirectoryBindingRef:
-        raise IdentityMismatchError('complete expected DirectoryBindingRef required')
+        raise UnitIdentityMismatch('complete expected DirectoryBindingRef required')
     # Original owner lock order; no lock escapes this function. This observes
     # current local sources, not an approval/control or filesystem mutation lock.
     @contextmanager
@@ -435,7 +433,7 @@ def snapshot_live_unit_selection(services, unit_ref, *, expected_profile_revisio
         # Never wait on a Unit prompt's lifecycle/model round trip while a
         # consumer may hold its own Engineering COMMIT transaction.
         if not lock.acquire(blocking=False):
-            raise GuaranteeUnavailableError('original live-source owner is busy')
+            raise UnitGuaranteeUnavailable('original live-source owner is busy')
         try:
             yield
         finally:
@@ -461,7 +459,7 @@ def snapshot_live_unit_selection(services, unit_ref, *, expected_profile_revisio
                     directory = DirectoryBindingRef.from_dict(dict(
                         original.intent.context_ref['directoryBindingRef']))
                     if directory != expected_directory_binding_ref:
-                        raise IdentityMismatchError('original LocalUnitOwner directory differs')
+                        raise UnitIdentityMismatch('original LocalUnitOwner directory differs')
                     record = live.channel_factory.owned_record
                     use = live.channel_factory.environment
                     roots = unit.facts['privateRootFacts']
@@ -495,10 +493,10 @@ def snapshot_live_unit_selection(services, unit_ref, *, expected_profile_revisio
                     })
                 if (live.profile_revision != expected_profile_revision
                         or not same_reference(live.prepared_unit['unitRef'], unit.public_ref)):
-                    raise IdentityMismatchError('fixed live Profile or Unit differs')
+                    raise UnitIdentityMismatch('fixed live Profile or Unit differs')
                 directory = DirectoryBindingRef.from_dict(dict(original.intent.context_ref['directoryBindingRef']))
                 if directory != expected_directory_binding_ref:
-                    raise IdentityMismatchError('original preparation directory differs')
+                    raise UnitIdentityMismatch('original preparation directory differs')
                 # Re-run the trusted original Workspace/installation resolver
                 # and fingerprint its plan against the original publication.
                 # Expected DTO equality is not a substitute for this owner call.
@@ -507,7 +505,7 @@ def snapshot_live_unit_selection(services, unit_ref, *, expected_profile_revisio
                 roots = unit.facts['privateRootFacts']
                 if (not same_reference(plan['context']['privateRootFacts'], roots)
                         or not same_reference(factory._roots, roots)):
-                    raise IdentityMismatchError('resolved live preparation roots differ')
+                    raise UnitIdentityMismatch('resolved live preparation roots differ')
                 record = factory.owned_record
                 use = factory.environment
                 if (record is None or use is None or record.prepared_agent is not factory.prepared_agent
@@ -517,7 +515,7 @@ def snapshot_live_unit_selection(services, unit_ref, *, expected_profile_revisio
                         or record.environment_identity != use.environment_id
                         or record.environment_use_identity != use.identity
                         or factory.instance.identity != use.environment_id):
-                    raise GuaranteeUnavailableError('original live Environment/channel binding is unavailable')
+                    raise UnitGuaranteeUnavailable('original live Environment/channel binding is unavailable')
                 session = records.owner_read_session(unit.unit_ref)
                 if (session is None or session.state != 'confirmed'
                         or live._channels.get(unit.unit_ref) is not record.entry
@@ -526,7 +524,7 @@ def snapshot_live_unit_selection(services, unit_ref, *, expected_profile_revisio
                         or any(records.owner_read_termination(unit.unit_ref, action) is not None
                                for action in ('stop', 'release'))
                         or record.process.observe().state != 'running'):
-                    raise GuaranteeUnavailableError('original Unit is not live and confirmed')
+                    raise UnitGuaranteeUnavailable('original Unit is not live and confirmed')
                 # The narrow contract qualifies only the existing bound Local
                 # file area. Public guarded Use getters reject inactive Uses.
                 try:
@@ -542,7 +540,7 @@ def snapshot_live_unit_selection(services, unit_ref, *, expected_profile_revisio
                             or not files.exists(relative) or not os.path.isdir(files.path(relative))):
                         raise ValueError('actual bound cwd is unavailable')
                 except Exception:
-                    raise GuaranteeUnavailableError('actual bound Local file area is unavailable') from None
+                    raise UnitGuaranteeUnavailable('actual bound Local file area is unavailable') from None
                 # Re-read publication and liveness after context/file work.
                 _, latest_node, latest = _source(services, records, unit_ref)
                 if (latest.revision != original.revision
@@ -550,7 +548,7 @@ def snapshot_live_unit_selection(services, unit_ref, *, expected_profile_revisio
                         or record.process.observe().state != 'running'
                         or session.native_facts.get('sessionId') != record.entry.session_id
                         or not record.entry.has_io_loop or record.entry.transport.detached):
-                    raise IdentityMismatchError('live source changed during observation')
+                    raise UnitIdentityMismatch('live source changed during observation')
                 observed_at = issuer._now()
                 verified = records.verifier.verify_continuation(query_invocation, 'query',
                     unit.facts['providerRef'], unit.facts['nodeRef'], query_input_digest)

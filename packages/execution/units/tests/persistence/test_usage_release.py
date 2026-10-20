@@ -9,8 +9,8 @@ from __future__ import annotations
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment.errors import IdentityMismatchError, UnknownResultError
-from ordessa_execution_api.environment.operations import (
+from ordessa_units.errors import UnitIdentityMismatch, UnitOperationUnknown
+from ordessa_units.definitions.operations import (
     OperationIntent, OperationRevisionConflict, StepIntent, UsageMutation,
     node_holder, operation_holder,
 )
@@ -85,7 +85,7 @@ def test_unknown_usage_row_cannot_be_released_and_keeps_its_hold(tmp_path):
     step = store.read_operation_step(request, "prepare")
     store.record_operation_step(request, "digest-1", "prepare", "digest-prepare", step.revision,
                                 "unknown", {}, usages=(turned,))
-    with pytest.raises(UnknownResultError, match="only an active Usage"):
+    with pytest.raises(UnitOperationUnknown, match="only an active Usage"):
         _release_attempt(store, "usage.u", owner, expected_revision=2,
                          request_name="release-unknown", digest="digest-unknown")
     rows = store.read_usages("env", owner)
@@ -95,10 +95,10 @@ def test_unknown_usage_row_cannot_be_released_and_keeps_its_hold(tmp_path):
 def test_release_requires_exact_release_holder_identity(tmp_path):
     store = _published_usage(tmp_path)
     other = node_holder("env", "node-2", 1)
-    with pytest.raises(IdentityMismatchError, match="exact release holder"):
+    with pytest.raises(UnitIdentityMismatch, match="exact release holder"):
         _release_attempt(store, "usage.a", NODE_HOLDER, holder_mutation=other,
                          request_name="release-2a", digest="digest-2a")
-    with pytest.raises(IdentityMismatchError, match="exact release holder"):
+    with pytest.raises(UnitIdentityMismatch, match="exact release holder"):
         _release_attempt(store, "usage.a", NODE_HOLDER, expected_holder=other,
                          request_name="release-2b", digest="digest-2b")
     with pytest.raises(OperationRevisionConflict):
@@ -128,7 +128,7 @@ def test_active_release_is_terminal_and_idempotent(tmp_path):
     request = _request("release-3b")
     _reserve(store, request, "digest-3b", "op-3b", "release")
     step = store.read_operation_step(request, "release")
-    with pytest.raises(IdentityMismatchError, match="history cannot be rewritten"):
+    with pytest.raises(UnitIdentityMismatch, match="history cannot be rewritten"):
         store.record_operation_step(request, "digest-3b", "release", "digest-release", step.revision,
                                     "concluded", {"terminationRef": "sha256:y"},
                                     usages=(rewritten,), release_holder=NODE_HOLDER)
@@ -149,7 +149,7 @@ def test_release_seam_requires_concluded_step_and_explicit_holder(tmp_path):
                                     usages=(mutation,), release_holder="node-holder-string")
     # a release step cannot mix in occupation changes
     mixed = UsageMutation("usage.a", 2, NODE_HOLDER, NODE_HOLDER, TARGET, ("use",), "active")
-    with pytest.raises(IdentityMismatchError, match="only release"):
+    with pytest.raises(UnitIdentityMismatch, match="only release"):
         store.record_operation_step(request, "digest-4", "release", "digest-release", step.revision,
                                     "concluded", {"terminationRef": "sha256:x"},
                                     usages=(mixed,), release_holder=NODE_HOLDER)
@@ -163,7 +163,7 @@ def test_released_mutation_under_unknown_outcome_is_refused(tmp_path):
     _reserve(store, request, "digest-1", "op-1", "prepare", usages=(hold,))
     released = UsageMutation("usage.v", 1, owner, owner, TARGET, ("use",), "released")
     step = store.read_operation_step(request, "prepare")
-    with pytest.raises(UnknownResultError, match="unknown evidence cannot release"):
+    with pytest.raises(UnitOperationUnknown, match="unknown evidence cannot release"):
         store.record_operation_step(request, "digest-1", "prepare", "digest-prepare", step.revision,
                                     "unknown", {}, usages=(released,))
     rows = store.read_usages("env", owner)

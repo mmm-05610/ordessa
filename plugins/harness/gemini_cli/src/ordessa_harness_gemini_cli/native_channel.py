@@ -143,16 +143,16 @@ def compile_config(materials: Mapping[str, Any]) -> dict:
 
 def capability_matrix() -> dict[str, dict]:
     return {
-        "prompt": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "cancel": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "resume": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "approvalCallback": {"declared": "yes", "implemented": "reply", "observed": "no"},
-        "fileCallbacks": {"declared": "yes", "implemented": "reply", "observed": "no"},
-        "terminalCallbacks": {"declared": "yes(acp)", "implemented": "reply", "observed": "no"},
+        "prompt": {"declared": "yes", "implemented": "unsupported", "observed": "no"},
+        "cancel": {"declared": "yes", "implemented": "unsupported", "observed": "no"},
+        "resume": {"declared": "yes", "implemented": "unsupported", "observed": "no"},
+        "approvalCallback": {"declared": "yes", "implemented": "unsupported", "observed": "no"},
+        "fileCallbacks": {"declared": "yes", "implemented": "unsupported", "observed": "no"},
+        "terminalCallbacks": {"declared": "yes(acp)", "implemented": "unsupported", "observed": "no"},
         "steer": {"declared": "unknown", "implemented": "no", "observed": "no"},
         "modelConfig": {"declared": "unstable", "implemented": "plan-only", "observed": "no"},
         "headlessJson": {"declared": "limited", "implemented": "no", "observed": "no"},
-        "unknownExtensions": {"declared": "yes", "implemented": "yes", "observed": "no"},
+        "unknownExtensions": {"declared": "yes", "implemented": "unsupported", "observed": "no"},
         "transportFence": {"declared": "no", "implemented": "no", "observed": "no"},
-        "requestReconciliation": {"declared": "yes", "implemented": "yes", "observed": "no"},
+        "requestReconciliation": {"declared": "yes", "implemented": "unsupported", "observed": "no"},
     }

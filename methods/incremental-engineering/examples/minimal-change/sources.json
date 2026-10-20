@@ -1,0 +1,38 @@
+{
+  "fixture_only": true,
+  "captures": [
+    {
+      "source_id": "src-user-1",
+      "kind": "chat_message",
+      "capture_kind": "immutable_excerpt",
+      "content": "normalize_limit 对负数应返回 0，正数和 0 的行为保持不变。请先给我看方案，确认后再改，不做发布。",
+      "sha256": "9b4101c8efc9d84a0050fd6da1ae35fe093c5ce65cf9a2bba5f873ad1c39bdbf",
+      "byte_length": 132,
+      "selector": "whole_capture",
+      "trusted_origin": "fixture.capture-provider",
+      "limitation": "合成测试材料，不是真实聊天、代码或授权。"
+    },
+    {
+      "source_id": "src-code-1",
+      "kind": "code",
+      "capture_kind": "immutable_excerpt",
+      "content": "def normalize_limit(value):\n    return value\n",
+      "sha256": "a0b19270276f2d238caf9a8ba814368fd0bcdbbc16548b217a48fd31fece5a23",
+      "byte_length": 45,
+      "selector": "whole_capture",
+      "trusted_origin": "fixture.capture-provider",
+      "limitation": "合成测试材料，不是真实聊天、代码或授权。"
+    },
+    {
+      "source_id": "src-test-1",
+      "kind": "code",
+      "capture_kind": "immutable_excerpt",
+      "content": "def test_positive():\n    assert normalize_limit(3) == 3\n",
+      "sha256": "314851e1234136ebf6abb4b29053638f876fa9f469a2f7735cdbb384d8daec9e",
+      "byte_length": 56,
+      "selector": "whole_capture",
+      "trusted_origin": "fixture.capture-provider",
+      "limitation": "合成测试材料，不是真实聊天、代码或授权。"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "report_id": "synthetic-release-report-01",
+  "phase": "release",
+  "reported_at": "2025-04-02T12:00:00Z",
+  "reporter": {
+    "actor_id": "example-contributor",
+    "role_claim": "contributor",
+    "reported_at": "2025-04-02T12:00:00Z"
+  },
+  "cycle": "2025.1",
+  "blueprint": {
+    "id": "libvirt-virtiofs-attach-manila-shares",
+    "url": "https://blueprints.launchpad.net/nova/+spec/libvirt-virtiofs-attach-manila-shares",
+    "status": "Implemented (reported)",
+    "cycle": "2025.1"
+  },
+  "spec": {
+    "url": "https://specs.openstack.org/openstack/nova-specs/specs/2025.1/implemented/libvirt-virtiofs-attach-manila-shares.html",
+    "status": "implemented",
+    "cycle": "2025.1"
+  },
+  "decision": "Official 2025.1 release notes include Manila share attachment capability.",
+  "decision_record": {
+    "actor_id": "example-release-observer",
+    "role_claim": "release evidence reporter",
+    "decided_at": "2025-04-02T12:00:00Z",
+    "authority_ref": "https://docs.openstack.org/releasenotes/nova/2025.1.html",
+    "rationale_summary": "Synthetic report assembled from the official implemented spec and series release notes; not a claim that this artifact is an authentic Nova record."
+  },
+  "result": "released",
+  "summary": "Synthetic report-shaped example of a completed feature lifecycle; the upstream example is evidence of inclusion in 2025.1 only.",
+  "merge": null,
+  "release": {
+    "version": "2025.1",
+    "release_url": "https://docs.openstack.org/releasenotes/nova/2025.1.html",
+    "released_at": "2025-04-02T00:00:00Z",
+    "included_commits": [
+      "synthetic-commit-placeholder"
+    ]
+  },
+  "blockers": [],
+  "predecessors": [
+    {
+      "report_id": "synthetic-merge-report-01",
+      "artifact_revision": "synthetic-revision-01"
+    }
+  ],
+  "evidence_urls": [
+    "https://specs.openstack.org/openstack/nova-specs/specs/2025.1/implemented/libvirt-virtiofs-attach-manila-shares.html",
+    "https://docs.openstack.org/releasenotes/nova/2025.1.html"
+  ],
+  "limitations": [
+    "All actor/report identifiers and commit reference are synthetic.",
+    "This does not assert full CI history or customer deployment."
+  ],
+  "spec_required": true
+}

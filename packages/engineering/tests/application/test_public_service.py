@@ -58,13 +58,40 @@ def test_canonical_dispatch_gate_preserves_original_port_result_and_authority():
 
 
 def test_package_public_gate_uses_original_owner_request_identity():
-    import runpy
-    from pathlib import Path
+    import hashlib
+    from ordessa_engineering.domain.artifacts.method_binding import ExactMethodResourceRef, MethodRef
+    from ordessa_engineering.domain.artifacts.provenance import SourceLocator, SourceRef, VersionCapture
+    from ordessa_engineering.domain.changes.refs import ProposalRef
+    from ordessa_engineering.domain.common.models.values import Digest
     from ordessa_engineering.domain.packages.codec import encode_package
+    from ordessa_engineering.domain.packages.models import (
+        ImplementationPackage, PackageDocument, PreparedPackagePayload,
+    )
+    from ordessa_engineering.domain.reviews.refs import ReviewRef
     from ordessa_infrastructure.encoding import decode_json
     from ordessa_engineering.application.usecases.packages.implementation import ImplementationUseCases
-    helpers=runpy.run_path(str(Path(__file__).parents[1]/'domain/test_implementation_package_binding.py'))
-    _,_,package,*_=helpers['_records']()
+
+    actor = ActorRef('fixture-author', 'human', 'controlled-public-gate-test')
+    locator = SourceLocator('document', provider='fixture-provider', document_id='change-design')
+    before = b'design: baseline\n'
+    after = b'design: candidate\n'
+    baseline = SourceRef('baseline-source', 'document', locator,
+        VersionCapture('baseline-v1', Digest('sha256', hashlib.sha256(before).hexdigest())),
+        '2026-10-12T12:00:00.000000Z', actor, 'text/markdown', len(before))
+    candidate = SourceRef('candidate-source', 'document', locator,
+        VersionCapture('candidate-v2', Digest('sha256', hashlib.sha256(after).hexdigest())),
+        '2026-10-12T12:00:00.000000Z', actor, 'text/markdown', len(after))
+    method = MethodRef('fixture-method', '1.0.0', 2, Digest('sha256', 'a' * 64))
+    resource = ExactMethodResourceRef(method, 'schemas/review.json', Digest('sha256', 'b' * 64),
+                                      'fixture-review-schema')
+    change_ref = ProposalRef(SCOPE.realm_id, SCOPE.project_id, 'fixture-change', 'fixture-proposal',
+                             Digest('sha256', 'c' * 64))
+    review_ref = ReviewRef(SCOPE.realm_id, SCOPE.project_id, 'fixture-review', Digest('sha256', 'd' * 64))
+    payload = PreparedPackagePayload(baseline, candidate, change_ref, (review_ref,), method,
+        (resource,), (PackageDocument('design', candidate),))
+    package = ImplementationPackage(SCOPE, 'prepared-public-gate',
+        '2026-10-12T12:00:00.000000Z', actor, payload)
+    assert package.payload.package_schema == 'ordessa.implementation-package/v2'
     ctx=CommandContext(package.scope,'fixture-principal',package.created_by,'freeze-original',
         package.created_at,'trace')
     parameters={'record':decode_json(encode_package(package))}

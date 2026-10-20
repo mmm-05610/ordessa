@@ -8,8 +8,9 @@ from pacthold.public import Environment, InstallationRecord
 from agent_tools_fixtures.node_publication import Provider
 from ordessa_execution_agents.harness.providers.registry.contributions import AgentContributionSet
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import IdentityMismatchError, AdmissionRefusedError
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, UsageMutation, operation_holder, safe_json
+from ordessa_units.errors import UnitIdentityMismatch, UnitAdmissionRefused
+from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 
 
@@ -71,7 +72,7 @@ def test_invalid_hold_rolls_back_operation_and_node_identity(reservation, foreig
     if foreign == "holder": holder["operationRef"] = "another-operation"
     else: target["environmentNamespace"] = "other"
     invalid = UsageMutation("provider-hold", 0, None, holder, target, ("use",), "active")
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         nodes.reserve(request, "digest", intent, usages=(invalid,))
     assert store.read_operation(request) is None
     assert store.read_domain("env", IDENTITIES, "node") is None
@@ -126,7 +127,7 @@ def test_reserve_refuses_pin_that_was_never_admitted(tmp_path):
             {"environmentNamespace": "env"},
             (StepIntent("prepare", unadmitted, "step-digest", "original-correlation"),),
             {"environmentNamespace": "env", "instanceId": "node", "generation": 1})
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(UnitAdmissionRefused):
             NodePublication(env).reserve(request, "digest", intent)
         assert store.read_operation(request) is None
         assert store.read_domain("env", IDENTITIES, "node") is None
@@ -162,7 +163,7 @@ def test_reserve_refuses_pin_after_provider_is_drained(tmp_path):
         hold = UsageMutation("provider-hold", 0, None,
                              operation_holder(request, intent.operation_ref),
                              provider, ("use",), "active")
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(UnitAdmissionRefused):
             NodePublication(env).reserve(request, "digest", intent, usages=(hold,))
         assert store.read_operation(request) is None
         assert store.read_domain("env", IDENTITIES, "node") is None

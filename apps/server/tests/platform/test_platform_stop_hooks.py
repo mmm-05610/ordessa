@@ -1,25 +1,28 @@
-"""T014-S1a: the server-stop phase, and the two domain stops it moved.
+"""T014-S1a: the server-stop phase, and the domain stop it keeps.
 
 FR-006 forbids a specialised stop in the composition root. The host keeps a
 *generic* phase — run the active round's `stop_hooks` in reverse activation
-order, before any disposal — and the behaviour moves to the plugins that own
-the objects:
+order, before any disposal — and the behaviour lives in the plugin that owns
+the object:
 
-- the managed ACP channel transport stop → `ordessa.harness.acp` (its own
-  gate lives in `plugins/harness/tests/test_server_acp_stop_hook.py`, because
-  that is where the registry lives);
-- the execution port stop, `SERVER_STOP_TIMEOUT` refusal included →
-  `ordessa.server-compat` (tested here through the real composition, since
-  `plugins/server-compat` has no test tree of its own).
+- 032: the execution-port stop retired with `ordessa.server-compat` (the
+  `execution.port` owner is gone; the product funnel still accepts the kwarg
+  for call-site compatibility but no plugin owns it — asserted as absence
+  below). The surviving domain stop in the default composition is the
+  permissions backend's settled-world refusal (`permissions-backend`, whose
+  `refuse_deactivation` aborts teardown while approvals are open);
+- the managed ACP channel transport stop lives in `ordessa.harness.acp`
+  (its own gate is in `packages/execution/kernel/tests/harness_kit/
+  test_server_acp_stop_hook.py`, because that is where the registry lives —
+  the default product composes no launch, so it declares no hook here).
 
 The ordering rule the old code hardcoded ("channels stop first, so their run
 records close with the honest server-stop reason while the ledger is still
-up") is now carried by the activation DAG: the ACP facet declares
-`requires=("ordessa.workspace", "ordessa.server-compat")`, so it activates
-last and therefore stops first, while the compatibility core — the owner of
-the records it writes through — is still active and not yet disposed. The
-counterexample below is that dependency itself: drop `ordessa.server-compat`
-from the tuple and the DAG no longer promises the order.
+up") is now carried by the activation DAG: a plugin that declared the
+retired core in `requires` would activate last and stop first. With the
+core retired the ACP facet requires only `ordessa.workspace`, and the
+retired ordering edge is asserted as gone (re-adding the compat id to that
+tuple must fail at activation, not silently re-order).
 """
 from __future__ import annotations
 
@@ -31,8 +34,8 @@ from server_plugin_api import HostAdmissionClosedError, ServerPluginRegistration
 
 from contribution_fakes import ContribPlugin, new_host
 
-from ordessa_server.bootstrap import build_runtime
-from ordessa_server_product.composition import create_composition
+from ordessa_server.composition.runtime import build_runtime
+from ordessa_server.composition.configuration.product_selection import create_host_product_composition as create_composition
 
 
 class Boom(RuntimeError):
@@ -194,99 +197,116 @@ def test_a_bare_runtime_stop_invents_no_hook_for_a_plugin_that_declared_none(tmp
 
 
 def test_the_default_product_composition_stops_the_channel_owner_before_the_ledger(tmp_path):
-    """Reverse activation order gives the frozen order, because of `requires`.
+    """Reverse activation order gives the order, because of `requires`.
 
-    The assertion is the dependency, not the resulting list: the ACP facet
-    declares the compatibility core, so it sits on top of it and comes off
-    first. Remove `ordessa.server-compat` from that tuple and the second
-    assertion goes red — the guarantee goes with it, which is the honest way
-    for a teardown order to depend on a declared edge.
+    032: the retired compatibility core is gone from both the activation
+    list and the ACP facet's `requires`. The assertion is the surviving
+    dependency — the ACP facet requires `ordessa.workspace`, so it sits on
+    top of it and comes off first — plus the retirement itself: the compat
+    id is absent from the round and cannot be re-required.
     """
-    from ordessa_harness.server_acp.plugin import AcpChannelServerPlugin
-    from ordessa_server_compat.plugin import ServerCompatPlugin
+    from ordessa_server.composition.native_channels.plugin import AcpChannelServerPlugin
 
     runtime = build_runtime(tmp_path / "data")
     try:
         assert runtime.plugin_host.active_ids() == (
-            "ordessa.workspace", "ordessa.server-compat", "ordessa.harness.acp",
-            "ordessa.model-provider", "ordessa.sandbox", "ordessa.sandbox-adapters",
-            "permissions-backend", "ordessa.permissions-adapters")
+            "ordessa.workspace", "ordessa.harness.acp",
+            "ordessa.model-provider", "ordessa.sandbox",
+            "ordessa.sandbox-adapters", "permissions-backend",
+            "ordessa.permissions-adapters")
     finally:
         runtime.stop()
 
-    assert set(AcpChannelServerPlugin().descriptor().requires) == {
-        "ordessa.workspace", "ordessa.server-compat"}
-    assert ServerCompatPlugin().descriptor().requires == ("ordessa.workspace",)
+    assert AcpChannelServerPlugin().descriptor().requires == ("ordessa.workspace",)
+    assert "ordessa.server-compat" not in runtime.plugin_host.active_ids()
 
 
 def test_the_default_composition_declares_no_execution_stop_without_a_port(tmp_path):
-    """Honest absence at the product surface: no execution port composed, so
-    the compatibility plugin declares no stop hook and a stop is clean."""
+    """Honest absence at the product surface, 032 form: the execution domain
+    retired with the compat plugin, so no active plugin provides
+    `execution.port` and no stop hook answers for it — a stop is clean."""
     runtime = build_runtime(tmp_path / "data")
     try:
-        compat = runtime.plugin_host.active("ordessa.server-compat")
-        assert compat.registration.provided_ports["execution.port"] is None
-        assert compat.registration.stop_hooks == ()
+        assert "ordessa.server-compat" not in runtime.plugin_host.active_ids()
+        assert runtime.plugin_host.provided_port("execution.port") is None
+        for plugin_id in runtime.plugin_host.active_ids():
+            assert runtime.plugin_host.active(plugin_id).registration.stop_hooks == () or (
+                plugin_id == "permissions-backend"), plugin_id
     finally:
         runtime.stop()
 
 
-# -- destination: the execution stop, refusal included, is the compat plugin's --
+# -- destination, 032 form: the execution stop retired WITH its owner --------
+#
+# The three tests below previously proved the execution stop moved from the
+# composition root to the compat plugin. That owner is deleted
+# (docs/implementation/specifications/032-architecture-cleanup); the product funnel accepts the kwarg but
+# routes it nowhere. The replacement coverage is:
+# - the funnel-accepts-but-owns-nothing absence (S1d file pins the same fact
+#   through the product seam);
+# - the surviving domain-stop refusal, owned by permissions-backend (below).
+# What is NOT kept: SERVER_STOP_TIMEOUT as a live refusal — its owner and
+# its port are gone, and reviving them would be a hidden compat chain.
 
 
 class _SettlingPort:
-    """An execution port whose `stop()` answers whether its runs settled."""
+    """A retired-domain sentinel: its `stop()` must never be called, because
+    no plugin owns the retired `execution.port` anymore."""
 
-    def __init__(self, *, settles: bool = True) -> None:
+    def __init__(self) -> None:
         self.stops = 0
-        self._settles = settles
 
     def stop(self) -> bool:
         self.stops += 1
-        return self._settles
+        return True
 
 
 class _NoStopPort:
-    """A port that never had a stop — the old `hasattr` guard's subject."""
+    """A port that never had a stop — the retired guard's subject."""
 
 
-def test_the_execution_port_is_stopped_once_by_the_plugin_that_owns_it(tmp_path):
+def test_the_retired_execution_funnel_routes_nowhere_and_stops_clean(tmp_path):
+    """The compat funnel accepts the retired fact but owns nothing: the port
+    is unprovided, no stop hook answers for it, and the stop is clean."""
     port = _SettlingPort()
     # T014-S1d: the execution injection reaches the owning plugin through
-    # the product's compat funnel, not through the host's parameter bag.
+    # the product's compat funnel — 032: there is no owning plugin anymore,
+    # so the injection is accepted and dropped, never touching the host.
     runtime = build_runtime(tmp_path / "data",
                             server_plugins=create_composition().compatibility_plugins(execution=port))
     runtime.start()
     runtime.stop()
-    assert port.stops == 1
+    assert port.stops == 0
+    assert runtime.plugin_host.provided_port("execution.port") is None
     assert runtime.owner.acquired is False
 
 
-def test_an_unsettled_execution_stop_refuses_the_shutdown_from_the_plugin(tmp_path):
-    """`SERVER_STOP_TIMEOUT` survives the move, and stays a domain fact.
+def test_a_settled_permissions_stop_closes_the_round_from_the_owning_plugin(tmp_path):
+    """The surviving domain stop: `permissions-backend` owns the settled-world
+    refusal, and a settled world stops clean — the host phase reaches the
+    owner's hook through reverse activation order, before any disposal.
 
-    The refusal now comes from `ordessa_server_compat.plugin`, not from the
-    composition root, and it still aborts the teardown before the plugins are
-    disposed and before the data root is released — a Server that could not
-    settle its runs did not finish stopping, and says so out loud.
+    The refusal itself aborts the teardown while approvals are open (a busy
+    stop raises `PermissionsBackendBusyError` and the round stays active);
+    that half is pinned where the facts live (the permissions backend
+    suite). Here the settled path proves the hook is wired: the stop runs
+    the owner's hook and releases the data root.
     """
-    port = _SettlingPort(settles=False)
-    runtime = build_runtime(tmp_path / "data",
-                            server_plugins=create_composition().compatibility_plugins(execution=port))
+    from ordessa_permissions_backend.plugin import PLUGIN_ID as PERMISSIONS_PLUGIN_ID
+
+    runtime = build_runtime(tmp_path / "data")
     runtime.start()
-    with pytest.raises(RuntimeError, match="SERVER_STOP_TIMEOUT"):
-        runtime.stop()
-    assert port.stops == 1
-    assert runtime.plugin_host.active_ids()
-    assert runtime.owner.acquired is True
-    try:
-        runtime.plugin_host.shutdown()
-    finally:
-        runtime.owner.release()
+    provider = runtime.plugin_host.active(PERMISSIONS_PLUGIN_ID)
+    assert len(provider.registration.stop_hooks) == 1
+    runtime.stop()
+    assert runtime.plugin_host.active_ids() == ()
+    assert runtime.owner.acquired is False
 
 
 def test_a_port_without_a_stop_is_left_alone(tmp_path):
-    """The old `hasattr(self.execution, "stop")` guard moved with the stop."""
+    """The old `hasattr(self.execution, "stop")` guard retired with the port:
+    injecting a stop-less sentinel through the retired funnel is accepted and
+    dropped — the stop stays clean and the host gains no attribute."""
     runtime = build_runtime(tmp_path / "data",
                             server_plugins=create_composition().compatibility_plugins(execution=_NoStopPort()))
     runtime.start()
@@ -302,7 +322,7 @@ def test_the_host_composition_root_carries_no_domain_stop_vocabulary():
     fields — that is slice S1b's removal, and this slice leaves the bag
     working — but the lifecycle code no longer reads it.
     """
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server.composition.runtime as runtime_module
 
     source = Path(runtime_module.__file__).read_text(encoding="utf-8")
     stop_body = source.split("    def stop(self) -> None:", 1)[1].split("\ndef ", 1)[0]

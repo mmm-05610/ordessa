@@ -1,0 +1,42 @@
+schema_version: 1
+method_id: ordessa.nova-feature-delivery.report-smoke
+release_version: 1.0.0
+display_name: OpenStack Nova feature delivery report capture smoke
+compiler_contract: ordessa.methods/v1
+entry:
+  resource: workflow.nova_report_intake
+documents:
+- document_type: phase-report
+  schema:
+    resource: document.phase_report.schema
+  template:
+    resource: document.phase_report.template
+  validation_target: method_content
+skills: {}
+resources:
+- id: document.phase_report.schema
+  kind: document_schema
+  path: documents/phase-report/schema.json
+  media_type: application/schema+json
+  sha256: a865ed18491a41a8a95ffc40feb21f5daeaa76f2ae4b5a83cde01b7ad55dc01b
+- id: document.phase_report.template
+  kind: document_template
+  path: documents/phase-report/template.md
+  media_type: text/markdown
+  sha256: 135d88b4883b92f2d2cfb7fa500d006b897d3191f3f09194dbc184216c1f5c7b
+- id: workflow.nova_report_intake
+  kind: workflow
+  path: workflows/report-intake.yaml
+  media_type: application/yaml
+  sha256: 1f567a6833c550904e925e50e3fef763eacf0d310bd8dc5268b05ece1230f997
+requires:
+- capability_id: engineering.artifacts.create
+  kind: operation
+  interface_version: "2"
+  contract_digest: 0bc02e9e5a17ada14fc47a3da92abd6c360247768ab0ab1debfc6ec444b213f4
+metadata:
+  full_flow_support: unsupported
+  declared_scope: phase_report_registration_only
+  external_owners: nova_community_gerrit_zuul_release_team
+  workflow_projection: one_report_per_invocation
+  runtime_execution: awaiting_coordinator_verification

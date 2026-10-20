@@ -11,7 +11,7 @@ from ordessa_infrastructure.database.records import (
     DomainRevisionConflict,
     DomainStorePort,
 )
-from ordessa_execution_api.environment.errors import UnknownResultError, GuaranteeUnavailableError
+from ordessa_units.errors import UnitOperationUnknown, UnitGuaranteeUnavailable
 from ordessa_units.persistence.sqlite.store import SqliteUnitStore, KeyConflictError
 
 
@@ -102,7 +102,7 @@ def _close_shared_writer(store):
     """
     try:
         store.close()
-    except GuaranteeUnavailableError:
+    except UnitGuaranteeUnavailable:
         row = store._conn.execute(
             "SELECT owner_token FROM env_writer_lock WHERE id=1").fetchone()
         if row is not None:
@@ -123,7 +123,7 @@ def test_shared_writer_close_refuses_a_changed_owner(tmp_path):
         first.commit_domain_change(key("initial"), "initial", (write(),), {})
         second = SqliteUnitStore(path, writer_token="owner-b", allow_takeover=True)
         try:
-            with pytest.raises(GuaranteeUnavailableError):
+            with pytest.raises(UnitGuaranteeUnavailable):
                 _close_shared_writer(first)
             assert first._conn.execute(
                 "SELECT owner_token FROM env_writer_lock WHERE id=1").fetchone()[0] == "owner-b"
@@ -194,9 +194,9 @@ def test_spent_incomplete_requests_never_write(tmp_path, state):
                         ('{"delivery":"acknowledged"}', '{"outcome":"concluded","revision":1}'))
                 else:
                     connection.execute("UPDATE env_requests SET dispatch_state='possibly-dispatched'")
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             store.commit_domain_change(request, "digest", (write(),), {})
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             store.read_domain_result(request, "digest")
         assert store.list_domain("env-a", "catalog") == ()
     finally:
@@ -260,7 +260,7 @@ def test_nested_commit_refuses_without_committing_outer_transaction(tmp_path):
         with pytest.raises(RuntimeError):
             with store.transaction() as conn:
                 conn.execute("INSERT INTO env_meta(key,value) VALUES ('outer','pending')")
-                with pytest.raises(GuaranteeUnavailableError):
+                with pytest.raises(UnitGuaranteeUnavailable):
                     store.commit_domain_change(key("nested"), "digest", (write(),), {})
                 raise RuntimeError("rollback outer")
         assert store.read_request(key("nested")) is None
