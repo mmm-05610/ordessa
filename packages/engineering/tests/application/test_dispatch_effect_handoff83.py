@@ -22,6 +22,9 @@ from ordessa_engineering.adapters.native_records.recorded_dispatch import (
     engineering_effect_write_guard_factory,
 )
 from ordessa_engineering.application.contracts.errors import ApplicationError
+from ordessa_engineering.application.contracts.execution_observations import (
+    MAX_EXECUTION_RECEIPT_BYTES,
+)
 from ordessa_engineering.domain.changes.dispatch import DispatchBinding
 from ordessa_engineering.domain.common.models.identity import Scope as EngineeringScope
 from ordessa_engineering.domain.common.models.values import Digest
@@ -58,6 +61,15 @@ def _freeze_admission_clock(monkeypatch):
 
 class _Records:
     """Small native digest peer; it does not report native completion."""
+
+    acp_turn_evidence_max_bytes = MAX_EXECUTION_RECEIPT_BYTES
+
+    def __init__(self):
+        self.prompt_capacity_calls = []
+
+    def validate_acp_prompt_capacity(self, unit_ref, params):
+        self.prompt_capacity_calls.append((dict(unit_ref), params))
+        return None
 
     @staticmethod
     def acp_prompt_input_digest(unit_ref, params):
@@ -135,7 +147,7 @@ class _UnitPeer:
             native_facts={"sessionId": self.fixed_session}
         ))
 
-    def prompt_recorded(self, unit_ref, lease, *, operation_ref, timeout=60, **params):
+    def prompt(self, unit_ref, lease, *, operation_ref, timeout=60, **params):
         # Matches the original prompt owner: the fixed factory is invoked
         # synchronously on the caller before the SDK target receives the guard.
         self.prompt_count += 1
@@ -316,6 +328,9 @@ def test_original_engineering_uow_cut_consumes_handoff_on_target_thread(
             ):
                 receipt = execution.send(binding, timeout=4)
                 assert receipt == {"controlled_peer": True}
+                assert records.prompt_capacity_calls == [
+                    (dict(_unit_value()), {"sessionId": "fixed-session", "prompt": []})
+                ]
                 assert unit.response_wait.is_set()
             access.require(context, DISPATCH)
 

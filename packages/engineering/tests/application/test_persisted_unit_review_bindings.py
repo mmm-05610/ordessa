@@ -76,8 +76,8 @@ def selected(tmp_path):
         standard=snapshot.program.standard_definitions[0]
         class Bindings:
             def __init__(self):self.factory=factory
-            def resolve_bindings(self,*args):return binding
-            def material_inputs(self,*args):return ()
+            def resolve_plan_bindings(self,*args):return binding
+            def material_inputs_for_plan(self,*args):return ()
         records=SimpleNamespace(acp_prompt_input_digest=lambda unit,params:'sha256:'+hashlib.sha256(canonical_bytes({'unitRef':unit,'params':params})).hexdigest())
         unit={'environmentNamespace':'test','unitId':'independent','ownerProviderRef':{'fixture':True},'sourceRevision':'1'}
         author={**unit,'unitId':'author'}

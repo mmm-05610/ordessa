@@ -1,0 +1,14 @@
+{
+  "name": "@ordessa/extension-loader",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Independent extension loader leaf (032): discovery, manifest validation and dynamic import.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./manifest": "./src/manifest.ts"
+  },
+  "dependencies": {
+    "@ordessa/extension-api": "0.1.0"
+  }
+}

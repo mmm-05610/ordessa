@@ -11,19 +11,19 @@ import json
 from collections.abc import Mapping
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
-    ParticipantInstanceRef,
-    PreDispatchRefusalStorePort,
-    UnknownResultError,
-)
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown
+from ordessa_units.definitions.admission_identity import AgentNodeRef
 from ordessa_infrastructure.database.records import (
     DomainStorePort,
     DomainWrite,
 )
-from ordessa_execution_api.environment.operations import OperationIntent, OperationStorePort, StepIntent, safe_json
+from ordessa_units.definitions.operations import (
+    OperationIntent,
+    OperationStorePort,
+    PreDispatchRefusalStorePort,
+    StepIntent,
+)
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.configuration.contracts import (
  ApplicationPolicy, ConfigurationChangeRequest, ConfigurationChangeResult, ConfigurationContractError,
  ConfigurationSnapshot, ConfigurationUnsupported, ConfigurationRevisionConflict, UnitInspection,
@@ -32,6 +32,7 @@ from ordessa_units.configuration.contracts import (
 )
 from ordessa_units.admission.invocation import InvocationAuthorityRefused, InvocationIssuer
 from ordessa_units.bindings.publication import encode_node_ref
+from ordessa_units.bindings.profile_admission import UnitProfileAdmission
 from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessAdmission
 from ordessa_execution_agents.profiles.definitions.models import ProfileRevisionRef
 
@@ -70,36 +71,36 @@ class AgentConfiguration:
     def _admit(self, node_ref, access):
         env = self._environment
         env._check_open()
-        if not isinstance(node_ref, ParticipantInstanceRef):
-            raise IdentityMismatchError('complete Node identity required')
+        if not isinstance(node_ref, AgentNodeRef):
+            raise UnitIdentityMismatch('complete Node identity required')
         env._check_environment(node_ref.environment)
         if env._policy is None or not env._policy.admit_object_access(
                 env._principal_scope, f'{env.environment_id}:agents.node:{node_ref.instance_id}', access):
-            raise AdmissionRefusedError('Node configuration access refused')
+            raise UnitAdmissionRefused('Node configuration access refused')
         node = self._nodes.read(node_ref)
         if node is None:
-            raise GuaranteeUnavailableError('published Node unavailable')
+            raise UnitGuaranteeUnavailable('published Node unavailable')
         return node
 
     def _owner(self, node, *methods):
         admitted = HarnessAdmission(self._environment).describe(node['binding']['harnessDefinitionRef'])
         if not _same(admitted.provider_ref,node['binding']['harnessProviderRef']):
-            raise AdmissionRefusedError('Node owner activation differs')
-        raise GuaranteeUnavailableError('specific Unit manifest configuration owner is not bound')
+            raise UnitAdmissionRefused('Node owner activation differs')
+        raise UnitGuaranteeUnavailable('specific Unit manifest configuration owner is not bound')
 
     @staticmethod
     def _call(callback, *args):
         try:
             return callback(*args)
         except Exception:
-            raise GuaranteeUnavailableError('owner configuration evidence unavailable') from None
+            raise UnitGuaranteeUnavailable('owner configuration evidence unavailable') from None
 
     def _inspection(self, node, admitted):
         unit = self._call(admitted.provider.inspect_unit, node['binding']['harnessUnitRef'])
         if (not isinstance(unit, UnitInspection) or not _same(unit.unit_ref,node['binding']['harnessUnitRef'])
                 or not _same(unit.provider_ref,admitted.provider_ref)
                 or not _same(unit.configuration_target_ref,node['binding']['configurationTargetRef'])):
-            raise GuaranteeUnavailableError('current Unit owner evidence differs from Node binding')
+            raise UnitGuaranteeUnavailable('current Unit owner evidence differs from Node binding')
         return unit
 
     def describe(self, node_ref):
@@ -109,7 +110,7 @@ class AgentConfiguration:
         result = self._call(admitted.provider.describe_configuration, node['binding']['harnessUnitRef'])
         if (not isinstance(result, tuple) or any(not isinstance(item, ConfigurationDescription) for item in result)
                 or len({(item.configuration_kind,item.schema_version) for item in result}) != len(result)):
-            raise GuaranteeUnavailableError('owner description is incomplete or ambiguous')
+            raise UnitGuaranteeUnavailable('owner description is incomplete or ambiguous')
         return result
 
     def inspect(self, node_ref):
@@ -118,21 +119,21 @@ class AgentConfiguration:
         unit = self._inspection(node, admitted)
         result = self._call(admitted.provider.inspect_configuration, unit.unit_ref)
         if not isinstance(result, ConfigurationSnapshot) or not _same(result.unit_ref,unit.unit_ref) or not _same(result.scope_ref,unit.configuration_target_ref):
-            raise GuaranteeUnavailableError('owner snapshot target differs')
+            raise UnitGuaranteeUnavailable('owner snapshot target differs')
         return result
 
     def _request(self, request, node_ref):
         env = self._environment
         if not isinstance(request, RequestKey) or request.principal_scope != env._principal_scope:
-            raise AdmissionRefusedError('authenticated request realm differs')
+            raise UnitAdmissionRefused('authenticated request realm differs')
         env._check_environment(request.environment_namespace)
         node = self._admit(node_ref, 'write')
         if env._policy is None or not env._policy.admit_invoke(env._principal_scope, 'pacthold.agents.configuration.apply', 'reliable'):
-            raise AdmissionRefusedError('configuration invocation refused')
+            raise UnitAdmissionRefused('configuration invocation refused')
         if not isinstance(env._store, OperationStorePort) or not isinstance(env._store, DomainStorePort) or env._fingerprint_port is None:
-            raise GuaranteeUnavailableError('configuration requires the existing durable operation store and fingerprint port')
+            raise UnitGuaranteeUnavailable('configuration requires the existing durable operation store and fingerprint port')
         if not isinstance(self._issuer, InvocationIssuer) or self._issuer._store is not env._store:
-            raise GuaranteeUnavailableError('explicit invocation issuer on the same Environment store required')
+            raise UnitGuaranteeUnavailable('explicit invocation issuer on the same Environment store required')
         return node
 
     def reserve(self, request, node_ref, change, *, profile_ref=None, base_profile_ref=None,
@@ -148,11 +149,11 @@ class AgentConfiguration:
         the expected source.
         """
         if not isinstance(change, ConfigurationChangeRequest) or not isinstance(request, RequestKey) or request.request_id != change.request_id:
-            raise IdentityMismatchError('configuration request identity differs')
+            raise UnitIdentityMismatch('configuration request identity differs')
         if profile_ref is not None and type(profile_ref) is not ProfileRevisionRef:
-            raise IdentityMismatchError('fixed new Profile reference required')
+            raise UnitIdentityMismatch('fixed new Profile reference required')
         if base_profile_ref is not None and type(base_profile_ref) is not ProfileRevisionRef:
-            raise IdentityMismatchError('fixed base Profile reference required')
+            raise UnitIdentityMismatch('fixed base Profile reference required')
         env = self._environment
         with env._admission_lock:
             node = self._request(request, node_ref)
@@ -167,14 +168,14 @@ class AgentConfiguration:
             unknown_operation = None
             try:
                 prior = env._store.read_operation(request)
-            except UnknownResultError as error:
+            except UnitOperationUnknown as error:
                 # Domain-only receipts spend the request key without an
                 # Operation. Resolve them only by the exact digest below.
                 unknown_operation = error
                 prior = None
             if prior is not None:
                 if prior.digest != digest or prior.intent.kind != 'configuration-change':
-                    raise IdentityMismatchError('spent configuration request differs')
+                    raise UnitIdentityMismatch('spent configuration request differs')
                 return prior
             # Domain-only refusals (including omission receipts) also spend
             # this Environment request key. Detect them before any Unit-owner
@@ -184,7 +185,7 @@ class AgentConfiguration:
             if prior_domain_result is None and unknown_operation is not None:
                 raise unknown_operation
             if prior_domain_result is not None:
-                raise IdentityMismatchError('spent configuration request has a domain-only result')
+                raise UnitIdentityMismatch('spent configuration request has a domain-only result')
             required = ('inspect_unit', 'inspect_configuration') if mode is not None else (
                 'inspect_unit', 'inspect_configuration', 'describe_configuration', 'apply_configuration')
             admitted = self._owner(node, *required)
@@ -203,7 +204,7 @@ class AgentConfiguration:
                     raise ConfigurationUnsupported('required declaration unsupported before dispatch')
                 for ref in declaration.get('resourceRefs', ()):
                     if ref.get('environmentNamespace') != env.environment_id:
-                        raise IdentityMismatchError('configuration material environment differs')
+                        raise UnitIdentityMismatch('configuration material environment differs')
                 # C1 material acquisition and authorized SecretRef resolution
                 # are not composed here. Keep opaque references in request
                 # identity, but never pass them to an owner as acquired material.
@@ -275,9 +276,9 @@ class AgentConfiguration:
                 or old.intent.kind != 'configuration-change'
                 or old.intent.operation_ref != source.get('operationRef')
                 or not _same(old.intent.context_ref.get('configurationTargetRef'), target)):
-            raise GuaranteeUnavailableError('configuration scope source identity damaged')
+            raise UnitGuaranteeUnavailable('configuration scope source identity damaged')
         if old.status not in {'published', 'refused', 'cancelled'}:
-            raise UnknownResultError('scope has an unresolved configuration operation')
+            raise UnitOperationUnknown('scope has an unresolved configuration operation')
         expected = source.get('expectedProfileRef')
         expected_operation = source.get('expectedProfileOperationRef')
         try:
@@ -285,9 +286,9 @@ class AgentConfiguration:
                 raise ValueError()
             decode_revision_ref(json.loads(safe_json(expected)))
         except (ValueError, TypeError, KeyError):
-            raise GuaranteeUnavailableError('configuration scope expected source unavailable') from None
+            raise UnitGuaranteeUnavailable('configuration scope expected source unavailable') from None
         if expected_operation is not None and (not isinstance(expected_operation, str) or not expected_operation):
-            raise GuaranteeUnavailableError('configuration scope source identity damaged')
+            raise UnitGuaranteeUnavailable('configuration scope source identity damaged')
         return expected, expected_operation
 
     def apply_profile(self, request, node_ref, profile_ref, expected_configuration_revision,
@@ -309,10 +310,10 @@ class AgentConfiguration:
         if (profile_ref is None) == (profile_manifest is None):
             raise ConfigurationContractError('exactly one configuration source required')
         if type(base_profile_ref) is not ProfileRevisionRef:
-            raise IdentityMismatchError('fixed base Profile reference required')
+            raise UnitIdentityMismatch('fixed base Profile reference required')
         if profile_ref is not None and type(profile_ref) is not ProfileRevisionRef:
-            raise IdentityMismatchError('fixed Profile reference required')
-        catalog = ProfileService(self._environment)
+            raise UnitIdentityMismatch('fixed Profile reference required')
+        catalog = ProfileService(UnitProfileAdmission(self._environment))
         base_manifest = catalog.get_revision(base_profile_ref)
         snapshot_write = None
         if profile_ref is None:
@@ -366,13 +367,13 @@ class AgentConfiguration:
             unknown_operation = None
             try:
                 prior = env._store.read_operation(request)
-            except UnknownResultError as error:
+            except UnitOperationUnknown as error:
                 # The exact-digest domain read below distinguishes a complete
                 # historical receipt from an incomplete/unknown spent key.
                 unknown_operation = error
                 prior = None
             if prior is not None:
-                raise IdentityMismatchError('spent configuration request differs')
+                raise UnitIdentityMismatch('spent configuration request differs')
 
             receipt = env._store.read_domain_result(request, digest)
             expected_omitted = tuple(omitted)
@@ -384,7 +385,7 @@ class AgentConfiguration:
                         or receipt.get('code') != ConfigurationOmissionRefused.code
                         or not isinstance(receipt.get('omitted'), list)
                         or tuple(receipt['omitted']) != expected_omitted):
-                    raise UnknownResultError('stored configuration refusal cannot be verified; do not resend')
+                    raise UnitOperationUnknown('stored configuration refusal cannot be verified; do not resend')
                 raise ConfigurationOmissionRefused(expected_omitted)
 
             result = {'status': 'refused', 'code': ConfigurationOmissionRefused.code,
@@ -395,7 +396,7 @@ class AgentConfiguration:
                     or committed.get('code') != ConfigurationOmissionRefused.code
                     or not isinstance(committed.get('omitted'), list)
                     or tuple(committed['omitted']) != expected_omitted):
-                raise UnknownResultError('configuration refusal receipt could not be verified; do not resend')
+                raise UnitOperationUnknown('configuration refusal receipt could not be verified; do not resend')
             raise ConfigurationOmissionRefused(expected_omitted)
 
     def _no_change(self, request, node_ref, change, profile_ref, base_profile_ref, snapshot_write=None):
@@ -423,14 +424,14 @@ class AgentConfiguration:
             unknown_operation = None
             try:
                 prior = env._store.read_operation(request)
-            except UnknownResultError as error:
+            except UnitOperationUnknown as error:
                 # A data-only result has no Operation projection. Do not treat
                 # it as unused; read_domain_result must prove the exact receipt.
                 unknown_operation = error
                 prior = None
             if prior is not None:
                 if prior.digest != digest or prior.intent.kind != 'configuration-change':
-                    raise IdentityMismatchError('spent configuration request differs')
+                    raise UnitIdentityMismatch('spent configuration request differs')
                 return prior
             receipt = env._store.read_domain_result(request, digest)
             if receipt is None and unknown_operation is not None:
@@ -440,7 +441,7 @@ class AgentConfiguration:
                         or receipt.get('verified') != 'standing-operation'
                         or not isinstance(receipt.get('noChangeOf'), str)
                         or receipt.get('profileRef') != encode_revision_ref(profile_ref)):
-                    raise UnknownResultError('stored no-change result cannot be verified; do not resend')
+                    raise UnitOperationUnknown('stored no-change result cannot be verified; do not resend')
                 return self.query(node_ref, receipt['noChangeOf'])
 
             admitted = self._owner(node, 'inspect_unit', 'inspect_configuration')
@@ -561,8 +562,8 @@ class AgentConfiguration:
                 invocation = self._issuer.issue(request,operation.digest,'configuration-apply','applyConfiguration',unit.configuration_target_ref)
             except _KnownPreDispatchRefusal as refusal:
                 self._refuse_unclaimed(request, operation, refusal.phase, refusal.reason)
-                raise AdmissionRefusedError('owner evidence changed before configuration dispatch') from None
-            except AdmissionRefusedError:
+                raise UnitAdmissionRefused('owner evidence changed before configuration dispatch') from None
+            except UnitAdmissionRefused:
                 self._refuse_unclaimed(request, operation, 'owner-recheck', 'admission-refused')
                 raise
             except ConfigurationRevisionConflict:
@@ -578,7 +579,7 @@ class AgentConfiguration:
         try:
             result = admitted.provider.apply_configuration(unit.unit_ref,effective_change,invocation)
             if not self._issuer.verified_consumption(invocation):
-                raise GuaranteeUnavailableError('owner did not verify the issued invocation')
+                raise UnitGuaranteeUnavailable('owner did not verify the issued invocation')
             result = merge_skipped(operation,effective_change,result)
             self._validate_result(operation,change,unit,result)
         except Exception:
@@ -593,7 +594,7 @@ class AgentConfiguration:
                 or not callable(refusal_method)):
             # Older stores keep their existing reserved/held state. No second
             # write path can safely emulate the capability.
-            raise AdmissionRefusedError('atomic pre-dispatch refusal capability unavailable')
+            raise UnitAdmissionRefused('atomic pre-dispatch refusal capability unavailable')
         rollback = operation.intent.context_ref.get('preDispatchRollback')
         expected_keys = {
             'namespace', 'recordId', 'preReservationFenceRevision',
@@ -601,16 +602,16 @@ class AgentConfiguration:
             'reservedExpectedProfileRef', 'reservedExpectedProfileOperationRef',
         }
         if not isinstance(rollback, Mapping) or set(rollback) != expected_keys:
-            raise AdmissionRefusedError('pre-dispatch rollback facts unavailable')
+            raise UnitAdmissionRefused('pre-dispatch rollback facts unavailable')
         previous_revision = rollback.get('preReservationFenceRevision')
         namespace, record_id = rollback.get('namespace'), rollback.get('recordId')
         target_ref = operation.intent.context_ref.get('configurationTargetRef')
         if not isinstance(target_ref, Mapping):
-            raise AdmissionRefusedError('pre-dispatch target identity unavailable')
+            raise UnitAdmissionRefused('pre-dispatch target identity unavailable')
         expected_record_id = 'scope-' + hashlib.sha256(safe_json(target_ref).encode()).hexdigest()[:48]
         if (type(previous_revision) is not int or previous_revision < 0
                 or namespace != CONFIGURATION_ATTEMPTS or record_id != expected_record_id):
-            raise AdmissionRefusedError('pre-dispatch rollback facts invalid')
+            raise UnitAdmissionRefused('pre-dispatch rollback facts invalid')
         prior_profile = rollback.get('priorExpectedProfileRef')
         prior_operation = rollback.get('priorExpectedProfileOperationRef')
         reserved_profile = rollback.get('reservedExpectedProfileRef')
@@ -619,18 +620,18 @@ class AgentConfiguration:
             prior_ref = decode_revision_ref(_plain(prior_profile))
             reserved_ref = decode_revision_ref(_plain(reserved_profile))
         except (ValueError, TypeError, KeyError, AttributeError):
-            raise AdmissionRefusedError('pre-dispatch prior Profile source unavailable') from None
+            raise UnitAdmissionRefused('pre-dispatch prior Profile source unavailable') from None
         if (prior_ref.environment_namespace != env.environment_id
                 or reserved_ref.environment_namespace != env.environment_id
                 or (prior_operation is not None
                     and (not isinstance(prior_operation, str) or not prior_operation))
                 or (reserved_operation is not None
                     and (not isinstance(reserved_operation, str) or not reserved_operation))):
-            raise AdmissionRefusedError('pre-dispatch prior source identity invalid')
+            raise UnitAdmissionRefused('pre-dispatch prior source identity invalid')
         fence = env._store.read_domain(env.environment_id, namespace, record_id)
         expected_reserved_revision = previous_revision + 1
         if fence is None or fence.get('revision') != expected_reserved_revision:
-            raise AdmissionRefusedError('reserved configuration fence changed')
+            raise UnitAdmissionRefused('reserved configuration fence changed')
         value = _plain(fence.get('value'))
         context = operation.intent.context_ref
         if (value.get('principalScope') != request.principal_scope
@@ -639,7 +640,7 @@ class AgentConfiguration:
                 or not _same(value.get('scopeRef'), target_ref)
                 or not _same(value.get('expectedProfileRef'), encode_revision_ref(reserved_ref))
                 or not _same(value.get('expectedProfileOperationRef'), reserved_operation)):
-            raise AdmissionRefusedError('reserved configuration fence identity changed')
+            raise UnitAdmissionRefused('reserved configuration fence identity changed')
         value['expectedProfileRef'] = encode_revision_ref(prior_ref)
         value['expectedProfileOperationRef'] = prior_operation
         restore = DomainWrite(namespace, record_id, expected_reserved_revision, value)
@@ -673,7 +674,7 @@ class AgentConfiguration:
         evidence = json.loads(step.evidence_json)
         result = evidence.get('configurationResult')
         if result is None:
-            raise GuaranteeUnavailableError('concluded configuration result unavailable')
+            raise UnitGuaranteeUnavailable('concluded configuration result unavailable')
         return self._environment._store.publish_operation(request,operation.digest,operation.revision,
             ('configuration-apply',),(),(),{'nodeRef':_plain(operation.intent.node_ref),'configurationResult':result})
 
@@ -712,41 +713,41 @@ class AgentConfiguration:
             node=self._admit(node_ref,'read')
             if (not isinstance(env._store,OperationStorePort) or not isinstance(env._store,DomainStorePort)
                     or not isinstance(self._issuer,InvocationIssuer) or self._issuer._store is not env._store):
-                raise GuaranteeUnavailableError('same-store operation and read authority required')
+                raise UnitGuaranteeUnavailable('same-store operation and read authority required')
             if not isinstance(operation_ref,str) or not operation_ref or len(operation_ref)>256:
-                raise IdentityMismatchError('complete operation identity required')
+                raise UnitIdentityMismatch('complete operation identity required')
             if not env._policy.admit_object_access(env._principal_scope,f'{env.environment_id}:operation:{operation_ref}','read'):
-                raise AdmissionRefusedError('configuration operation read refused')
+                raise UnitAdmissionRefused('configuration operation read refused')
             # Existing core identity index, never a new recovery dictionary.
             identity=env._store.read_domain(env.environment_id,'core.operation-identities',operation_ref)
             if identity is None:
-                raise GuaranteeUnavailableError('configuration operation unavailable')
+                raise UnitGuaranteeUnavailable('configuration operation unavailable')
             holder=identity['value']['holder']
             if holder.get('principalScope')!=env._principal_scope or holder.get('operationId')!=operation_ref:
-                raise AdmissionRefusedError('operation belongs to another authenticated realm')
+                raise UnitAdmissionRefused('operation belongs to another authenticated realm')
             request=RequestKey(env.environment_id,holder['principalScope'],holder['requestId'])
             operation=env._store.read_operation(request)
             if (operation is None or operation.intent.kind!='configuration-change'
                     or operation.intent.operation_ref!=operation_ref
                     or not _same(operation.intent.node_ref,encode_node_ref(node_ref))):
-                raise IdentityMismatchError('configuration operation target differs')
+                raise UnitIdentityMismatch('configuration operation target differs')
             if operation.status in {'published','refused','cancelled','reserved'}:
                 return operation
             step=env._store.read_operation_step(request,'configuration-apply')
             if step is None:
-                raise GuaranteeUnavailableError('configuration dispatch claim unavailable')
+                raise UnitGuaranteeUnavailable('configuration dispatch claim unavailable')
             if step.outcome == 'concluded':
                 return self._finish_recorded(request,operation,step)
             admitted=self._owner(node,'inspect_unit','query_change')
             unit=self._inspection(node,admitted)
             if not _same(admitted.provider_ref,operation.intent.steps[0].pinned_provider_ref):
-                raise AdmissionRefusedError('original configuration owner no longer admitted')
+                raise UnitAdmissionRefused('original configuration owner no longer admitted')
             change=ConfigurationChangeRequest.from_dict(_plain(operation.intent.context_ref['change']))
             invocation=self._issuer.issue_query(request,operation.digest,'configuration-apply')
         try:
             result=admitted.provider.query_change(unit.unit_ref,operation_ref,invocation)
             if not self._issuer.verified_observation(invocation):
-                raise GuaranteeUnavailableError('owner did not verify read authority')
+                raise UnitGuaranteeUnavailable('owner did not verify read authority')
             result=merge_skipped(operation,replace_change(change,operation.intent.context_ref['effectiveDeclarations']),result)
             self._validate_result(operation,change,unit,result)
         except Exception:

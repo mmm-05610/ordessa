@@ -2,16 +2,18 @@
  * 宿主主进程侧的门（PA-02/03/04/07/08/09/10/11/13/14/21/22/23）。
  * 每条断言都对应契约里的一条反例或硬门；node 环境，不起 Electron。
  */
-import { mkdtemp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, rm, stat, writeFile, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { buildInfo, assertBuildInfo, writeBuildInfo } from '../scripts/build-info.mjs'
-import { exportIcons, ICON_SIZES, HICOLOR_SIZES } from '../scripts/build-icons.mjs'
-import { findTestDrivers, FORBIDDEN_MARKERS } from '../scripts/release-hygiene.mjs'
-import { acquireDataRootLock, ensureDataRoot, probeDataRoot, resolveDataRoot } from '../electron/data-root'
+import { discover } from '@ordessa/extension-host/main'
+import { buildInfo, assertBuildInfo, writeBuildInfo } from '../packaging/build-info.mjs'
+import { exportIcons, ICON_SIZES, HICOLOR_SIZES } from '../packaging/icons/build-icons.mjs'
+import { findTestDrivers, FORBIDDEN_MARKERS } from '../packaging/release-hygiene.mjs'
+import { acquireDataRootLock, ensureDataRoot, initializeExistingDataRoot, probeDataRoot, resolveDataRoot, OWNER_MARKER_NAME, OWNER_MARKER_CONTENT } from '../electron/data-root'
 import { isRenderableFault, sortFaults, faultId } from '../electron/faults'
+import { resolveProductLayout } from '../electron/product-layout'
 import { DEFAULT_WINDOW_STATE, beginSession, cleanSession, restoreWindowState, runCleanup, startupCrashReport } from '../electron/lifecycle'
 import { createSettingsStore, normalizeDocument, projectFragments } from '../electron/settings-store'
 import { createFixtureUpdateClient } from '../electron/update-client'
@@ -98,9 +100,62 @@ describe('PA-11 代码卫生：发行物零测试驱动代码', () => {
 })
 
 describe('PA-07 数据根与锁语义（消费 C-01）', () => {
+  it('显式初始化既有根保留账号与配置，随后可重用同一所有权标记', async () => {
+    const root = await tempDir()
+    await mkdir(path.join(root, 'accounts'))
+    await writeFile(path.join(root, 'accounts', 'sentinel'), 'unchanged')
+    await expect(initializeExistingDataRoot(root, { confirmed: false })).rejects.toThrow(/confirmation/)
+    await expect(readFile(path.join(root, OWNER_MARKER_NAME))).rejects.toThrow()
+    await initializeExistingDataRoot(root, { confirmed: true })
+    await initializeExistingDataRoot(root, { confirmed: true })
+    expect(await readFile(path.join(root, OWNER_MARKER_NAME), 'utf8')).toBe(OWNER_MARKER_CONTENT)
+    expect(await readFile(path.join(root, 'accounts', 'sentinel'), 'utf8')).toBe('unchanged')
+    expect((await stat(path.join(root, OWNER_MARKER_NAME))).mode & 0o777).toBe(0o600)
+  })
+  it('显式初始化也拒绝活锁、符号链接与错误标记，不覆盖任何内容', async () => {
+    const root = await tempDir()
+    await writeFile(path.join(root, '.lock'), JSON.stringify({ pid: process.pid }))
+    await expect(initializeExistingDataRoot(root, { confirmed: true })).rejects.toThrow(/locked/)
+    await rm(path.join(root, '.lock'))
+    const parent = await tempDir()
+    const link = path.join(parent, 'link')
+    await symlink(root, link)
+    await expect(initializeExistingDataRoot(link, { confirmed: true })).rejects.toThrow(/symbolic/)
+    await writeFile(path.join(root, OWNER_MARKER_NAME), 'foreign')
+    await expect(initializeExistingDataRoot(root, { confirmed: true })).rejects.toThrow(/marker/)
+    expect(await readFile(path.join(root, OWNER_MARKER_NAME), 'utf8')).toBe('foreign')
+  })
+  it('初始化拒绝损坏的 Desktop 锁、Server 锁及标记符号链接', async () => {
+    const root = await tempDir()
+    await writeFile(path.join(root, '.lock'), '{broken')
+    await expect(initializeExistingDataRoot(root, { confirmed: true })).rejects.toThrow()
+    await rm(path.join(root, '.lock'))
+    await writeFile(path.join(root, 'server.lock'), 'server_unknown')
+    await expect(initializeExistingDataRoot(root, { confirmed: true })).rejects.toThrow(/Server lock/)
+    await rm(path.join(root, 'server.lock'))
+    const target = path.join(await tempDir(), 'marker')
+    await writeFile(target, 'untouched')
+    await symlink(target, path.join(root, OWNER_MARKER_NAME))
+    await expect(initializeExistingDataRoot(root, { confirmed: true })).rejects.toThrow(/Unsafe/)
+    expect(await readFile(target, 'utf8')).toBe('untouched')
+  })
   it('解析顺序：env 优先，缺省 ~/.ordessa', () => {
     expect(resolveDataRoot({ ORDESSA_DATA_ROOT: '/tmp/custom' }, '/home/u')).toBe('/tmp/custom')
     expect(resolveDataRoot({}, '/home/u')).toBe(path.join('/home/u', '.ordessa'))
+  })
+  it('首启创建的根写 owner marker；既有无 marker 目录不被收养', async () => {
+    // Server 的 DataRootOwner 拒绝"已存在但无 marker"的目录（DATA_ROOT_UNOWNED）。
+    // 宿主首启创建根时必须立契，否则随后 spawn 的 Server 会拒绝宿主自己的根。
+    const dir = await tempDir()
+    const fresh = path.join(dir, 'fresh-root')
+    await ensureDataRoot(fresh)
+    expect(await readFile(path.join(fresh, OWNER_MARKER_NAME), 'utf8')).toBe(OWNER_MARKER_CONTENT)
+
+    // 反例：既有目录（外来根）不由宿主收养——marker 不写，拒绝权留给 Server。
+    const foreign = path.join(dir, 'foreign-root')
+    await mkdir(foreign)
+    await ensureDataRoot(foreign)
+    await expect(readFile(path.join(foreign, OWNER_MARKER_NAME), 'utf8')).rejects.toThrow()
   })
   it('目录缺失 → 故障带 reason/remedy/logRef，不抛异常', async () => {
     const dir = await tempDir()
@@ -319,4 +374,62 @@ describe('PA-23 安全基线不退化', () => {
     expect(isTrustedIpcCaller({ ...trusted, windowDestroyed: true })).toBe(false)
   })
   it('新窗口一律 deny', () => { expect(WINDOW_OPEN_ACTION).toBe('deny') })
+})
+
+describe('B-003 产品产物位置：安装布局与开发树都必须解析得到扩展', () => {
+  /** 造一棵假的开发树：<root>/apps/desktop/dist + <root>/apps/desktop/packaging/product/dist。 */
+  async function devTree() {
+    const root = await tempDir()
+    const distDir = path.join(root, 'apps/desktop/dist')
+    await mkdir(path.join(root, 'apps/desktop/packaging/product/dist/extensions'), { recursive: true })
+    await writeFile(path.join(root, 'apps/desktop/packaging/product/dist/extensions.json'), '{"enabled":[]}\n')
+    await mkdir(distDir, { recursive: true })
+    return { root, distDir }
+  }
+
+  it('安装布局：ORDESSA_BUNDLED_ROOT/app/dist 存在时用它（合并后的产品产物）', async () => {
+    const prefix = await tempDir()
+    const installedDist = path.join(prefix, 'app/dist')
+    await mkdir(path.join(installedDist, 'extensions'), { recursive: true })
+    await writeFile(path.join(installedDist, 'extensions.json'), '{"enabled":[]}\n')
+    const distDir = installedDist // 装机后宿主与产品产物同目录
+    const layout = resolveProductLayout(distDir, { ORDESSA_BUNDLED_ROOT: prefix })
+    expect(layout.dist).toBe(installedDist)
+    // 清单与扩展同在合并目录里，诊断不能再去读开发树。
+    expect(layout.manifestDir).toBe(installedDist)
+    expect(await readFile(path.join(layout.manifestDir, 'extensions.json'), 'utf8')).toBe('{"enabled":[]}\n')
+  })
+
+  it('开发树：没有安装根（或其 app/dist 不存在）时维持既有相对解析，行为零回归', async () => {
+    const { root, distDir } = await devTree()
+    const layout = resolveProductLayout(distDir, {})
+    expect(layout.dist).toBe(path.join(root, 'apps/desktop/packaging/product/dist'))
+    expect(layout.manifestDir).toBe(path.join(root, 'apps/desktop/packaging/product'))
+    // 显式设了根但那棵安装树不存在时，不得误判成安装布局。
+    expect(resolveProductLayout(distDir, { ORDESSA_BUNDLED_ROOT: path.join(root, 'absent') }).dist)
+      .toBe(path.join(root, 'apps/desktop/packaging/product/dist'))
+  })
+
+  it('两棵树都在时，安装布局优先（判定顺序是显式的）', async () => {
+    const { root, distDir } = await devTree()
+    const prefix = await tempDir()
+    const installedDist = path.join(prefix, 'app/dist')
+    await mkdir(installedDist, { recursive: true })
+    expect(resolveProductLayout(distDir, { ORDESSA_BUNDLED_ROOT: prefix }).dist).toBe(installedDist)
+  })
+
+  it('两者都不满足 → 回退到相对路径（不是 undefined）：discover 走 fail-closed 的空目录，不抛异常', async () => {
+    const distDir = path.join(await tempDir(), 'apps/desktop/dist')
+    const layout = resolveProductLayout(distDir, { ORDESSA_BUNDLED_ROOT: path.join(await tempDir(), 'absent') })
+    expect(layout.dist).toBe(path.resolve(distDir, '../packaging/product/dist'))
+    expect(layout.dist).toBeTypeOf('string')
+    const discovery = await discover(await tempDir(), layout.dist)
+    expect(discovery.catalog.extensions).toEqual([])
+    expect(discovery.catalog.failures).toEqual([])
+  })
+
+  it('真实仓库树：解析到 apps/desktop/packaging/product/dist（开发零回归的硬断言）', () => {
+    expect(resolveProductLayout(path.join(repoRoot, 'apps/desktop/dist'), {}).dist)
+      .toBe(path.join(repoRoot, 'apps/desktop/packaging/product/dist'))
+  })
 })

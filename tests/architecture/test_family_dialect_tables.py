@@ -1,0 +1,264 @@
+"""P-A② equivalence pins (approvals/PA2-dialect-release.md, case 1, minimal split).
+
+The dialect tables moved from literals in `native_materialization` into each
+family's own `native.py`; these pins freeze exactly what the approval calls
+equivalence:
+
+  * every family table byte-equal to the pre-split literal (change needs a pin
+    update in the same batch - frozen on purpose, x20 precedent);
+  * the aggregation is the family tables themselves (`is`, not a copy) with the
+    same key sets as before - 7 dialect keys, 6 target keys (dsh pins None in
+    its own module and stays absent from `_NATIVE_TARGET`, exactly as the
+    pre-split literals), `qoder` absent from both;
+  * kilo/opencode hold distinct objects (equal by value, owned separately - the
+    approval names "each family owns its facts, no cross-family import");
+  * the shared module's public surface did not move (engine, renderers, error,
+    vocabulary - the approval froze that list) and behaviour readings
+    (translate/refuse/is_pinnable) are unchanged;
+  * the `dsh/__init__` lazification (declared path, goal-H-027): package import
+    needs no PyYAML, `__all__` frozen to the original 25 names; value identity
+    with `production` is covered by the C-authority gate (env has PyYAML).
+
+Red-green: on a prefix tree without `<family>/native.py` these pins fail at
+import (that is the tooth); `native_materialization` itself would also be the
+old literal version there, so the pins red for the right reason.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from ordessa_server_product import native_materialization as nm
+from ordessa_harness_claude_code import native as claude_native
+from ordessa_harness_codex import native as codex_native
+from ordessa_harness_dsh import native as dsh_native
+from ordessa_harness_hermes import native as hermes_native
+from ordessa_harness_kilo import native as kilo_native
+from ordessa_harness_opencode import native as opencode_native
+from ordessa_harness_pi import native as pi_native
+
+# -- frozen pre-split literals (copied from the P-A② source tree, d8a71c4) ----
+
+FROZEN_DIALECTS = {
+    "codex": {"openai-responses": ("wire_api", "responses"),
+              "openai-chat": ("wire_api", "chat")},
+    "pi": {"openai-chat": ("api", "openai-completions")},
+    "hermes": {"openai-chat": ("transport", "chat_completions")},
+    "opencode": {"openai-chat": ("npm", "@ai-sdk/openai-compatible")},
+    "kilo": {"openai-chat": ("npm", "@ai-sdk/openai-compatible")},
+    "claude-code": {"anthropic-messages": ("ANTHROPIC_BASE_URL", None)},
+    "dsh": {},
+}
+FROZEN_TARGET = {
+    "codex": "config.toml", "opencode": "opencode.json", "kilo": "kilo.json",
+    "pi": "models.json", "hermes": "config.yaml", "claude-code": "settings.json",
+}
+FROZEN_DSH_LAZY_NAMES = (
+    "ADAPTER_ARTIFACT_ENTRY", "ADAPTER_PACKAGE", "ADAPTER_VERSION", "ARTIFACT_NAME",
+    "ARTIFACT_TARGET", "CREDENTIAL_ENVIRONMENT", "CREDENTIAL_KIND", "DSH_PROVIDER",
+    "DshProductionTemplateError", "HARNESS_HOME", "MODEL_CONTROL_ID",
+    "NATIVE_MODEL_VALUE", "OFFICIAL_BASE_URL", "OUTPUT_TOKEN_LIMIT", "PRODUCT_MODEL_ID",
+    "STATE_TARGET", "capability_claims", "deployment_document", "documented_differences",
+    "harness_deployment", "loopback_settings_document", "model_aliases", "native_model",
+    "projection_files", "settings_document",
+)
+
+
+@pytest.mark.parametrize("family", sorted(FROZEN_DIALECTS))
+def test_family_dialect_table_is_byte_equal_to_the_pre_split_literal(family):
+    assert dict(FROZEN_DIALECTS[family]) == dict(nm._FAMILY_DIALECTS[family])
+
+
+def test_aggregation_key_sets_match_the_pre_split_literals_exactly():
+    assert sorted(nm._FAMILY_DIALECTS) == sorted(FROZEN_DIALECTS)   # 7 keys
+    assert sorted(nm._NATIVE_TARGET) == sorted(FROZEN_TARGET)       # 6 keys
+    assert nm._NATIVE_TARGET == FROZEN_TARGET
+
+
+def test_aggregation_holds_the_family_tables_themselves_not_copies():
+    pairs = {
+        "codex": codex_native, "pi": pi_native, "hermes": hermes_native,
+        "opencode": opencode_native, "kilo": kilo_native,
+        "claude-code": claude_native, "dsh": dsh_native,
+    }
+    for key, module in pairs.items():
+        assert nm._FAMILY_DIALECTS[key] is module.DIALECTS, key
+    for key in FROZEN_TARGET:
+        module = {"codex": codex_native, "pi": pi_native, "hermes": hermes_native,
+                  "opencode": opencode_native, "kilo": kilo_native,
+                  "claude-code": claude_native}[key]
+        assert nm._NATIVE_TARGET[key] == module.NATIVE_TARGET, key
+
+
+def test_dsh_pins_nothing_as_explicit_family_rule():
+    assert dsh_native.DIALECTS == {} and dsh_native.NATIVE_TARGET is None
+    assert "dsh" not in nm._NATIVE_TARGET
+
+
+def test_kilo_and_opencode_hold_distinct_objects_equal_by_value():
+    assert kilo_native is not opencode_native
+    assert kilo_native.DIALECTS is not opencode_native.DIALECTS
+    assert kilo_native.DIALECTS == opencode_native.DIALECTS
+
+
+def test_claude_code_key_maps_to_the_claude_package_and_the_mismatch_stays():
+    assert "claude-code" in nm._FAMILY_DIALECTS and "claude" not in nm._FAMILY_DIALECTS
+    assert nm._FAMILY_DIALECTS["claude-code"] is claude_native.DIALECTS
+
+
+def test_qoder_stays_absent_from_both_tables():
+    assert "qoder" not in nm._FAMILY_DIALECTS
+    assert "qoder" not in nm._NATIVE_TARGET
+    assert nm.is_pinnable("qoder", "openai-chat") is False
+
+
+def test_shared_module_public_surface_did_not_move():
+    # the approval froze this list: engine + renderers + error + vocabulary
+    assert nm.CANONICAL_PROTOCOLS == (
+        "openai-chat", "openai-responses", "anthropic-messages", "gemini-generate")
+    for name in ("translate_protocol", "is_pinnable", "materialize_family",
+                 "NativeMaterializationError",
+                 "render_codex_provider_section", "render_pi_provider",
+                 "render_claude_env", "render_opencode_provider", "render_hermes_config"):
+        assert hasattr(nm, name), name
+
+
+def test_behaviour_readings_are_unchanged_after_the_split():
+    assert nm.translate_protocol("codex", "openai-responses") == ("wire_api", "responses")
+    assert nm.translate_protocol("hermes", "openai-chat") == ("transport", "chat_completions")
+    with pytest.raises(nm.NativeMaterializationError) as refused:
+        nm.translate_protocol("dsh", "openai-chat")
+    assert refused.value.code == "PROTOCOL_UNSUPPORTED_BY_HARNESS"
+    with pytest.raises(nm.NativeMaterializationError) as refused:
+        nm.translate_protocol("claude-code", "openai-chat")
+    assert refused.value.code == "PROTOCOL_UNSUPPORTED_BY_HARNESS"
+
+
+FROZEN_DSH_PROVIDER_EXPORTS = (
+    "DshRuntimeProvider", "DshProviderRefused", "DshCapabilityUnsupported",
+    "DshUnitProjection", "DshProjectionRefused",
+    "DshAcpChannelFactory", "DshChannelRefused", "ChannelRecord", "dsh_acp_argv",
+    "verified_private_roots", "PRIVATE_ROOT_FIELDS",
+    "DshTerminationEvidencePort", "DshTerminationRefused", "termination_ready",
+    "DshConnectionLeasePort", "DshLeaseRefused", "DshGrant", "LeasedConnection",
+    "DshAcpClient", "DshRpcError", "PromptTurnFailed", "PROTOCOL", "describe",
+)
+FROZEN_DSH_PROVIDER_SOURCES = (
+    ("provider", ("DshRuntimeProvider", "DshProviderRefused", "DshCapabilityUnsupported", "termination_ready")),
+    ("projection", ("DshUnitProjection", "DshProjectionRefused")),
+    ("runtime_channel", ("DshAcpChannelFactory", "DshChannelRefused", "ChannelRecord", "dsh_acp_argv", "verified_private_roots", "PRIVATE_ROOT_FIELDS")),
+    ("termination", ("DshTerminationEvidencePort", "DshTerminationRefused")),
+    ("lease", ("DshConnectionLeasePort", "DshLeaseRefused", "DshGrant", "LeasedConnection")),
+    ("client", ("DshAcpClient", "DshRpcError", "PromptTurnFailed", "PROTOCOL", "describe")),
+)
+
+
+def test_dsh_production_symbols_remain_at_the_production_owner():
+    """The historical 25 template names remain available on production.py itself."""
+    from importlib import import_module
+
+    production = import_module(BRAND_MODULES["dsh"] + ".production")
+    for name in FROZEN_DSH_LAZY_NAMES:
+        assert name in vars(production), name
+        assert getattr(production, name) is vars(production)[name], name
+    # These deployment-template names are not the provider package's public API.
+    import ordessa_harness_dsh as dsh_pkg
+    assert not set(FROZEN_DSH_LAZY_NAMES).intersection(dsh_pkg.__all__)
+
+
+def test_dsh_provider_public_exports_have_exact_owner_identity():
+    """Pin the package's actual provider surface and each original source object."""
+    from importlib import import_module
+
+    import ordessa_harness_dsh as dsh_pkg
+    assert tuple(dsh_pkg.__all__) == FROZEN_DSH_PROVIDER_EXPORTS
+    # Keep the prior refusal pin: no dynamic catch-all expands the public surface.
+    with pytest.raises(AttributeError):
+        dsh_pkg.does_not_exist
+    for module_name, names in FROZEN_DSH_PROVIDER_SOURCES:
+        owner = import_module(BRAND_MODULES["dsh"] + "." + module_name)
+        for name in names:
+            assert getattr(dsh_pkg, name) is getattr(owner, name), (module_name, name)
+
+
+def test_fresh_dsh_package_import_does_not_attempt_yaml_import():
+    """A clean interpreter imports the provider package without YAML lookup/IO."""
+    import os
+    import subprocess
+    import sys
+
+    script = """import importlib.abc, sys
+class DenyYaml(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname == \"yaml\" or fullname.startswith(\"yaml.\"):
+            raise AssertionError(\"fresh dsh package import attempted YAML access\")
+sys.meta_path.insert(0, DenyYaml())
+import ordessa_harness_dsh
+assert not any(name == \"yaml\" or name.startswith(\"yaml.\") for name in sys.modules)
+"""
+    env = dict(os.environ)
+    child = subprocess.run(
+        [sys.executable, "-c", script], cwd=REPO_ROOT, env=env,
+        capture_output=True, text=True, check=False,
+    )
+    assert child.returncode == 0, child.stderr
+
+
+# -- P-B pilot pins, restated for the monorepo baseline (2026-09-25) -----------
+# The historical pins compared the legacy alias distributions
+# (`agent_box_harness_dsh/kilo`) with the canonical package. Those alias
+# distributions were retired together with the old repository layout; the
+# pins below keep the parts that still carry weight: one implementation, no
+# per-brand entry points, and no second copy of the pilot packages on disk.
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+HARNESS_GROUP = REPO_ROOT / 'plugins' / 'harness'
+
+#: 032: each brand is its own independent package.
+BRAND_MODULES = {"dsh": "ordessa_harness_dsh", "kilo": "ordessa_harness_kilo",
+                 "qwen": "ordessa_harness_qwen", "opencode": "ordessa_harness_opencode",
+                 "hermes": "ordessa_harness_hermes", "codex": "ordessa_harness_codex",
+                 "pi": "ordessa_harness_pi", "claude": "ordessa_harness_claude_code"}
+
+
+def test_the_root_super_package_is_retired_and_brands_register_no_pilot_entry_points():
+    """032: the root ordessa-harness distribution retired; per-brand packages
+    carry their own knowledge and register no legacy pilot entry points."""
+    import tomllib
+
+    assert not (HARNESS_GROUP / "pyproject.toml").exists(), (
+        "the retired root super-package manifest must stay absent")
+    for brand in ("dsh", "kilo"):
+        manifest = tomllib.loads((HARNESS_GROUP / brand / "pyproject.toml").read_text(encoding="utf-8"))
+        assert f"ordessa-harness-{brand}" == manifest["project"]["name"]
+        assert "entry-points" not in manifest["project"], (
+            f"{brand} must not resurrect an automatic registration entry point")
+
+
+def test_the_pilot_brands_have_exactly_one_implementation_each():
+    """The implementation exists exactly once, in the brand's own package."""
+    from pathlib import Path
+
+    for brand in ("dsh", "kilo"):
+        src_root = HARNESS_GROUP / brand / "src" / f"ordessa_harness_{brand}"
+        assert src_root.is_dir()
+        # The retired root super-package tree must not come back under any spelling.
+        assert not (HARNESS_GROUP / "src" / "ordessa_harness" / brand).exists()
+    # the real body lives only in the brand package
+    dsh_src = HARNESS_GROUP / "dsh" / "src" / "ordessa_harness_dsh"
+    assert "def harness_deployment" in (dsh_src / "production.py").read_text(encoding="utf-8")
+    assert "DIALECTS" in (dsh_src / "native.py").read_text(encoding="utf-8")
+
+
+def test_brand_modules_resolve_to_canonical_module_objects():
+    """Package + both submodules import to stable, single module objects."""
+    import importlib
+
+    for brand in ("dsh", "kilo"):
+        pkg = importlib.import_module(BRAND_MODULES[brand])
+        native = importlib.import_module(BRAND_MODULES[brand] + ".native")
+        production = importlib.import_module(BRAND_MODULES[brand] + ".production")
+        assert importlib.import_module(BRAND_MODULES[brand]) is pkg
+        assert production.__package__ == BRAND_MODULES[brand]
+        assert native.__package__ == BRAND_MODULES[brand]

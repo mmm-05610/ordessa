@@ -75,10 +75,21 @@ class _Output:
 
 
 class OpenShellProcess:
-    def __init__(self,rpc,*,workspace,sandbox_name,request,generation=0):
+    # The physical write is the enqueued frame that the request generator sends
+    # to the official bidirectional RPC; the owner may therefore guard it.
+    guarded_write_supported = True
+    # A remote sandbox has no per-process signal RPC; termination runs a kill in
+    # the sandbox against the pid recorded at launch, then waits for the exit
+    # event on the official interactive stream. The synchronous guard covers the
+    # kill dispatch cut.
+    guarded_termination_supported = True
+
+    def __init__(self,rpc,*,workspace,sandbox_name,request,generation=0,file_root='/sandbox'):
         if not isinstance(request,ProcessRequest):raise EnvironmentRefused('OpenShell execution requires ProcessRequest')
         request_id=str(uuid.uuid4())
         self.identity='openshell-exec/'+request_id
+        self._rpc=rpc
+        self._workspace,self._name=workspace,sandbox_name
         self.generation=generation
         self._input=queue.Queue(maxsize=256)
         self._finished=threading.Event()
@@ -86,8 +97,16 @@ class OpenShellProcess:
         self._input_watchers=set();self._finish_watchers=set()
         self._queued_bytes=0;self._stdin_closed=False
         self._exit_code=None;self._io_unknown=False;self._released=False
+        # True only when this owner terminated the process and then positively
+        # observed that it no longer exists in the sandbox.
+        self._terminated_absent=False
         self._loop=None;self._write_busy=False;self._release_receipt=None
         self._stdout,self._stderr=_Output(self),_Output(self)
+        # The launch argv is used verbatim: wrapping it in a shell changed how the
+        # harness identified its own process and broke its ACP startup. A remote
+        # sandbox has no per-process signal RPC, so termination later matches the
+        # harness' real command line instead of a recorded pid.
+        self._argv=tuple(request.argv)
         start=pb.ExecSandboxRequest(workspace_scope=datamodel_pb2.WorkspaceSelector(workspace=workspace),
             sandbox=sandbox_name,command=list(request.argv),workdir=request.cwd,
             environment=dict(request.env),tty=False,no_login_shell=True,request_id=request_id)
@@ -179,6 +198,50 @@ class OpenShellProcess:
             with self._state_lock:self._input_watchers.discard(watcher)
             self._write_busy=False
 
+    async def write_stdin_guarded(self,data,*,timeout=None,write_guard=None):
+        """Write one frame with the caller's synchronous physical-write guard.
+
+        The guard is entered exactly once, and the frame becomes dispatchable
+        inside that cut (no await between the guard and the enqueue).
+        """
+        timeout=validate_timeout(timeout);self._check_io();loop=self._bind_loop()
+        if not callable(write_guard):
+            raise EnvironmentRefused('restricted synchronous write guard required')
+        if not isinstance(data,bytes):raise EnvironmentRefused('stdin accepts bytes only')
+        if len(data)>1024*1024:raise EnvironmentRefused('stdin frame exceeds bounded channel')
+        if self._write_busy:raise EnvironmentRefused('concurrent stdin writes are refused')
+        if not data:return 0
+        self._write_busy=True
+        deadline=None if timeout is None else loop.time()+timeout
+        event=asyncio.Event();watcher=(loop,event)
+        with self._state_lock:self._input_watchers.add(watcher)
+        try:
+            while True:
+                if deadline is not None and deadline-loop.time()<=0:
+                    raise ProcessWaitTimeout('stdin admission timed out before dispatch')
+                with self._state_lock:
+                    if self._released or self._stdin_closed or self._finished.is_set():
+                        raise EnvironmentRefused('stdin is closed')
+                    admitted=self._queued_bytes+len(data)<=4*1024*1024
+                if admitted:
+                    with write_guard():
+                        with self._state_lock:
+                            if self._released or self._stdin_closed or self._finished.is_set():
+                                raise EnvironmentRefused('stdin is closed')
+                            if self._queued_bytes+len(data)>4*1024*1024:
+                                raise EnvironmentRefused('stdin queue is full at dispatch')
+                            try:self._input.put_nowait(pb.ExecSandboxInput(stdin=data))
+                            except queue.Full:raise EnvironmentRefused('stdin queue is full at dispatch') from None
+                            self._queued_bytes+=len(data)
+                    return len(data)
+                event.clear()
+                remaining=None if deadline is None else deadline-loop.time()
+                try:await asyncio.wait_for(event.wait(),remaining)
+                except TimeoutError:raise ProcessWaitTimeout('stdin admission timed out before dispatch') from None
+        finally:
+            with self._state_lock:self._input_watchers.discard(watcher)
+            self._write_busy=False
+
     async def close_stdin(self):
         if self._write_busy:raise EnvironmentRefused('stdin write is in progress')
         self._check_io();self._bind_loop()
@@ -216,15 +279,100 @@ class OpenShellProcess:
         io='unknown' if self._io_unknown else 'closed' if self._released else 'open'
         return ProcessObservation(self.identity,state,datetime.now(timezone.utc).isoformat(),code,io)
 
-    async def cancel(self,*,force=False):
-        if type(force) is not bool:raise EnvironmentRefused('force must be boolean')
-        self._bind_loop()
+    def _kill(self, signal):
+        """Terminate the harness inside the sandbox when its pid is unambiguous.
+
+        A sandbox has no per-process signal RPC. The launched argv is used as the
+        match pattern; if more than one process matches (a shared sandbox with
+        another live Use of the same harness), nothing is killed and the caller
+        keeps the honest unknown.
+        """
+        import re as _re
+        # A node harness runs as ``node .../kilocode/cli/... acp``, so the tokens
+        # are matched in order across the real command line. Only an unambiguous
+        # single match may be killed; two live Uses of the same harness in one
+        # shared sandbox therefore stay an honest unknown.
+        pattern='.*'.join(_re.escape(token) for token in self._argv if token)
+        # The match pattern travels through the environment: a pattern placed in
+        # the shell's own argv would match itself and break the unique-match rule.
+        script=('pids=$(pgrep -f "$ORDESSA_MATCH" 2>/dev/null || true); '
+                'count=$(printf "%s" "$pids" | wc -w); '
+                '[ "$count" -eq 1 ] && kill -'+signal+' $pids')
+        request=pb.ExecSandboxRequest(workspace_scope=datamodel_pb2.WorkspaceSelector(workspace=self._workspace),
+            sandbox=self._name,command=['/bin/sh','-c',script],
+            environment={'ORDESSA_MATCH':pattern,'PATH':'/usr/local/bin:/usr/bin:/bin'},
+            workdir='/',tty=False,no_login_shell=True,request_id=str(uuid.uuid4()))
+        code=None
+        try:
+            for event in self._rpc.ExecSandbox(request,timeout=15):
+                if event.WhichOneof('payload')=='exit':code=int(event.exit.exit_code)
+        except Exception:
+            return False
+        return code==0
+
+    def _present(self):
+        pattern='.*'.join(__import__('re').escape(token) for token in self._argv if token)
+        script='pgrep -f "$ORDESSA_MATCH" 2>/dev/null | wc -w'
+        request=pb.ExecSandboxRequest(workspace_scope=datamodel_pb2.WorkspaceSelector(workspace=self._workspace),
+            sandbox=self._name,command=['/bin/sh','-c',script],
+            environment={'ORDESSA_MATCH':pattern,'PATH':'/usr/local/bin:/usr/bin:/bin'},
+            workdir='/',tty=False,no_login_shell=True,request_id=str(uuid.uuid4()))
+        data=bytearray()
+        try:
+            for event in self._rpc.ExecSandbox(request,timeout=15):
+                if event.WhichOneof('payload')=='stdout':data.extend(event.stdout.data)
+        except Exception:
+            return None
+        try:return int(data.decode('utf-8','replace').strip() or '0')!=0
+        except ValueError:return None
+
+    async def _terminate(self,force,guard_effect=None):
         observation=self.observe()
         if observation.state=='exited':return ProcessCancellation('requested',observation)
-        if force:return ProcessCancellation('unsupported',observation)
-        self._call.cancel()
+        def dispatch(signal):
+            if guard_effect is None:return self._kill(signal)
+            with guard_effect():return self._kill(signal)
+        if guard_effect is None:await asyncio.to_thread(dispatch,'TERM')
+        else:dispatch('TERM')
+        # A harness may shut down slowly after SIGTERM; the exit receipt is what
+        # makes the outcome confirmed, so wait well past the usual teardown.
+        try:observation=await self.wait_exit(timeout=20)
+        except ProcessWaitTimeout:observation=self.observe()
+        if observation.state=='exited':return ProcessCancellation('requested',observation)
+        # An external kill may terminate the process without an exit event on the
+        # interactive stream. Half-closing stdin lets the supervisor finalize the
+        # exec session, which is where the exit receipt belongs.
+        try:
+            await self.close_stdin()
+        except Exception:
+            pass
+        try:observation=await self.wait_exit(timeout=20)
+        except ProcessWaitTimeout:observation=self.observe()
+        if observation.state=='exited':return ProcessCancellation('requested',observation)
+        if force:
+            if guard_effect is None:await asyncio.to_thread(dispatch,'KILL')
+            else:dispatch('KILL')
+            try:observation=await self.wait_exit(timeout=15)
+            except ProcessWaitTimeout:observation=self.observe()
+            if observation.state=='exited':return ProcessCancellation('requested',observation)
+        # Without an exit receipt the outcome must stay unknown: a fixed process
+        # observation requires an integer exit code for `exited`, so "process
+        # absent" alone can never be promoted to a confirmed exit.
+        try:self._call.cancel()
+        except Exception:pass
         with self._state_lock:self._io_unknown=self._exit_code is None
         return ProcessCancellation('unknown',self.observe())
+
+    async def cancel(self,*,force=False):
+        if type(force) is not bool:raise EnvironmentRefused('force must be boolean')
+        self._check_io();self._bind_loop()
+        return await self._terminate(force)
+
+    async def cancel_guarded(self,*,force=False,guard_effect=None):
+        if type(force) is not bool:raise EnvironmentRefused('force must be boolean')
+        if not callable(guard_effect):raise EnvironmentRefused('mandatory synchronous termination guard required')
+        self._check_io();self._bind_loop()
+        return await self._terminate(force,guard_effect)
 
     def release(self):
         if self._release_receipt is not None:return dict(self._release_receipt)
@@ -243,10 +391,12 @@ class OpenShellProcess:
 
 
 class OpenShellExecution:
-    def __init__(self,rpc,*,workspace,sandbox_name,validate=None,generation=0):
+    def __init__(self,rpc,*,workspace,sandbox_name,validate=None,generation=0,file_root='/sandbox'):
         self._rpc,self._workspace,self._name=rpc,workspace,sandbox_name
         self._validate,self._generation=validate,generation
+        self._file_root=file_root
 
     def start(self,request):
         if self._validate is not None:self._validate()
-        return OpenShellProcess(self._rpc,workspace=self._workspace,sandbox_name=self._name,request=request,generation=self._generation)
+        return OpenShellProcess(self._rpc,workspace=self._workspace,sandbox_name=self._name,request=request,
+            generation=self._generation,file_root=self._file_root)

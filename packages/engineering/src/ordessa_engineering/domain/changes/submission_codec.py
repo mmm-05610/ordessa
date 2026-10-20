@@ -17,6 +17,8 @@ from ..changes.models import ChangeSet
 from ..packages.codec import decode_package_ref
 from .submission import (Submission, ExecutionRecordRef, CommitRef, FileChange,
     TestEvidence, EffectTargetRef, EffectObservation, SubmissionCoverage)
+from .agent_execution_ref import AgentExecutionRecordRef
+from .agent_submission_report import AgentSubmissionReport, AGENT_SUBMISSION_REPORT_VERSION
 
 MAX_SUBMISSION_BYTES = 2 * 1024 * 1024
 _CODE = 'INVALID_SUBMISSION'
@@ -48,6 +50,18 @@ def _test_projection(value):
 
 
 def submission_projection(value):
+    if type(value) is AgentSubmissionReport:
+        body = value.hash_payload()
+        body.update({name: projection(getattr(value, name)) for name in (
+            'authorization_refs', 'package_ref', 'source_refs', 'checkpoint_ref')})
+        body['execution_ref'] = value.execution_ref.projection()
+        body['output_refs'] = [_output_projection(x) for x in value.output_refs]
+        body['coverage'] = [_coverage_projection(x) for x in value.coverage]
+        body['change_set'] = {'proposal_refs': [asdict(x) for x in value.change_set.proposal_refs],
+                              'digest': asdict(value.change_set.digest)}
+        body['method_content'] = value.method_content.projection()
+        body['digest'] = asdict(value.digest)
+        return body
     if type(value) is not Submission:
         raise ReferenceError(_CODE)
     body = value.hash_payload()
@@ -67,7 +81,7 @@ def submission_projection(value):
     return body
 
 
-def encode_submission(value: Submission) -> bytes:
+def encode_submission(value: Submission | AgentSubmissionReport) -> bytes:
     raw = canonical_bytes(submission_projection(value))
     if len(raw) > MAX_SUBMISSION_BYTES:
         raise ReferenceError('SUBMISSION_TOO_LARGE')
@@ -132,11 +146,56 @@ def _content(v):
     return MethodContent.from_value(decode_exact_method_resource(v['schema_ref']),v['value'],None if v['rendered_body_ref'] is None else decode_blob_ref(v['rendered_body_ref']))
 
 
-def decode_submission(raw: bytes) -> Submission:
+def _agent_execution(v):
+    require_object(v, {'schemaVersion','agent_ref_bytes','turn_ref_bytes','source_revision',
+        'operation_ref','engineering_attempt_ref','prompt_input_digest','query_digest',
+        'captured_observation_ref'}, _CODE)
+    if v['schemaVersion'] != 'engineering-agent-execution-ref/2':
+        raise ReferenceError(_CODE)
+    return AgentExecutionRecordRef(canonical_bytes(v['agent_ref_bytes']), canonical_bytes(v['turn_ref_bytes']),
+        v['source_revision'], v['operation_ref'], v['engineering_attempt_ref'],
+        decode_digest(v['prompt_input_digest']), v['query_digest'], decode_blob_ref(v['captured_observation_ref']))
+
+
+def _agent_report(v):
+    require_object(v, {'schemaVersion','realm_id','project_id','submission_id','created_at',
+        'created_by','change_set','authorization_refs','package_ref','execution_ref','output_refs',
+        'coverage','source_refs','method_content','checkpoint_ref','digest'}, _CODE)
+    if v['schemaVersion'] != AGENT_SUBMISSION_REPORT_VERSION:
+        raise ReferenceError(_CODE)
+    return AgentSubmissionReport(
+        decode_scope({'realm_id': v['realm_id'], 'project_id': v['project_id']}),
+        v['submission_id'], v['created_at'], decode_actor(v['created_by']), _changeset(v['change_set']),
+        _tuple(v['authorization_refs'], decode_approval_ref), decode_package_ref(v['package_ref']),
+        _agent_execution(v['execution_ref']), _tuple(v['output_refs'], _output),
+        _tuple(v['coverage'], _coverage), _tuple(v['source_refs'], decode_source), _content(v['method_content']),
+        None if v['checkpoint_ref'] is None else decode_blob_ref(v['checkpoint_ref']))
+
+
+def decode_submission(raw: bytes) -> Submission | AgentSubmissionReport:
     try:
         v = canonical_value(raw, maximum=MAX_SUBMISSION_BYTES)
-        require_object(v, {'realm_id','project_id','submission_id','created_at','created_by','change_set','authorization_refs','package_ref','execution_ref','baseline_snapshots','resulting_snapshots','commit_refs','file_changes','output_refs','test_evidence','effect_observations','coverage','source_refs','method_content','checkpoint_ref','digest'}, _CODE)
-        record = Submission(decode_scope({'realm_id':v['realm_id'],'project_id':v['project_id']}),v['submission_id'],v['created_at'],decode_actor(v['created_by']),_changeset(v['change_set']),_tuple(v['authorization_refs'],decode_approval_ref),decode_package_ref(v['package_ref']),_execution(v['execution_ref']),_tuple(v['baseline_snapshots'],decode_repository_ref),_tuple(v['resulting_snapshots'],decode_repository_ref),_tuple(v['commit_refs'],_commit),_tuple(v['file_changes'],_file_change),_tuple(v['output_refs'],_output),_tuple(v['test_evidence'],_test),_tuple(v['effect_observations'],_effect),_tuple(v['coverage'],_coverage),_tuple(v['source_refs'],decode_source),_content(v['method_content']),None if v['checkpoint_ref'] is None else decode_blob_ref(v['checkpoint_ref']))
+        if type(v) is dict and 'schemaVersion' in v:
+            record = _agent_report(v)
+            if record.digest != decode_digest(v['digest']) or encode_submission(record) != raw:
+                raise ReferenceError(_CODE)
+            return record
+        version = v.get('schema_version', 1)
+        if type(version) is not int or version not in (1, 2) or 'schema_version' in v and version != 2:
+            raise ReferenceError(_CODE)
+        fields = {'realm_id','project_id','submission_id','created_at','created_by','change_set','authorization_refs','package_ref','execution_ref','baseline_snapshots','resulting_snapshots','commit_refs','file_changes','output_refs','test_evidence','effect_observations','coverage','source_refs','method_content','checkpoint_ref','digest'}
+        require_object(v, fields | ({'schema_version'} if version == 2 else set()), _CODE)
+        record = Submission(
+            decode_scope({'realm_id':v['realm_id'],'project_id':v['project_id']}),
+            v['submission_id'],v['created_at'],decode_actor(v['created_by']),_changeset(v['change_set']),
+            _tuple(v['authorization_refs'],decode_approval_ref),decode_package_ref(v['package_ref']),
+            _execution(v['execution_ref']),_tuple(v['baseline_snapshots'],decode_repository_ref),
+            _tuple(v['resulting_snapshots'],decode_repository_ref),_tuple(v['commit_refs'],_commit),
+            _tuple(v['file_changes'],_file_change),_tuple(v['output_refs'],_output),
+            _tuple(v['test_evidence'],_test),_tuple(v['effect_observations'],_effect),
+            _tuple(v['coverage'],_coverage),_tuple(v['source_refs'],decode_source),_content(v['method_content']),
+            None if v['checkpoint_ref'] is None else decode_blob_ref(v['checkpoint_ref']),
+            schema_version=version)
         if record.digest != decode_digest(v['digest']) or encode_submission(record) != raw:
             raise ReferenceError(_CODE)
         return record

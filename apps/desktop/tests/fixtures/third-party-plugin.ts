@@ -1,16 +1,17 @@
+import { type HarnessReport, HarnessAvailabilityToken } from '@extensions/ordessa.harness-contracts/contract.js'
 /**
  * 受控第三方 fixture 插件（PA-24 边界反例的正面一侧）。
  *
- * 纪律：只 import 公开面——`@extensions/ordessa.contracts/contract.js`（C-03…C-08）
+ * 纪律：只 import 公开面——platform与Harness contracts carriers（C-03…C-08）
  * 与 `@ordessa/extension-api`。**不得** import 任何宿主内部（apps 下的实现、
  * 平台包的 src 内部模块），下面的边界测试会逐字扫描并判红。
  *
  * 它完成 6 项接入：① 日志 ② 主题 ③ 设置分区 ④ 诊断片段 ⑤ 命令+快捷键 ⑥ wire 口。
  */
 import {
-  CommandSourceToken, HarnessAvailabilityToken, DiagnosticsContributionToken, KeybindingServiceToken, LoggerToken, SettingsContributionToken,
+  CommandSourceToken, DiagnosticsContributionToken, KeybindingServiceToken, LoggerToken, SettingsContributionToken,
   ThemeServiceToken, WirePortToken,
-  C07, type DiagnosticProvider, type HarnessReport, type Logger, type SettingsSection,
+  C07, type DiagnosticProvider, type Logger, type SettingsSection,
   type ThemeService, type WirePort, type WireResult,
 } from '@extensions/ordessa.contracts/contract.js'
 import type { Plugin, PluginContext, ResourceScope } from '@ordessa/extension-api'

@@ -19,8 +19,9 @@ from ordessa_units.bindings.publication import NodePublication, NodePublicationE
 from ordessa_execution_agents.profiles.management.service import ProfileService
 from ordessa_execution_agents.harness.providers.registry.contributions import AgentContributionSet, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import IdentityMismatchError, AdmissionRefusedError, GuaranteeUnavailableError
-from ordessa_execution_api.environment.operations import UsageMutation, operation_holder, safe_json
+from ordessa_units.errors import UnitIdentityMismatch, UnitAdmissionRefused, UnitGuaranteeUnavailable
+from ordessa_units.definitions.operations import UsageMutation, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from ordessa_units.public import unit_services, AGENT_MANAGEMENT_CONTRACT_VERSION
@@ -66,7 +67,7 @@ def test_ack_does_not_publish_without_original_owner_confirmation(assembly, fail
 def test_changed_request_conflicts_without_new_effect(assembly):
     prepare(assembly)
     before = list(assembly[3].calls)
-    with pytest.raises(IdentityMismatchError): prepare(assembly, options={"different": True})
+    with pytest.raises(UnitIdentityMismatch): prepare(assembly, options={"different": True})
     assert assembly[3].calls == before
 
 
@@ -77,7 +78,7 @@ def test_change_between_steps_prevents_start(assembly, change):
         elif change == "authority": assembly[6].allowed = False
         else: assembly[10].drain(assembly[11].activation)
     assembly[3].after_prepare = mutate
-    with pytest.raises(GuaranteeUnavailableError if change == "authority" else AdmissionRefusedError): prepare(assembly)
+    with pytest.raises(UnitGuaranteeUnavailable if change == "authority" else UnitAdmissionRefused): prepare(assembly)
     assert assembly[3].calls == ["prepare"]
     assert assembly[4].read_operation_step(assembly[1], "start") is None
     assert assembly[5].list() == ()
@@ -96,7 +97,7 @@ def test_query_confirms_original_prepare_without_starting_missing_step(assembly)
 
 def test_missing_deployment_port_refuses_before_spending_key(assembly):
     assembly[0]._context_port = None
-    with pytest.raises(GuaranteeUnavailableError): prepare(assembly)
+    with pytest.raises(UnitGuaranteeUnavailable): prepare(assembly)
     assert assembly[4].read_operation(assembly[1]) is None
     assert assembly[3].calls == []
 
@@ -114,7 +115,7 @@ def test_unresolved_material_refuses_before_plan_or_claim(assembly, material):
     entry = catalog.create(profile_id="with-material", name="Material", content={
         "harnessDefinitionRef": dict(Provider.descriptor.definition_ref), "schemaVersion": "1", "declarations": [declaration]},
         request=RequestKey("env", "principal", "create-material"))
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         assembly[0].prepare(assembly[1], entry.current_revision, {}, {})
     assert assembly[4].read_operation(assembly[1]) is None
     assert assembly[3].calls == []
@@ -198,19 +199,19 @@ def test_original_query_requires_read_authority_without_new_prepare_permission(a
     assembly[3].fail = None
     assert assembly[0].query(assembly[1]).status == "running"
     assert assembly[3].calls == ["prepare", "query"]
-    with pytest.raises(AdmissionRefusedError): prepare(assembly)
+    with pytest.raises(UnitAdmissionRefused): prepare(assembly)
 
 
 @pytest.mark.parametrize("context", [{"cwd": "/caller/path"}, {"runtimeBindingRef": {"environmentNamespace": "env", "privateRootFacts": {"cwd": "/caller/path"}}}])
 def test_caller_host_paths_refused_without_claim(assembly, context):
-    with pytest.raises(IdentityMismatchError): prepare(assembly, context=context)
+    with pytest.raises(UnitIdentityMismatch): prepare(assembly, context=context)
     assert assembly[4].read_operation(assembly[1]) is None
     assert assembly[3].calls == []
 
 
 def test_requested_directory_must_match_trusted_owner_binding(assembly):
     wrong = DirectoryBindingRef("env", "other-directory", 1, "sha256:" + "e" * 64)
-    with pytest.raises(IdentityMismatchError): prepare(assembly, context={"directoryBindingRef": wrong.to_dict()})
+    with pytest.raises(UnitIdentityMismatch): prepare(assembly, context={"directoryBindingRef": wrong.to_dict()})
     assert assembly[4].read_operation(assembly[1]) is None
 
 

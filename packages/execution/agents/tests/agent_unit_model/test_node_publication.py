@@ -15,10 +15,11 @@ from ordessa_execution_agents.harness.providers.registry.contributions import Ru
 from ordessa_execution_agents.harness.providers.registry.contributions import AgentContributionSet
 from pacthold.public import Environment, InstallationRecord
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import IdentityMismatchError, AdmissionRefusedError, GuaranteeUnavailableError, UnknownResultError
+from ordessa_units.errors import UnitIdentityMismatch, UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitOperationUnknown
 from ordessa_infrastructure.database.records import DomainRevisionConflict
-from ordessa_execution_api.environment.identity import ParticipantInstanceRef
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, UsageMutation, operation_holder, node_holder, safe_json
+from ordessa_units.definitions.admission_identity import AgentNodeRef
+from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, operation_holder, node_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort, KeyConflictError
 
 
@@ -68,7 +69,7 @@ def test_reservation_replay_same_key_and_identity_collision_no_second_operation(
     first = pub.reserve(request, "digest", intent)
     assert pub.reserve(request, "digest", intent) == first
     with pytest.raises(KeyConflictError): pub.reserve(request, "other-digest", intent)
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         pub.reserve(RequestKey("env", "principal", "second"), "digest2", replace(intent, operation_ref="second"))
     assert store.read_operation(RequestKey("env", "principal", "second")) is None
     assert pub.read(ref) is None
@@ -83,14 +84,14 @@ def test_new_node_generation_not_provider_activation_generation(setup):
     intent = replace(intent, steps=(replace(intent.steps[0], pinned_provider_ref=provider),))
     operation = pub.reserve(request, "digest", intent)
     assert operation.intent.node_ref["generation"] == 1
-    with pytest.raises(IdentityMismatchError):
-        pub.reserve(RequestKey("env", "principal", "different"), "different", replace(intent, operation_ref="different", node_ref=encode_node_ref(ParticipantInstanceRef("env", "different", 2))))
+    with pytest.raises(UnitIdentityMismatch):
+        pub.reserve(RequestKey("env", "principal", "different"), "different", replace(intent, operation_ref="different", node_ref=encode_node_ref(AgentNodeRef("env", "different", 2))))
 
 
 def test_unknown_native_step_cannot_publish_or_reclaim(setup):
     _, store, _, _, _, pub, request, ref, intent, _ = setup
     revision, usages = conclude(setup, outcome="unknown")
-    with pytest.raises(UnknownResultError): pub.publish(request, "digest", revision, usages)
+    with pytest.raises(UnitOperationUnknown): pub.publish(request, "digest", revision, usages)
     assert pub.read(ref) is None
     assert not store.claim_operation_step(request, "digest", intent.steps[0]).claimed
     assert store._conn.execute("SELECT revision FROM env_usages").fetchone()[0] == 1
@@ -99,7 +100,7 @@ def test_unknown_native_step_cannot_publish_or_reclaim(setup):
 def test_missing_owner_adapter_does_not_publish(setup):
     _, store, env, _, _, pub, request, ref, _, _ = setup
     revision, usages = conclude(setup)
-    with pytest.raises(GuaranteeUnavailableError): NodePublication(env).publish(request, "digest", revision, usages)
+    with pytest.raises(UnitGuaranteeUnavailable): NodePublication(env).publish(request, "digest", revision, usages)
     assert pub.read(ref) is None
 
 
@@ -117,10 +118,10 @@ def test_sqlite_publication_failure_rolls_back_node_usage_and_terminal_result(se
 def test_policy_rechecked_for_read_list_publish_and_principal_scope(setup):
     _, _, _, policy, _, pub, request, ref, intent, _ = setup
     revision, usages = conclude(setup)
-    with pytest.raises(AdmissionRefusedError): pub.reserve(RequestKey("env", "other", "second"), "digest", intent)
+    with pytest.raises(UnitAdmissionRefused): pub.reserve(RequestKey("env", "other", "second"), "digest", intent)
     policy.allowed = False
     for action in (lambda: pub.read(ref), pub.list, lambda: pub.publish(request, "digest", revision, usages)):
-        with pytest.raises(AdmissionRefusedError): action()
+        with pytest.raises(UnitAdmissionRefused): action()
 
 
 @pytest.mark.parametrize("mutate", ["node", "provider", "correlation", "missing_target", "unscoped_access"])
@@ -137,7 +138,7 @@ def test_actual_owner_identity_or_evidence_mismatch_refuses_publication(setup, m
     if mutate == "missing_target": binding.pop("configurationTargetRef")
     if mutate == "unscoped_access": access = ({"ref": "fake"},)
     owner.evidence = NodePublicationEvidence(evidence.provider_ref, binding, tuple(sources), access)
-    with pytest.raises((IdentityMismatchError, GuaranteeUnavailableError)):
+    with pytest.raises((UnitIdentityMismatch, UnitGuaranteeUnavailable)):
         pub.publish(request, "digest", revision, usages)
     assert pub.read(ref) is None
     assert store.read_operation(request).status == "running"
@@ -151,14 +152,14 @@ def test_published_record_or_step_provenance_corruption_rejected(setup):
     value = row["value"]
     value["sourceSteps"][0]["recoveryCorrelation"] = "forged"
     store._conn.execute("UPDATE env_domain_records SET payload=? WHERE namespace=?", (safe_json(value), NODES))
-    with pytest.raises(GuaranteeUnavailableError): pub.read(ref)
+    with pytest.raises(UnitGuaranteeUnavailable): pub.read(ref)
 
 
 def test_strict_existing_participant_identity_and_no_credentials():
-    assert AgentNodeRef is ParticipantInstanceRef
-    with pytest.raises(IdentityMismatchError): decode_node_ref({"environmentNamespace": "env", "instanceId": "node", "generation": 1, "nativeSessionId": "wrong"})
-    with pytest.raises(IdentityMismatchError): encode_node_ref(ParticipantInstanceRef("env", "node", 0))
-    with pytest.raises(IdentityMismatchError): NodePublicationEvidence({}, {"token": "secret"}, ({"x": "y"},), ({"x": "y"},))
+    assert AgentNodeRef is AgentNodeRef
+    with pytest.raises(UnitIdentityMismatch): decode_node_ref({"environmentNamespace": "env", "instanceId": "node", "generation": 1, "nativeSessionId": "wrong"})
+    with pytest.raises(UnitIdentityMismatch): encode_node_ref(AgentNodeRef("env", "node", 0))
+    with pytest.raises(UnitIdentityMismatch): NodePublicationEvidence({}, {"token": "secret"}, ({"x": "y"},), ({"x": "y"},))
 
 
 def test_reservation_sqlite_failure_leaves_no_participant_or_operation(setup):
@@ -184,7 +185,7 @@ def test_two_environment_roots_same_sqlite_node_cas_only_one_reservation(setup):
                 gate_read.wait(timeout=5)
             return row
     from ordessa_infrastructure.database.records import DomainStorePort
-    from ordessa_execution_api.environment.operations import OperationStorePort
+    from ordessa_units.definitions.operations import OperationStorePort
     for protocol in (DomainStorePort, OperationStorePort):
         for name in protocol.__dict__:
             if not name.startswith("_") and name != "read_domain":
@@ -204,7 +205,7 @@ def test_two_environment_roots_same_sqlite_node_cas_only_one_reservation(setup):
         try:
             instance.reserve(key, "digest", value)
             return "reserved"
-        except (IdentityMismatchError, DomainRevisionConflict):
+        except (UnitIdentityMismatch, DomainRevisionConflict):
             return "conflict"
     try:
         other_request = RequestKey("env", "principal", "other")
@@ -221,7 +222,7 @@ def test_provider_draining_or_replaced_generation_cannot_publish(setup):
     _, store, env, _, _, pub, request, ref, _, activation = setup
     revision, usages = conclude(setup)
     env.drain(activation.activation)
-    with pytest.raises(AdmissionRefusedError): pub.publish(request, "digest", revision, usages)
+    with pytest.raises(UnitAdmissionRefused): pub.publish(request, "digest", revision, usages)
     assert pub.read(ref) is None
     state, blockers = env.retire(activation.activation)
     assert state == "retire-pending" and "agent-unit-usage:resource" in blockers
@@ -245,7 +246,7 @@ def test_provider_draining_or_replaced_generation_cannot_publish(setup):
         release_holder=holder)
     assert env.retire(activation.activation) == ("retired", ())
     env.activate("fixture.plugin", AgentContributionSet(agent_runtime_providers=(Provider(),)))
-    with pytest.raises(IdentityMismatchError): pub.publish(request, "digest", revision, usages)
+    with pytest.raises(UnitIdentityMismatch): pub.publish(request, "digest", revision, usages)
     assert store.read_operation(request).status == "running"
 
 
@@ -253,7 +254,7 @@ def test_publication_replay_rejects_changed_usage_transfer(setup):
     _, _, _, _, _, pub, request, _, _, _ = setup
     revision, usages = conclude(setup)
     pub.publish(request, "digest", revision, usages)
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         pub.publish(request, "digest", revision, (replace(usages[0], usage_id="different"),))
 
 
@@ -263,8 +264,8 @@ def test_identity_reservation_corruption_blocks_read_replay_and_publication(setu
     value = store.read_domain("env", IDENTITIES, "node")["value"]
     value["nodeRef"]["generation"] = 99
     store._conn.execute("UPDATE env_domain_records SET payload=? WHERE namespace=?", (safe_json(value), IDENTITIES))
-    with pytest.raises(GuaranteeUnavailableError): pub.reserve(request, "digest", intent)
-    with pytest.raises(GuaranteeUnavailableError): pub.publish(request, "digest", revision, usages)
+    with pytest.raises(UnitGuaranteeUnavailable): pub.reserve(request, "digest", intent)
+    with pytest.raises(UnitGuaranteeUnavailable): pub.publish(request, "digest", revision, usages)
     assert pub.read(ref) is None
 
 
@@ -272,7 +273,7 @@ def test_no_provider_type_or_caller_boolean_can_substitute_actual_owner_evidence
     _, _, _, _, owner, pub, request, ref, _, _ = setup
     revision, usages = conclude(setup)
     owner.evidence = {"ready": True}
-    with pytest.raises(GuaranteeUnavailableError): pub.publish(request, "digest", revision, usages)
+    with pytest.raises(UnitGuaranteeUnavailable): pub.publish(request, "digest", revision, usages)
     assert pub.read(ref) is None
 
 
@@ -283,7 +284,7 @@ def test_publication_cannot_omit_any_held_resource_usage(setup, monkeypatch, omi
     _, store, _, _, _, pub, request, ref, intent, _ = setup
     revision, unit, extra = _conclude_with_extra_usage(setup, monkeypatch)
     partial = (extra,) if omit == "unit" else (unit,)
-    with pytest.raises((IdentityMismatchError, GuaranteeUnavailableError)):
+    with pytest.raises((UnitIdentityMismatch, UnitGuaranteeUnavailable)):
         pub.publish(request, "digest", revision, partial)
     assert pub.read(ref) is None
     assert store.read_operation(request).status == "running"
@@ -313,7 +314,7 @@ def test_concluded_release_evidence_excludes_resource_from_transfer(setup, monke
 def test_unknown_resource_evidence_cannot_publish_even_with_complete_transfers(setup, monkeypatch):
     _, store, _, _, _, pub, request, ref, intent, _ = setup
     revision, unit, extra = _conclude_with_extra_usage(setup, monkeypatch, outcome="unknown")
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         pub.publish(request, "digest", revision, (unit, extra))
     assert pub.read(ref) is None
     assert store.read_operation(request).status == "unknown"
@@ -325,7 +326,7 @@ def test_unknown_resource_evidence_cannot_publish_even_with_complete_transfers(s
 def test_unrelated_usage_cannot_stand_in_for_actual_unit_occupation(setup, monkeypatch):
     _, store, _, _, _, pub, request, ref, intent, _ = setup
     revision, _, unrelated = _conclude_with_extra_usage(setup, monkeypatch, only_unrelated=True)
-    with pytest.raises((IdentityMismatchError, GuaranteeUnavailableError)):
+    with pytest.raises((UnitIdentityMismatch, UnitGuaranteeUnavailable)):
         pub.publish(request, "digest", revision, (unrelated,))
     assert pub.read(ref) is None
     assert store.read_operation(request).status == "running"
@@ -351,7 +352,7 @@ def test_json_numeric_alias_cannot_publish_different_reference(setup, number, lo
     elif location == "step_provider": sources[0]["providerRef"]["generation"] = number
     elif location == "access_owner": access[0]["ownerProviderRef"]["generation"] = number
     owner.evidence = NodePublicationEvidence(evidence.provider_ref, binding, tuple(sources), tuple(access))
-    with pytest.raises((IdentityMismatchError, GuaranteeUnavailableError)):
+    with pytest.raises((UnitIdentityMismatch, UnitGuaranteeUnavailable)):
         pub.publish(request, "digest", revision, usages)
     assert pub.read(ref) is None
     assert store.read_operation(request).status == "running"
@@ -371,8 +372,8 @@ def test_json_numeric_alias_corruption_refuses_cold_publication_read(setup, numb
     else: value["sourceSteps"][0]["providerRef"]["generation"] = number
     store._conn.execute("UPDATE env_domain_records SET payload=? WHERE namespace=?", (safe_json(value), namespace))
     cold = NodePublication(env)
-    with pytest.raises(GuaranteeUnavailableError): cold.read(ref)
-    with pytest.raises(GuaranteeUnavailableError): cold.list()
+    with pytest.raises(UnitGuaranteeUnavailable): cold.read(ref)
+    with pytest.raises(UnitGuaranteeUnavailable): cold.list()
     assert store.read_operation(request).status == "published"
     assert store._conn.execute("SELECT revision FROM env_usages").fetchone()[0] == 2
 
@@ -404,7 +405,7 @@ def test_publication_keeps_opaque_owner_and_usage_json_identity(setup, number, l
             item["providerRef"] = provider
             item["evidenceRef"]["ownerProviderRef"] = provider
     owner.evidence = NodePublicationEvidence(provider, binding, tuple(sources), tuple(access))
-    with pytest.raises((IdentityMismatchError, GuaranteeUnavailableError)) as refused:
+    with pytest.raises((UnitIdentityMismatch, UnitGuaranteeUnavailable)) as refused:
         pub.publish(request, "digest", revision, usages)
     if location == "admitted_provider":
         assert "currently admitted provider" in str(refused.value)
@@ -461,7 +462,7 @@ def test_unreadable_original_usage_never_reports_idle_runtime(setup):
     store._conn.execute("UPDATE env_usages SET target_ref=? WHERE usage_id=?",
                         ("{invalid", "resource"))
     store._conn.commit()
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         env.retire_activation(activation.activation)
     assert env.registry_snapshot.agent_runtime_provider_ids == ("fixture.runtime",)
 
@@ -470,7 +471,7 @@ def test_direct_node_reservation_cannot_reoccupy_after_retirement_cut(setup):
     _, store, env, _, _, pub, request, _, intent, activation = setup
     assert store.read_operation(request) is None
     assert env.retire_activation(activation.activation) == ("retired", ())
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         pub.reserve(request, "digest", intent, usages=(UsageMutation(
             "late-provider", 0, None, operation_holder(request, intent.operation_ref),
             intent.steps[0].pinned_provider_ref, ("use",), "active"),))
@@ -520,7 +521,7 @@ def test_provider_shaped_unit_target_corruption_cannot_retire(setup, corruption)
     store._conn.execute("UPDATE env_usages SET target_ref=? WHERE usage_id='resource'",
                         (json.dumps(target),))
     store._conn.commit()
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         env.retire_activation(activation.activation)
     assert env.registry_snapshot.agent_runtime_provider_ids == ("fixture.runtime",)
 
@@ -539,11 +540,11 @@ def test_ordinary_non_agent_usage_is_not_runtime_hold(setup):
 def test_valid_material_provider_hold_does_not_block_unrelated_runtime_retirement(setup):
     from ordessa_units.bindings.materials import MaterialProviderPin
     from ordessa_units.bindings.material_operations import material_provider_ref
-    from ordessa_execution_api.environment.identity import ActivationRef
+    from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
     _, store, env, _, _, pub, request, _, intent, activation = setup
     holder = operation_holder(request, intent.operation_ref)
     material = material_provider_ref(MaterialProviderPin(
-        "material.provider", "material-provider-1", ActivationRef("env", "material.plugin", 1)))
+        "material.provider", "material-provider-1", HarnessActivationRef("env", "material.plugin", 1)))
     pub.reserve(request, "digest", intent, usages=(UsageMutation(
         "material-hold", 0, None, holder, material, ("use",), "active"),))
     assert store.read_usages("env", holder)[0]["targetRef"] == material

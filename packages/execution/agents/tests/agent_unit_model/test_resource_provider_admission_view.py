@@ -8,8 +8,8 @@ from typing import ClassVar
 
 import pytest
 
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError, GuaranteeUnavailableError,
+from ordessa_units.errors import (
+    UnitAdmissionRefused, UnitGuaranteeUnavailable,
 )
 from ordessa_units.public import AdmittedResourceProviderMetadata
 from pacthold.public import (
@@ -215,7 +215,7 @@ def test_staged_resource_is_not_discoverable_until_environment_commit():
 
     before = MaterialAdmission(env).resource_provider_contributions()
     assert tuple(row.descriptor.id for row in before) == ("res.active",)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).resource_provider_contribution("res.staged")
     staged.commit()
     assert {row.descriptor.id for row in MaterialAdmission(env).resource_provider_contributions()} == {
@@ -239,9 +239,9 @@ def test_missing_provider_and_cross_environment_provider_are_not_resolved():
     assert foreign_view.owner_activation == foreign_owner
     assert local_view.owner_activation.environment == "env-a"
     assert foreign_view.owner_activation.environment == "env-b"
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env_a).resource_provider_contribution("res.foreign-only")
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env_a).resource_provider_contribution("res.absent")
     assert local.effect_calls == {"acquire": 0, "release": 0, "reconcile": 0}
     assert foreign.effect_calls == {"acquire": 0, "release": 0, "reconcile": 0}
@@ -255,7 +255,7 @@ def test_draining_resource_owner_is_hidden_and_single_lookup_refuses():
     env.drain(owner)
 
     assert MaterialAdmission(env).resource_provider_contributions() == ()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).resource_provider_contribution("res.draining")
     assert provider.effect_calls == {"acquire": 0, "release": 0, "reconcile": 0}
 
@@ -268,7 +268,7 @@ def test_retired_resource_owner_is_removed_from_registry_and_discovery():
     assert env.retire_activation(owner) == ("retired", ())
     assert env._registry.resource_provider("res.retired") is None
     assert MaterialAdmission(env).resource_provider_contributions() == ()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).resource_provider_contribution("res.retired")
     assert provider.effect_calls == {"acquire": 0, "release": 0, "reconcile": 0}
 
@@ -281,7 +281,7 @@ def test_registry_entry_without_matching_environment_owner_is_not_discoverable()
     env._registry.commit(batch)
 
     assert MaterialAdmission(env).resource_provider_contributions() == ()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).resource_provider_contribution("res.orphan")
     assert env._registry.resource_provider("res.orphan") == ("registry-only-owner", orphan)
     assert orphan.effect_calls == {"acquire": 0, "release": 0, "reconcile": 0}
@@ -299,9 +299,9 @@ def test_active_provider_identity_or_contract_mutation_fails_closed(mutation):
     else:
         provider.supported_contract_ids = frozenset({"sample.beta@1"})
 
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).resource_provider_contribution("res.mutating")
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).resource_provider_contributions()
     assert provider.effect_calls == {"acquire": 0, "release": 0, "reconcile": 0}
 
@@ -316,9 +316,9 @@ def test_c1_provider_without_support_declaration_remains_registered_but_not_disc
     # refuses to claim complete resource coverage from a missing declaration.
     assert env._registry.resource_provider("res.legacy-no-coverage") == (
         "owner.legacy", provider)
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         MaterialAdmission(env).resource_provider_contribution("res.legacy-no-coverage")
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         MaterialAdmission(env).resource_provider_contributions()
     assert provider.effect_calls == {"acquire": 0, "release": 0, "reconcile": 0}
 
@@ -331,9 +331,9 @@ def test_explicit_none_support_declaration_keeps_c1_registration_but_is_unavaila
 
     assert env._registry.resource_provider("res.none-coverage") == (
         "owner.none-coverage", provider)
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         MaterialAdmission(env).resource_provider_contribution("res.none-coverage")
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         MaterialAdmission(env).resource_provider_contributions()
     assert provider.effect_calls == {"acquire": 0, "release": 0, "reconcile": 0}
 
@@ -364,9 +364,9 @@ def test_resource_discovery_requires_its_own_read_acl(allowed):
     env._registry.snapshot = registry_read_forbidden
     env._registry.resource_provider = registry_read_forbidden
     env._registry.resource_descriptors = registry_read_forbidden
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).resource_provider_contributions()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).resource_provider_contribution("res.protected")
     assert provider.describe_calls == describe_calls_before
     assert policy.object_checks == [
@@ -429,9 +429,9 @@ def test_postcommit_descriptor_object_mutation_is_not_advertised():
 
     object.__setattr__(original_descriptor, "version", "2.0")
     assert view.descriptor.version == "1.0"
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).resource_provider_contribution("res.descriptor-alias")
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).resource_provider_contributions()
     assert provider.effect_calls == {"acquire": 0, "release": 0, "reconcile": 0}
 
@@ -445,8 +445,8 @@ def test_postcommit_in_place_supported_contract_set_mutation_is_not_advertised()
 
     provider.supported_contract_ids.add("sample.beta@1")
     assert view.supported_contract_ids == ("sample.alpha@1",)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).resource_provider_contribution("res.mutable-support")
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).resource_provider_contributions()
     assert provider.effect_calls == {"acquire": 0, "release": 0, "reconcile": 0}

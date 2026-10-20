@@ -2,11 +2,11 @@
  * 更新客户端的真实现（INT-01 切换点）。
  *
  * 分工（plan.md §跨包集成归属）：
- *   · **更新引擎** = 打包包 `packaging/update/client.mjs`（清单 / 签名 / 下载 / 校验 /
+ *   · **更新引擎** = 桌面更新纯实现 `electron/update/client.mjs`（清单 / 签名 / 下载 / 校验 /
  *     备份 / 故障门 / `pkexec dpkg -i`）；
  *   · **本文件** = 把引擎的可观察语义适配成 `UpdateClient`，供设置页 UI 与主进程接线。
  *
- * 引擎在构建期被打进 `electron-main.cjs`，所以**安装后的应用不依赖 packaging/ 目录**。
+ * 引擎在构建期被打进 `electron-main.cjs`，安装后的应用通过主进程 bundle 使用该实现。
  * 令牌与私钥都不经过本文件：签名验签用的是随包公钥，安装提权走 polkit。
  */
 import { readFile } from 'node:fs/promises'
@@ -22,7 +22,7 @@ import {
   markUpdateDone,
   markUpdateFailed,
   selfCheck,
-} from '../../../packaging/update/client.mjs'
+} from './update/client.mjs'
 
 export interface UpdateEngineOptions {
   /** 更新源清单地址；缺席即视为"未配置"，检查时报可操作错误而非"已是最新"。 */

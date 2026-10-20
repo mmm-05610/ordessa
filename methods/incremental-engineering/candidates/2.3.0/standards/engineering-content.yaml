@@ -1,0 +1,140 @@
+schema_version: 1
+standard_id: engineering-content
+revision: 2.0.0
+purpose: quality
+criteria:
+- criterion_id: selected_standard_content
+  statement: 每一选定标准适用条款均有实质内容证据，裁剪有有效接受；无标准正文/配置/裁剪授权不能通过。
+  applies_to:
+  - did-change
+  required_inputs:
+  - proposal_ref
+  - baseline_ref
+  - standard_profile_ref
+  - method_content
+  - source_captures
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.engineering_content
+      question_ids:
+      - selected_standard_content
+  policy:
+    satisfied: manual
+    violated: block
+    insufficient: block
+    unknown: manual
+  answer_vocabulary:
+    kind: choice
+    options:
+    - option_id: supported
+      description: 完整满足冻结问题；意见仍交受信审阅者复核，不产生权限。自动判定准入另需已接受评测。
+    - option_id: contradicted
+      description: 与有效约束或目标冲突。
+    - option_id: insufficient
+      description: 有缺口或上下文不足，不能确定。
+- criterion_id: change_impact_completeness
+  statement: 逐条增改删及受影响保持项覆盖owner、接口、消费者、装配、数据、错误/失败、权限、验证与迁移退役；不适用有证据，重要未知阻塞，不要求用户补普通已授权实现细节。
+  applies_to:
+  - did-change
+  required_inputs:
+  - proposal_ref
+  - baseline_ref
+  - standard_profile_ref
+  - method_content
+  - source_captures
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.engineering_content
+      question_ids:
+      - change_impact_completeness
+  policy:
+    satisfied: manual
+    violated: block
+    insufficient: block
+    unknown: manual
+  answer_vocabulary:
+    kind: choice
+    options:
+    - option_id: supported
+      description: 完整满足冻结问题；意见仍交受信审阅者复核，不产生权限。自动判定准入另需已接受评测。
+    - option_id: contradicted
+      description: 与有效约束或目标冲突。
+    - option_id: insufficient
+      description: 有缺口或上下文不足，不能确定。
+- criterion_id: package_bidirectional_trace
+  statement: 每项批准变更与保持约束正向映射spec/plan/tasks/验收，每任务反向有批准规定或授权自由；apply receipt与全部版本一致，不能在tasks补重要选择。
+  applies_to:
+  - spec-kit-package
+  required_inputs:
+  - proposal_ref
+  - baseline_ref
+  - standard_profile_ref
+  - method_content
+  - source_captures
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.engineering_content
+      question_ids:
+      - package_bidirectional_trace
+  policy:
+    satisfied: manual
+    violated: block
+    insufficient: block
+    unknown: manual
+  answer_vocabulary:
+    kind: choice
+    options:
+    - option_id: supported
+      description: 完整满足冻结问题；意见仍交受信审阅者复核，不产生权限。自动判定准入另需已接受评测。
+    - option_id: contradicted
+      description: 与有效约束或目标冲突。
+    - option_id: insufficient
+      description: 有缺口或上下文不足，不能确定。
+- criterion_id: package_dispatchability
+  statement: 实施切片依赖无环、写权明确、实际路径与新建路径区分、共享运行资源串行；输入输出、保留/退役和失败停止范围足够使Pi不必重做设计。
+  applies_to:
+  - spec-kit-package
+  required_inputs:
+  - proposal_ref
+  - baseline_ref
+  - standard_profile_ref
+  - method_content
+  - source_captures
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.engineering_content
+      question_ids:
+      - package_dispatchability
+  policy:
+    satisfied: manual
+    violated: block
+    insufficient: block
+    unknown: manual
+  answer_vocabulary:
+    kind: choice
+    options:
+    - option_id: supported
+      description: 完整满足冻结问题；意见仍交受信审阅者复核，不产生权限。自动判定准入另需已接受评测。
+    - option_id: contradicted
+      description: 与有效约束或目标冲突。
+    - option_id: insufficient
+      description: 有缺口或上下文不足，不能确定。
+reduction:
+  required_criteria: all_applicable
+  empty_applicable_set: error
+  priority:
+  - block
+  - manual
+  - pass

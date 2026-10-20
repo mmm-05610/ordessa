@@ -13,7 +13,7 @@ afterEach(async () => {
 })
 
 it('publishes the UI Components API as an import-map entry sharing the extension Token', async () => {
-  const buildScript = await readFile(path.join(app, 'scripts/build.mjs'), 'utf8')
+  const buildScript = await readFile(path.join(app, 'packaging/build.mjs'), 'utf8')
   expect(buildScript).toContain("'ui-components-api'")
 
   const root = await mkdtemp(path.join(tmpdir(), 'ordessa-shared-ui-api-'))
@@ -39,7 +39,7 @@ it('publishes the UI Components API as an import-map entry sharing the extension
 
   // The platform carrier is a separate extension build. Resolve its bare
   // imports as the browser import map would, then compare object identity.
-  const carrier = path.resolve(app, '../../packages/desktop-platform/contracts/foundation/src/contract.ts')
+  const carrier = path.resolve(app, '../../packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/contract.ts')
   const carrierFile = path.join(root, 'contract.js')
   await build({
     entryPoints: [carrier], outfile: carrierFile, bundle: true,

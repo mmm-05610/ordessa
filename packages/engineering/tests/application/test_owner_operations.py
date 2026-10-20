@@ -51,6 +51,14 @@ def test_closed_operation_inputs_reject_before_calling_owner():
         operations.freeze_package({'record': {}, 'context': object()}, object())
     with pytest.raises(ApplicationError, match='OWNER_OPERATION_INPUT_INVALID'):
         operations.dispatch_execution({'dispatch': {'run_id':'r'}}, object())
+    # A run-shaped request is never an active writer any more, whatever else it carries.
+    with pytest.raises(ApplicationError, match='OWNER_OPERATION_INPUT_INVALID'):
+        operations.dispatch_execution({'dispatch': {'run_id':'r','step_id':'s','attempt':1,
+            'unit_ref':{},'params':{},'actions':['edit_repository'],'timeout':1}}, object())
+    # A Work-shaped request missing the declared identity is refused too.
+    with pytest.raises(ApplicationError, match='OWNER_OPERATION_INPUT_INVALID'):
+        operations.dispatch_execution({'dispatch': {'work_id':'w','step_id':'s','attempt':1,
+            'unit_ref':{},'params':{},'actions':['edit_repository'],'timeout':1}}, object())
     from test_review_usecases import _context, _scope
     context=_context(_scope(),'legacy-submission-route')
     assert not hasattr(operations,'record_submission')
@@ -65,23 +73,36 @@ def test_closed_operation_inputs_reject_before_calling_owner():
 
 
 def test_capabilities_are_detached_and_declare_conservative_outcomes():
-    first = owner_capabilities()
-    assert first[0].contract['workflow_outcomes'] == ['completed', 'unknown']
-    assert first[1].contract['workflow_outcomes'] == ['completed', 'failed', 'unknown']
-    assert first[1].contract['completion_semantics'].endswith('always false.')
-    assert [item.capability_id for item in first] == [
-        'engineering.packages.freeze','engineering.executions.dispatch',
-        'engineering.submissions.record_report']
-    assert first[2].contract['workflow_outcomes'] == ['submitted', 'unknown']
-    assert 'accepted' not in first[2].contract['workflow_outcomes']
-    assert set(first[0].contract['input_schema']['properties']['record']['properties']) == {
+    # Look capabilities up by identity: the list may carry more owners than it
+    # once did, so an index assumption is not a contract.
+    by_id = {item.capability_id: item for item in owner_capabilities()}
+    assert by_id['engineering.packages.freeze'].contract['workflow_outcomes'] == ['completed', 'unknown']
+    assert by_id['engineering.executions.dispatch'].contract['workflow_outcomes'] == [
+        'completed', 'failed', 'unknown']
+    assert by_id['engineering.proposals.associate_review'].contract['workflow_outcomes'] == [
+        'completed', 'rejected', 'unknown']
+    # The set of advertised owners is a contract; their order is not.
+    assert set(by_id) == {
+        'engineering.packages.freeze', 'engineering.proposals.associate_review',
+        'engineering.executions.dispatch', 'engineering.submissions.record_report'}
+    dispatch = by_id['engineering.executions.dispatch']
+    assert dispatch.contract['completion_semantics'].endswith('always false.')
+    report = by_id['engineering.submissions.record_report']
+    assert report.contract['workflow_outcomes'] == ['submitted', 'unknown']
+    assert 'accepted' not in report.contract['workflow_outcomes']
+    assert set(by_id['engineering.packages.freeze'].contract['input_schema']
+               ['properties']['record']['properties']) == {
         'scope','package_id','created_at','created_by','payload','digest'}
-    submission_schema = first[2].contract['input_schema']['properties']['record']
-    assert 'scope' not in submission_schema['properties']
-    assert {'realm_id','project_id','submission_id'} <= set(submission_schema['properties'])
-    assert all(item.contract['registered'] is False for item in first)
-    first[2].contract['workflow_outcomes'].append('accepted')
-    assert 'accepted' not in owner_capabilities()[2].contract['workflow_outcomes']
+    submission_schema = report.contract['input_schema']['properties']['record']
+    assert len(submission_schema['oneOf']) == 2
+    for version_schema in submission_schema['oneOf']:
+        assert 'scope' not in version_schema['properties']
+        assert {'realm_id','project_id','submission_id'} <= set(version_schema['properties'])
+    assert all(item.contract['registered'] is False for item in by_id.values())
+    report.contract['workflow_outcomes'].append('accepted')
+    fresh_report = next(item for item in owner_capabilities()
+                        if item.capability_id == 'engineering.submissions.record_report')
+    assert 'accepted' not in fresh_report.contract['workflow_outcomes']
 
 
 def test_constructor_requires_same_original_authority_objects():
@@ -99,7 +120,9 @@ def test_constructor_requires_same_original_authority_objects():
 
 def test_dispatch_rejects_boolean_timeout_and_duplicate_actions_before_owner_call():
     operations = _ops()
-    base = {'run_id':'run','step_id':'step','attempt':1,
+    # The active write entry takes a declared Work identity; the same input
+    # checks apply to it.
+    base = {'work_id':'work-1','action_id':'incremental.prepare-packages','step_id':'draft','attempt':1,
         'unit_ref':{'environmentNamespace':'env','unitId':'unit','ownerProviderRef':{},'sourceRevision':'rev'},
         'params':{},'actions':['edit_repository'],'timeout':1}
     with pytest.raises(ApplicationError, match='OWNER_OPERATION_INPUT_INVALID'):
@@ -135,7 +158,7 @@ def test_report_same_key_replay_and_changed_record_digest_conflict_in_original_j
     context=CommandContext(record.scope,'fixture-principal',record.created_by,'report-replay',
         record.created_at,'report-replay-trace')
     operation='engineering.submissions.record_report'
-    schema=report_input_schema()
+    schema=report_input_schema(record.schema_version)
     raw=encode_submission(record)
     digest=request_digest(operation,context,{'record':decode_json(raw)},
         read_set_projection(ReadSet(context.scope,())),

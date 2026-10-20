@@ -11,6 +11,7 @@ import pytest
 from test_invariant_checks import invariant_source
 from test_proposal_usecases import SCOPE
 from ordessa_engineering.application.assembly import build_review_check_admission
+from ordessa_engineering.application.assembly import EngineeringPorts, build_engineering_service
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.application.orchestration.decision_checks import GenericDecisionCheckSource
 from ordessa_engineering.application.orchestration.unit_review import UnitReviewCheckSource
@@ -132,3 +133,29 @@ def test_public_builder_refuses_foreign_composite_access_and_scope(invariant_sou
     args['expected_scope'] = SimpleNamespace(realm_id='foreign-realm', project_id=SCOPE.project_id)
     with pytest.raises(ApplicationError, match='REVIEW_SOURCE_AUTHORITY_MISMATCH'):
         build_review_check_admission(**args)
+
+
+def test_review_runner_and_plan_factory_reach_service_and_are_required_together():
+    factory = SimpleNamespace(begin=lambda *_args, **_kwargs: None)
+    access = SimpleNamespace(require=lambda *_args, **_kwargs: None)
+
+    async def review_run(_context, _plan, _request):
+        raise AssertionError("the assembly test must not invoke review")
+
+    def plan_factory(_context, _binding, *, review_id, baseline, candidate):
+        raise AssertionError("the assembly test must not build a review plan")
+
+    selected = build_engineering_service(factory, EngineeringPorts(
+        access, review_run=review_run, review_plan_factory=plan_factory))
+    assert selected._review_run is review_run
+    assert selected._review_change_steps.review_run is review_run
+    assert selected._review_change_steps.plan_factory is plan_factory
+    assert selected._review_change_steps.runnable is True
+
+    absent = build_engineering_service(factory, EngineeringPorts(access))
+    assert absent._review_run is None
+    assert absent._review_change_steps.runnable is False
+
+    partial = build_engineering_service(factory, EngineeringPorts(
+        access, review_run=review_run))
+    assert partial._review_change_steps.runnable is False

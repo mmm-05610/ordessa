@@ -7,7 +7,7 @@ name = "ordessa-engineering"
 version = "0.1.0"
 description = "Local, versioned engineering material workflow"
 requires-python = ">=3.12"
-dependencies = ["decision-runtime==0.1.0", "ordessa-infrastructure==0.1.0", "pydantic-graph==2.54.0", "PyYAML==6.0.3", "jsonschema==4.19.2", "referencing==0.36.2"]
+dependencies = ["decision-runtime==0.2.0", "ordessa-infrastructure==0.1.0", "PyYAML==6.0.3", "jsonschema==4.20.0", "referencing==0.36.2"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7", "pytest-asyncio"]

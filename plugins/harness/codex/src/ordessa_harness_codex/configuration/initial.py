@@ -1,6 +1,0 @@
-"""Brand-owned initial native model dialect; output contains private launch facts."""
-from ordessa_execution_agents.harness.configuration.validation.initial_params import build_initial_model_params
-
-def initial_model_params(payload, operation_id, *, credential=None, models=None):
-    return build_initial_model_params(payload, operation_id,
-        protocol='openai-responses', provider_id='custom-gateway', api='openai', managed_account=True, managed_provider='openai', capabilities=True, credential=credential, models=models)

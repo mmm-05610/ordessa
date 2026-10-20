@@ -6,7 +6,9 @@ from ..usecases.changes.apply import ChangeIntentAdmission
 from ..usecases.packages.authorization import ImplementationIntentAdmission
 from ..usecases.changes.acceptance_closure import SubmissionAcceptanceIntentAdmission
 from ...domain.approvals.consent import AuthorizationIntent, ChangeAuthorizationIntent
-from ...domain.approvals.implementation import ImplementationAuthorizationIntent
+from ...domain.approvals.implementation import (
+    ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent,
+)
 
 
 class _IntentAdmissionRouter:
@@ -34,7 +36,7 @@ class _IntentAdmissionRouter:
     def guard_intent(self, context, intent):
         if type(intent) is ChangeAuthorizationIntent:
             owner = self.change
-        elif type(intent) is ImplementationAuthorizationIntent:
+        elif type(intent) in (ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent):
             owner = self.implementation
         elif type(intent) is AuthorizationIntent:
             owner = self.acceptance

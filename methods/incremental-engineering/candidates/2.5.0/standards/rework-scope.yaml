@@ -1,0 +1,70 @@
+schema_version: 1
+standard_id: rework-scope
+revision: 1.0.0
+purpose: quality
+criteria:
+- criterion_id: correction_within_approved_scope
+  statement: 只有 correction-plan 精确引用已批准 DID、冻结 package、失败 Submission 与失败 acceptance ReviewRecord，且每项修正链接到该原 ReviewPlan 中的失败 CheckKey；独立评估确认修正仍在已批准范围内、不是重要设计变更后，才可作为一次普通实现修正继续。引用存在或结构相似不构成语义符合；材料缺失、版本不明、重要设计变化状态不明或证据不足时不得判断符合。
+  applies_to:
+  - correction-plan
+  required_inputs:
+  - approved_did_ref
+  - approved_did_content
+  - approved_package_ref
+  - approved_package_content
+  - failed_submission_ref
+  - failed_submission_content
+  - acceptance_review_ref
+  - acceptance_review_content
+  - correction_plan_ref
+  - correction_plan_content
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.rework_scope
+      question_ids:
+      - correction_eligibility
+      iteration: once
+      nominal_answer_conversion:
+        contract_version: ordessa.nominal-choice-status/1
+        answer_kind: choice
+        option_statuses:
+          eligible: satisfied
+          important_design_change: violated
+          outside_approved_scope: violated
+          insufficient: insufficient
+        tie: unknown
+        missing_answer: unknown
+        incomplete_answer: unknown
+        truncated_input: unknown
+        unmapped_option: unknown
+      quality_admission:
+        contract_version: ordessa.review-quality-admission/1
+        activation: matching_validated_evaluation_required
+        missing_evaluation: manual
+        unresolved_model: manual
+  answer_vocabulary:
+    kind: choice
+    options:
+    - option_id: eligible
+      description: 精确冻结材料支持该 correction-plan 中列出的修正完全处于已批准DID/package/目标范围内，且不构成重要设计变更。
+    - option_id: important_design_change
+      description: 修正改变重要设计选择；回到DID提案，不作为普通实现修正。
+    - option_id: outside_approved_scope
+      description: 修正超出精确已批准DID/package/目标范围；停止本轮并重新提案。
+    - option_id: insufficient
+      description: 冻结材料、版本或独立审核证据不足以确认普通修正资格。
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+reduction:
+  required_criteria: all_applicable
+  empty_applicable_set: error
+  priority:
+  - block
+  - manual
+  - pass

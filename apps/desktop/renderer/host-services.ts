@@ -1,3 +1,5 @@
+import { createAbsentHarnessAvailability } from '@ordessa/harness-contracts/service'
+import type { AbsentHarnessAvailability } from '@extensions/ordessa.harness-contracts/contract.js'
 /**
  * 渲染进程的平台服务装配（PA-16/19/21/22 的接线点）。
  *
@@ -6,7 +8,7 @@
  *   · 日志服务不直接写盘：渲染进程把记录交给主进程 sink 脱敏，避免渲染侧另起一套格式；
  *   · 缺席的服务用**缺席实现**（C-03 §6 / C-05 §5 / C-08 §4），不返回 null 让界面崩。
  */
-import { createAbsentHarnessAvailability, createCommandSource, createKeybindingService, createThemeService, listPalette, type AbsentHarnessAvailability, type CommandSourceHost, type KeybindingServiceHost, type ThemeService } from '@ordessa/extension-host/platform'
+import { createCommandSource, createKeybindingService, createThemeService, listPalette, type CommandSourceHost, type KeybindingServiceHost, type ThemeService } from '@ordessa/extension-host/platform'
 import type { CommandOutcome, DiagnosticProvider, Logger, SettingsSection, WirePort, WireResult } from '@extensions/ordessa.contracts/contract.js'
 import { NEUTRAL_TOKENS, createNeutralThemeService } from '@ordessa/extension-host/platform'
 
@@ -51,12 +53,26 @@ export function createBridgeLogger(sink: (level: 'debug' | 'info' | 'warn' | 'er
   return make(scope)
 }
 
+/** The two facts the IPC proxy cannot know by itself (main-process `wireReady`/
+ * `wireScope`). The assembler owns a **live cell** of these and passes it in:
+ * the port reads through the cell at access time, so facts that settle after
+ * startup (B-006) become visible to already-activated extensions instead of
+ * being frozen at construction. An unresolved fact stays `false`/`null`:
+ * honesty here is what lets an asset extension refuse a call instead of
+ * rendering a page that cannot work. */
+export interface BridgeWireFacts {
+  ready: boolean
+  scope: string | null
+}
+
 /** C-03 §4：渲染侧只做代理，任何异常都降级为 `Unknown`，不冒泡到界面。 */
-export function createBridgeWirePort(host: DesktopHostBridge | undefined): WirePort {
+export function createBridgeWirePort(host: DesktopHostBridge | undefined, facts?: Partial<BridgeWireFacts>): WirePort {
   if (!host) return { ready: false, scope: null, call: async () => ({ kind: 'Unknown', requestId: 'absent', reason: 'port-absent' }) as WireResult }
   return {
-    ready: true,
-    scope: null,
+    // 主进程的事实是活值：读的是装配层 cell 的当下内容，不在构造时抄快照；
+    // 未就绪即 false/null，绝不乐观默认。
+    get ready() { return facts?.ready ?? false },
+    get scope() { return facts?.scope ?? null },
     async call(method, params) {
       try { return await host.wireCall(method, params) as WireResult }
       catch { return { kind: 'Unknown', requestId: 'local', reason: 'transport-unreachable' } }
@@ -78,6 +94,9 @@ export interface HostServices {
 
 export interface BuildHostServicesOptions {
   bridge?: DesktopHostBridge
+  /** `wireReady()`/`wireScope()` 的**活值 cell**，由异步 start 持有并在事实落定后
+   * 更新（host-services 无法自己得到这两个事实）；缺省即 false/null，不假成就绪。 */
+  wire?: Partial<BridgeWireFacts>
   mode?: 'light' | 'dark' | 'system'
   prefersDark?: () => boolean
   onCommandError?: (commandId: string, error: unknown) => void
@@ -93,26 +112,40 @@ export function buildHostServices(options: BuildHostServicesOptions = {}): HostS
   const commands = createCommandSource({ keybindings, onError: options.onCommandError })
   const sections: SettingsSection[] = []
   const providers: DiagnosticProvider[] = []
+  // Identity-stable snapshots (T008-03): getSnapshot returns the SAME frozen
+  // array until a registration actually changes the list — safe for
+  // useSyncExternalStore consumers (the old shape returned a fresh array per
+  // call, which re-rendered every subscriber on every read).
+  let settingsSnapshot: readonly SettingsSection[] | null = null
+  let diagnosticsSnapshot: readonly DiagnosticProvider[] | null = null
   return {
     theme,
     commands,
     keybindings,
     harness: options.harness ?? createAbsentHarnessAvailability(),
-    wire: createBridgeWirePort(bridge),
+    wire: createBridgeWirePort(bridge, options.wire),
     logger: createBridgeLogger(() => { /* 渲染侧日志在构建期接主进程 sink；未接时静默丢弃而非阻塞 */ }),
     settings: {
       register(section) {
         sections.push(section)
-        return () => { const index = sections.indexOf(section); if (index >= 0) sections.splice(index, 1) }
+        settingsSnapshot = null // invalidate: uSES requires identity-stable reads
+        return () => {
+          const index = sections.indexOf(section)
+          if (index >= 0) { sections.splice(index, 1); settingsSnapshot = null }
+        }
       },
-      getSnapshot: () => [...sections],
+      getSnapshot: () => (settingsSnapshot ??= Object.freeze([...sections])),
     },
     diagnostics: {
       register(provider) {
         providers.push(provider)
-        return () => { const index = providers.indexOf(provider); if (index >= 0) providers.splice(index, 1) }
+        diagnosticsSnapshot = null
+        return () => {
+          const index = providers.indexOf(provider)
+          if (index >= 0) { providers.splice(index, 1); diagnosticsSnapshot = null }
+        }
       },
-      getSnapshot: () => [...providers],
+      getSnapshot: () => (diagnosticsSnapshot ??= Object.freeze([...providers])),
     },
   }
 }

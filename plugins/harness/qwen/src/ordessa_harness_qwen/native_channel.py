@@ -423,35 +423,35 @@ def capability_matrix() -> dict[str, dict]:
     over.
     """
     return {
-        "prompt": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "cancel": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "resume": {"declared": "yes", "implemented": "route-known", "observed": "no"},
+        "prompt": {"declared": "yes", "implemented": "unsupported(native-http-owner-missing)", "observed": "no"},
+        "cancel": {"declared": "yes", "implemented": "unsupported(native-http-owner-missing)", "observed": "no"},
+        "resume": {"declared": "yes", "implemented": "unsupported(native-http-owner-missing)", "observed": "no"},
         "approvalCallback": {
             "declared": "yes",
-            "implemented": "vote-route(no-auto)",
+            "implemented": "unsupported(native-http-owner-missing)",
             "observed": "no",
         },
         "steer": {"declared": "yes", "implemented": "no", "observed": "no"},
         "modelConfig": {
             "declared": "yes",
-            "implemented": "session-field",
+            "implemented": "unsupported(native-http-owner-missing)",
             "observed": "no",
         },
         "sessionPersist": {
             "declared": "yes",
-            "implemented": "daemon-owned",
+            "implemented": "unsupported(native-http-owner-missing)",
             "observed": "no",
         },
-        "unknownExtensions": {"declared": "yes", "implemented": "yes", "observed": "no"},
+        "unknownExtensions": {"declared": "yes", "implemented": "unsupported(native-http-owner-missing)", "observed": "no"},
         "transportFence": {"declared": "no", "implemented": "no", "observed": "no"},
         "requestReconciliation": {
             "declared": "yes",
-            "implemented": "yes",
+            "implemented": "unsupported(native-http-owner-missing)",
             "observed": "no",
         },
         "sseDisconnectSemantics": {
             "declared": "yes",
-            "implemented": "not-completion",
+            "implemented": "unsupported(native-http-owner-missing)",
             "observed": "no",
         },
     }

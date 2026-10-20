@@ -22,6 +22,12 @@ class DomainRevisionConflict(RuntimeError):
     code = "DOMAIN_REVISION_CONFLICT"
 
 
+class DomainRequestConflict(RuntimeError):
+    """The same scoped request key was already spent with another digest."""
+
+    code = "DOMAIN_REQUEST_CONFLICT"
+
+
 @dataclass(frozen=True)
 class DomainWrite:
     """One opaque value replacement guarded by its expected record revision.
@@ -57,7 +63,10 @@ class DomainStorePort(Protocol):
     positive revisions require an exact match) and commit those writes together
     with the request result in the same existing transaction. The request key
     and digest identify an idempotent request/result according to the store
-    owner's contract. This port grants no authority, performs no ACL checks,
+    owner's contract. A spent key with another digest raises
+    ``DomainRequestConflict`` from either read or commit; consumers may map it
+    to their own identity conflict without depending on a backend's domain.
+    This port grants no authority, performs no ACL checks,
     and assigns no business meaning to namespace, key, value, or result.
     """
 
@@ -85,6 +94,7 @@ class DomainStorePort(Protocol):
 __all__ = [
     "DOMAIN_STORE_VERSION",
     "DomainRevisionConflict",
+    "DomainRequestConflict",
     "DomainStorePort",
     "DomainWrite",
 ]

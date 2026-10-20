@@ -6,6 +6,7 @@ import os
 
 from ordessa_execution_agents.harness.transport import WriterLeaseRefused
 from ordessa_units.admission.invocation import InvocationAuthorityRefused
+from ordessa_units.errors import UnitApiRefused
 
 from test_local_owner import ACP_PEER_REVERSE_WRITE, live_owner
 
@@ -94,7 +95,7 @@ def test_manager_close_stays_pending_through_recorded_prompt_finish(live_owner, 
 
     def recorded_prompt():
         try:
-            prompt_results.append(instance.prompt_recorded(
+            prompt_results.append(instance.prompt(
                 unit.identity, lease, operation_ref='quiescence-held-recorded-prompt', timeout=5,
                 prompt=[{'type': 'text', 'text': 'real local ACP prompt'}]))
         except BaseException as error:
@@ -160,13 +161,15 @@ def test_manager_close_waits_for_real_local_peer_reverse_file_write(live_owner):
 
     def send_real_prompt():
         try:
-            prompt_results.append(instance.prompt_recorded(
+            prompt_results.append(instance.prompt(
                 unit.identity, lease, operation_ref='real-peer-reverse-write', timeout=5,
                 prompt=[{'type': 'text', 'text': 'request one approved file write'}]))
         except BaseException as error:
             prompt_errors.append(error)
 
     worker = Thread(target=send_real_prompt)
+    rejected, reject_errors = Event(), []
+    reject_worker = None
     worker.start()
     assert approval.entered.wait(5)
     try:
@@ -183,10 +186,36 @@ def test_manager_close_waits_for_real_local_peer_reverse_file_write(live_owner):
         assert _termination_rows(world, unit) == (None, None)
         assert world.environment.snapshot.active_uses == 1
         assert instance.channel_factory.owned_record.process.observe().state == 'running'
+        operations_before = len(world.owner._operations)
+
+        def reject_after_close_cut():
+            try:
+                # An external approval wait must not retain the admission
+                # lock. The cut must reject a fresh public request without
+                # waiting for that original callback or spending a new key.
+                with world.admission.admission_lock:
+                    pass
+                with pytest.raises(UnitApiRefused, match='closing'):
+                    world.public_manager.create(world.owner.spec, authorization)
+            except BaseException as error:
+                reject_errors.append(error)
+            finally:
+                rejected.set()
+
+        reject_worker = Thread(target=reject_after_close_cut)
+        reject_worker.start()
+        assert rejected.wait(1), 'close-cut rejection waited for external callback approval'
+        assert reject_errors == []
+        assert approval.resume.is_set() is False
+        assert len(world.owner._operations) == operations_before
+        assert world.environment.snapshot.active_uses == 1
     finally:
         approval.resume.set()
         worker.join(5)
+        if reject_worker is not None:
+            reject_worker.join(5)
     assert not worker.is_alive()
+    assert reject_worker is not None and not reject_worker.is_alive()
     assert prompt_errors == []
     assert prompt_results and prompt_results[0]['state'] == 'completed'
     assert files.exists(relative) is True

@@ -7,7 +7,6 @@ required_input_slots:
 - submission_ref
 - fixed_delivery_refs
 - executor_report
-- independent_review_observations
 iteration: once
 questions:
 - question_id: output_scope
@@ -16,7 +15,7 @@ questions:
   criterion_refs:
   - resource: standard.acceptance
     criterion_id: output_scope
-  instructions: 独立判断固定交付引用及基线下的输出是否符合已批准范围。只依据冻结交付、执行者报告和独立审核观察；引用存在或执行者自述本身不能证明范围符合。材料缺失、版本不明或观察不足时不得回答supported。
+  instructions: 独立审核Unit在本次检查中形成观察，判断固定交付引用及基线下的输出是否符合已批准范围。只依据冻结交付和执行者报告；引用存在或执行者自述本身不能证明范围符合。材料缺失、版本不明或观察不足时不得回答supported。
   answer_definition:
     from_criterion:
       resource: standard.acceptance

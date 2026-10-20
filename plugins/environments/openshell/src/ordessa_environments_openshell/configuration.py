@@ -48,6 +48,28 @@ def create_spec(reference):
         raise EnvironmentRefused('OpenShell image and non-empty backend policy required')
     if not isinstance(command, (list, tuple)) or not command or any(not isinstance(x, str) or not x for x in command):
         raise EnvironmentRefused('independent environment lifetime command required')
+    # The gateway validates policy JSON with its own spellings; accept only the
+    # values it admits so an unsupported policy is refused before any dispatch
+    # instead of becoming an in-flight INVALID_ARGUMENT.
+    landlock = policy.get('landlock')
+    if landlock is not None:
+        if not isinstance(landlock, Mapping):
+            raise EnvironmentRefused('OpenShell landlock policy must be a mapping')
+        compatibility = landlock.get('compatibility')
+        if compatibility is not None and compatibility not in ('hard_requirement', 'best_effort'):
+            raise EnvironmentRefused(
+                'OpenShell landlock.compatibility must be hard_requirement or best_effort')
+    filesystem = policy.get('filesystem')
+    if filesystem is not None:
+        if not isinstance(filesystem, Mapping):
+            raise EnvironmentRefused('OpenShell filesystem policy must be a mapping')
+        for key in ('read_only', 'read_write'):
+            paths = filesystem.get(key)
+            if paths is None:
+                continue
+            if (not isinstance(paths, (list, tuple))
+                    or any(not isinstance(item, str) or not item.startswith('/') for item in paths)):
+                raise EnvironmentRefused('OpenShell ' + key + ' must contain absolute backend paths')
     try:
         return ParseDict({'template': {'image': image}, 'policy': dict(policy),
             'command': list(command), 'tty': False}, pb.SandboxSpec(), ignore_unknown_fields=False)

@@ -518,6 +518,7 @@ type ApprovalRequest struct {
 	CommandActions                  []CommandAction          `json:"commandActions,omitempty"`
 	CWD                             string                   `json:"cwd,omitempty"`
 	Files                           []string                 `json:"files,omitempty"`
+	FileOperation                   string                   `json:"fileOperation,omitempty"`
 	Host                            string                   `json:"host,omitempty"`
 	Protocol                        string                   `json:"protocol,omitempty"`
 	Port                            int                      `json:"port,omitempty"`

@@ -67,7 +67,8 @@ it('the channel handle binding, not the project query, carries every cwd onto th
   const bound = { id: 'ws_app', normalizedPath: '/bound/app' }
   const client = await target.createConnector(harness(target,
     () => ({ connectionId: 'chan_1', binding: bound, stream: peer.stream, release: async () => {} }), query)).connect()
-  expect(await client.openWorkspace!('ws_app')).toEqual(bound)
+  expect(await client.openWorkspace!('ws_app')).toEqual(query)
+  expect(peer.requests).toEqual([])
   const { sessionId } = await client.createAndSend!('ws_app', 'ping', 'req_1')
   expect(peer.recorded('session/new')[0].params).toMatchObject({ cwd: '/bound/app' })
   await client.openSession!(sessionId)
@@ -84,7 +85,7 @@ it('a handle bound to a different project is stood down before any frame, and it
   const client = await target.createConnector(harness(target,
     () => ({ connectionId: 'chan_x', binding: { id: 'ws_other', normalizedPath: '/other' }, stream: peer.stream,
       release: async () => { released.push('chan_x') } }), query)).connect()
-  const opening = await alwaysSettled(client.openWorkspace!('ws_app'))
+  const opening = await alwaysSettled(client.createAndSend!('ws_app', 'ping', 'request-binding'))
   expect(String(opening.error)).toMatch(/asked ws_app, bound ws_other/)
   expect(released).toEqual(['chan_x'])
   // Refused at the binding check: not one ACP frame ever crossed this stream.
@@ -104,7 +105,7 @@ it('a failed release is visible and retryable: the dispose attempt fails, the ha
   const client = await target.createConnector(harness(target,
     () => ({ connectionId: 'chan_r', binding: query, stream: peer.stream,
       release: async () => { releaseCalls.push('one'); if (releaseCalls.length === 1) throw new Error('backend unreachable') } }), query)).connect()
-  const opening = alwaysSettled(client.openWorkspace!('ws_app'))
+  const opening = alwaysSettled(client.createAndSend!('ws_app', 'ping', 'request-handshake'))
   await until('initialize to reach the gate', () => peer.recorded('initialize').length === 1)
   client.dispose()
   // The in-handshake handle is dispose's to stand down; that attempt FAILS — recorded, not swallowed,
@@ -132,6 +133,7 @@ it('the ordinary established-channel path is host-visible and host-retryable: di
       release: async () => { releaseCalls.push('one'); if (releaseCalls.length <= 2) throw new Error('backend unreachable') } }), query)).connect()
   // No handshake halfway through anything here: the channel is fully established, then disposed.
   await client.openWorkspace!('ws_app')
+  await client.newSession()
   expect(peer.recorded('initialize')).toHaveLength(1)
   client.dispose()
   await until('the failed release to surface as a diagnostic', () => diagnostics(client).length === 1)
@@ -168,6 +170,7 @@ it('the release lifecycle is announced, not inferred: subscribeReleaseStates car
   const unsubscribe = client.subscribeReleaseStates(state =>
     events.push({ status: state.status, ...(state.reason === undefined ? {} : { reason: state.reason }) }))
   await client.openWorkspace!('ws_app')
+  await client.newSession()
   client.dispose()
   // In-flight is visible synchronously — before any answer, without reading anything: an
   // unanswered release is a STATE, so "nothing recorded" can never be mistaken for confirmed.
@@ -198,6 +201,7 @@ it('the client attests silence only after dispose AND every stand-down is confir
   let settled = false
   void client.releasesSettled.then(() => { settled = true })
   await client.openWorkspace!('ws_app')
+  await client.newSession()
   client.dispose()
   await until('the failed release to surface as a diagnostic', () => diagnostics(client).length === 1)
   await new Promise(resolve => setTimeout(resolve, 20))
@@ -222,7 +226,7 @@ it('a release already in flight is joined, not doubled: dispose and the landing 
     () => ({ connectionId: 'chan_c', binding: query, stream: peer.stream,
       release: async () => { releaseCalls++; await releaseGate.promise } }), query)).connect()
   let opened: unknown = 'pending'
-  void alwaysSettled(client.openWorkspace!('ws_app')).then(value => { opened = value })
+  void alwaysSettled(client.createAndSend!('ws_app', 'ping', 'request-joining')).then(value => { opened = value })
   await until('initialize to reach the gate', () => peer.recorded('initialize').length === 1)
   client.dispose()
   await until('the first release call to leave', () => releaseCalls === 1)
@@ -290,8 +294,8 @@ it('add-workspace is offered when orchestration supplies it, and it selects the 
   const snapshot = client.getSnapshot()
   expect(snapshot.workspaces?.selectedWorkspaceId).toBe('ws_new')
   expect(snapshot.workspaces?.items.map(item => item.id)).toContain('ws_new')
-  // The add selects the project (a bound channel initializes once); no native session is invented.
-  await until('the added project to get its bound initialize', () => peer.recorded('initialize').length === 1)
+  // Registration and selection read project facts only; initialization waits for a session/history op.
+  expect(peer.recorded('initialize')).toHaveLength(0)
   expect(peer.recorded('session/new')).toHaveLength(0)
   client.dispose()
   peer.close()

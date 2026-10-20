@@ -1,7 +1,7 @@
 """Pure validation for a fixed Unit preparation carrier."""
 from collections.abc import Mapping
 
-from ordessa_execution_api.environment.operations import sealed_mapping
+from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
 from ordessa_execution_agents.profiles.definitions.codec import decode_revision
 from ordessa_units.lifecycle.unit_lifecycle import plain
 

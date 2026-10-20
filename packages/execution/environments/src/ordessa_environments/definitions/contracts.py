@@ -23,15 +23,17 @@ OS process, which is exactly why nothing here may name that type.
 Layering
 --------
 ``units`` depends on this contract; ``agents`` and ``environments`` never depend
-on ``units``. The contract depends on nothing but the standard library.
+on ``units``. The execution-space contract in this module uses the standard library.
+Runtime resource identities also use the explicit Infrastructure digest mechanism;
+no environment declaration depends on Agents, Units, Interfaces or providers.
 """
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
-from typing import Any, Mapping, Protocol, Sequence, TYPE_CHECKING, runtime_checkable
+from dataclasses import dataclass
+from typing import Mapping, Protocol, Sequence, TYPE_CHECKING, runtime_checkable
 
-from .errors import EnvironmentGuaranteeUnmet, EnvironmentRefused
+from .errors import EnvironmentRefused
 
 if TYPE_CHECKING:
     from .models import ProcessObservation, ProcessCancellation
@@ -151,77 +153,6 @@ class ExecutionSpace(Protocol):
         """
 
 
-@dataclass(frozen=True)
-class Capabilities:
-    """What an environment handle **actually** provides.
-
-    ``isolation`` names the real isolation level (``"none"`` for the local
-    provider). ``provides`` lists the capability keys above. This is a report of
-    fact, not a wish list: :func:`require_guarantees` checks it against the
-    caller's reference and refuses on any gap.
-    """
-
-    isolation: str
-    provides: frozenset[str] = field(default_factory=frozenset)
-    detail: Mapping[str, Any] = field(default_factory=dict)
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.isolation, str) or not self.isolation:
-            raise EnvironmentRefused("capabilities require an explicit isolation level")
-        unknown = set(self.provides) - KNOWN_CAPABILITIES
-        if unknown:
-            raise EnvironmentRefused(f"unknown capability keys: {sorted(unknown)}")
-
-    def guarantees(self, required: Sequence[str]) -> bool:
-        return set(required) <= set(self.provides)
-
-
-def require_guarantees(handle: "EnvironmentHandle", required: Sequence[str]) -> None:
-    """Refuse when the handle does not really provide every required capability.
-
-    This is the actual-guarantee check behind a configuration reference: the
-    reference asks, the handle is inspected, and a mismatch is an explicit
-    refusal rather than a silent downgrade.
-    """
-    missing = sorted(set(required) - set(handle.capabilities.provides))
-    if missing:
-        raise EnvironmentGuaranteeUnmet(
-            f"environment {handle.identity!r} does not provide {missing}"
-        )
-
-
-@runtime_checkable
-class EnvironmentHandle(Protocol):
-    """The stable high-level handle for one execution space.
-
-    This is the explicit Local development entry's original provider shape.
-    Managed consumers acquire EnvironmentUse from EnvironmentInstance instead.
-    No implicit fallback from a managed remote provider resolves this entry.
-    """
-
-    identity: str
-    capabilities: Capabilities
-    files: FileArea
-    execution: ExecutionSpace
-
-    def release(self) -> Mapping[str, object]:
-        """Release this handle. **Never** destroys the project or shared resources."""
-
-
-@runtime_checkable
-class EnvironmentProvider(Protocol):
-    """Resolves a configuration reference to a real environment handle."""
-
-    def probe(self) -> Mapping[str, object]:
-        """Report what this provider can do here, without opening anything."""
-
-    def resolve(self, reference: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
-        """Resolve a configuration reference into concrete, checked settings."""
-
-    def open(self, reference: Mapping[str, Any] | None = None) -> EnvironmentHandle:
-        """Acquire a real environment handle."""
-
-
 __all__ = [
     "PROCESS_CAPABILITY",
     "BYTE_CHANNEL_CAPABILITY",
@@ -233,8 +164,4 @@ __all__ = [
     "ProcessHandle",
     "FileArea",
     "ExecutionSpace",
-    "Capabilities",
-    "require_guarantees",
-    "EnvironmentHandle",
-    "EnvironmentProvider",
 ]

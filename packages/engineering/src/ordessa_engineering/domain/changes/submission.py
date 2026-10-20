@@ -193,6 +193,7 @@ class Submission:
     source_refs: tuple[SourceRef, ...]
     method_content: MethodContent | None = None
     checkpoint_ref: BlobRef | None = None
+    schema_version: int = 1
     digest: Digest = field(init=False)
 
     def __post_init__(self):
@@ -204,7 +205,9 @@ class Submission:
             raise ReferenceError('INVALID_SUBMISSION')
         if type(self.package_ref) is not ImplementationPackageRef or type(self.execution_ref) is not ExecutionRecordRef:
             raise ReferenceError('INVALID_SUBMISSION')
-        validate_items(self.baseline_snapshots, RepositorySnapshotRef, nonempty=True)
+        if type(self.schema_version) is not int or self.schema_version not in (1, 2):
+            raise ReferenceError('INVALID_SUBMISSION')
+        validate_items(self.baseline_snapshots, RepositorySnapshotRef, nonempty=self.schema_version == 1)
         for name, typ in (('resulting_snapshots',RepositorySnapshotRef),('commit_refs',CommitRef),('file_changes',FileChange),('test_evidence',TestEvidence),('effect_observations',EffectObservation),('coverage',SubmissionCoverage),('source_refs',SourceRef)):
             validate_items(getattr(self,name),typ)
         _validate_union(self.output_refs, (ArtifactRevisionRef, BlobRef))
@@ -215,6 +218,13 @@ class Submission:
                 raise ReferenceError('DUPLICATE_SUBMISSION_ITEM')
         if self.method_content is not None and type(self.method_content) is not MethodContent or self.checkpoint_ref is not None and type(self.checkpoint_ref) is not BlobRef:
             raise ReferenceError('INVALID_SUBMISSION')
+        if self.schema_version == 2 and (
+                self.baseline_snapshots or self.resulting_snapshots or self.commit_refs
+                or self.file_changes or self.test_evidence or self.effect_observations
+                or self.method_content is None
+                or len(self.output_refs) != 1 or type(self.output_refs[0]) is not BlobRef
+                or self.method_content.rendered_body_ref != self.output_refs[0]):
+            raise ReferenceError('INVALID_SUBMISSION_REPORT')
         for items in (self.baseline_snapshots,self.resulting_snapshots):
             keys=[(i.realm_id,i.project_id,i.repository_id) for i in items]
             if len(keys)!=len(set(keys)): raise ReferenceError('DUPLICATE_SNAPSHOT')
@@ -240,7 +250,8 @@ class Submission:
         for c in self.coverage:
             if not set(c.file_change_ids)<=file_ids or any(not any(f.change_id==fid and c.proposal_ref in f.proposal_refs for f in self.file_changes) for fid in c.file_change_ids):
                 raise ReferenceError('INVALID_SUBMISSION_COVERAGE')
-        for items,key in ((self.test_evidence,lambda x:x.check_id),(self.effect_observations,lambda x:x.effect_id),(self.source_refs,lambda x:x.source_id)):
+        for items,key in ((self.test_evidence,lambda x:x.check_id),(self.effect_observations,lambda x:x.effect_id),
+                          (self.source_refs,lambda x:x.source_id if self.schema_version == 1 else (x.source_id,x.content_identity))):
             if len({key(i) for i in items}) != len(items):
                 raise ReferenceError('DUPLICATE_SUBMISSION_ITEM')
         if any(len(items) > 4096 for items in (self.coverage,self.baseline_snapshots,self.resulting_snapshots,self.commit_refs,self.source_refs)):
@@ -266,7 +277,7 @@ class Submission:
             nested['owner_provider_ref_bytes'] = decode_json(item.execution_ref.owner_provider_ref_bytes)
             row['execution_ref'] = nested
             tests.append(row)
-        return {'realm_id':self.scope.realm_id,'project_id':self.scope.project_id,'submission_id':self.submission_id,
+        payload = {'realm_id':self.scope.realm_id,'project_id':self.scope.project_id,'submission_id':self.submission_id,
             'created_at':self.created_at,'created_by':projection(self.created_by,identity=True),
             'change_set':projection(self.change_set,identity=True),'authorization_refs':projection(self.authorization_refs,identity=True),
             'package_ref':projection(self.package_ref,identity=True),'execution_ref':execution,
@@ -276,6 +287,11 @@ class Submission:
             'effect_observations':projection(self.effect_observations,identity=True),'coverage':projection(self.coverage,identity=True),
             'source_refs':projection(self.source_refs,identity=True),'method_content':None if self.method_content is None else self.method_content.projection(identity=True),
             'checkpoint_ref':projection(self.checkpoint_ref,identity=True)}
+        # Historical schema-1 bytes and digests have no version field. Only the
+        # explicit Work report variant adds one; empty snapshots never downgrade.
+        if self.schema_version == 2:
+            payload['schema_version'] = 2
+        return payload
 
     @property
     def ref(self):

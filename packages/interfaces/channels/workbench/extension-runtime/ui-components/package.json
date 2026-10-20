@@ -1,0 +1,29 @@
+{
+  "name": "@ordessa/ui-components",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "ordessa": {
+    "id": "ordessa.ui-components"
+  },
+  "exports": {
+    "./api": "./api/ui-components.ts",
+    "./react": "./react/index.ts",
+    "./assembly": "./assembly/entry.ts",
+    "./state": "./src/state/stateStore.ts",
+    "./state/selectors": "./src/state/selectors.ts",
+    "./react/state": "./react/state.ts",
+    "./editing": "./src/state/editing.ts",
+    "./tasks": "./src/state/tasks.ts",
+    "./query-cache": "./src/state/queryCache.ts",
+    "./projection": "./src/state/projection.ts",
+    "./ui-storage": "./src/state/uiStorage.ts"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1"
+  },
+  "dependencies": {
+    "@ordessa/extension-api": "0.1.0",
+    "@ordessa/extension-runtime": "0.1.0"
+  }
+}

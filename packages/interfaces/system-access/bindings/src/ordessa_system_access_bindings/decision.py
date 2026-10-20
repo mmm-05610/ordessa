@@ -1,68 +1,138 @@
-"""Read-only snapshots of public Agent services, preserving incomplete scope."""
-from ordessa_execution_agents.profiles import decode_revision_ref, encode_content, encode_profile, encode_revision_ref
+"""Read-only current owner projections in the explicit historical observation format.
+
+Historical DTOs describe evidence only. No old graph, UnitServices, admission
+registry or configuration runtime is imported or assembled by this binding.
+"""
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from collections.abc import Mapping
-from ordessa_units.public import (UnitServices, OwnerProposalInput, ProfileRevisionRef, decode_node_ref)
-from decision_runtime.definitions import *
+
+from ordessa_execution_agents.profiles import (
+    ProfileService, decode_revision_ref, encode_content, encode_profile, encode_revision_ref,
+)
+from ordessa_execution_agents.harness.providers.catalog import HarnessCatalog
+from ordessa_units.configuration.proposal_input import OwnerProposalInput
+from decision_runtime.historical.context import ReadContext
+from decision_runtime.historical.values import ContractError, freeze, plain, digest, name
+from decision_runtime.historical.models import (
+    ExternalRef, VersionedObservation, ObservationBatch, ObligationResult,
+    ValidationReceipt, validate_ready,
+)
+
 
 @dataclass(frozen=True)
 class ObservationQuery:
     kind: str
     parameters: Mapping
+
     def __post_init__(self):
-        if self.kind not in ('providers','profiles','profile','nodes','configuration','configuration_offers'):
+        if self.kind not in ('providers', 'profiles', 'profile', 'nodes', 'configuration', 'configuration_offers'):
             raise ContractError('query_unregistered')
-        object.__setattr__(self,'parameters',freeze(self.parameters))
+        if not isinstance(self.parameters, Mapping):
+            raise ContractError('query_parameters')
+        object.__setattr__(self, 'parameters', freeze(self.parameters))
+
+
+@dataclass(frozen=True)
+class ReadOwners:
+    """Explicit current owner selection, without an implicit UnitServices facade.
+
+    The host supplies the read context and original Profile admission. A Harness
+    catalog exposes pinned declarations only; it provides no install/readiness
+    or configuration-definition authority.
+    """
+    profiles: ProfileService | None = None
+    harnesses: HarnessCatalog | None = None
+
+    def __post_init__(self):
+        if (self.profiles is not None and not isinstance(self.profiles, ProfileService)
+                or self.harnesses is not None and not isinstance(self.harnesses, HarnessCatalog)):
+            raise ContractError('adapter_binding')
+
 
 class OrdessaReadFacade:
-    """Composed capability; business graph sees observe, never UnitServices."""
-    def __init__(self, services: UnitServices, *, namespace, read_context, max_items=64):
-        if not isinstance(services,UnitServices) or not isinstance(read_context,ReadContext) or type(max_items) is not int or not 1<=max_items<=64: raise ContractError('adapter_binding')
-        self.__services=services; self.namespace=namespace; self.__context=read_context; self.max_items=max_items
-    def _authorise(self,context):
-        if not isinstance(context,ReadContext) or context.authority is not self.__context.authority or context.scope_ref!=self.__context.scope_ref: raise ContractError('read_refused')
+    """Preserve bounded authorised observations over actual current read owners."""
+    def __init__(self, services: ReadOwners, *, namespace, read_context, max_items=64):
+        if (not isinstance(services, ReadOwners) or not isinstance(read_context, ReadContext)
+                or type(max_items) is not int or not 1 <= max_items <= 64):
+            raise ContractError('adapter_binding')
+        name(namespace)
+        self.__services = services
+        self.namespace = namespace
+        self.__context = read_context
+        self.max_items = max_items
+
+    def _authorise(self, context):
+        if (not isinstance(context, ReadContext) or context.authority is not self.__context.authority
+                or context.scope_ref != self.__context.scope_ref):
+            raise ContractError('read_refused')
+
     def _observation(self, identity, version, data, label):
-        ref=ExternalRef(self.namespace,identity)
-        return VersionedObservation(digest('descriptor',{'kind':label,'identity':identity,'data':data}),ref,version,
-            digest('descriptor',data),datetime.now(timezone.utc).isoformat(),data,'current' if version is not None else 'unknown',
-            evidence_refs=({'source_namespace':self.namespace,'identity':identity},))
-    async def observe(self,query,read_context):
+        ref = ExternalRef(self.namespace, identity)
+        return VersionedObservation(digest('descriptor', {'kind': label, 'identity': identity, 'data': data}),
+            ref, version, digest('descriptor', data), datetime.now(timezone.utc).isoformat(), data,
+            'current' if version is not None else 'unknown',
+            evidence_refs=({'source_namespace': self.namespace, 'identity': identity},))
+
+    async def observe(self, query, read_context):
         self._authorise(read_context)
-        if not isinstance(query,ObservationQuery): raise ContractError('query_unregistered')
-        s=self.__services; p=query.parameters; values=[]; complete=False; unknown=[]
-        if query.kind=='providers':
-            if p: raise ContractError('query_parameters')
-            for v in s.providers.list():
-                d=v['descriptor']; values.append(self._observation(v['providerRef'],d['definitionRef']['revision'],v,'provider'))
-            unknown=['installation','availability','directory_scope']
-        elif query.kind=='profiles':
-            if p: raise ContractError('query_parameters')
-            for v in s.profiles.list(): values.append(self._observation(encode_revision_ref(v.current_revision),str(v.version),encode_profile(v),'profile'))
-            # Core may silently filter per-item authorisation: empty is not absence.
-            unknown=['permission_filtered_items']
-        elif query.kind=='profile':
-            if set(p)!={'profile_ref'}: raise ContractError('query_parameters')
-            ref=decode_revision_ref(plain(p['profile_ref'])); v=s.profiles.get_revision(ref)
-            values=[self._observation(encode_revision_ref(ref),str(ref.revision),{'profileRef':encode_revision_ref(ref),'content':encode_content(v.content)},'profile')]; complete=True
-        elif query.kind=='nodes':
-            if p: raise ContractError('query_parameters')
-            for v in s.nodes.list(): values.append(self._observation(plain(v['nodeRef']),None,plain(v),'node'))
-            unknown=['availability','continuity','directory_scope']
-        elif query.kind=='configuration':
-            if set(p)!={'node_ref'}: raise ContractError('query_parameters')
-            v=s.configuration.inspect(decode_node_ref(plain(p['node_ref'])))
-            values=[self._observation(plain(v.unit_ref),v.source_revision,v.to_dict(),'configuration')]; complete=True
-            unknown=list(v.unknown_items)
-        elif query.kind=='configuration_offers':
-            if set(p)!={'definition_ref'}: raise ContractError('query_parameters')
-            v=s.configuration_offers.describe_configuration_offers(plain(p['definition_ref']))
-            values=[self._observation(plain(v.definition_ref),v.descriptor_revision,v.to_dict(),'configuration_offers')]
-            complete=v.complete; unknown=list(v.unknown_items)
-        truncated=len(values)>self.max_items
-        return ObservationBatch(query.kind,tuple(values[:self.max_items]),complete and not truncated,
+        if not isinstance(query, ObservationQuery):
+            raise ContractError('query_unregistered')
+        s = self.__services
+        p = query.parameters
+        values = []
+        complete = False
+        unknown = []
+        if query.kind == 'providers':
+            if p:
+                raise ContractError('query_parameters')
+            if s.harnesses is None:
+                raise ContractError('harness_catalog_unbound')
+            for descriptor in s.harnesses.descriptors():
+                # Use the actual SDK definition identity. Do not fabricate the
+                # retired Environment providerRef/admission generation.
+                value = descriptor.projection()
+                values.append(self._observation(value['definitionRef'], value['definitionRef']['revision'], value, 'provider'))
+            unknown = ['installation', 'availability', 'directory_scope', 'provider_admission']
+        elif query.kind == 'profiles':
+            if p:
+                raise ContractError('query_parameters')
+            if s.profiles is None:
+                raise ContractError('profile_owner_unbound')
+            for value in s.profiles.list():
+                values.append(self._observation(encode_revision_ref(value.current_revision), str(value.version), encode_profile(value), 'profile'))
+            unknown = ['permission_filtered_items']
+        elif query.kind == 'profile':
+            if set(p) != {'profile_ref'}:
+                raise ContractError('query_parameters')
+            if s.profiles is None:
+                raise ContractError('profile_owner_unbound')
+            ref = decode_revision_ref(plain(p['profile_ref']))
+            value = s.profiles.get_revision(ref)
+            values = [self._observation(encode_revision_ref(ref), str(ref.revision),
+                {'profileRef': encode_revision_ref(ref), 'content': encode_content(value.content)}, 'profile')]
+            complete = True
+        elif query.kind == 'nodes':
+            if p:
+                raise ContractError('query_parameters')
+            # AgentManager.get requires an exact start request and invocation.
+            # It is not an authorised inventory list; old Unit nodes are not
+            # substituted and absence is never represented by a fabricated [].
+            raise ContractError('agent_inventory_owner_unbound')
+        elif query.kind == 'configuration':
+            if set(p) != {'node_ref'}:
+                raise ContractError('query_parameters')
+            raise ContractError('instance_configuration_read_owner_unbound')
+        else:
+            if set(p) != {'definition_ref'}:
+                raise ContractError('query_parameters')
+            raise ContractError('configuration_definition_owner_unbound')
+        truncated = len(values) > self.max_items
+        return ObservationBatch(query.kind, tuple(values[:self.max_items]), complete and not truncated,
             'public authorised observation; sources checked independently; no global snapshot',
-            pagination={'truncated':truncated,'count':min(len(values),self.max_items)},unobserved_items=tuple(unknown))
+            pagination={'truncated': truncated, 'count': min(len(values), self.max_items)},
+            unobserved_items=tuple(unknown))
+
 
 class OwnerProposalValidator:
     """Explicitly pins a public owner input mapping; no private provider access."""
@@ -71,7 +141,7 @@ class OwnerProposalValidator:
         self.__providers=providers; self.__builder=input_builder; self.__context=read_context
         self.__verifier=input_verifier
     async def validate(self,draft,basis,read_context):
-        if read_context.authority is not self.__context.authority or read_context.scope_ref!=self.__context.scope_ref: raise ContractError('read_refused')
+        if not isinstance(read_context,ReadContext) or read_context.authority is not self.__context.authority or read_context.scope_ref!=self.__context.scope_ref: raise ContractError('read_refused')
         input=self.__builder(draft,basis)
         if not isinstance(input,OwnerProposalInput): raise ContractError('owner_input')
         # Different digest domains cannot prove a semantic field mapping. The

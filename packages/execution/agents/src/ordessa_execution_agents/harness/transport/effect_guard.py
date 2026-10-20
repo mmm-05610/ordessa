@@ -11,7 +11,11 @@ import hashlib
 import json
 import math
 
-from ordessa_execution_api.environment.operations import safe_json, sealed_mapping
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
+
+# Preserve the finite native prompt capacity at the immutable write seam. This
+# carrier grants no capacity: the selected Unit Records owner preflights it.
+_MAX_PROMPT_BYTES = 589824
 
 
 class EffectWriteRefused(RuntimeError):
@@ -42,16 +46,20 @@ class EffectWriteGuard:
         if set(self.unit_ref) != {'environmentNamespace', 'unitId', 'ownerProviderRef', 'sourceRevision'}:
             raise EffectWriteRefused('complete Unit write binding required')
         object.__setattr__(self, 'unit_ref', sealed_mapping(self.unit_ref))
-        object.__setattr__(self, 'params', sealed_mapping(self.params))
+        object.__setattr__(self, 'params', sealed_mapping(self.params, max_bytes=_MAX_PROMPT_BYTES))
 
     def matches(self, unit_ref, operation_ref, input_digest, params):
         return (safe_json(unit_ref) == safe_json(self.unit_ref) and operation_ref == self.operation_ref
-                and input_digest == self.input_digest and safe_json(params) == safe_json(self.params))
+                and input_digest == self.input_digest
+                and safe_json(params, max_bytes=_MAX_PROMPT_BYTES)
+                    == safe_json(self.params, max_bytes=_MAX_PROMPT_BYTES))
 
     @asynccontextmanager
     async def hold(self, frame):
         raw = json.loads(frame)
-        if raw.get('method') != 'session/prompt' or safe_json(raw.get('params')) != safe_json(self.params):
+        if (raw.get('method') != 'session/prompt'
+                or safe_json(raw.get('params'), max_bytes=_MAX_PROMPT_BYTES)
+                    != safe_json(self.params, max_bytes=_MAX_PROMPT_BYTES)):
             raise EffectWriteRefused('actual frame differs from fixed operation')
         identity = sealed_mapping({'unitRef': self.unit_ref, 'operationRef': self.operation_ref,
             'inputDigest': self.input_digest, 'requestId': raw['id'],

@@ -1,7 +1,7 @@
 """T014-S2b: the host stopped building connectors; workspace owns them.
 
 Before this slice the composition root in
-`ordessa_server.bootstrap.runtime` read the six AGENT_BOX_* machine
+`ordessa_server.composition.runtime` read the six AGENT_BOX_* machine
 bindings, constructed the WSL/SSH connectors
 itself, and published them as the `connectors` / `workspace.*_connector`
 host ports — the host naming a business placement it does not own
@@ -32,14 +32,14 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_server.bootstrap import build_runtime
-from ordessa_server.bootstrap import runtime as runtime_module
+from ordessa_server.composition.runtime import build_runtime
+from ordessa_server.composition import runtime as runtime_module
 from ordessa_workspace.error_families import WORKSPACE_ERROR_FAMILIES
 from ordessa_workspace.plugin import WorkspaceServerPlugin
 
 TREE = Path(__file__).resolve().parents[4]
-RUNTIME_SOURCE = TREE / "apps" / "server" / "src" / "ordessa_server" / "bootstrap" / "runtime.py"
-WORKSPACE_CONNECTORS = (TREE / "plugins" / "workspace" / "src"
+RUNTIME_SOURCE = TREE / "apps" / "server" / "src" / "ordessa_server" / "composition" / "runtime.py"
+WORKSPACE_CONNECTORS = (TREE / 'plugins' / 'agents' / 'workspace' / "src"
                         / "ordessa_workspace" / "connectors.py")
 
 #: The six machine bindings, byte-identical to what the host read before
@@ -146,10 +146,16 @@ def test_the_ssh_connector_rows_answer_only_where_the_connector_is_composed(tmp_
         bare.stop()
     composed = build_runtime(tmp_path / "full")
     try:
+        # 032: ordessa.server-compat retired; the default product is the
+        # seven-plugin selection (workspace, acp channel, model-provider,
+        # sandbox, sandbox-adapters, permissions-backend,
+        # permissions-adapters); Pacthold Agent methods bind through the
+        # reserved core-method seam, not a product plugin.
         assert composed.plugin_host.active_ids() == (
-            "ordessa.workspace", "ordessa.server-compat", "ordessa.harness.acp",
-            "ordessa.model-provider", "ordessa.sandbox", "ordessa.sandbox-adapters",
-            "permissions-backend", "ordessa.permissions-adapters")
+            "ordessa.workspace", "ordessa.harness.acp",
+            "ordessa.model-provider", "ordessa.sandbox",
+            "ordessa.sandbox-adapters", "permissions-backend",
+            "ordessa.permissions-adapters")
         families = composed.plugin_host.wire_error_families
         assert families.family_for("SSH_TARGET_INVALID") == "INVALID_REQUEST"
         assert families.family_for("SSH_IDENTITY_INVALID") == "INVALID_REQUEST"

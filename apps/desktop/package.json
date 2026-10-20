@@ -2,7 +2,7 @@
   "name": "@modular/desktop-app",
   "version": "0.1.0",
   "private": true,
-  "description": "Ordessa Desktop — 本地优先的智能体工作台宿主（Electron）",
+  "description": "Ordessa Desktop \u2014 \u672c\u5730\u4f18\u5148\u7684\u667a\u80fd\u4f53\u5de5\u4f5c\u53f0\u5bbf\u4e3b\uff08Electron\uff09",
   "productName": "Ordessa Desktop",
   "author": "Ordessa",
   "license": "AGPL-3.0-or-later",
@@ -14,15 +14,15 @@
   "type": "module",
   "main": "dist/electron-main.cjs",
   "scripts": {
-    "dev": "npm run build && node scripts/run-dev.mjs",
-    "build": "node scripts/build.mjs",
+    "dev": "npm run build && node electron/dev/run-dev.mjs",
+    "build": "node packaging/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --maxWorkers=1",
-    "test:electron": "node scripts/smoke-electron.mjs",
-    "start": "node scripts/run-dev.mjs",
-    "build:icons": "node scripts/build-icons.mjs",
-    "build:info": "node scripts/build-info.mjs",
-    "test:hygiene": "node scripts/test-release-hygiene.mjs"
+    "test:electron": "node tests/smoke/smoke-electron.mjs",
+    "start": "node electron/dev/run-dev.mjs",
+    "build:icons": "node packaging/icons/build-icons.mjs",
+    "build:info": "node packaging/build-info.mjs",
+    "test:hygiene": "vitest run tests/host-main.test.ts -t 'PA-11 代码卫生' --maxWorkers=1"
   },
   "dependencies": {
     "@ordessa/extension-host": "0.1.0",
@@ -31,7 +31,8 @@
     "react-dom": "19.2.7",
     "@ordessa/extension-api": "0.1.0",
     "@ordessa/ui-components": "0.1.0",
-    "@ordessa/extension-loader": "0.1.0"
+    "@ordessa/extension-loader": "0.1.0",
+    "@ordessa/harness-contracts": "*"
   },
   "devDependencies": {
     "@types/node": "22.20.1",

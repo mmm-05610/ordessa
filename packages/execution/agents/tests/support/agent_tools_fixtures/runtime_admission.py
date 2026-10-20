@@ -6,11 +6,14 @@ from dataclasses import dataclass
 
 import pytest
 
-from ordessa_execution_api.environment import AdmissionRefusedError, IdentityMismatchError
+from ordessa_execution_agents.harness.providers.registry.errors import (
+    CatalogAdmissionRefused, CatalogIdentityConflict,
+)
 from pacthold.public import Environment, InstallationRecord
 from pacthold.core.registration import CoreRegistry
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
-from ordessa_execution_api.c1.errors import CoreDTOError, RegistrationConflictError
+from pacthold.core.registration import RegistrationConflictError
+from ordessa_execution_agents.harness.definitions.errors import CoreDTOError
 from ordessa_execution_agents.harness.providers.registry.contributions import AgentContributionSet, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS
 
 

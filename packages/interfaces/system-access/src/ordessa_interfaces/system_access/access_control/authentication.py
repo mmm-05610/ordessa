@@ -17,7 +17,6 @@ import threading
 from typing import Callable, Iterator
 
 from ..contracts.refs import Scope
-from ..contracts.transport import AccessError
 
 
 _MAX_AUTHORIZATION_BYTES = 8192
@@ -29,6 +28,14 @@ _FORBIDDEN_CAPABILITIES = frozenset({
     "approval.grant", "record_consent",
     "engineering.approvals.grant", "engineering.approvals.record_consent",
 })
+
+
+class AccessError(RuntimeError):
+    """Stable authorization failure; messages never contain credential data."""
+
+    def __init__(self, code: str):
+        self.code = code
+        super().__init__(code)
 
 
 def _operation(value: object) -> str:
@@ -119,6 +126,7 @@ class InstanceAccessAuthority:
         self._lock = threading.RLock()
         self._guard_owner: int | None = None
         self._guard_depth = 0
+        self._guard_bindings = []
         self._credential_epoch = 0
         self._revoked_fingerprint: bytes | None = None
         self._grants = self._validate_grants(grants)
@@ -247,14 +255,51 @@ class InstanceAccessAuthority:
             else:
                 self._guard_owner = owner
                 self._guard_depth = 1
+            binding=(principal,scope,capability)
+            self._guard_bindings.append(binding)
             try:
                 yield principal
             finally:
+                if not self._guard_bindings or self._guard_bindings[-1] is not binding:
+                    raise AccessError('AUTHORIZATION_GUARD_INVALID')
+                self._guard_bindings.pop()
                 self._guard_depth -= 1
                 if self._guard_depth == 0:
                     self._guard_owner = None
         finally:
             self._lock.release()
+
+    @contextmanager
+    def suspend_guard(self,principal,scope,operation):
+        """Park exactly one current typed guard across an external response wait.
+
+        This transfers no grant. The SAME authority lock is reacquired and the
+        original principal/grant rechecked before original guarded work resumes.
+        Nested/legacy guards cannot be parked. Caller enforces its task binding.
+        """
+        owner=threading.get_ident();capability=_operation(operation)
+        if (self._guard_owner!=owner or self._guard_depth!=1 or len(self._guard_bindings)!=1):
+            raise AccessError('AUTHORIZATION_GUARD_INVALID')
+        original=self._guard_bindings[0]
+        if original[0] is not principal or original[1]!=scope or original[2]!=capability:
+            raise AccessError('AUTHORIZATION_GUARD_INVALID')
+        self._verify_locked(principal)
+        self._guard_bindings.pop();self._guard_owner=None;self._guard_depth=0
+        self._lock.release()
+        try:yield
+        finally:
+            self._lock.acquire()
+            # Balance the original outer context even if another same-thread
+            # task holds a reentrant guard: refuse resumption rather than claim
+            # its authority, and let each original context release its own lock.
+            busy=self._guard_depth!=0
+            self._guard_bindings.append(original);self._guard_owner=owner;self._guard_depth+=1
+            if busy:raise AccessError('AUTHORIZATION_BUSY')
+            self._verify_locked(principal)
+            grant=next((item for item in self._grants if item.scope==scope),None)
+            observed=next((item for item in principal.grants if item.scope==scope),None)
+            if (grant is None or observed is None or capability not in grant.capabilities
+                    or capability not in observed.capabilities):raise AccessError('ACCESS_DENIED')
 
     @contextmanager
     def guard_legacy(self, principal: VerifiedPrincipal) -> Iterator[VerifiedPrincipal]:

@@ -1,6 +1,7 @@
 """Optional adapters over original durable execution owners."""
 
-from .recorded_dispatch import RecordedDispatchExecution, engineering_effect_write_guard_factory, NativeDispatchSources
+from .recorded_dispatch import (RecordedDispatchExecution, engineering_effect_write_guard_factory,
+                                NativeDispatchSources, NativeContinuationEvidenceReader)
 
 
 def __getattr__(name):
@@ -9,18 +10,26 @@ def __getattr__(name):
     if name == 'OriginalDispatchSelection':
         from .selection import OriginalDispatchSelection
         return OriginalDispatchSelection
+    if name == 'DeclaredUnitReviewRuntime':
+        from .declared_review_runtime import DeclaredUnitReviewRuntime
+        return DeclaredUnitReviewRuntime
     if name == 'build_local_dispatch_bindings':
         from .local_bindings import build_local_dispatch_bindings
         return build_local_dispatch_bindings
     if name == 'build_local_dispatch_query_factory':
         from .local_bindings import build_local_dispatch_query_factory
         return build_local_dispatch_query_factory
+    if name == 'build_historical_dispatch_query_factory':
+        from .local_bindings import build_historical_dispatch_query_factory
+        return build_historical_dispatch_query_factory
     if name == 'build_local_method_dispatch_inputs':
         from .method_inputs import build_local_method_dispatch_inputs
         return build_local_method_dispatch_inputs
     raise AttributeError(name)
 
 __all__ = ['RecordedDispatchExecution', 'engineering_effect_write_guard_factory',
-           'NativeDispatchSources', 'OriginalDispatchSelection',
+           'NativeDispatchSources', 'NativeContinuationEvidenceReader',
+           'OriginalDispatchSelection', 'DeclaredUnitReviewRuntime',
            'build_local_dispatch_bindings', 'build_local_dispatch_query_factory',
+           'build_historical_dispatch_query_factory',
            'build_local_method_dispatch_inputs']

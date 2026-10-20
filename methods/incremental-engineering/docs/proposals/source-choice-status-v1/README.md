@@ -1,0 +1,17 @@
+# source-support Choice → Criterion status：formal 缺口与版本化提案 v1
+
+记录日期2026-10-12。状态：**2.2.0的真实JEV答案尚不足以由现合同转换、接纳为正式Engineering review。** 本记录是待原规则owner冻结的交接提案，不是新增已可消费的method或批准规则。
+
+2.2.0的source-review.claim_support只有三项answer_vocabulary：supported/contradicted/insufficient；source-support.support的answer_definition.from_criterion.field为answer_vocabulary。它继承答案定义，不产生语义转换。CriterionAnswer本身是captured DTO，原application/usecases/reviews/admission.py::review_observations只接受satisfied/violated/insufficient/unknown；没有把三choice转换成四status的公开resolver。
+
+现OptionStatusMap是DecisionPolicySpec.option_statuses的组成部分，不是独立nominal映射。methods/validation/policies.py要求choice政策有minimum_selected_probability、选中项threshold_dependent、完整option map、below_threshold、matching_validated_evaluation_required校准等；review_observations同时拒绝非空decision_policy。不能随意填0、复制演示阈值或创建假evaluation以补洞，也不能更改JEV问题让它直接答四status。
+
+原DESIGN.md方法/Decision章节把业务转换归Engineering application evaluate_decision，Decision只返回类型化答案；运行时意见不产生approval。原实现owner是Engineering，method owner只提供版本化外置声明，product owner不得自定映射，ReviewerSource仍负责实际来源/roles/capability与raw response验真。
+
+供原owner审议的有限**候选**是supported→satisfied、contradicted→violated、insufficient→insufficient。此表尚未批准或绑定可消费的新方法release；仅把语义标签对齐，不决定置信阈值、真实支持性或授权。即使该表被采用，原satisfied→manual保持，不得到pass/grant；violated/insufficient→block、unknown→manual也不变。不能从缺失、非法、重复、截断、partial、stale或provider unknown答案猜一个选项；原owner须冻结有限failure/unknown规则。missing-required-evidence不调用模型的事实也不能成为从正式Claim集合移除该claim的理由。
+
+下一步是原Engineering规则owner交公开resolver的精确签名/输入输出/错误边界，确认并绑定完整版本化声明；method owner据冻结合同生成下一独立候选release，不原位改2.1/2.2。未知阈值不通过新增policy绕过；若nominal转换与confidence门禁分离，应由原owner在其既有合同中明确，不由product/资产文档暗造机制。
+
+测试要求供owner实施：冻结三选项全集映射、未知/缺项/duplicate/partial/truncation拒绝或保留typed unknown、exact question/criterion/input/target/claim替换拒绝、supported保留manual、不足阻门、全部原正式claims完整答案、no kind/link过滤。该列表未执行，不声称formal或语义质量通过。其他score/Noul问题不能复用本choice候选表，仍须其各自规则。
+
+proposal.json记录精确source pins、待审候选表及转换归属。本次未调用模型、未改历史/候选snapshot/确认policy，也没有把旧synthetic机械状态追认为formal JEV审查。消息已送Engineering与产品集成owner，等待其冻结原规则合同。

@@ -1,0 +1,29 @@
+[
+  {
+    "brand": "claude-code",
+    "packageName": "@agentclientprotocol/claude-agent-acp",
+    "packageVersion": "0.81.2",
+    "edgeCount": 1,
+    "templateFiles": 15,
+    "emissionSucceeded": true,
+    "returnKind": "object"
+  },
+  {
+    "brand": "codex",
+    "packageName": "@agentclientprotocol/codex-acp",
+    "packageVersion": "1.1.14",
+    "edgeCount": 1,
+    "templateFiles": 18,
+    "emissionSucceeded": true,
+    "returnKind": "object"
+  },
+  {
+    "brand": "pi",
+    "packageName": "@automatalabs/pi-acp",
+    "packageVersion": "0.5.0",
+    "edgeCount": 4,
+    "templateFiles": 8,
+    "emissionSucceeded": true,
+    "returnKind": "object"
+  }
+]

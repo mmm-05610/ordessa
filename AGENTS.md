@@ -248,3 +248,29 @@ reset、删除远端分支、合并 `main` 或历史改写。
 Foundation Sol 是唯一 Git 操作者。其他 owner 仅能在完成契约审查和验证后，
 按新的精确冻结文件清单追加其已授权范围；不得以目录白名单扩大首片。
 现有其他远端分支及其历史保持不变。
+
+## 2026-10-13 进展、交付与 agent 信息同步
+
+所有主控与执行 agent 先读唯一正文
+[进展与交付规范](docs/standards/progress-and-delivery-standard.md)。
+该规范是本项目统一的信息同步策略；不复制第二份规范或独立总计划。
+唯一总 TODO 为 [TONIGHT-DELIVERY.md](docs/implementation/packages-convergence-20261012/TONIGHT-DELIVERY.md)，
+现有（6）—（14）保持稳定 ID。其他 owner 清单与交接只引用总 TODO 的 ID 和证据。
+
+先报告整体与模块的工程阶段，再分别报告进度健康与阻塞；修补是动作。
+每轮用原缺陷／缺口→具体改动→同场景结果说明新增、修复或验证。
+按正文记录未知调查、估期前提、阶段退出／回退和新事项来源；默认一屏摘要，
+完整 TODO 与证据另展开。单阻塞30分钟无实质推进须主动报告尝试和所需决定。
+Sol 协调实际 Luna 按独占 owner 执行，优先同一真实案例的纵向联调；
+暂停非阻塞扩展，避免反复全量打包／审计。模块、测试、安装、默认入口和真实闭环分开认定。
+
+昨夜交付账使用唯一文件
+[Foundation 交付账](docs/implementation/packages-convergence-20261012/foundation/DELIVERY-LEDGER-20261012.md)。
+先记录 Foundation 的可核事实；其他 owner 由父任务采集转交后补入。
+用户报告周额度消耗56%尚未独立核实，不据此推算各组 token 归因，
+不读取秘密／私有会话目录，不重置额度，不把验证文档计为功能代码。
+
+本轮用户另行明确授权整理 nightly 本树的已核稳定文件并分批本地提交。
+Foundation Sol 仍是唯一 Git 操作者；使用精确路径和安全临时 index，
+新 HEAD 下正常 index 必须保留原用户 staged rename 的模式、blob和暂存语义。
+本项授权不包含向 main 提交／合并、reset、force、未知归属或敏感产物。

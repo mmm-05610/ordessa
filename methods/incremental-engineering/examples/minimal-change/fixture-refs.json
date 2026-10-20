@@ -1,0 +1,705 @@
+{
+  "schema_version": 1,
+  "fixture_only": true,
+  "ref_dialect": "test-adapter-inputs-not-production-domain-records",
+  "hash_domain": "ordessa/fixture-record/v1\n",
+  "method_ref": {
+    "method_id": "ordessa.incremental-engineering",
+    "release_version": "1.1.0",
+    "schema_version": 1,
+    "snapshot_digest": {
+      "algorithm": "sha256",
+      "hex": "238dae70b99d88282567562bec51721daac9a30c700f4ea2500cde82c74865a6"
+    }
+  },
+  "records": {
+    "BASE1": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "repository_snapshot",
+      "record_id": "BASE1",
+      "body": {
+        "repository_id": "repo-fixture",
+        "commit_id": "1111111111111111111111111111111111111111",
+        "tree_digest": "00f316b5bb89c71ca6905f80410225e846a4649a8413770f8fefa9960bab10d2"
+      },
+      "digest": "96046cacff213fee580b90cb5815477df11f285a55ef3f0cb9fd0d01855f5cb9"
+    },
+    "D1": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "artifact_revision",
+      "record_id": "D1",
+      "body": {
+        "artifact_id": "did-1",
+        "revision_id": "did-r1",
+        "body_sha256": "c26450413ee8dbbb8b76ca0c48ec02918530cebda2243ba9038aa8f77a1639af",
+        "method_ref": {
+          "method_id": "ordessa.incremental-engineering",
+          "release_version": "1.1.0",
+          "schema_version": 1,
+          "snapshot_digest": {
+            "algorithm": "sha256",
+            "hex": "238dae70b99d88282567562bec51721daac9a30c700f4ea2500cde82c74865a6"
+          }
+        },
+        "sources_sha256": "962cbd05f6ee306593222afcd1a6a447d20919ce73e9a846993849bb4a620aa7"
+      },
+      "digest": "c1dff8a1ca5ad290b089ee7f21365c84377f97c81e388d5f923d702f88fe130c"
+    },
+    "P1": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "proposal",
+      "record_id": "P1",
+      "body": {
+        "did_ref": {
+          "kind": "artifact_revision",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "D1",
+          "digest": "c1dff8a1ca5ad290b089ee7f21365c84377f97c81e388d5f923d702f88fe130c"
+        },
+        "implementation_intent_spec": {
+          "implementation_intent_id": "I1",
+          "actions": [
+            "modify_files",
+            "run_tests"
+          ],
+          "scope": {
+            "repository_id": "repo-fixture",
+            "allowed_paths": [
+              "src/limits.py",
+              "tests/test_limits.py"
+            ],
+            "test_command_keys": [
+              "test-limits"
+            ],
+            "network": "none",
+            "publish": false
+          },
+          "baseline": {
+            "kind": "repository_snapshot",
+            "realm_id": "realm-fixture",
+            "project_id": "project-minimal",
+            "id": "BASE1",
+            "digest": "96046cacff213fee580b90cb5815477df11f285a55ef3f0cb9fd0d01855f5cb9"
+          },
+          "acceptance_criterion_refs": [
+            {
+              "resource": "standard.acceptance",
+              "criterion_id": "submission_shape"
+            },
+            {
+              "resource": "standard.acceptance",
+              "criterion_id": "submission_binding"
+            },
+            {
+              "resource": "standard.acceptance",
+              "criterion_id": "output_scope"
+            },
+            {
+              "resource": "standard.acceptance",
+              "criterion_id": "test_evidence"
+            }
+          ]
+        },
+        "method_ref": {
+          "method_id": "ordessa.incremental-engineering",
+          "release_version": "1.1.0",
+          "schema_version": 1,
+          "snapshot_digest": {
+            "algorithm": "sha256",
+            "hex": "238dae70b99d88282567562bec51721daac9a30c700f4ea2500cde82c74865a6"
+          }
+        }
+      },
+      "digest": "dbe12cd8f1232dbaba379a1bdfe9cd735162b02fa3877c9760ebd49485b9f450"
+    },
+    "R1": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "review_set",
+      "record_id": "R1",
+      "body": {
+        "target_ref": {
+          "kind": "proposal",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "P1",
+          "digest": "dbe12cd8f1232dbaba379a1bdfe9cd735162b02fa3877c9760ebd49485b9f450"
+        },
+        "purposes": [
+          "provenance_support",
+          "quality"
+        ],
+        "requirements_digest": "2c40bec8046c1f3e91d20a2c04692504fc04a370cfe975a42bb9a3275ff88e44",
+        "set_version": 1,
+        "result": "passed"
+      },
+      "digest": "84caf24a5d8bcb053b20b82db0901714dbe74588bd5bf217abe6c4e222ea2311"
+    },
+    "AI1": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "authorization_intent",
+      "record_id": "AI1",
+      "body": {
+        "proposal_ref": {
+          "kind": "proposal",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "P1",
+          "digest": "dbe12cd8f1232dbaba379a1bdfe9cd735162b02fa3877c9760ebd49485b9f450"
+        },
+        "implementation_intent_spec_digest": "b76215a7681e6f5917ea58659509a05ff351a2b1aedb498a1d62800a51ca1318",
+        "requested_scope": {
+          "repository_id": "repo-fixture",
+          "allowed_paths": [
+            "src/limits.py",
+            "tests/test_limits.py"
+          ],
+          "test_command_keys": [
+            "test-limits"
+          ],
+          "network": "none",
+          "publish": false
+        }
+      },
+      "digest": "cd7319ab6b7858066785ca17cb2940ee567081b5675ea8c99e9c4f60888f095a"
+    },
+    "G1": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "approval",
+      "record_id": "G1",
+      "body": {
+        "authorization_intent_ref": {
+          "kind": "authorization_intent",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "AI1",
+          "digest": "cd7319ab6b7858066785ca17cb2940ee567081b5675ea8c99e9c4f60888f095a"
+        },
+        "proposal_ref": {
+          "kind": "proposal",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "P1",
+          "digest": "dbe12cd8f1232dbaba379a1bdfe9cd735162b02fa3877c9760ebd49485b9f450"
+        },
+        "granted_scope": {
+          "repository_id": "repo-fixture",
+          "allowed_paths": [
+            "src/limits.py",
+            "tests/test_limits.py"
+          ],
+          "test_command_keys": [
+            "test-limits"
+          ],
+          "network": "none",
+          "publish": false
+        },
+        "trusted_provider_receipt": {
+          "provider_id": "fixture.approval-provider",
+          "authenticated_actor": "fixture-user",
+          "challenge_nonce": "fixture-nonce-1",
+          "request_digest": "cd7319ab6b7858066785ca17cb2940ee567081b5675ea8c99e9c4f60888f095a",
+          "decision": "grant"
+        },
+        "control": "granted"
+      },
+      "digest": "411f31d4c761f7885443beb85a7660a8f63f698b34184ddbc58114b6a1ae059d"
+    },
+    "PK1": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "artifact_revision",
+      "record_id": "PK1",
+      "body": {
+        "artifact_id": "package-1",
+        "revision_id": "package-r1",
+        "kind": "implementation_package",
+        "proposal_ref": {
+          "kind": "proposal",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "P1",
+          "digest": "dbe12cd8f1232dbaba379a1bdfe9cd735162b02fa3877c9760ebd49485b9f450"
+        },
+        "authorization_ref": {
+          "kind": "approval",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "G1",
+          "digest": "411f31d4c761f7885443beb85a7660a8f63f698b34184ddbc58114b6a1ae059d"
+        },
+        "authorization_intent_ref": {
+          "kind": "authorization_intent",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "AI1",
+          "digest": "cd7319ab6b7858066785ca17cb2940ee567081b5675ea8c99e9c4f60888f095a"
+        },
+        "body_sha256": "dc3d551a195995c15e29a2e1d76b7e86a4f7dae6124a4b2fcfa5e87d29f10e32",
+        "derived_scope": {
+          "repository_id": "repo-fixture",
+          "allowed_paths": [
+            "src/limits.py",
+            "tests/test_limits.py"
+          ],
+          "test_command_keys": [
+            "test-limits"
+          ],
+          "network": "none",
+          "publish": false
+        },
+        "derivation_rule": "bounded_subset/v1"
+      },
+      "digest": "78adb26f3e3a16cb64b57cb3bb383042e2ba5f71cc47adb82542abf82a58734c"
+    },
+    "R2": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "review_set",
+      "record_id": "R2",
+      "body": {
+        "target_ref": {
+          "kind": "artifact_revision",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "PK1",
+          "digest": "78adb26f3e3a16cb64b57cb3bb383042e2ba5f71cc47adb82542abf82a58734c"
+        },
+        "purpose": "quality",
+        "result": "passed",
+        "set_version": 1
+      },
+      "digest": "024d631667895e652434227b535d9aafdd4915fd9a1535fa3a08856b6c7aaae6"
+    },
+    "EX1": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "execution",
+      "record_id": "EX1",
+      "body": {
+        "package_ref": {
+          "kind": "artifact_revision",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "PK1",
+          "digest": "78adb26f3e3a16cb64b57cb3bb383042e2ba5f71cc47adb82542abf82a58734c"
+        },
+        "authorization_ref": {
+          "kind": "approval",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "G1",
+          "digest": "411f31d4c761f7885443beb85a7660a8f63f698b34184ddbc58114b6a1ae059d"
+        },
+        "attempt_id": "attempt-1",
+        "status": "succeeded",
+        "native_record_ref": "fixture:native:EX1"
+      },
+      "digest": "3ccc4a4d53087500c89bfdc1a861bdbc460f2909457d5739b1ef9863e2ec247d"
+    },
+    "OUT1": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "repository_snapshot",
+      "record_id": "OUT1",
+      "body": {
+        "repository_id": "repo-fixture",
+        "commit_id": "2222222222222222222222222222222222222222",
+        "tree_digest": "3b797121b1e051fe9392aeaf956a3b0808053a1664164ca2aad45430b5a0c9b7",
+        "changed_paths": [
+          "src/limits.py",
+          "tests/test_limits.py"
+        ]
+      },
+      "digest": "86b4fa7b79d9268cccfc241350f7374ae4950d031a5575070d80609fa395bb8c"
+    },
+    "TEST1": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "test_observation",
+      "record_id": "TEST1",
+      "body": {
+        "test_id": "T1",
+        "test_command_key": "test-limits",
+        "output_ref": {
+          "kind": "repository_snapshot",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "OUT1",
+          "digest": "86b4fa7b79d9268cccfc241350f7374ae4950d031a5575070d80609fa395bb8c"
+        },
+        "execution_ref": {
+          "kind": "execution",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "EX1",
+          "digest": "3ccc4a4d53087500c89bfdc1a861bdbc460f2909457d5739b1ef9863e2ec247d"
+        },
+        "exit_code": 0,
+        "log": "fixture run: pytest tests/test_limits.py\n3 passed\nexit_code=0\n",
+        "log_sha256": "9c6c0db27b8105a7f08606d0520295142b0a0d0f334b426bb3f2c7377b910993",
+        "trusted_capture_provider": "fixture.execution-observer"
+      },
+      "digest": "a75046a940721384c99cd6e572384a7e48de97fd1f8d92873bfceac8a8f712d2"
+    },
+    "SUB1": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "submission",
+      "record_id": "SUB1",
+      "body": {
+        "proposal_ref": {
+          "kind": "proposal",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "P1",
+          "digest": "dbe12cd8f1232dbaba379a1bdfe9cd735162b02fa3877c9760ebd49485b9f450"
+        },
+        "package_ref": {
+          "kind": "artifact_revision",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "PK1",
+          "digest": "78adb26f3e3a16cb64b57cb3bb383042e2ba5f71cc47adb82542abf82a58734c"
+        },
+        "authorization_refs": [
+          {
+            "kind": "approval",
+            "realm_id": "realm-fixture",
+            "project_id": "project-minimal",
+            "id": "G1",
+            "digest": "411f31d4c761f7885443beb85a7660a8f63f698b34184ddbc58114b6a1ae059d"
+          }
+        ],
+        "execution_ref": {
+          "kind": "execution",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "EX1",
+          "digest": "3ccc4a4d53087500c89bfdc1a861bdbc460f2909457d5739b1ef9863e2ec247d"
+        },
+        "output_refs": [
+          {
+            "kind": "repository_snapshot",
+            "realm_id": "realm-fixture",
+            "project_id": "project-minimal",
+            "id": "OUT1",
+            "digest": "86b4fa7b79d9268cccfc241350f7374ae4950d031a5575070d80609fa395bb8c"
+          }
+        ],
+        "test_refs": [
+          {
+            "kind": "test_observation",
+            "realm_id": "realm-fixture",
+            "project_id": "project-minimal",
+            "id": "TEST1",
+            "digest": "a75046a940721384c99cd6e572384a7e48de97fd1f8d92873bfceac8a8f712d2"
+          }
+        ],
+        "body_sha256": "cf0513ac63b1237d6a1caf543906f92423c036bb0736013a83c63b816826d293"
+      },
+      "digest": "1bc2b396060fc319c2a0dad72eefd32482677d504ca8abd556567e98edb6c843"
+    },
+    "D2": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "artifact_revision",
+      "record_id": "D2",
+      "body": {
+        "artifact_id": "did-1",
+        "revision_id": "did-r2",
+        "parent_refs": [
+          {
+            "kind": "artifact_revision",
+            "realm_id": "realm-fixture",
+            "project_id": "project-minimal",
+            "id": "D1",
+            "digest": "c1dff8a1ca5ad290b089ee7f21365c84377f97c81e388d5f923d702f88fe130c"
+          }
+        ],
+        "method_content": {
+          "document_type": "did",
+          "schema_version": 1,
+          "title": "规范化负数上限",
+          "intent": "将负数归零并保留其他数值行为。",
+          "claims": [
+            {
+              "claim_id": "C1",
+              "kind": "user_request",
+              "statement": "用户要求负数归零，其他行为不变，实施前确认且不发布。",
+              "source_ids": [
+                "src-user-1"
+              ],
+              "counter_source_ids": []
+            },
+            {
+              "claim_id": "C2",
+              "kind": "observation",
+              "statement": "当前函数原样返回输入，因此负数不会归零。",
+              "source_ids": [
+                "src-code-1"
+              ],
+              "counter_source_ids": []
+            },
+            {
+              "claim_id": "C3",
+              "kind": "design_choice",
+              "statement": "使用 max(0, value) 实现最小修改，并补充边界测试。",
+              "source_ids": [],
+              "counter_source_ids": []
+            }
+          ],
+          "goals": [
+            "负数返回 0",
+            "非负整数行为不变",
+            "更改非整数输入处理。"
+          ],
+          "non_goals": [
+            "发布部署",
+            "改变参数类型或异常契约",
+            "重构其他文件"
+          ],
+          "change_plan": [
+            {
+              "path": "src/limits.py",
+              "change": "返回 max(0, value)。",
+              "reason_claim_ids": [
+                "C1",
+                "C2",
+                "C3"
+              ]
+            },
+            {
+              "path": "tests/test_limits.py",
+              "change": "添加负数、0 和正数回归用例。",
+              "reason_claim_ids": [
+                "C1",
+                "C3"
+              ]
+            }
+          ],
+          "risks": [
+            "非整数输入不在本变更范围内，保持当前契约。"
+          ],
+          "rollback": "回退本次 patch；不触及其他修改。",
+          "acceptance": [
+            {
+              "acceptance_id": "A1",
+              "description": "负数、0、正数边界及既有测试均通过。",
+              "test_ids": [
+                "T1"
+              ]
+            }
+          ],
+          "open_questions": []
+        },
+        "method_ref": {
+          "method_id": "ordessa.incremental-engineering",
+          "release_version": "1.1.0",
+          "schema_version": 1,
+          "snapshot_digest": {
+            "algorithm": "sha256",
+            "hex": "238dae70b99d88282567562bec51721daac9a30c700f4ea2500cde82c74865a6"
+          }
+        }
+      },
+      "digest": "b62625e09445f8be37b59226fa818dd8e15c43a68205064d1ae81c8b3996f423"
+    },
+    "P2": {
+      "schema_version": 1,
+      "fixture_only": true,
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "record_type": "proposal",
+      "record_id": "P2",
+      "body": {
+        "did_ref": {
+          "kind": "artifact_revision",
+          "realm_id": "realm-fixture",
+          "project_id": "project-minimal",
+          "id": "D2",
+          "digest": "b62625e09445f8be37b59226fa818dd8e15c43a68205064d1ae81c8b3996f423"
+        },
+        "implementation_intent_spec": {
+          "implementation_intent_id": "I1",
+          "actions": [
+            "modify_files",
+            "run_tests"
+          ],
+          "scope": {
+            "repository_id": "repo-fixture",
+            "allowed_paths": [
+              "src/limits.py",
+              "tests/test_limits.py"
+            ],
+            "test_command_keys": [
+              "test-limits"
+            ],
+            "network": "none",
+            "publish": false
+          },
+          "baseline": {
+            "kind": "repository_snapshot",
+            "realm_id": "realm-fixture",
+            "project_id": "project-minimal",
+            "id": "BASE1",
+            "digest": "96046cacff213fee580b90cb5815477df11f285a55ef3f0cb9fd0d01855f5cb9"
+          },
+          "acceptance_criterion_refs": [
+            {
+              "resource": "standard.acceptance",
+              "criterion_id": "submission_shape"
+            },
+            {
+              "resource": "standard.acceptance",
+              "criterion_id": "submission_binding"
+            },
+            {
+              "resource": "standard.acceptance",
+              "criterion_id": "output_scope"
+            },
+            {
+              "resource": "standard.acceptance",
+              "criterion_id": "test_evidence"
+            }
+          ]
+        },
+        "method_ref": {
+          "method_id": "ordessa.incremental-engineering",
+          "release_version": "1.1.0",
+          "schema_version": 1,
+          "snapshot_digest": {
+            "algorithm": "sha256",
+            "hex": "238dae70b99d88282567562bec51721daac9a30c700f4ea2500cde82c74865a6"
+          }
+        }
+      },
+      "digest": "ff53bb14dbfd5cf98d0a9e5d6c0f2c620e08bd5bf86e4711d16e9649ae93a4b4"
+    }
+  },
+  "bindings": {
+    "D1": {
+      "kind": "artifact_revision",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "D1",
+      "digest": "c1dff8a1ca5ad290b089ee7f21365c84377f97c81e388d5f923d702f88fe130c"
+    },
+    "D2": {
+      "kind": "artifact_revision",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "D2",
+      "digest": "b62625e09445f8be37b59226fa818dd8e15c43a68205064d1ae81c8b3996f423"
+    },
+    "P1": {
+      "kind": "proposal",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "P1",
+      "digest": "dbe12cd8f1232dbaba379a1bdfe9cd735162b02fa3877c9760ebd49485b9f450"
+    },
+    "P2": {
+      "kind": "proposal",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "P2",
+      "digest": "ff53bb14dbfd5cf98d0a9e5d6c0f2c620e08bd5bf86e4711d16e9649ae93a4b4"
+    },
+    "R1": {
+      "kind": "review_set",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "R1",
+      "digest": "84caf24a5d8bcb053b20b82db0901714dbe74588bd5bf217abe6c4e222ea2311"
+    },
+    "AI1": {
+      "kind": "authorization_intent",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "AI1",
+      "digest": "cd7319ab6b7858066785ca17cb2940ee567081b5675ea8c99e9c4f60888f095a"
+    },
+    "G1": {
+      "kind": "approval",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "G1",
+      "digest": "411f31d4c761f7885443beb85a7660a8f63f698b34184ddbc58114b6a1ae059d"
+    },
+    "PK1": {
+      "kind": "artifact_revision",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "PK1",
+      "digest": "78adb26f3e3a16cb64b57cb3bb383042e2ba5f71cc47adb82542abf82a58734c"
+    },
+    "R2": {
+      "kind": "review_set",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "R2",
+      "digest": "024d631667895e652434227b535d9aafdd4915fd9a1535fa3a08856b6c7aaae6"
+    },
+    "EX1": {
+      "kind": "execution",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "EX1",
+      "digest": "3ccc4a4d53087500c89bfdc1a861bdbc460f2909457d5739b1ef9863e2ec247d"
+    },
+    "OUT1": {
+      "kind": "repository_snapshot",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "OUT1",
+      "digest": "86b4fa7b79d9268cccfc241350f7374ae4950d031a5575070d80609fa395bb8c"
+    },
+    "TEST1": {
+      "kind": "test_observation",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "TEST1",
+      "digest": "a75046a940721384c99cd6e572384a7e48de97fd1f8d92873bfceac8a8f712d2"
+    },
+    "SUB1": {
+      "kind": "submission",
+      "realm_id": "realm-fixture",
+      "project_id": "project-minimal",
+      "id": "SUB1",
+      "digest": "1bc2b396060fc319c2a0dad72eefd32482677d504ca8abd556567e98edb6c843"
+    }
+  }
+}

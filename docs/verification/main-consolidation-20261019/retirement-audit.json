@@ -1,0 +1,3983 @@
+{
+  "projects": 53,
+  "pythonFiles": 1361,
+  "parseErrors": {},
+  "implantedCounterexampleDetected": true,
+  "hostFindings": {
+    "apps/server/src/ordessa_server/composition/agent_tools/owner_ports.py": [
+      {
+        "line": 25,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 32,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 194,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      },
+      {
+        "line": 194,
+        "kind": "unit-module",
+        "value": "ordessa_units.records"
+      },
+      {
+        "line": 195,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/configuration/product_selection.py": [
+      {
+        "line": 5,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly.runtime.assembler"
+      },
+      {
+        "line": 10,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/configuration/request_integrity.py": [
+      {
+        "line": 15,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.fingerprints"
+      },
+      {
+        "line": 16,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering.py": [
+      {
+        "line": 20,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 20,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 233,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_declared_work_case_assembly.py": [
+      {
+        "line": 395,
+        "kind": "unit-module",
+        "value": "ordessa_units.api"
+      },
+      {
+        "line": 546,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 546,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 548,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_method_unit_assembly.py": [
+      {
+        "line": 15,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 15,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 63,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_method_unit_sources.py": [
+      {
+        "line": 90,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 167,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 167,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 168,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 168,
+        "kind": "unit-module",
+        "value": "ordessa_units.management"
+      },
+      {
+        "line": 169,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 169,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_native_dispatch_assembly.py": [
+      {
+        "line": 30,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 30,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 31,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 31,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 73,
+        "kind": "legacy-field",
+        "value": "unit_manager"
+      },
+      {
+        "line": 75,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 75,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 189,
+        "kind": "legacy-field",
+        "value": "unit_manager"
+      },
+      {
+        "line": 191,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 192,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 474,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 578,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_review_assembly.py": [
+      {
+        "line": 18,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 18,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 51,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_submission_sources.py": [
+      {
+        "line": 105,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 105,
+        "kind": "unit-module",
+        "value": "ordessa_units.management"
+      },
+      {
+        "line": 106,
+        "kind": "legacy-symbol",
+        "value": "EnvironmentUse"
+      },
+      {
+        "line": 108,
+        "kind": "legacy-symbol",
+        "value": "EnvironmentUse"
+      },
+      {
+        "line": 108,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 118,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 155,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 159,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_unit_reviewer_source.py": [
+      {
+        "line": 119,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_work_assembly.py": [
+      {
+        "line": 13,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 14,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      },
+      {
+        "line": 14,
+        "kind": "unit-module",
+        "value": "ordessa_units.records"
+      },
+      {
+        "line": 50,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 58,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      },
+      {
+        "line": 112,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 151,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 159,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/harness_registration.py": [
+      {
+        "line": 5,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.generation"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/native_channels/action_factories.py": [
+      {
+        "line": 2,
+        "kind": "legacy-symbol",
+        "value": "NativeSessionActionExecutor"
+      },
+      {
+        "line": 11,
+        "kind": "legacy-symbol",
+        "value": "NativeSessionActionExecutor"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/native_channels/native_action_executor.py": [
+      {
+        "line": 11,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.actions"
+      },
+      {
+        "line": 12,
+        "kind": "unit-module",
+        "value": "ordessa_units.records.operation_journal"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/pi_selection.py": [
+      {
+        "line": 11,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.profile_admission"
+      },
+      {
+        "line": 12,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 18,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly.process_input"
+      },
+      {
+        "line": 210,
+        "kind": "unit-module",
+        "value": "ordessa_units.api"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/product_native_configuration.py": [
+      {
+        "line": 23,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/product_native_provider.py": [
+      {
+        "line": 8,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.profile_admission"
+      },
+      {
+        "line": 30,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.fingerprints"
+      },
+      {
+        "line": 36,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 115,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/product_runtime.py": [
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/product_unit_admission.py": [
+      {
+        "line": 6,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 65,
+        "kind": "unit-module",
+        "value": "ordessa_units.persistence.sqlite"
+      },
+      {
+        "line": 66,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.context"
+      },
+      {
+        "line": 67,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.generation"
+      },
+      {
+        "line": 77,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 116,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 122,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/product_user_configuration.py": [
+      {
+        "line": 24,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.context"
+      },
+      {
+        "line": 25,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 26,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 26,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 174,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/profile_history_views.py": [
+      {
+        "line": 11,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/runtime.py": [
+      {
+        "line": 814,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly.runtime.assembler"
+      },
+      {
+        "line": 869,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly.runtime.assembler"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/unit_admission.py": [
+      {
+        "line": 3,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 5,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.context"
+      },
+      {
+        "line": 6,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.material_registration"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/unit_file_callback_approval.py": [
+      {
+        "line": 12,
+        "kind": "unit-module",
+        "value": "ordessa_units.api"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/unit_runtime.py": [
+      {
+        "line": 3,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.context"
+      },
+      {
+        "line": 4,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      }
+    ],
+    "packages/interfaces/channels/cli/src/ordessa_cli_runtime/commands/configuration.py": [
+      {
+        "line": 82,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 86,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 155,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 157,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 159,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/interfaces/channels/cli/src/ordessa_cli_runtime/commands/nodes.py": [
+      {
+        "line": 50,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      }
+    ]
+  },
+  "allDistributionFindings": {
+    "apps/server/src/ordessa_server/composition/agent_tools/owner_ports.py": [
+      {
+        "line": 25,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 32,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 194,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      },
+      {
+        "line": 194,
+        "kind": "unit-module",
+        "value": "ordessa_units.records"
+      },
+      {
+        "line": 195,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/configuration/product_selection.py": [
+      {
+        "line": 5,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly.runtime.assembler"
+      },
+      {
+        "line": 10,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/configuration/request_integrity.py": [
+      {
+        "line": 15,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.fingerprints"
+      },
+      {
+        "line": 16,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering.py": [
+      {
+        "line": 20,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 20,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 233,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_declared_work_case_assembly.py": [
+      {
+        "line": 395,
+        "kind": "unit-module",
+        "value": "ordessa_units.api"
+      },
+      {
+        "line": 546,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 546,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 548,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_method_unit_assembly.py": [
+      {
+        "line": 15,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 15,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 63,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_method_unit_sources.py": [
+      {
+        "line": 90,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 167,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 167,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 168,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 168,
+        "kind": "unit-module",
+        "value": "ordessa_units.management"
+      },
+      {
+        "line": 169,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 169,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_native_dispatch_assembly.py": [
+      {
+        "line": 30,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 30,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 31,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 31,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 73,
+        "kind": "legacy-field",
+        "value": "unit_manager"
+      },
+      {
+        "line": 75,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 75,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 189,
+        "kind": "legacy-field",
+        "value": "unit_manager"
+      },
+      {
+        "line": 191,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 192,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 474,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 578,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_review_assembly.py": [
+      {
+        "line": 18,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 18,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 51,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_submission_sources.py": [
+      {
+        "line": 105,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 105,
+        "kind": "unit-module",
+        "value": "ordessa_units.management"
+      },
+      {
+        "line": 106,
+        "kind": "legacy-symbol",
+        "value": "EnvironmentUse"
+      },
+      {
+        "line": 108,
+        "kind": "legacy-symbol",
+        "value": "EnvironmentUse"
+      },
+      {
+        "line": 108,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 118,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 155,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 159,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_unit_reviewer_source.py": [
+      {
+        "line": 119,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/engineering_work_assembly.py": [
+      {
+        "line": 13,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 14,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      },
+      {
+        "line": 14,
+        "kind": "unit-module",
+        "value": "ordessa_units.records"
+      },
+      {
+        "line": 50,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 58,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      },
+      {
+        "line": 112,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 151,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 159,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/harness_registration.py": [
+      {
+        "line": 5,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.generation"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/native_channels/action_factories.py": [
+      {
+        "line": 2,
+        "kind": "legacy-symbol",
+        "value": "NativeSessionActionExecutor"
+      },
+      {
+        "line": 11,
+        "kind": "legacy-symbol",
+        "value": "NativeSessionActionExecutor"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/native_channels/native_action_executor.py": [
+      {
+        "line": 11,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.actions"
+      },
+      {
+        "line": 12,
+        "kind": "unit-module",
+        "value": "ordessa_units.records.operation_journal"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/pi_selection.py": [
+      {
+        "line": 11,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.profile_admission"
+      },
+      {
+        "line": 12,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 18,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly.process_input"
+      },
+      {
+        "line": 210,
+        "kind": "unit-module",
+        "value": "ordessa_units.api"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/product_native_configuration.py": [
+      {
+        "line": 23,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/product_native_provider.py": [
+      {
+        "line": 8,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.profile_admission"
+      },
+      {
+        "line": 30,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.fingerprints"
+      },
+      {
+        "line": 36,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 115,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/product_runtime.py": [
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/product_unit_admission.py": [
+      {
+        "line": 6,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 65,
+        "kind": "unit-module",
+        "value": "ordessa_units.persistence.sqlite"
+      },
+      {
+        "line": 66,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.context"
+      },
+      {
+        "line": 67,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.generation"
+      },
+      {
+        "line": 77,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 116,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 122,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/product_user_configuration.py": [
+      {
+        "line": 24,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.context"
+      },
+      {
+        "line": 25,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 26,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 26,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      },
+      {
+        "line": 174,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/profile_history_views.py": [
+      {
+        "line": 11,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/runtime.py": [
+      {
+        "line": 814,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly.runtime.assembler"
+      },
+      {
+        "line": 869,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly.runtime.assembler"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/unit_admission.py": [
+      {
+        "line": 3,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 5,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.context"
+      },
+      {
+        "line": 6,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.material_registration"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/unit_file_callback_approval.py": [
+      {
+        "line": 12,
+        "kind": "unit-module",
+        "value": "ordessa_units.api"
+      }
+    ],
+    "apps/server/src/ordessa_server/composition/unit_runtime.py": [
+      {
+        "line": 3,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.context"
+      },
+      {
+        "line": 4,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/adapters/execution_profiles.py": [
+      {
+        "line": 187,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 187,
+        "kind": "unit-module",
+        "value": "ordessa_units.api"
+      },
+      {
+        "line": 189,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 200,
+        "kind": "legacy-symbol",
+        "value": "UnitSpec"
+      },
+      {
+        "line": 200,
+        "kind": "unit-module",
+        "value": "ordessa_units.api"
+      },
+      {
+        "line": 205,
+        "kind": "legacy-symbol",
+        "value": "UnitSpec"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/adapters/native_records/declared_review_runtime.py": [
+      {
+        "line": 21,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/adapters/native_records/declared_reviewer.py": [
+      {
+        "line": 280,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/adapters/native_records/local_bindings.py": [
+      {
+        "line": 18,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.contracts"
+      },
+      {
+        "line": 19,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 19,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 161,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 161,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly.local_owner"
+      },
+      {
+        "line": 162,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.owner_ports"
+      },
+      {
+        "line": 164,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      },
+      {
+        "line": 190,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/adapters/native_records/recorded_dispatch.py": [
+      {
+        "line": 439,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 526,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 526,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 527,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 544,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.contracts"
+      },
+      {
+        "line": 768,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/adapters/native_records/selection.py": [
+      {
+        "line": 13,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      },
+      {
+        "line": 32,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/application/orchestration/steps/declared_generation_dispatch.py": [
+      {
+        "line": 518,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 530,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/application/orchestration/steps/declared_generation_port.py": [
+      {
+        "line": 283,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 314,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 321,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/application/orchestration/steps/generation_format_rework.py": [
+      {
+        "line": 43,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/application/orchestration/steps/implementation_dispatch.py": [
+      {
+        "line": 86,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 97,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 262,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 263,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/application/usecases/changes/declared_report.py": [
+      {
+        "line": 655,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 700,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 983,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 987,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1013,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1395,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1427,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1428,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1449,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1719,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1722,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/application/usecases/changes/dispatch_continuation.py": [
+      {
+        "line": 359,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/application/usecases/changes/execution_capture.py": [
+      {
+        "line": 73,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/engineering/src/ordessa_engineering/application/usecases/changes/report_content_rework.py": [
+      {
+        "line": 702,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 725,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 767,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/agents/src/ordessa_execution_agents/harness/transport/effect_guard.py": [
+      {
+        "line": 64,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/environments/src/ordessa_environments/__init__.py": [
+      {
+        "line": 57,
+        "kind": "legacy-symbol",
+        "value": "EnvironmentUse"
+      }
+    ],
+    "packages/execution/environments/src/ordessa_environments/management/__init__.py": [
+      {
+        "line": 3,
+        "kind": "legacy-symbol",
+        "value": "EnvironmentUse"
+      }
+    ],
+    "packages/execution/environments/src/ordessa_environments/management/resources.py": [
+      {
+        "line": 10,
+        "kind": "legacy-symbol",
+        "value": "EnvironmentUse"
+      },
+      {
+        "line": 231,
+        "kind": "legacy-symbol",
+        "value": "EnvironmentUse"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/admission/context.py": [
+      {
+        "line": 5,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 6,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 7,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 8,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 119,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/admission/fingerprint.py": [
+      {
+        "line": 10,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/admission/generation.py": [
+      {
+        "line": 32,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/admission/invocation.py": [
+      {
+        "line": 20,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 21,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 24,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.contracts"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/admission/local_state.py": [
+      {
+        "line": 7,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.harness_admission"
+      },
+      {
+        "line": 8,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 21,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.contracts"
+      },
+      {
+        "line": 22,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      },
+      {
+        "line": 23,
+        "kind": "unit-module",
+        "value": "ordessa_units.records.unit_records"
+      },
+      {
+        "line": 272,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 356,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 477,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/admission/material_admission.py": [
+      {
+        "line": 4,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 5,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 92,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.materials"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/admission/material_contracts.py": [
+      {
+        "line": 11,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.materials"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/admission/material_registration.py": [
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 14,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 15,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.materials"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/admission/operations.py": [
+      {
+        "line": 8,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 10,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.publication"
+      },
+      {
+        "line": 14,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/admission/owner_ports.py": [
+      {
+        "line": 50,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 50,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.manager"
+      },
+      {
+        "line": 51,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/admission/owner_selection.py": [
+      {
+        "line": 10,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 130,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 131,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      },
+      {
+        "line": 131,
+        "kind": "unit-module",
+        "value": "ordessa_units.records"
+      },
+      {
+        "line": 132,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 132,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.manager"
+      },
+      {
+        "line": 133,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.instance"
+      },
+      {
+        "line": 152,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      },
+      {
+        "line": 191,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 201,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.fingerprints"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/admission/run_permission.py": [
+      {
+        "line": 156,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 157,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/api/__init__.py": [
+      {
+        "line": 2,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 5,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 6,
+        "kind": "legacy-symbol",
+        "value": "UnitSpec"
+      },
+      {
+        "line": 6,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions"
+      },
+      {
+        "line": 7,
+        "kind": "unit-module",
+        "value": "ordessa_units.channels.acp_input"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/api/interaction.py": [
+      {
+        "line": 4,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/api/unit.py": [
+      {
+        "line": 10,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/assembly/__init__.py": [
+      {
+        "line": 4,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/assembly/fresh_factory.py": [
+      {
+        "line": 7,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.owner_selection"
+      },
+      {
+        "line": 8,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.owner_ports"
+      },
+      {
+        "line": 9,
+        "kind": "unit-module",
+        "value": "ordessa_units.management"
+      },
+      {
+        "line": 10,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      },
+      {
+        "line": 33,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions"
+      },
+      {
+        "line": 68,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      },
+      {
+        "line": 68,
+        "kind": "unit-module",
+        "value": "ordessa_units.records"
+      },
+      {
+        "line": 69,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/assembly/instance.py": [
+      {
+        "line": 9,
+        "kind": "legacy-symbol",
+        "value": "UnitSpec"
+      },
+      {
+        "line": 9,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions"
+      },
+      {
+        "line": 10,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 10,
+        "kind": "unit-module",
+        "value": "ordessa_units.management"
+      },
+      {
+        "line": 11,
+        "kind": "unit-module",
+        "value": "ordessa_units.management"
+      },
+      {
+        "line": 12,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      },
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 14,
+        "kind": "unit-module",
+        "value": "ordessa_units.api.unit"
+      },
+      {
+        "line": 15,
+        "kind": "unit-module",
+        "value": "ordessa_units.api.interaction"
+      },
+      {
+        "line": 16,
+        "kind": "unit-module",
+        "value": "ordessa_units.records"
+      },
+      {
+        "line": 51,
+        "kind": "legacy-symbol",
+        "value": "UnitSpec"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/assembly/local_owner.py": [
+      {
+        "line": 16,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 17,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 20,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.context"
+      },
+      {
+        "line": 21,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.profile_admission"
+      },
+      {
+        "line": 22,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.connection"
+      },
+      {
+        "line": 23,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.owner_ports"
+      },
+      {
+        "line": 24,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.owner_selection"
+      },
+      {
+        "line": 25,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.run_permission"
+      },
+      {
+        "line": 26,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.local_state"
+      },
+      {
+        "line": 27,
+        "kind": "legacy-symbol",
+        "value": "UnitSpec"
+      },
+      {
+        "line": 27,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions"
+      },
+      {
+        "line": 28,
+        "kind": "unit-module",
+        "value": "ordessa_units.api.unit"
+      },
+      {
+        "line": 29,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.manager"
+      },
+      {
+        "line": 30,
+        "kind": "unit-module",
+        "value": "ordessa_units.sessions.evidence"
+      },
+      {
+        "line": 66,
+        "kind": "unit-module",
+        "value": "ordessa_units.channels.acp_input"
+      },
+      {
+        "line": 124,
+        "kind": "legacy-symbol",
+        "value": "UnitSpec"
+      },
+      {
+        "line": 373,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      },
+      {
+        "line": 397,
+        "kind": "unit-module",
+        "value": "ordessa_units.records.unit_records"
+      },
+      {
+        "line": 428,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 477,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 482,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 488,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 493,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 514,
+        "kind": "legacy-symbol",
+        "value": "LocalUnitOwner"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/assembly/owner.py": [
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 15,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.owner_ports"
+      },
+      {
+        "line": 16,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.owner_selection"
+      },
+      {
+        "line": 22,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      },
+      {
+        "line": 23,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      },
+      {
+        "line": 23,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      },
+      {
+        "line": 23,
+        "kind": "unit-module",
+        "value": "ordessa_units.records"
+      },
+      {
+        "line": 33,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      },
+      {
+        "line": 34,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      },
+      {
+        "line": 63,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      },
+      {
+        "line": 79,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      },
+      {
+        "line": 111,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/assembly/process_input.py": [
+      {
+        "line": 10,
+        "kind": "unit-module",
+        "value": "ordessa_units.management"
+      },
+      {
+        "line": 138,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/assembly/profile_selection.py": [
+      {
+        "line": 7,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 8,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.harness_admission"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/assembly/service.py": [
+      {
+        "line": 3,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 3,
+        "kind": "unit-module",
+        "value": "ordessa_units.api.manager"
+      },
+      {
+        "line": 13,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/assembly.py": [
+      {
+        "line": 17,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 18,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 23,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.contracts"
+      },
+      {
+        "line": 24,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      },
+      {
+        "line": 25,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.publication"
+      },
+      {
+        "line": 80,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 111,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 111,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.manager"
+      },
+      {
+        "line": 113,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 155,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.staged_assembly"
+      },
+      {
+        "line": 292,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 294,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/contracts.py": [
+      {
+        "line": 4,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/dispatch_selection.py": [
+      {
+        "line": 12,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 16,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      },
+      {
+        "line": 17,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.publication"
+      },
+      {
+        "line": 18,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      },
+      {
+        "line": 50,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 50,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.manager"
+      },
+      {
+        "line": 51,
+        "kind": "unit-module",
+        "value": "ordessa_units.sessions.sdk_client"
+      },
+      {
+        "line": 55,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 82,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 105,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 189,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.run_permission"
+      },
+      {
+        "line": 201,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 201,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.manager"
+      },
+      {
+        "line": 204,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 272,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 283,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 283,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.manager"
+      },
+      {
+        "line": 285,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 305,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 344,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 379,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 380,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 404,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 416,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.contracts"
+      },
+      {
+        "line": 417,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      },
+      {
+        "line": 418,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 418,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.manager"
+      },
+      {
+        "line": 422,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 479,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 495,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 561,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/harness_admission.py": [
+      {
+        "line": 5,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/manager_evidence.py": [
+      {
+        "line": 8,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 9,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 11,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      },
+      {
+        "line": 12,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.instance"
+      },
+      {
+        "line": 49,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 49,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.manager"
+      },
+      {
+        "line": 50,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 61,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 64,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 66,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 79,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 98,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.assembly"
+      },
+      {
+        "line": 106,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 116,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 119,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.assembly"
+      },
+      {
+        "line": 127,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 137,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 138,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 143,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 153,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.service"
+      },
+      {
+        "line": 173,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 179,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 189,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.publication"
+      },
+      {
+        "line": 208,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 210,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 217,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 226,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 236,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/material_consumption.py": [
+      {
+        "line": 45,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 46,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 47,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 50,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.material_contracts"
+      },
+      {
+        "line": 51,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      },
+      {
+        "line": 52,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.material_operations"
+      },
+      {
+        "line": 59,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.materials"
+      },
+      {
+        "line": 282,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.material_admission"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/material_operations.py": [
+      {
+        "line": 15,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 16,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 17,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 18,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 21,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.material_contracts"
+      },
+      {
+        "line": 22,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.contracts"
+      },
+      {
+        "line": 23,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      },
+      {
+        "line": 24,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.materials"
+      },
+      {
+        "line": 279,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.material_admission"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/materials.py": [
+      {
+        "line": 15,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 16,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 17,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 20,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.materials"
+      },
+      {
+        "line": 21,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.material_contracts"
+      },
+      {
+        "line": 27,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.contracts"
+      },
+      {
+        "line": 28,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/preparation_effects.py": [
+      {
+        "line": 27,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 30,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.contracts"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/profile_admission.py": [
+      {
+        "line": 14,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 134,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.context"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/publication.py": [
+      {
+        "line": 28,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 33,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 34,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 40,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 242,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 300,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/staged_assembly.py": [
+      {
+        "line": 31,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 33,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 36,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.staged_operations"
+      },
+      {
+        "line": 38,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.assembly"
+      },
+      {
+        "line": 42,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.publication"
+      },
+      {
+        "line": 43,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.preparation_effects"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/bindings/wire.py": [
+      {
+        "line": 24,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/channels/acp_input.py": [
+      {
+        "line": 14,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 48,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 102,
+        "kind": "unit-module",
+        "value": "ordessa_units.records"
+      },
+      {
+        "line": 118,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 156,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 165,
+        "kind": "unit-module",
+        "value": "ordessa_units.records"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/channels/contracts.py": [
+      {
+        "line": 11,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 38,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/channels/reservations.py": [
+      {
+        "line": 16,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 17,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 22,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 25,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.contracts"
+      },
+      {
+        "line": 26,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      },
+      {
+        "line": 152,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 229,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 235,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 242,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 315,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 329,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 337,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 339,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 386,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 386,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 417,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 432,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 437,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 458,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 540,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 572,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 658,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/configuration/acp_options.py": [
+      {
+        "line": 10,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/configuration/contracts.py": [
+      {
+        "line": 12,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 205,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 226,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 229,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 257,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 343,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.contracts"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/configuration/offers.py": [
+      {
+        "line": 18,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 19,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.profile_admission"
+      },
+      {
+        "line": 190,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.publication"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/configuration/references.py": [
+      {
+        "line": 13,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/configuration/service.py": [
+      {
+        "line": 14,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 15,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 20,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 27,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.contracts"
+      },
+      {
+        "line": 33,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      },
+      {
+        "line": 34,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.publication"
+      },
+      {
+        "line": 35,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.profile_admission"
+      },
+      {
+        "line": 99,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 100,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 109,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.contracts"
+      },
+      {
+        "line": 110,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 231,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 513,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 525,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 657,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 775,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.contracts"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/configuration/wire.py": [
+      {
+        "line": 31,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 33,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/definitions/__init__.py": [
+      {
+        "line": 3,
+        "kind": "legacy-symbol",
+        "value": "UnitSpec"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/definitions/execution.py": [
+      {
+        "line": 14,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.materials"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/definitions/operations.py": [
+      {
+        "line": 15,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/lifecycle/service.py": [
+      {
+        "line": 14,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 15,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.admission_identity"
+      },
+      {
+        "line": 16,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 19,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      },
+      {
+        "line": 20,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.publication"
+      },
+      {
+        "line": 79,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 79,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.manager"
+      },
+      {
+        "line": 81,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 140,
+        "kind": "unit-module",
+        "value": "ordessa_units.management.manager"
+      },
+      {
+        "line": 142,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 148,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 161,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.contracts"
+      },
+      {
+        "line": 165,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 167,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 214,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 214,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 262,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 315,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.publication"
+      },
+      {
+        "line": 331,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 356,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.publication"
+      },
+      {
+        "line": 367,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/lifecycle/unit_lifecycle.py": [
+      {
+        "line": 155,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 181,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 215,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 230,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 256,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 319,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 355,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/management/__init__.py": [
+      {
+        "line": 3,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/management/instance.py": [
+      {
+        "line": 7,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      },
+      {
+        "line": 8,
+        "kind": "unit-module",
+        "value": "ordessa_units.sessions.acp_factory"
+      },
+      {
+        "line": 9,
+        "kind": "unit-module",
+        "value": "ordessa_units.sessions.callbacks"
+      },
+      {
+        "line": 12,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      },
+      {
+        "line": 14,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions"
+      },
+      {
+        "line": 92,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 100,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 115,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 132,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 158,
+        "kind": "unit-module",
+        "value": "ordessa_units.sessions.sdk_client"
+      },
+      {
+        "line": 185,
+        "kind": "unit-module",
+        "value": "ordessa_units.sessions.acp_factory"
+      },
+      {
+        "line": 186,
+        "kind": "unit-module",
+        "value": "ordessa_units.sessions.sdk_client"
+      },
+      {
+        "line": 258,
+        "kind": "unit-module",
+        "value": "ordessa_units.sessions.prompt"
+      },
+      {
+        "line": 265,
+        "kind": "unit-module",
+        "value": "ordessa_units.sessions.sdk_client"
+      },
+      {
+        "line": 312,
+        "kind": "unit-module",
+        "value": "ordessa_units.sessions.sdk_client"
+      },
+      {
+        "line": 321,
+        "kind": "unit-module",
+        "value": "ordessa_units.sessions.acp_factory"
+      },
+      {
+        "line": 354,
+        "kind": "unit-module",
+        "value": "ordessa_units.sessions.sdk_client"
+      },
+      {
+        "line": 363,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      },
+      {
+        "line": 410,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 427,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 437,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.acp_options"
+      },
+      {
+        "line": 441,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.acp_options"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/management/manager.py": [
+      {
+        "line": 8,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      },
+      {
+        "line": 56,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 83,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 109,
+        "kind": "legacy-symbol",
+        "value": "UnitSpec"
+      },
+      {
+        "line": 109,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions"
+      },
+      {
+        "line": 110,
+        "kind": "legacy-symbol",
+        "value": "UnitSpec"
+      },
+      {
+        "line": 171,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 174,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 212,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 231,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 237,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 259,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 308,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 321,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 348,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.publication"
+      },
+      {
+        "line": 358,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      },
+      {
+        "line": 421,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 439,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/management/planning.py": [
+      {
+        "line": 6,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/persistence/sqlite/operation_records.py": [
+      {
+        "line": 17,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 19,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.operations"
+      },
+      {
+        "line": 21,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.staged_operations"
+      },
+      {
+        "line": 287,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 291,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/persistence/sqlite/store.py": [
+      {
+        "line": 18,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 25,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 26,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions.staged_operations"
+      },
+      {
+        "line": 635,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/public.py": [
+      {
+        "line": 8,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 17,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.wire"
+      },
+      {
+        "line": 18,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.wire"
+      },
+      {
+        "line": 19,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.wire"
+      },
+      {
+        "line": 20,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.wire"
+      },
+      {
+        "line": 21,
+        "kind": "unit-module",
+        "value": "ordessa_units.channels.wire"
+      },
+      {
+        "line": 22,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.contracts"
+      },
+      {
+        "line": 23,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.publication"
+      },
+      {
+        "line": 24,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.profile_admission"
+      },
+      {
+        "line": 25,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.operations"
+      },
+      {
+        "line": 26,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.service"
+      },
+      {
+        "line": 28,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.offers"
+      },
+      {
+        "line": 74,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.material_contracts"
+      },
+      {
+        "line": 83,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.assembly"
+      },
+      {
+        "line": 84,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.service"
+      },
+      {
+        "line": 85,
+        "kind": "unit-module",
+        "value": "ordessa_units.channels.reservations"
+      },
+      {
+        "line": 90,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.invocation"
+      },
+      {
+        "line": 95,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.material_operations"
+      },
+      {
+        "line": 100,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.owner_ports"
+      },
+      {
+        "line": 102,
+        "kind": "unit-module",
+        "value": "ordessa_units.channels.contracts"
+      },
+      {
+        "line": 154,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 175,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.manager_evidence"
+      },
+      {
+        "line": 178,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 202,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 252,
+        "kind": "legacy-symbol",
+        "value": "UnitServices"
+      },
+      {
+        "line": 293,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.contracts"
+      },
+      {
+        "line": 304,
+        "kind": "unit-module",
+        "value": "ordessa_units.bindings.materials"
+      },
+      {
+        "line": 322,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.references"
+      },
+      {
+        "line": 332,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.offers"
+      },
+      {
+        "line": 335,
+        "kind": "unit-module",
+        "value": "ordessa_units.admission.owner_selection"
+      },
+      {
+        "line": 342,
+        "kind": "unit-module",
+        "value": "ordessa_units.management"
+      },
+      {
+        "line": 343,
+        "kind": "unit-module",
+        "value": "ordessa_units.definitions"
+      },
+      {
+        "line": 346,
+        "kind": "legacy-symbol",
+        "value": "UnitManager"
+      },
+      {
+        "line": 346,
+        "kind": "unit-module",
+        "value": "ordessa_units.management"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/records/__init__.py": [
+      {
+        "line": 7,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      },
+      {
+        "line": 8,
+        "kind": "legacy-symbol",
+        "value": "UnitRecords"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/records/acp_turns.py": [
+      {
+        "line": 61,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 76,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 82,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 147,
+        "kind": "unit-module",
+        "value": "ordessa_units.channels.acp_input"
+      },
+      {
+        "line": 148,
+        "kind": "unit-module",
+        "value": "ordessa_units.channels.reservations"
+      },
+      {
+        "line": 149,
+        "kind": "unit-module",
+        "value": "ordessa_units.channels.contracts"
+      },
+      {
+        "line": 152,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 163,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 171,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 183,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 200,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 201,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 397,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/records/native_evidence.py": [
+      {
+        "line": 13,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      },
+      {
+        "line": 18,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/records/unit_records.py": [
+      {
+        "line": 34,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      },
+      {
+        "line": 345,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      },
+      {
+        "line": 420,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 424,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 425,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 426,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 441,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 446,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 447,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 567,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 577,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 788,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 792,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 793,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1017,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1214,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1224,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1225,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1233,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1292,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1298,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1299,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1372,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1374,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1375,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1383,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1448,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1454,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1506,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1554,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 1557,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/sessions/acp_factory.py": [
+      {
+        "line": 10,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/sessions/callbacks.py": [
+      {
+        "line": 12,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/sessions/evidence.py": [
+      {
+        "line": 7,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      },
+      {
+        "line": 187,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 199,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/execution/units/src/ordessa_units/sessions/prompt.py": [
+      {
+        "line": 2,
+        "kind": "unit-module",
+        "value": "ordessa_units.records"
+      },
+      {
+        "line": 3,
+        "kind": "unit-module",
+        "value": "ordessa_units.lifecycle.unit_lifecycle"
+      },
+      {
+        "line": 10,
+        "kind": "unit-module",
+        "value": "ordessa_units.channels.acp_input"
+      }
+    ],
+    "packages/interfaces/channels/cli/src/ordessa_cli_runtime/commands/configuration.py": [
+      {
+        "line": 82,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 86,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 155,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 157,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      },
+      {
+        "line": 159,
+        "kind": "legacy-field",
+        "value": "unitRef"
+      }
+    ],
+    "packages/interfaces/channels/cli/src/ordessa_cli_runtime/commands/nodes.py": [
+      {
+        "line": 50,
+        "kind": "legacy-field",
+        "value": "harnessUnitRef"
+      }
+    ],
+    "packages/interfaces/system-access/bindings/src/ordessa_system_access_bindings/agents.py": [
+      {
+        "line": 6,
+        "kind": "unit-module",
+        "value": "ordessa_units.errors"
+      },
+      {
+        "line": 17,
+        "kind": "unit-module",
+        "value": "ordessa_units.public"
+      }
+    ],
+    "packages/interfaces/system-access/bindings/src/ordessa_system_access_bindings/decision.py": [
+      {
+        "line": 14,
+        "kind": "unit-module",
+        "value": "ordessa_units.configuration.proposal_input"
+      }
+    ],
+    "packages/interfaces/system-access/bindings/src/ordessa_system_access_bindings/engineering.py": [
+      {
+        "line": 22,
+        "kind": "unit-module",
+        "value": "ordessa_units.assembly"
+      }
+    ],
+    "plugins/agents/resources/mcp/tests/harness_wiring/test_controlled_chain.py": [
+      {
+        "line": 33,
+        "kind": "legacy-symbol",
+        "value": "ConfigurationApplicationService"
+      },
+      {
+        "line": 34,
+        "kind": "unit-module",
+        "value": "ordessa_units.records.operation_journal"
+      },
+      {
+        "line": 36,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      },
+      {
+        "line": 36,
+        "kind": "unit-module",
+        "value": "ordessa_units.records.operation_journal"
+      },
+      {
+        "line": 160,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      },
+      {
+        "line": 161,
+        "kind": "legacy-symbol",
+        "value": "ConfigurationApplicationService"
+      }
+    ],
+    "plugins/agents/resources/mcp/tests/integration/integration_helpers.py": [
+      {
+        "line": 64,
+        "kind": "legacy-symbol",
+        "value": "ConfigurationApplicationService"
+      },
+      {
+        "line": 66,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      },
+      {
+        "line": 66,
+        "kind": "unit-module",
+        "value": "ordessa_units.records.operation_journal"
+      },
+      {
+        "line": 620,
+        "kind": "legacy-symbol",
+        "value": "OperationJournal"
+      },
+      {
+        "line": 621,
+        "kind": "legacy-symbol",
+        "value": "ConfigurationApplicationService"
+      }
+    ]
+  },
+  "selectedEntryDirectFindings": {},
+  "verdict": "INVENTORY_ONLY_AUTHORITY_EXIT_UNDETERMINED",
+  "symbolPresence": "PRESENT",
+  "classification": "retirement-classification.json",
+  "qualification": "All enumerated production Python source roots were scanned. Direct-entry findings do not establish transitive/dynamic reachability. Historical Unit codecs/stores and still-unmigrated online consumers are both retained in the full inventory; no exclusions manufacture a green verdict."
+}

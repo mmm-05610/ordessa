@@ -16,20 +16,20 @@ import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, cpSync } from 'node:fs'
 import path from 'node:path'
-import { repoRoot, identity } from '../../../packaging/lib/identity.mjs'
-import { signManifest, loadPrivateKey, loadPublicKey, verifyManifest, buildManifest } from '../../../packaging/update/manifest.mjs'
+import { repoRoot, identity } from '../../../apps/desktop/packaging/lib/identity.mjs'
+import { signManifest, loadPrivateKey, loadPublicKey, verifyManifest, buildManifest } from '../../../apps/desktop/electron/update/manifest.mjs'
 import {
   checkForUpdate, downloadAndVerify, backUpAndCheckCompatibility,
   installDeb, selfCheck, markUpdateDone, compareVersions,
-} from '../../../packaging/update/client.mjs'
-import { assessUpdateState, readState, writeState, createBackup, verifyBackup } from '../../../packaging/update/state.mjs'
-import { sha256File } from '../../../packaging/lib/hash.mjs'
+} from '../../../apps/desktop/electron/update/client.mjs'
+import { assessUpdateState, readState, writeState, createBackup, verifyBackup } from '../../../apps/desktop/electron/update/state.mjs'
+import { sha256File } from '../../../apps/desktop/electron/update/hash.mjs'
 
 const id = identity()
-const OUT = path.join(repoRoot, 'packaging/.out')
+const OUT = path.join(repoRoot, 'apps/desktop/packaging/.out')
 const DEB = path.join(OUT, id.pkgName + '_' + id.version + '_amd64.deb')
-const KEYS = path.join(repoRoot, 'packaging/.keys')
-const WORK = path.join(repoRoot, 'packaging/.test-update')
+const KEYS = path.join(repoRoot, 'apps/desktop/packaging/.keys')
+const WORK = path.join(repoRoot, 'apps/desktop/packaging/.test-update')
 
 const NEW_VERSION = '9.9.9'
 const NEW_BUILD = '20260928-acceptance'
@@ -88,7 +88,7 @@ function seedDataRoot(root) {
 before(async () => {
   if (!existsSync(DEB)) throw new Error('deb not built: ' + DEB + '\nRun `npm run build:deb` first.')
   if (!existsSync(path.join(KEYS, 'update-private.pem'))) {
-    throw new Error('no signing key. Run: node packaging/update/keygen.mjs packaging/.keys')
+    throw new Error('no signing key. Run: node apps/desktop/packaging/update/keygen.mjs apps/desktop/packaging/.keys')
   }
   rmSync(WORK, { recursive: true, force: true })
   mkdirSync(WORK, { recursive: true })

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "scope": "this_proposal_excluding_index",
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "8cd13c3b7d5802092971d76339cd2540bef5dd52040f446608483a57b736920b"
+    },
+    {
+      "path": "proposal.json",
+      "sha256": "6bb91490642f765daa92e69ecd2f16f1d76bbf95916da5269433ae940954048d"
+    }
+  ]
+}

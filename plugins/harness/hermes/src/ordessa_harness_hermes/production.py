@@ -87,7 +87,8 @@ from pathlib import Path
 import re
 from typing import Any, Mapping, Sequence
 
-from ordessa_execution_agents.harness.definitions.harness_capabilities import CANONICAL_CAPABILITY_IDS
+# Historical deployment-document field validation only; not runtime capabilities.
+CANONICAL_CAPABILITY_IDS=('start','observe','finish','attach','steer','stream','permissions','native_continuation')
 
 #: The block the configuration declares carries the product's provider identity in
 #: its content: the official DeepSeek root, the credential reference, the

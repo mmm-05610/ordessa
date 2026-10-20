@@ -264,11 +264,43 @@ class ConversationEvidence:
 
 
 @dataclass(frozen=True)
+class CapturedInstructionEvidence:
+    """A real user instruction bound by the main Agent to one exact intent.
+
+    This is not an answer to a newly presented question. Product admission
+    verifies the captured instruction and its business context; the original
+    approval owner still issues and consumes the exact bounded Grant.
+    """
+    evidence_id: str
+    instruction: str
+    necessary_context: str
+    source: ConversationSource
+    policy_ref: ConsentPolicyRef
+    intent_digest: Digest
+    notice_ref: NoticeRef
+    disposition: str
+    schema_version: int = field(default=2, init=False)
+    evidence_kind: str = field(default='captured_instruction', init=False)
+    binding_origin: str = field(default='registered-main-agent', init=False)
+    digest: Digest = field(init=False, default=None)
+
+    def __post_init__(self):
+        validate_id(self.evidence_id)
+        validate_text(self.instruction)
+        validate_text(self.necessary_context)
+        if (type(self.source) is not ConversationSource or type(self.policy_ref) is not ConsentPolicyRef
+                or type(self.intent_digest) is not Digest or type(self.notice_ref) is not NoticeRef
+                or self.disposition not in {'confirm', 'decline', 'ambiguous'}):
+            raise ReferenceError('INVALID_INSTRUCTION_EVIDENCE')
+        _seal(self, 'captured-instruction-evidence')
+
+
+@dataclass(frozen=True)
 class ApprovalGrant:
     approval_id: str
     intent: AuthorizationIntent
     challenge_id: str
-    evidence: ConversationEvidence
+    evidence: ConversationEvidence | CapturedInstructionEvidence
     granted_at: str
     digest: Digest = field(init=False, default=None)
 
@@ -279,10 +311,13 @@ class ApprovalGrant:
         from .implementation import ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent
         if (type(self.intent) not in (AuthorizationIntent, ChangeAuthorizationIntent,
                                       ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent)
-                or type(self.evidence) is not ConversationEvidence
+                or type(self.evidence) not in (ConversationEvidence, CapturedInstructionEvidence)
                 or self.evidence.disposition != 'confirm' or self.evidence.intent_digest != self.intent.digest
                 or self.evidence.notice_ref != self.intent.notice_ref or self.evidence.policy_ref != self.intent.policy_ref
                 or not self.intent.not_before <= self.granted_at < self.intent.expires_at):
+            raise ReferenceError('CONSENT_BINDING_MISMATCH')
+        if (type(self.evidence) is CapturedInstructionEvidence
+                and type(self.intent) is not WorkPackageAuthorizationIntent):
             raise ReferenceError('CONSENT_BINDING_MISMATCH')
         _seal(self, 'approval-grant')
 

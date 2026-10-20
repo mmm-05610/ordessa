@@ -9,3 +9,4 @@ from ordessa_infrastructure.process.framing import (
 from .ndjson import NDJSONTransport,TransportClosed,WriterLease,WriterLeaseRefused
 from .prepared import PreparedFrame, PreparedFramePool, PreparedFrameRefused, native_frame_bytes
 from .effect_guard import EffectWriteGuard, EffectWriteRefused
+from .write_diagnostic import NativeWriteProgress, native_write_failure, attach_native_write_failure

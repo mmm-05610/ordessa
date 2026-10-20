@@ -10,8 +10,10 @@ from ordessa_engineering.domain.common.models.refs import BlobRef
 from ordessa_engineering.domain.common.models.values import Digest, validate_id
 from ordessa_engineering.application.contracts.work_context import WORK_STABLE_ID_PREFIX
 from ordessa_engineering.application.contracts.dispatch_identity import identity_is_current
-from ordessa_engineering.domain.changes.dispatch import package_ref_projection
-from ordessa_engineering.domain.changes.dispatch_codec import decode_dispatch
+from ordessa_engineering.domain.changes.dispatch import (
+    DispatchContinuation, package_ref_projection)
+from ordessa_engineering.domain.changes.dispatch_codec import (
+    decode_continuation, decode_dispatch, encode_continuation)
 from ordessa_engineering.domain.packages.refs import ImplementationPackageRef
 from .dispatch_schema import DISPATCH_SCHEMA_VERSION, WORK_DISPATCH_SCHEMA_VERSION
 from .acceptance_schema import ACCEPTANCE_SCHEMA_VERSION
@@ -82,8 +84,29 @@ class SQLiteDispatchRepository:
             raise ApplicationError('DISPATCH_RECORD_CORRUPT') from None
         SQLiteDispatchRepository._binding(binding_bytes, digest)
         marker = _canonical_json(receipt_ref_json)
-        if marker != {'dispatch': 'reserved', 'binding_digest': binding_digest,
-                      'operation_ref': operation_ref}:
+        continuation = None
+        if set(marker) == {'dispatch', 'binding_digest', 'operation_ref'}:
+            # The historical three-field marker keeps its exact shape and bytes.
+            if marker != {'dispatch': 'reserved', 'binding_digest': binding_digest,
+                          'operation_ref': operation_ref}:
+                raise ApplicationError('DISPATCH_RECORD_CORRUPT')
+        elif set(marker) == {'marker_version', 'dispatch', 'binding_digest', 'operation_ref',
+                             'continuation'}:
+            # A continuation attempt carries its causal relation in the same
+            # immutable column. Unknown shapes are refused, never downgraded to
+            # the three-field form or read as a binding.
+            if (type(marker['marker_version']) is not int or marker['marker_version'] != 2
+                    or marker['dispatch'] != 'reserved'
+                    or marker['binding_digest'] != binding_digest
+                    or marker['operation_ref'] != operation_ref):
+                raise ApplicationError('DISPATCH_RECORD_CORRUPT')
+            try:
+                continuation = decode_continuation(canonical_bytes(marker['continuation']))
+            except Exception:
+                raise ApplicationError('DISPATCH_RECORD_CORRUPT') from None
+            if continuation.successor_binding_record_digest != decode_dispatch(binding_bytes).digest:
+                raise ApplicationError('DISPATCH_RECORD_CORRUPT')
+        else:
             raise ApplicationError('DISPATCH_RECORD_CORRUPT')
         if result_blob_json is not None:
             _canonical_json(result_blob_json)
@@ -93,7 +116,7 @@ class SQLiteDispatchRepository:
             'binding_digest': digest, 'binding_bytes': binding_bytes,
             'execution_operation_ref': operation_ref, 'dispatch_phase': phase,
             'dispatch_version': version, 'dispatch_fence': fence,
-            'result_blob_json': result_blob_json,
+            'result_blob_json': result_blob_json, 'continuation': continuation,
         }
 
     def reserve(self, run_id, step_id, attempt, scope, binding_bytes, binding_digest, operation_ref):
@@ -238,7 +261,13 @@ class SQLiteWorkDispatchRepository:
         named refusal and nothing is written.
         """
         try:
-            binding = decode_dispatch(binding_bytes)
+            stored = _canonical_json(binding_bytes)
+            from ordessa_engineering.domain.changes.agent_dispatch_codec import (
+                decode_agent_dispatch, WORK_SCHEMA_VERSION)
+            if type(stored) is dict and stored.get('schemaVersion') == WORK_SCHEMA_VERSION:
+                binding = decode_agent_dispatch(binding_bytes)
+            else:
+                binding = decode_dispatch(binding_bytes)
         except Exception:
             raise ApplicationError('DISPATCH_BINDING_INVALID') from None
         work = binding.work if type(binding.work) is dict else {}
@@ -291,6 +320,69 @@ class SQLiteWorkDispatchRepository:
         scope_json = canonical_bytes(asdict(scope)).decode('utf-8')
         marker = canonical_bytes({'dispatch': 'reserved', 'binding_digest': digest_hex,
                                   'operation_ref': operation_ref}).decode('utf-8')
+        self.access.execute(
+            'INSERT INTO work_step_log (dispatch_key,ordinal,step_id,operation,attempt,status,'
+            'receipt_ref_json,dispatch_scope_json,binding_digest,binding_bytes,'
+            'execution_operation_ref,dispatch_phase,dispatch_version,dispatch_fence,'
+            'result_blob_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+            (dispatch_key, ordinal, step_id, _OPERATION, attempt, 'reserved', marker,
+             scope_json, digest_hex, binding_bytes, operation_ref, 'reserved', 0, 1, None))
+        return self.get(dispatch_key, step_id, attempt, scope)
+
+    def latest_attempt(self, dispatch_key, step_id, scope):
+        """Highest recorded attempt for this exact Work step, or None.
+
+        Only rows that carry a binding count: a provisional/ordinal-only row is
+        not an attempt a continuation can follow.
+        """
+        self._prefix(scope)
+        validate_id(dispatch_key)
+        validate_id(step_id)
+        row = self.access.execute(
+            'SELECT MAX(attempt) FROM work_step_log WHERE dispatch_key=? AND step_id=? '
+            'AND binding_digest IS NOT NULL', (dispatch_key, step_id)).fetchone()
+        if row is None or row[0] is None:
+            return None
+        return row[0]
+
+    def reserve_continuation(self, dispatch_key, step_id, attempt, scope, binding_bytes,
+                             binding_digest, operation_ref, continuation):
+        """Append one continuation attempt: strictly next attempt, marker2 only.
+
+        The row is the same immutable relation as a first attempt — only its
+        marker carries the causal relation. The predecessor is never modified.
+        """
+        self._prefix(scope, write=True)
+        validate_id(dispatch_key)
+        validate_id(step_id)
+        validate_id(operation_ref)
+        if (type(attempt) is not int or not 2 <= attempt <= 4096
+                or type(continuation) is not DispatchContinuation):
+            raise ApplicationError('INVALID_ARGUMENT')
+        digest_hex = self._shared._binding(binding_bytes, binding_digest)
+        binding = self._declared(dispatch_key, step_id, attempt, scope, binding_bytes)
+        latest = self.latest_attempt(dispatch_key, step_id, scope)
+        if latest is None or attempt != latest + 1:
+            raise ApplicationError('DISPATCH_ATTEMPT_NOT_NEXT')
+        if (continuation.origin.dispatch_key != dispatch_key
+                or continuation.origin.step_id != step_id
+                or continuation.origin.attempt != attempt - 1
+                or continuation.origin.scope != scope
+                or continuation.successor_binding_record_digest != binding.digest):
+            raise ApplicationError('DISPATCH_CONTINUATION_INVALID')
+        existing = self.access.execute(
+            'SELECT binding_digest FROM work_step_log WHERE dispatch_key=? AND step_id=? '
+            'AND attempt=?', (dispatch_key, step_id, attempt)).fetchone()
+        if existing is not None:
+            raise ApplicationError('DISPATCH_ATTEMPT_CONFLICT')
+        ordinal = self.access.execute(
+            'SELECT COALESCE(MAX(ordinal),-1)+1 FROM work_step_log WHERE dispatch_key=?',
+            (dispatch_key,)).fetchone()[0]
+        scope_json = canonical_bytes(asdict(scope)).decode('utf-8')
+        marker = canonical_bytes({'marker_version': 2, 'dispatch': 'reserved',
+                                  'binding_digest': digest_hex, 'operation_ref': operation_ref,
+                                  'continuation': json.loads(encode_continuation(continuation))
+                                  }).decode('utf-8')
         self.access.execute(
             'INSERT INTO work_step_log (dispatch_key,ordinal,step_id,operation,attempt,status,'
             'receipt_ref_json,dispatch_scope_json,binding_digest,binding_bytes,'

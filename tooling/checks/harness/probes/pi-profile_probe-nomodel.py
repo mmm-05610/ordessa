@@ -1,0 +1,311 @@
+"""Real enhanced Pi, private HOME, no credentials, no prompt/model requests.
+
+Usage: python probe-nomodel.py /absolute/pi-profile-runtime
+This is a developer-artifact check, NOT proof of root-managed installation.
+"""
+from ordessa_server.composition.configuration.contributions import descriptor_admission_for
+import json
+import hashlib
+import os
+from pathlib import Path
+import queue
+import subprocess
+import sys
+import tempfile
+import threading
+
+
+def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live_model=False, owner_registration=False) -> dict:
+    if owner_operations and not owner_rpc:
+        raise ValueError('owner operations require owner RPC mode')
+    if owner_live_model and not owner_operations:
+        raise ValueError('live model C4 probe requires owner operations')
+    if owner_registration and not owner_live_model:
+        raise ValueError('provider registration probe requires live model C4 mode')
+    entry = artifact / "node_modules/@automatalabs/pi-acp/dist/ordessa-profile.mjs"
+    with tempfile.TemporaryDirectory(prefix="ordessa-pi-profile-probe-") as temporary:
+        home = Path(temporary)
+        instance = home / "instance"
+        instance.mkdir(mode=0o700)
+        # Synthetic, non-secret test credentials only. They make a reasoning
+        # model selectable locally; no prompt or outbound request is sent.
+        (instance / "settings.json").write_text(json.dumps({
+            "defaultProvider": "anthropic", "defaultModel": "claude-opus-4-6",
+            "defaultThinkingLevel": "off"}))
+        if owner_live_model:
+            # Entirely local synthetic provider: no real credentials or API
+            # requests. The two models make the native setter observable.
+            (instance / "models.json").write_text(json.dumps({"providers": {"ordessa-fixture": {
+                "api": "openai-completions", "baseUrl": "http://127.0.0.1:9/v1",
+                "apiKey": "ordessa-nomodel-fixture-not-a-real-credential",
+                "models": [{"id": name, "name": name, "reasoning": True, "input": ["text"],
+                    "contextWindow": 8192, "maxTokens": 1024,
+                    "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}}
+                    for name in ("first", "second")]}}}))
+            (instance / "settings.json").write_text(json.dumps({"defaultProvider": "ordessa-fixture",
+                "defaultModel": "first", "defaultThinkingLevel": "off"}))
+        project = home / "project"
+        project.mkdir(mode=0o700)
+        global_dir = home / ".pi/agent"
+        global_dir.mkdir(parents=True)
+        sentinel = global_dir / "settings.json"
+        sentinel.write_text('{"sentinel":"do not modify"}\n')
+        before = sentinel.read_bytes()
+        # Do not inherit credentials, HOME configuration or provider variables.
+        environment = {"PATH": os.defpath, "HOME": str(home), "PI_OFFLINE": "1",
+                       "ORDESSA_PI_INSTANCE_DIR": str(instance),
+                       "ANTHROPIC_API_KEY": "ordessa-nomodel-fixture-not-a-real-credential"}
+        replies = queue.Queue()
+        with tempfile.TemporaryFile(mode="w+") as stderr:
+            process = subprocess.Popen(["/usr/bin/node", str(entry)], cwd=project,
+                env=environment, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                stderr=stderr, text=True)
+            channel = None
+            if owner_rpc:
+                from ordessa_server.composition.native_channels.registry import _Channel
+                from ordessa_server.composition.native_channels.registry import _ObservedTransport
+                channel = _Channel(connection_id='probe-channel', harness_id='pi',
+                    workspace_id='probe-project', profile_id='probe-profile', cwd=str(project))
+                # Ledger fixture only: this probe is NOT a full Server composition.
+                channel.session_id = 'probe-ledger-session'
+                channel.execution_id = 'probe-execution'
+                class PipeTransport:
+                    def send_line(self, line):
+                        process.stdin.write(line + '\n')
+                        process.stdin.flush()
+                class ImmediateLoop:
+                    def call_soon_threadsafe(self, callback, item):
+                        callback(item)
+                channel.transport = _ObservedTransport(channel, PipeTransport())
+                channel.attach(ImmediateLoop(), lambda line: replies.put(json.loads(line)))
+            def collect():
+                for line in process.stdout:
+                    try:
+                        if channel is None:
+                            replies.put(json.loads(line))
+                        else:
+                            channel.deliver(line)
+                    except ValueError:
+                        replies.put({"invalid_stdout": True})
+            reader = threading.Thread(target=collect, daemon=True)
+            reader.start()
+            serial = 0
+            def request(method, params, *, fails=False):
+                nonlocal serial
+                serial += 1
+                frame = json.dumps({"jsonrpc": "2.0", "id": serial, "method": method, "params": params})
+                if channel is None:
+                    process.stdin.write(frame + "\n")
+                    process.stdin.flush()
+                else:
+                    channel.transport.send_line(frame)
+                while True:
+                    frame = replies.get(timeout=25)
+                    assert "invalid_stdout" not in frame, "non-JSON protocol stdout"
+                    if frame.get("id") == serial:
+                        assert ("error" in frame) == fails, (method, frame.get("error"))
+                        return frame.get("result", frame.get("error"))
+            def configuration(native):
+                if channel is None:
+                    return request('_ordessa/session/configuration', {'sessionId': native})
+                observed = channel.query_native_configuration(native)
+                assert observed.owner.ledger_session_id == 'probe-ledger-session'
+                assert observed.owner.native_session_id == native
+                assert replies.empty(), 'owner configuration reply leaked to client relay'
+                return {'sessionId': native, 'generation': observed.native_generation,
+                    'busy': observed.busy, 'configOptions': observed.config_options}
+            def refused_configuration(native):
+                if channel is None:
+                    request('_ordessa/session/configuration', {'sessionId': native}, fails=True)
+                else:
+                    from ordessa_execution_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
+                    try:
+                        channel.query_native_configuration(native)
+                    except NativeConfigurationUnavailable:
+                        pass
+                    else:
+                        raise AssertionError('unavailable session gave owner evidence')
+            try:
+                initialized = request("initialize", {"protocolVersion": 1, "clientCapabilities": {},
+                    "clientInfo": {"name": "ordessa-profile-nomodel", "version": "1"}})
+                assert initialized["_meta"]["ordessaConfiguration"]["supported"] is True
+                refused_configuration('missing')
+                created = request("session/new", {"cwd": str(project), "mcpServers": []})
+                native = created["sessionId"]
+                initial = configuration(native)
+                thinking = next(o for o in initial["configOptions"] if o["id"] == "thinkingLevel")
+                different = next(o["value"] for o in thinking["options"] if o["value"] != thinking["currentValue"])
+                if owner_operations:
+                    from ordessa_execution_agents.harness.definitions import ApplicationTarget, InvokeAction, IntentSource
+                    from ordessa_execution_agents.units.configuration.actions import ActionBatch
+                    from ordessa_execution_agents.units.configuration.actions import ActionInvocation
+                    from ordessa_server.composition.native_channels.profile_owner import ProfileSessionOwner
+                    from ordessa_server.composition.native_channels.registry import AcpChannelRegistry
+                    from ordessa_server.composition.native_channels.action_factories import create_pi_action_executor as PiSessionActionExecutor
+                    registry = AcpChannelRegistry(session_records=None, profile_records=None,
+                        launch=lambda **kwargs: (_ for _ in ()).throw(AssertionError('probe cannot launch twice')))
+                    registry._by_id[channel.connection_id] = channel
+                    registry._by_pair[channel.pair] = channel
+                    owners = ProfileSessionOwner(registry, server_id='probe-server-incarnation')
+                    bound = owners.bind(canonical_session_id='probe-canonical', harness_id='pi',
+                        workspace_id='probe-project', connection_id=channel.connection_id,
+                        native_session_id=native)
+                    digest = hashlib.sha256(json.dumps(initial['configOptions'], sort_keys=True,
+                        ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()
+                    batch = ActionBatch(bound.target, (ActionInvocation('probe-provider', 'probe-publication',
+                        InvokeAction(IntentSource('probe.model', 'thinking', '1'),
+                            'acp.session.set-config-option', '1',
+                            {'configId': 'thinkingLevel', 'value': different}, 'native-thinking-value')),))
+                    payload = {'sessionId': native, 'operationId': 'probe-native-operation',
+                        'expectedGeneration': initial['generation'], 'expectedConfigDigest': digest,
+                        'configId': 'thinkingLevel', 'value': different,
+                        'actionManifest': json.loads(batch.manifest_json)}
+                    executor = PiSessionActionExecutor(registry, owners, target=bound.target,
+                        expected_configuration_digest=digest)
+                    receipt = executor.execute(payload['operationId'], batch)
+                    assert receipt.target == batch.target and receipt.manifest_digest == batch.manifest_digest
+                    _, operation = channel._configuration_rpc(native,
+                        '_ordessa/session/configuration/operation',
+                        {'sessionId': native, 'operationId': payload['operationId']})
+                    assert operation['state'] == 'observed' and operation['observedValue'] == different
+                    _, replay = channel._configuration_rpc(native,
+                        '_ordessa/session/configuration/apply', payload)
+                    assert replay == operation
+                    _, retained = channel._configuration_rpc(native,
+                        '_ordessa/session/configuration/operation',
+                        {'sessionId': native, 'operationId': payload['operationId']})
+                    assert retained == operation
+                    if owner_live_model:
+                        from ordessa_execution_agents.harness.definitions import DesiredFragment, Installation
+                        from ordessa_server.composition.c2_providers import configuration_provider_plugin
+                        from ordessa_harness_pi.registration import configuration_adapters
+                        from ordessa_harness_pi.configuration.runtime import PiLiveModelRuntime
+                        from ordessa_server.composition.configuration.model.live_service import native_model_runtime
+                        from ordessa_execution_agents.harness.configuration.compilation.native_context import NativeLiveModelContext
+                        from ordessa_server.composition.configuration.application import ConfigurationApplicationService
+                        from ordessa_execution_agents.units.records.operation_journal import OperationJournal
+                        from ordessa_execution_agents.units.configuration.actions import ActionGrant
+                        from ordessa_server.composition.runtime import build_runtime
+                        carrier_runtime = build_runtime(home / "controlled-carrier")
+                        try:
+                            carrier_runtime.plugin_host.activate(configuration_provider_plugin(configuration_adapters=configuration_adapters))
+                            view = next(view for view in carrier_runtime.plugin_host.contributions(
+                                'harness.configuration-adapters')
+                                if view.payload.descriptor.adapter_id == 'assets.model-provider.pi')
+                            native_runtime = PiLiveModelRuntime(registry, owners, target=bound.target,
+                                runtime_factory=native_model_runtime, context_factory=NativeLiveModelContext,
+                                installation=Installation('pi', (0, 5, 0), (1, 0, 0),
+                                    'development-pinned-pi:0.5.0'),
+                                private_root=home / 'never-materialized',
+                                publication_revision=view.publication_token)
+                            grant = ActionGrant(bound.target, view.owner, view.publication_token,
+                                'assets.model-provider', 'choice', '1', 'acp.session.set-config-option', '1')
+                            service = ConfigurationApplicationService(descriptor_admission=descriptor_admission_for(carrier_runtime.plugin_host), principal='probe', target=bound.target,
+                                carrier=carrier_runtime.plugin_host, runtime=native_runtime, permits=None,
+                                owner_application=True, journal=OperationJournal(home / 'c4.sqlite'),
+                                action_executor=native_runtime, action_grants=(grant,))
+                            desired = DesiredFragment('assets.model-provider', 'choice', '1',
+                                'fixture:provider', 'fixture:revision', 'set', {'provider': 'ordessa-fixture',
+                                'model': 'second', 'protocol': 'openai-chat',
+                                'endpoint': 'http://127.0.0.1:9/v1', 'credentialRef': None})
+                            plan = service.plan(bound.target, (desired,),
+                                native_runtime.capture(bound.target).before_revision)
+                            assert plan.kind == 'plan', plan
+                            confirmed = service.apply_prepared(plan.plan_id, 'native-model-switch')
+                            assert confirmed.kind == 'confirmed', confirmed
+                            assert service.apply_prepared(plan.plan_id, 'native-model-switch') == confirmed
+                            assert not native_runtime.private_root.exists()
+                            model = next(item for item in configuration(native)['configOptions'] if item['id'] == 'model')
+                            assert model['currentValue'] == 'ordessa-fixture/second'
+                            if owner_registration:
+                                from ordessa_server.composition.configuration.model.provider_registration import PiProviderRegistrationService
+                                original_model_file = (instance / 'models.json').read_bytes()
+                                registration = PiProviderRegistrationService(registry, owners,
+                                    verify=lambda _: 'DEVELOPMENT-pinned-provider-probe')
+                                payload = dict(provider='ordessa-next', model='third', protocol='openai-chat',
+                                    endpoint='http://127.0.0.1:9/next', credentialRef='fixture:opaque-ref')
+                                admission = registration.prepare(bound.target, payload, operation_key='probe-registration',
+                                    credential='synthetic-private-key-not-for-inference')
+                                assert admission.mode == 'live-update'
+                                admitted = registration.execute(admission, payload,
+                                    credential='synthetic-private-key-not-for-inference')
+                                assert admitted.state == 'observed' and admitted.ticket is None
+                                assert admitted.restored.snapshot.target == bound.target
+                                assert admitted.restored.snapshot.native_generation == initial['generation']
+                                native_runtime.credential_binding = lambda snapshot, desired: registration.credential_binding(
+                                    snapshot, desired, credential='synthetic-private-key-not-for-inference')
+                                live_desired = DesiredFragment('assets.model-provider', 'choice', '1',
+                                    'fixture:next-provider', 'fixture:next-revision', 'set', payload)
+                                live_plan = service.plan(bound.target, (live_desired,),
+                                    native_runtime.capture(bound.target).before_revision)
+                                assert live_plan.kind == 'plan', live_plan
+                                live_confirmed = service.apply_prepared(live_plan.plan_id, 'registered-provider-model')
+                                assert live_confirmed.kind == 'confirmed', live_confirmed
+                                selected = next(item for item in configuration(native)['configOptions'] if item['id'] == 'model')
+                                assert selected['currentValue'] == 'ordessa-next/third'
+                                assert (instance / 'models.json').read_bytes() == original_model_file
+                                assert replies.empty(), 'owner reply leaked to client relay'
+                                # Return to the prior fixture choice so the independent
+                                # thinking-setting checks below retain their original meaning.
+                                request('session/set_config_option', dict(sessionId=native, configId='model', value='ordessa-fixture/second'))
+                                request('session/set_config_option', dict(sessionId=native, configId='thinkingLevel', value=different))
+                        finally:
+                            carrier_runtime.stop()
+                else:
+                    request("session/set_config_option", {"sessionId": native,
+                        "configId": "thinkingLevel", "value": different})
+                actual = configuration(native)
+                assert actual["generation"] == initial["generation"]
+                assert actual["sessionId"] == native and actual["busy"] is False
+                assert next(o for o in actual["configOptions"] if o["id"] == "thinkingLevel")["currentValue"] == different
+                assert sentinel.read_bytes() == before
+                assert json.loads((instance / "settings.json").read_text())["defaultThinkingLevel"] == different
+                if channel is None:
+                    request("_ordessa/session/configuration", {"sessionId": native, "desired": different}, fails=True)
+                else:
+                    from ordessa_execution_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
+                    try:
+                        channel.transport.send_line(json.dumps({'jsonrpc': '2.0', 'id': 'client-config',
+                            'method': '_ordessa/session/configuration', 'params': {'sessionId': native}}))
+                    except NativeConfigurationUnavailable:
+                        pass
+                    else:
+                        raise AssertionError('client relay accepted owner-only method')
+                request("session/close", {"sessionId": native})
+                refused_configuration(native)
+                if channel is not None:
+                    from ordessa_execution_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
+                    try:
+                        channel.query_native_configuration(native)
+                    except NativeConfigurationUnavailable:
+                        pass
+                    else:
+                        raise AssertionError('closed native session gave owner evidence')
+                process.stdin.close()
+                process.wait(timeout=15)
+                assert process.returncode == 0
+                return {"realPiConfigurationReadback": True, "sameInstanceGeneration": True,
+                    "isolatedSettingsWrite": True, "globalSentinelUnchanged": True,
+                    "closedSessionRefused": True, "processExit": process.returncode,
+                    "sessionNew": 1, "modelPrompts": 0, "credentialAccess": "synthetic fixture only",
+                    "productionOwnerRpc": owner_rpc, 'nativeOperationRecord': owner_operations,
+                    'nativeTargetManifestBound': owner_operations,
+                    'c4NativeModelConfirmed': owner_live_model,
+                    'realOwnerProviderRegistrationConfirmed': owner_registration,
+                    'serverLedger': 'fixture only', 'profileApplicationReceipt': False}
+            finally:
+                if process.poll() is None:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=15)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait(timeout=5)
+                reader.join(timeout=2)
+
+
+if __name__ == "__main__":
+    print(json.dumps(probe(Path(sys.argv[1]).resolve(), owner_rpc='--owner-rpc' in sys.argv[2:],
+                           owner_operations='--owner-operations' in sys.argv[2:],
+                           owner_live_model='--owner-live-model' in sys.argv[2:],
+                           owner_registration='--owner-registration' in sys.argv[2:])))

@@ -15,9 +15,7 @@ import sqlite3
 from tempfile import TemporaryDirectory
 
 import ordessa_server
-from ordessa_server.bootstrap import (
-    LegacyMigrationProviderMissingError, StorageProviderMissingError, build_runtime,
-)
+from ordessa_server.composition.runtime import LegacyMigrationProviderMissingError, StorageProviderMissingError, build_runtime
 
 
 class NeutralDatabase:

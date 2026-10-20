@@ -19,7 +19,7 @@ import urllib.request
 import pytest
 
 from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
-from ordessa_harness.hermes import production
+from ordessa_harness_hermes import production
 
 
 REPO = Path(__file__).resolve().parents[3]

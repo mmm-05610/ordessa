@@ -23,7 +23,7 @@ full-tree grep plus build/test runs (see BUILD-TEST.md).
 | `tooling/` | `tooling/` (root) | no | minimal-change choice: root `package.json` scripts, `apps/desktop/scripts/build.mjs` and 9 per-extension `build.mjs` files reference it; keeping depth avoids touching all of them |
 | `tests/acp-connector/` | `tests/acp-connector/` (root) | no | self-contained vitest rig (own `package.json` + `package-lock.json`, not a root workspace); fits plan §4 root `tests/` = cross-component tests |
 | `docs/*.md`, `docs/ui-preview/` | `docs/` (root) | no | 5 files: `acp-connector-test-review.md`, `ui-reuse-log.md`, `zcode-borrow-points.md`, `ui-codex-reference-review.md`, `ui-tokens-and-paths.md` + 6 committed preview PNGs. No filename collides with plan §4 root docs names (architecture/baseline/known-issues/reference-index). `ui-preview/*.png` are regenerable outputs of `npm run test:ui-preview` but are committed evidence in the frozen tree, so kept; lead may drop them if the monorepo wants a clean docs/ |
-| `examples/` (7 sample extensions) | `examples/` (root) | no | sample extension sources, consumed by `tooling/build-examples.mjs`, `apps/desktop` tsconfig include + tests; `examples/dist/` is generated output, excluded by `.gitignore` |
+| `examples/` (7 sample extensions) | `examples/` (root) | no | sample extension sources, consumed by `tooling/workspace/build-examples.mjs`, `apps/desktop` tsconfig include + tests; `examples/dist/` is generated output, excluded by `.gitignore` |
 | `LICENSE`, `.gitignore` | root | no | carried as-is |
 
 ## 2. Root manifest change
@@ -49,9 +49,9 @@ full-tree grep plus build/test runs (see BUILD-TEST.md).
 | `apps/desktop/scripts/test-extensions.mjs` | `products/agent-desktop/dist/extensions` | `products/desktop/dist/extensions` |
 | `apps/desktop/scripts/test-agent-shell.mjs` | `products/agent-desktop/extensions.json` | `products/desktop/extensions.json` |
 | `plugins/connectors/acp/src/native.ts`, `plugins/connectors/ordessa/src/native.ts` | `'../../../../platform/native-bridge/src/index'` (import type) | `'../../../../packages/desktop-platform/native-bridge/src/index'` |
-| `tooling/build-all.mjs` | scan roots `['contracts', 'plugins']`; `products/agent-desktop/extensions.json` + `extensions.lock.json` + log line | `['packages/desktop-platform/contracts', 'plugins']`; `products/desktop/...` |
-| `tooling/build-extension.mjs` | `outputRoot = products/agent-desktop/dist` | `products/desktop/dist` |
-| `packages/desktop-platform/contracts/foundation/build.mjs`, `contracts/agent-ui/build.mjs` | `import ... '../../tooling/build-extension.mjs'` | `'../../../../tooling/build-extension.mjs'` (depth +2) |
+| `tooling/workspace/build-all.mjs` | scan roots `['contracts', 'plugins']`; `products/agent-desktop/extensions.json` + `extensions.lock.json` + log line | `['packages/desktop-platform/contracts', 'plugins']`; `products/desktop/...` |
+| `tooling/workspace/build-extension.mjs` | `outputRoot = products/agent-desktop/dist` | `products/desktop/dist` |
+| `packages/desktop-platform/contracts/foundation/build.mjs`, `contracts/agent-ui/build.mjs` | `import ... '../../tooling/workspace/build-extension.mjs'` | `'../../../../tooling/workspace/build-extension.mjs'` (depth +2) |
 | `tests/acp-connector/vitest.config.ts` | 2 aliases `../../contracts/...` | `../../packages/desktop-platform/contracts/...` |
 | `tests/acp-connector/acp-ts-hooks.mjs` | `ALIASES` → `ROOT/contracts/...`; `TS_DIRS` → `ROOT/contracts/`, `ROOT/platform/extension-api/` | under `ROOT/packages/desktop-platform/...` |
 | `README.md`, `AGENTS.md` (root docs) | `products/agent-desktop/...`, `contracts/foundation`, `contracts/agent-ui` | `products/desktop/...`, `packages/desktop-platform/contracts/...` (living docs kept accurate) |

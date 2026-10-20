@@ -1,0 +1,29 @@
+{
+  "method_ref": {
+    "method_id": "ordessa.incremental-engineering",
+    "release_version": "2.4.0",
+    "schema_version": 1,
+    "snapshot_digest": {
+      "algorithm": "sha256",
+      "hex": "fa51512abd24167856217ee58b4ba26903247a4f6e319ed9d80d20dc4c8c800c"
+    }
+  },
+  "standard_raw_sha256": "7be5c02a8782d01b309c63e4bca3ca17e8ea684cfd660b53ec34f118f8321496",
+  "loader": "passed",
+  "compiler": "passed",
+  "typed_frozen_bindings": "passed",
+  "stored_program_round_trip": "passed",
+  "unchanged_question_iteration_policy_reduction": "passed",
+  "prior_2_1_2_2_2_3_files_unchanged": 214,
+  "tampered_claim_selection": "rejected_by_resource_digest",
+  "stale_release_lock": "rejected",
+  "nominal_contract_and_quality_separation": "unchanged",
+  "human_semantic_scope_policy_digest": "declaration_verified",
+  "original_three_option_question_bytes": "unchanged",
+  "consumer_counterexamples": 13,
+  "consumer_execution": "not_run",
+  "publication": "not_run_fixture_catalog",
+  "real_jev": "not_run",
+  "real_pi": "not_run",
+  "final_acceptance": "not_complete"
+}

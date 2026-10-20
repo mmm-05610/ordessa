@@ -1,0 +1,175 @@
+{
+  "schema": {
+    "contractVersion": "agent-assembly/1",
+    "transport": "wire/1",
+    "requestKeyScope": [
+      "environmentNamespace",
+      "principalScope",
+      "requestId"
+    ],
+    "profileRef": {
+      "required": [
+        "environmentNamespace",
+        "profileId",
+        "manifestRevision",
+        "contentDigest"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "environmentNamespace": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]{0,63}$"
+        },
+        "profileId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]{0,63}$"
+        },
+        "manifestRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "contentDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "results": {
+      "catalogEntry": {
+        "required": [
+          "profileId",
+          "catalogRevision",
+          "displayName",
+          "archivedAt",
+          "currentManifestRef"
+        ]
+      },
+      "manifest": {
+        "required": [
+          "ref",
+          "content"
+        ]
+      },
+      "list": {
+        "required": [
+          "entries"
+        ]
+      },
+      "preview": {
+        "required": [
+          "profileRef",
+          "status",
+          "referenceCoverage",
+          "ready",
+          "error"
+        ]
+      }
+    },
+    "methods": {
+      "agents.profiles.list": {
+        "action": "list",
+        "required": [],
+        "optional": [
+          "includeArchived"
+        ],
+        "effectful": false
+      },
+      "agents.profiles.read": {
+        "action": "read",
+        "required": [
+          "profileRef"
+        ],
+        "optional": [],
+        "effectful": false
+      },
+      "agents.profiles.readEntry": {
+        "action": "readEntry",
+        "required": [
+          "profileId"
+        ],
+        "optional": [],
+        "effectful": false
+      },
+      "agents.profiles.create": {
+        "action": "create",
+        "required": [
+          "profileId",
+          "displayName",
+          "manifest",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true
+      },
+      "agents.profiles.edit": {
+        "action": "edit",
+        "required": [
+          "profileId",
+          "manifest",
+          "expectedCatalogRevision",
+          "baseManifestRef",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true
+      },
+      "agents.profiles.clone": {
+        "action": "clone",
+        "required": [
+          "profileRef",
+          "profileId",
+          "displayName",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true
+      },
+      "agents.profiles.rename": {
+        "action": "rename",
+        "required": [
+          "profileId",
+          "displayName",
+          "expectedCatalogRevision",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true
+      },
+      "agents.profiles.archive": {
+        "action": "archive",
+        "required": [
+          "profileId",
+          "expectedCatalogRevision",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true
+      },
+      "agents.profiles.restore": {
+        "action": "restore",
+        "required": [
+          "profileId",
+          "expectedCatalogRevision",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true
+      },
+      "agents.profiles.preview": {
+        "action": "preview",
+        "required": [
+          "profileRef"
+        ],
+        "optional": [],
+        "effectful": false
+      },
+      "agents.capabilities": {
+        "action": "capabilities",
+        "required": [],
+        "optional": [],
+        "effectful": false
+      }
+    }
+  },
+  "schemaDigest": "sha256:243863ecd93a893023f89af4c6f0aa032ece60d674301bd9391f7d4db84cdf91"
+}

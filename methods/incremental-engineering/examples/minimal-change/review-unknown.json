@@ -1,0 +1,85 @@
+{
+  "fixture_only": true,
+  "decision_result": {
+    "invocation_id": "fixture-C1",
+    "status": "unknown",
+    "model_resolution": {
+      "provider_id": "fixture.decision",
+      "plugin_version": "fixture-1",
+      "sdk_version": null,
+      "runtime_version": "fixture-1",
+      "requested_model": "fixture-fixed-v1",
+      "requested_revision": "fixture-checkpoint-1",
+      "reported_model": "fixture-fixed-v1",
+      "actual_model": null,
+      "actual_revision": null,
+      "actual_checkpoint_ref": null,
+      "exactness": "unknown",
+      "resolution_status": "unavailable",
+      "config_snapshot_ref": {
+        "namespace": "ordessa.fixture.provider-config",
+        "id": "fixture-decision",
+        "revision": "1",
+        "digest": "d61d75143cdd724d72e3f806dece31ae84aa910e0e8908093bb49b765eaf0ad4"
+      },
+      "routing": {},
+      "backend": {},
+      "evidence_refs": []
+    },
+    "answers": {},
+    "input_receipt": {
+      "input_ref": {
+        "namespace": "ordessa.decision.input",
+        "id": "input-fixture-C1",
+        "revision": "1",
+        "digest": "2eca2645ccbaca4cbd4ea4357a1da4eb9cfea28169caa177cf4940890737b610"
+      },
+      "question_set_ref": {
+        "namespace": "ordessa.decision.question-set",
+        "id": "source-support/C1",
+        "revision": "1.0.0",
+        "digest": "9d92f9f1e21e8f77e7a278f40905659505a9e32516055a8ac69a51c88fd8076b"
+      },
+      "request_digest": "25b4e34309d54525721ff41ecb7e1896d942366d08769e9f6e0d12a241842f8b",
+      "sent_state_digest": "1f7a3a33bfca744ce31ecdde7c9329258decea5be05e789cf522ae786b8ddf16",
+      "serialization_version": "ordessa.decision.json-v1",
+      "provider_question_mapping": {
+        "support/C1": "0"
+      },
+      "effective_input_ref": null
+    },
+    "truncation": {
+      "knowledge": "unknown",
+      "original_state_tokens": null,
+      "dropped_state_tokens": null,
+      "affected_question_ids": [],
+      "option_spans": {},
+      "native_fields": {},
+      "evidence_refs": []
+    },
+    "usage": {
+      "input_tokens": null,
+      "output_tokens": null,
+      "metering_semantics": "fixture.tokens-v1",
+      "wall_time_ms": 0,
+      "provider_request_id": "fixture-provider-fixture-C1",
+      "actual_cost": null,
+      "native_fields": {}
+    },
+    "record_refs": [
+      {
+        "namespace": "ordessa.fixture.native-decision",
+        "id": "fixture-C1",
+        "revision": "1",
+        "digest": "ba5fdd52d93190689168148738263a5428075ca064900f8966be6fd2d4590a7a"
+      }
+    ]
+  },
+  "review_expected": "manual",
+  "workflow_expected": {
+    "step": "source_review",
+    "wait": "check_reconciliation"
+  },
+  "dispatch_count": 0,
+  "retry_constraint": "Only reconcile same invocation; no new side-effect attempt."
+}

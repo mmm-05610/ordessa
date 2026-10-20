@@ -6,7 +6,8 @@ production human authority or model quality claim is made by this fixture.
 import pytest
 from agent_tools_fixtures.manager_joint import joint
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment.operations import safe_json, node_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
+from ordessa_units.definitions.operations import node_holder
 from ordessa_units.bindings.publication import decode_node_ref
 
 

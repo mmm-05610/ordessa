@@ -7,13 +7,30 @@ from pathlib import Path
 
 import pytest
 
-from decision_runtime.definitions import ReadContext
-from decision_runtime.evidence import FileEvidenceReader
+from decision_runtime.historical import ReadContext, FileEvidenceReader
 
 ROOT = Path(__file__).resolve().parents[5]
 RUN_ID = '0cf02263-2bbf-4e92-b604-a7184c1a6442'
 HISTORY = (ROOT / 'docs/implementation/specifications/031-jev-decision-module/evidence'
            / 'adversarial-20261005/live-injection/durable' / RUN_ID)
+
+
+def test_historical_reader_has_no_writer_and_foreign_read_authority_is_refused(tmp_path):
+    import decision_runtime.historical as historical
+    root, copy = _copy_for_reader(tmp_path)
+    original = {p.name:p.read_bytes() for p in copy.iterdir() if p.is_file()}
+    authority = object()
+    context = ReadContext(authority, 'history.031')
+    reader = FileEvidenceReader(root, read_context=context)
+    try:
+        assert not hasattr(historical, 'FileEvidenceSink')
+        for name in ('start', 'append_durable', 'finish'):
+            assert not hasattr(reader, name)
+        assert asyncio.run(reader.read(RUN_ID, ReadContext(object(), 'history.031')))=={'status':'refused'}
+        assert asyncio.run(reader.read(RUN_ID, ReadContext(authority, 'foreign-scope')))=={'status':'refused'}
+    finally:
+        asyncio.run(reader.close())
+    assert {p.name:p.read_bytes() for p in copy.iterdir() if p.is_file()}==original
 
 
 def test_frozen_031_fixture_is_locatable_with_original_bytes():

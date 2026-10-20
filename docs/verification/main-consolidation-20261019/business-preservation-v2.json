@@ -1,0 +1,41 @@
+{
+  "application": {
+    "files": 118,
+    "byteIdentical": 116,
+    "changed": [
+      {
+        "path": "packages/engineering/src/ordessa_engineering/application/contracts/execution_observations.py",
+        "originalBytesPrefix": true,
+        "originalTopLevelDefinitionsUnchanged": true,
+        "originalSha256": "dd0aa46851439055668f202a44a45633b93681ea3fd3ca9db116dcaa33c5ec95",
+        "currentSha256": "9bfc8edbbbc8825c894b8e62c3b7631f537b8b972a9d188ceb1939c27e89104b",
+        "qualification": "Full class AST may include additive methods; original method preservation must be checked separately for changed classes."
+      },
+      {
+        "path": "packages/engineering/src/ordessa_engineering/application/orchestration/steps/implementation_dispatch.py",
+        "originalBytesPrefix": false,
+        "originalTopLevelDefinitionsUnchanged": false,
+        "originalSha256": "b6ad53c14a64ac4665a1479affb75340cdba17359c4538d4ae6b469468f9816d",
+        "currentSha256": "a699e7b5f80afb08ec52975bdd494ba8f4aa8f90c5f46c9a5253ca400acb183b",
+        "qualification": "Full class AST may include additive methods; original method preservation must be checked separately for changed classes."
+      }
+    ],
+    "missing": []
+  },
+  "domain": {
+    "files": 72,
+    "byteIdentical": 71,
+    "changed": [
+      {
+        "path": "packages/engineering/src/ordessa_engineering/domain/changes/dispatch.py",
+        "originalBytesPrefix": true,
+        "originalTopLevelDefinitionsUnchanged": true,
+        "originalSha256": "030fb3107aae50e62ce74eb5eeed80e6bcc20c7ad326c33a82890de77ac8fe85",
+        "currentSha256": "3200a394d7207a38a4b1492bae35357d48a608a333b2549cf598b125fa2f710b",
+        "qualification": "Full class AST may include additive methods; original method preservation must be checked separately for changed classes."
+      }
+    ],
+    "missing": []
+  },
+  "qualification": "Source comparison against verified actual nightly recovery; additive Agent integration is visible, not hidden behind blanket business-unchanged assertion. Review uncommitted changes separately."
+}

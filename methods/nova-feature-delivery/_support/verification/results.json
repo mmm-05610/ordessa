@@ -1,0 +1,1958 @@
+{
+  "method_root": "methods/nova-feature-delivery",
+  "core_index_sha256": "c825c329a83775685bd048c144068ca31e0a5369d68e317bee3d95f0f79b40f5",
+  "compiled_bundle_root": "methods/nova-feature-delivery/projection",
+  "cases": [
+    {
+      "case": "baseline",
+      "compiler_ok": true,
+      "declared_resource_hashes": {
+        "documents/phase-report/schema.json": "a865ed18491a41a8a95ffc40feb21f5daeaa76f2ae4b5a83cde01b7ad55dc01b",
+        "documents/phase-report/template.md": "135d88b4883b92f2d2cfb7fa500d006b897d3191f3f09194dbc184216c1f5c7b",
+        "workflows/report-intake.yaml": "1f567a6833c550904e925e50e3fef763eacf0d310bd8dc5268b05ece1230f997"
+      },
+      "diagnostics": [],
+      "input_binding_names_are_actual_parameters": true,
+      "input_binding_names_match_required_parameters": true,
+      "loader_ok": true,
+      "production_activation": "not_attempted",
+      "program": {
+        "capability_bindings": [
+          {
+            "capability_id": "engineering.artifacts.create",
+            "contract_digest": "0bc02e9e5a17ada14fc47a3da92abd6c360247768ab0ab1debfc6ec444b213f4",
+            "interface_version": "2",
+            "kind": "operation"
+          }
+        ],
+        "compiler_version": "external-methods-offline/1",
+        "decision_templates": [],
+        "documents": [
+          {
+            "document_type": "phase-report",
+            "schema_resource": {
+              "kind": "document_schema",
+              "resource_id": "document.phase_report.schema",
+              "sha256": "a865ed18491a41a8a95ffc40feb21f5daeaa76f2ae4b5a83cde01b7ad55dc01b"
+            },
+            "template_resource": {
+              "kind": "document_template",
+              "resource_id": "document.phase_report.template",
+              "sha256": "135d88b4883b92f2d2cfb7fa500d006b897d3191f3f09194dbc184216c1f5c7b"
+            },
+            "validation_target": "method_content",
+            "value_schema": {
+              "$id": "https://schemas.ordessa.invalid/methods/nova-feature-delivery/phase-report/v1",
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "additionalProperties": false,
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "spec_screening"
+                      }
+                    },
+                    "required": [
+                      "phase"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {},
+                      "spec_required": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "spec_required",
+                      "spec"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "cycle_approval"
+                      }
+                    },
+                    "required": [
+                      "phase"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "spec_required",
+                      "spec"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "spec_screening"
+                      },
+                      "spec_required": {
+                        "const": false
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "spec_required"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "enum": [
+                          "design_review",
+                          "cycle_approval"
+                        ]
+                      },
+                      "spec_required": {
+                        "const": false
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "spec_required"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "design_review"
+                      },
+                      "result": {
+                        "enum": [
+                          "approved",
+                          "changes_requested"
+                        ]
+                      },
+                      "spec_required": {
+                        "const": true
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "spec_required",
+                      "result"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "cycle_approval"
+                      },
+                      "result": {
+                        "const": "approved"
+                      },
+                      "spec_required": {
+                        "const": true
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "spec_required",
+                      "result"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "design_review"
+                      },
+                      "result": {
+                        "const": "not_applicable"
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "result"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "decision": {
+                        "minLength": 1
+                      },
+                      "spec": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "enum": [
+                          "gerrit",
+                          "zuul_check",
+                          "zuul_gate"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "phase"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "gerrit": {
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "gerrit",
+                      "patchsets"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "zuul_check"
+                      }
+                    },
+                    "required": [
+                      "phase"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "zuul": {
+                        "properties": {
+                          "pipeline": {
+                            "const": "check"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "zuul"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "zuul_gate"
+                      }
+                    },
+                    "required": [
+                      "phase"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "zuul": {
+                        "properties": {
+                          "pipeline": {
+                            "const": "gate"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "zuul"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "merge"
+                      },
+                      "result": {
+                        "const": "merged"
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "result"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "merge": {
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "merge"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "release"
+                      },
+                      "result": {
+                        "const": "released"
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "result"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "release": {
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "release"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "feedback"
+                      }
+                    },
+                    "required": [
+                      "phase"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "feedback_summary",
+                      "follow_ups"
+                    ]
+                  }
+                }
+              ],
+              "description": "外部阶段报告结构；结构有效不等于上游状态已独立核验。",
+              "properties": {
+                "blockers": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "description": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "id": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "next_action": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "opened_at": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "owner": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "resume_condition": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "source_url": {
+                        "format": "uri",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "description",
+                      "owner",
+                      "opened_at",
+                      "next_action",
+                      "resume_condition",
+                      "source_url"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "blueprint": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "cycle": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "status": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "url": {
+                      "format": "uri",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "url",
+                    "status",
+                    "cycle"
+                  ],
+                  "type": "object"
+                },
+                "cycle": {
+                  "maxLength": 128,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "decision": {
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "decision_record": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "actor_id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "authority_ref": {
+                      "format": "uri",
+                      "type": "string"
+                    },
+                    "decided_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "rationale_summary": {
+                      "maxLength": 4000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "role_claim": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "actor_id",
+                    "role_claim",
+                    "decided_at",
+                    "authority_ref",
+                    "rationale_summary"
+                  ],
+                  "type": "object"
+                },
+                "evidence_urls": {
+                  "items": {
+                    "format": "uri",
+                    "type": "string"
+                  },
+                  "minItems": 1,
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "feedback_summary": {
+                  "maxLength": 12000,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "follow_ups": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "action": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "due_or_trigger": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "owner": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "owner",
+                      "due_or_trigger"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "gerrit": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "change_id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "change_url": {
+                      "format": "uri",
+                      "type": "string"
+                    },
+                    "patchset": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "change_url",
+                    "change_id",
+                    "patchset"
+                  ],
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "limitations": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "merge": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "branch": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "commit": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "merged_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "repository": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "commit",
+                    "merged_at",
+                    "repository",
+                    "branch"
+                  ],
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "patchsets": {
+                  "items": {
+                    "format": "uri",
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "phase": {
+                  "enum": [
+                    "blueprint",
+                    "spec_screening",
+                    "design_review",
+                    "cycle_approval",
+                    "implementation",
+                    "gerrit",
+                    "zuul_check",
+                    "zuul_gate",
+                    "merge",
+                    "release_preparation",
+                    "release",
+                    "feedback"
+                  ]
+                },
+                "predecessors": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "artifact_revision": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "report_id": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "report_id",
+                      "artifact_revision"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "release": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "included_commits": {
+                      "items": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "release_url": {
+                      "format": "uri",
+                      "type": "string"
+                    },
+                    "released_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "version",
+                    "release_url",
+                    "released_at",
+                    "included_commits"
+                  ],
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "report_id": {
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "reported_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "reporter": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "actor_id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "reported_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "role_claim": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "actor_id",
+                    "role_claim",
+                    "reported_at"
+                  ],
+                  "type": "object"
+                },
+                "result": {
+                  "enum": [
+                    "recorded",
+                    "approved",
+                    "changes_requested",
+                    "rejected",
+                    "deferred",
+                    "blocked",
+                    "waiting",
+                    "passed",
+                    "failed",
+                    "merged",
+                    "prepared",
+                    "released",
+                    "cancelled",
+                    "not_applicable"
+                  ]
+                },
+                "schema_version": {
+                  "const": 1
+                },
+                "spec": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "cycle": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "status": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "url": {
+                          "format": "uri",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "status",
+                        "cycle"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "spec_required": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "summary": {
+                  "maxLength": 12000,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "zuul": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "buildset_url": {
+                      "format": "uri",
+                      "type": "string"
+                    },
+                    "failure_class": {
+                      "enum": [
+                        "change_code_or_test",
+                        "infrastructure",
+                        "flake_or_unrelated",
+                        "unknown",
+                        "none"
+                      ]
+                    },
+                    "pipeline": {
+                      "enum": [
+                        "check",
+                        "gate",
+                        "post",
+                        "merge-check"
+                      ]
+                    },
+                    "verified_vote": {
+                      "enum": [
+                        -2,
+                        -1,
+                        0,
+                        1,
+                        2
+                      ]
+                    }
+                  },
+                  "required": [
+                    "pipeline",
+                    "buildset_url",
+                    "verified_vote",
+                    "failure_class"
+                  ],
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "schema_version",
+                "report_id",
+                "phase",
+                "reported_at",
+                "reporter",
+                "cycle",
+                "blueprint",
+                "spec_required",
+                "spec",
+                "decision",
+                "decision_record",
+                "result",
+                "summary",
+                "blockers",
+                "predecessors",
+                "evidence_urls",
+                "limitations"
+              ],
+              "title": "Nova feature delivery phase report",
+              "type": "object"
+            }
+          }
+        ],
+        "schema_resources": [
+          {
+            "schema_resource": {
+              "kind": "document_schema",
+              "resource_id": "document.phase_report.schema",
+              "sha256": "a865ed18491a41a8a95ffc40feb21f5daeaa76f2ae4b5a83cde01b7ad55dc01b"
+            },
+            "value_schema": {
+              "$id": "https://schemas.ordessa.invalid/methods/nova-feature-delivery/phase-report/v1",
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "additionalProperties": false,
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "spec_screening"
+                      }
+                    },
+                    "required": [
+                      "phase"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {},
+                      "spec_required": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "spec_required",
+                      "spec"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "cycle_approval"
+                      }
+                    },
+                    "required": [
+                      "phase"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "spec_required",
+                      "spec"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "spec_screening"
+                      },
+                      "spec_required": {
+                        "const": false
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "spec_required"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "enum": [
+                          "design_review",
+                          "cycle_approval"
+                        ]
+                      },
+                      "spec_required": {
+                        "const": false
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "spec_required"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "design_review"
+                      },
+                      "result": {
+                        "enum": [
+                          "approved",
+                          "changes_requested"
+                        ]
+                      },
+                      "spec_required": {
+                        "const": true
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "spec_required",
+                      "result"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "cycle_approval"
+                      },
+                      "result": {
+                        "const": "approved"
+                      },
+                      "spec_required": {
+                        "const": true
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "spec_required",
+                      "result"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "design_review"
+                      },
+                      "result": {
+                        "const": "not_applicable"
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "result"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "decision": {
+                        "minLength": 1
+                      },
+                      "spec": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "enum": [
+                          "gerrit",
+                          "zuul_check",
+                          "zuul_gate"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "phase"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "gerrit": {
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "gerrit",
+                      "patchsets"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "zuul_check"
+                      }
+                    },
+                    "required": [
+                      "phase"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "zuul": {
+                        "properties": {
+                          "pipeline": {
+                            "const": "check"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "zuul"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "zuul_gate"
+                      }
+                    },
+                    "required": [
+                      "phase"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "zuul": {
+                        "properties": {
+                          "pipeline": {
+                            "const": "gate"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "zuul"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "merge"
+                      },
+                      "result": {
+                        "const": "merged"
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "result"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "merge": {
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "merge"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "release"
+                      },
+                      "result": {
+                        "const": "released"
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "result"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "release": {
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "release"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "phase": {
+                        "const": "feedback"
+                      }
+                    },
+                    "required": [
+                      "phase"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "feedback_summary",
+                      "follow_ups"
+                    ]
+                  }
+                }
+              ],
+              "description": "外部阶段报告结构；结构有效不等于上游状态已独立核验。",
+              "properties": {
+                "blockers": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "description": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "id": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "next_action": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "opened_at": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "owner": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "resume_condition": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "source_url": {
+                        "format": "uri",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "description",
+                      "owner",
+                      "opened_at",
+                      "next_action",
+                      "resume_condition",
+                      "source_url"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "blueprint": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "cycle": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "status": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "url": {
+                      "format": "uri",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "url",
+                    "status",
+                    "cycle"
+                  ],
+                  "type": "object"
+                },
+                "cycle": {
+                  "maxLength": 128,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "decision": {
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "decision_record": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "actor_id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "authority_ref": {
+                      "format": "uri",
+                      "type": "string"
+                    },
+                    "decided_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "rationale_summary": {
+                      "maxLength": 4000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "role_claim": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "actor_id",
+                    "role_claim",
+                    "decided_at",
+                    "authority_ref",
+                    "rationale_summary"
+                  ],
+                  "type": "object"
+                },
+                "evidence_urls": {
+                  "items": {
+                    "format": "uri",
+                    "type": "string"
+                  },
+                  "minItems": 1,
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "feedback_summary": {
+                  "maxLength": 12000,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "follow_ups": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "action": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "due_or_trigger": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "owner": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "owner",
+                      "due_or_trigger"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "gerrit": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "change_id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "change_url": {
+                      "format": "uri",
+                      "type": "string"
+                    },
+                    "patchset": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "change_url",
+                    "change_id",
+                    "patchset"
+                  ],
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "limitations": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "merge": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "branch": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "commit": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "merged_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "repository": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "commit",
+                    "merged_at",
+                    "repository",
+                    "branch"
+                  ],
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "patchsets": {
+                  "items": {
+                    "format": "uri",
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "phase": {
+                  "enum": [
+                    "blueprint",
+                    "spec_screening",
+                    "design_review",
+                    "cycle_approval",
+                    "implementation",
+                    "gerrit",
+                    "zuul_check",
+                    "zuul_gate",
+                    "merge",
+                    "release_preparation",
+                    "release",
+                    "feedback"
+                  ]
+                },
+                "predecessors": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "artifact_revision": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "report_id": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "report_id",
+                      "artifact_revision"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "release": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "included_commits": {
+                      "items": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "release_url": {
+                      "format": "uri",
+                      "type": "string"
+                    },
+                    "released_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "version",
+                    "release_url",
+                    "released_at",
+                    "included_commits"
+                  ],
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "report_id": {
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "reported_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "reporter": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "actor_id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "reported_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "role_claim": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "actor_id",
+                    "role_claim",
+                    "reported_at"
+                  ],
+                  "type": "object"
+                },
+                "result": {
+                  "enum": [
+                    "recorded",
+                    "approved",
+                    "changes_requested",
+                    "rejected",
+                    "deferred",
+                    "blocked",
+                    "waiting",
+                    "passed",
+                    "failed",
+                    "merged",
+                    "prepared",
+                    "released",
+                    "cancelled",
+                    "not_applicable"
+                  ]
+                },
+                "schema_version": {
+                  "const": 1
+                },
+                "spec": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "cycle": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "status": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "url": {
+                          "format": "uri",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "status",
+                        "cycle"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "spec_required": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "summary": {
+                  "maxLength": 12000,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "zuul": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "buildset_url": {
+                      "format": "uri",
+                      "type": "string"
+                    },
+                    "failure_class": {
+                      "enum": [
+                        "change_code_or_test",
+                        "infrastructure",
+                        "flake_or_unrelated",
+                        "unknown",
+                        "none"
+                      ]
+                    },
+                    "pipeline": {
+                      "enum": [
+                        "check",
+                        "gate",
+                        "post",
+                        "merge-check"
+                      ]
+                    },
+                    "verified_vote": {
+                      "enum": [
+                        -2,
+                        -1,
+                        0,
+                        1,
+                        2
+                      ]
+                    }
+                  },
+                  "required": [
+                    "pipeline",
+                    "buildset_url",
+                    "verified_vote",
+                    "failure_class"
+                  ],
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "schema_version",
+                "report_id",
+                "phase",
+                "reported_at",
+                "reporter",
+                "cycle",
+                "blueprint",
+                "spec_required",
+                "spec",
+                "decision",
+                "decision_record",
+                "result",
+                "summary",
+                "blockers",
+                "predecessors",
+                "evidence_urls",
+                "limitations"
+              ],
+              "title": "Nova feature delivery phase report",
+              "type": "object"
+            }
+          }
+        ],
+        "schema_version": 2,
+        "skill_resources": [],
+        "standards": [],
+        "workflow": {
+          "context_slots": [
+            "artifact_kind",
+            "initial",
+            "method_refs"
+          ],
+          "entry": "record_phase_report",
+          "schema_version": 1,
+          "steps": [
+            {
+              "id": "record_phase_report",
+              "inputs": {
+                "initial": "initial",
+                "kind": "artifact_kind",
+                "method_refs": "method_refs"
+              },
+              "kind": "operation",
+              "operation": "engineering.artifacts.create",
+              "outcomes": {
+                "completed": {
+                  "stop": "report_record_created"
+                },
+                "rejected": {
+                  "stop": "report_record_rejected"
+                }
+              }
+            }
+          ],
+          "stop_outcomes": [
+            "report_record_created",
+            "report_record_rejected"
+          ],
+          "wait_kinds": [],
+          "workflow_id": "nova-feature-delivery-report-intake"
+        }
+      },
+      "program_sha256": "5a820cec8adab88b0381099569e93827f44d36d86a0aded47a47fb39890320a7",
+      "reader_paths": [
+        "method.yaml",
+        "documents/phase-report/schema.json",
+        "documents/phase-report/template.md",
+        "workflows/report-intake.yaml",
+        "bundle-lock.json"
+      ],
+      "requires_exact_actual_descriptors": true,
+      "runtime_execution": "not_attempted",
+      "schema_checks": [
+        {
+          "document_type": "phase-report",
+          "rejects_empty_report": true
+        }
+      ],
+      "support_area_read": false,
+      "synthetic_report_checks": [
+        {
+          "actual_command_input_schema_valid": true,
+          "actual_method_bridge_input_mapping_ok": true,
+          "actual_payload_codec_ok": true,
+          "authority": "synthetic report and symbolic UNRELEASED MethodRef; no command invoked",
+          "path": "_support/design-traces/nospec-cycle-approved.report.json",
+          "schema_errors": [],
+          "schema_valid": true,
+          "sha256": "5506cd96da14776978720e1de259f842c88bd745ac50162cace4ae040eeac1c9"
+        },
+        {
+          "actual_command_input_schema_valid": true,
+          "actual_method_bridge_input_mapping_ok": true,
+          "actual_payload_codec_ok": true,
+          "authority": "synthetic report and symbolic UNRELEASED MethodRef; no command invoked",
+          "path": "_support/design-traces/nospec.report.json",
+          "schema_errors": [],
+          "schema_valid": true,
+          "sha256": "df37c61a67dcad359dbaf6dfe342a59783a1834d4a02cb237f072d5e5560e839"
+        },
+        {
+          "actual_command_input_schema_valid": true,
+          "actual_method_bridge_input_mapping_ok": true,
+          "actual_payload_codec_ok": true,
+          "authority": "synthetic report and symbolic UNRELEASED MethodRef; no command invoked",
+          "path": "_support/design-traces/reject-postpone.report.json",
+          "schema_errors": [],
+          "schema_valid": true,
+          "sha256": "4e0dafeb235f1c37660234a756cdd6f3ce6f0c0384c8d3467288110b15cd3318"
+        },
+        {
+          "actual_command_input_schema_valid": true,
+          "actual_method_bridge_input_mapping_ok": true,
+          "actual_payload_codec_ok": true,
+          "authority": "synthetic report and symbolic UNRELEASED MethodRef; no command invoked",
+          "path": "_support/design-traces/rework-resumed.report.json",
+          "schema_errors": [],
+          "schema_valid": true,
+          "sha256": "cf8322bd21acd892a61cdf5eb78926a0b9e9b1cb66251b8d97f9d39ac152a014"
+        },
+        {
+          "actual_command_input_schema_valid": true,
+          "actual_method_bridge_input_mapping_ok": true,
+          "actual_payload_codec_ok": true,
+          "authority": "synthetic report and symbolic UNRELEASED MethodRef; no command invoked",
+          "path": "_support/design-traces/rework-waiting.report.json",
+          "schema_errors": [],
+          "schema_valid": true,
+          "sha256": "ef57b29da6f430c1d9d9efe5a93caa05569569253bf6e3bc8a4773b7bfbb33ce"
+        },
+        {
+          "actual_command_input_schema_valid": true,
+          "actual_method_bridge_input_mapping_ok": true,
+          "actual_payload_codec_ok": true,
+          "authority": "synthetic report and symbolic UNRELEASED MethodRef; no command invoked",
+          "path": "_support/design-traces/success.report.json",
+          "schema_errors": [],
+          "schema_valid": true,
+          "sha256": "5dc3ffc24ebb87c30d16260e4a74b39218624a85b65299e4c5c3c39779005875"
+        }
+      ],
+      "validation_valid": true,
+      "process_exit_code": 0,
+      "expected_refusal_observed": true
+    },
+    {
+      "case": "unknown-operation",
+      "compiler_error": {
+        "code": "UNKNOWN_CAPABILITY",
+        "column": null,
+        "line": null,
+        "message": "operation capability unavailable: external.verification.unregistered_operation",
+        "path": "workflows/report-intake.yaml",
+        "pointer": "/steps/record_phase_report/operation",
+        "resource_id": "workflow.nova_report_intake"
+      },
+      "compiler_ok": false,
+      "diagnostics": [
+        {
+          "code": "UNKNOWN_CAPABILITY",
+          "message": "operation capability unavailable: external.verification.unregistered_operation",
+          "path": "workflows/report-intake.yaml",
+          "pointer": "/steps/record_phase_report/operation",
+          "related_refs": [],
+          "resource_id": "workflow.nova_report_intake",
+          "severity": "error"
+        }
+      ],
+      "loader_ok": true,
+      "production_activation": "not_attempted",
+      "reader_paths": [
+        "method.yaml",
+        "documents/phase-report/schema.json",
+        "documents/phase-report/template.md",
+        "workflows/report-intake.yaml",
+        "bundle-lock.json"
+      ],
+      "runtime_execution": "not_attempted",
+      "support_area_read": false,
+      "validation_valid": false,
+      "process_exit_code": 1,
+      "expected_refusal_observed": true
+    },
+    {
+      "case": "business-outcomes",
+      "compiler_error": {
+        "code": "UNHANDLED_OUTCOME",
+        "column": null,
+        "line": null,
+        "message": "operation outcomes must exactly cover its registered contract",
+        "path": "workflows/report-intake.yaml",
+        "pointer": "/steps/record_phase_report/outcomes",
+        "resource_id": "workflow.nova_report_intake"
+      },
+      "compiler_ok": false,
+      "diagnostics": [
+        {
+          "code": "UNHANDLED_OUTCOME",
+          "message": "operation outcomes must exactly cover its registered contract",
+          "path": "workflows/report-intake.yaml",
+          "pointer": "/steps/record_phase_report/outcomes",
+          "related_refs": [],
+          "resource_id": "workflow.nova_report_intake",
+          "severity": "error"
+        }
+      ],
+      "loader_ok": true,
+      "production_activation": "not_attempted",
+      "reader_paths": [
+        "method.yaml",
+        "documents/phase-report/schema.json",
+        "documents/phase-report/template.md",
+        "workflows/report-intake.yaml",
+        "bundle-lock.json"
+      ],
+      "runtime_execution": "not_attempted",
+      "support_area_read": false,
+      "validation_valid": false,
+      "process_exit_code": 1,
+      "expected_refusal_observed": true
+    },
+    {
+      "case": "unsupported-control-node",
+      "compiler_error": {
+        "code": "METHOD_STRUCTURE_INVALID",
+        "column": null,
+        "line": null,
+        "message": "method declaration violates the supported structure",
+        "path": "workflows/report-intake.yaml",
+        "pointer": "/steps/0",
+        "resource_id": "workflow.nova_report_intake"
+      },
+      "compiler_ok": false,
+      "diagnostics": [
+        {
+          "code": "METHOD_STRUCTURE_INVALID",
+          "message": "method declaration violates the supported structure",
+          "path": "workflows/report-intake.yaml",
+          "pointer": "/steps/0",
+          "related_refs": [],
+          "resource_id": "workflow.nova_report_intake",
+          "severity": "error"
+        }
+      ],
+      "loader_ok": true,
+      "production_activation": "not_attempted",
+      "reader_paths": [
+        "method.yaml",
+        "documents/phase-report/schema.json",
+        "documents/phase-report/template.md",
+        "workflows/report-intake.yaml",
+        "bundle-lock.json"
+      ],
+      "runtime_execution": "not_attempted",
+      "support_area_read": false,
+      "validation_valid": false,
+      "process_exit_code": 1,
+      "expected_refusal_observed": true
+    },
+    {
+      "case": "cycle",
+      "compiler_error": {
+        "code": "UNSUPPORTED_FLOW_CYCLE",
+        "column": null,
+        "line": null,
+        "message": "workflow contains a cycle at record_phase_report",
+        "path": "workflows/report-intake.yaml",
+        "pointer": "/steps/record_phase_report",
+        "resource_id": "workflow.nova_report_intake"
+      },
+      "compiler_ok": false,
+      "diagnostics": [
+        {
+          "code": "UNSUPPORTED_FLOW_CYCLE",
+          "message": "workflow contains a cycle at record_phase_report",
+          "path": "workflows/report-intake.yaml",
+          "pointer": "/steps/record_phase_report",
+          "related_refs": [],
+          "resource_id": "workflow.nova_report_intake",
+          "severity": "error"
+        }
+      ],
+      "loader_ok": true,
+      "production_activation": "not_attempted",
+      "reader_paths": [
+        "method.yaml",
+        "documents/phase-report/schema.json",
+        "documents/phase-report/template.md",
+        "workflows/report-intake.yaml",
+        "bundle-lock.json"
+      ],
+      "runtime_execution": "not_attempted",
+      "support_area_read": false,
+      "validation_valid": false,
+      "process_exit_code": 1,
+      "expected_refusal_observed": true
+    },
+    {
+      "case": "digest-mismatch",
+      "loader_error": {
+        "code": "RESOURCE_DIGEST_MISMATCH",
+        "column": null,
+        "line": null,
+        "message": "resource bytes do not match manifest digest",
+        "path": "workflows/report-intake.yaml",
+        "pointer": null,
+        "resource_id": "workflow.nova_report_intake"
+      },
+      "loader_ok": false,
+      "production_activation": "not_attempted",
+      "reader_paths": [
+        "method.yaml",
+        "documents/phase-report/schema.json",
+        "documents/phase-report/template.md",
+        "workflows/report-intake.yaml"
+      ],
+      "runtime_execution": "not_attempted",
+      "support_area_read": false,
+      "process_exit_code": 1,
+      "expected_refusal_observed": true
+    }
+  ],
+  "verification_expectations_passed": true,
+  "process_exit_code": 0,
+  "runtime_execution": "not_attempted",
+  "complete_external_flow_execution": "not_supported"
+}

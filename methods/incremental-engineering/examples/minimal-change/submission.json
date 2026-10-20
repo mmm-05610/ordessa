@@ -1,0 +1,28 @@
+{
+  "document_type": "submission",
+  "schema_version": 1,
+  "summary": "已在两文件范围完成修复并提交证据。",
+  "change_notes": [
+    "负数归零",
+    "补充负数、0 和正数测试"
+  ],
+  "evidence_index": [
+    {
+      "evidence_id": "E1",
+      "kind": "patch",
+      "summary": "两个文件的精确补丁。"
+    },
+    {
+      "evidence_id": "E2",
+      "kind": "test_log",
+      "summary": "针对交回 tree 的测试日志。"
+    },
+    {
+      "evidence_id": "E3",
+      "kind": "native_record",
+      "summary": "fixture execution 原生记录。"
+    }
+  ],
+  "remaining_issues": [],
+  "reported_outcome": "complete"
+}

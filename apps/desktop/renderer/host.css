@@ -19,4 +19,6 @@ html[data-frameless] .wb-main > header { padding-right: var(--wb-window-controls
 .window-controls button:hover { background: var(--ui-hover, #eaeaea); }
 .window-controls button.wc-close:hover { background: #c42b1c; color: #fff; }
 .window-controls svg { stroke-width: 1; fill: none; }
-
+/* Native chrome keeps its own strip; modal close must never sit beneath it. */
+html[data-frameless] .wb-overlay-page { top:34px; }
+html[data-frameless] .wb-overlays, html[data-frameless] .wb-overlays * { -webkit-app-region:no-drag; }

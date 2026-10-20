@@ -1,4 +1,8 @@
-"""Shared isolated Work Core test fixtures."""
+"""Cross-owner test reporting and isolated historical data-root fixtures.
+
+Collection does not select a provider or import an obsolete product owner.
+Each owner test must construct and close its actual database/services locally.
+"""
 from __future__ import annotations
 
 import importlib.util
@@ -7,14 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from pacthold.work_core.db import _reset_connection_for_tests
-
-# Runtime environments resolve the sandbox provider by name; under pytest the
-# plugin is importable through PYTHONPATH but not pip-installed, so the test
-# session states the module explicitly (the same variable the gate scripts set).
-os.environ.setdefault("AGENT_BOX_SANDBOX_MODULE", "agent_box_sandbox_bwrap")
-
-_PRESENCE_PATH = (Path(__file__).resolve().parents[1] / "scripts/artifact_presence.py")
+_PRESENCE_PATH = (Path(__file__).resolve().parents[1] / "tooling/checks/artifact_presence.py")
 _SKIPPED_REASONS: list[str] = []
 
 
@@ -99,6 +96,4 @@ def tmp_agent_box_home(tmp_path, monkeypatch):
     home = tmp_path / "ab-home"
     home.mkdir()
     monkeypatch.setenv("AGENT_BOX_HOME", str(home))
-    _reset_connection_for_tests()
     yield home
-    _reset_connection_for_tests()

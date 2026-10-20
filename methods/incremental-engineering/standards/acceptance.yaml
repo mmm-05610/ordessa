@@ -1,0 +1,78 @@
+schema_version: 1
+standard_id: acceptance
+revision: 1.0.0
+purpose: acceptance
+criteria:
+- criterion_id: submission_shape
+  statement: 提交的说明应结构完整。
+  applies_to:
+  - submission
+  required_inputs:
+  - method_content
+  checks:
+  - capability_id: ordessa.schema.validate
+    interface_version: 1.0.0
+    bindings:
+      schema:
+        resource: document.submission.schema
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+- criterion_id: submission_binding
+  statement: 提交必须绑定正确的包、授权、执行 attempt、输出与测试。
+  applies_to:
+  - submission
+  required_inputs:
+  - submission_ref
+  - resolved_submission_graph
+  checks:
+  - capability_id: ordessa.submission.binding
+    interface_version: 1.0.0
+    bindings: {}
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+- criterion_id: output_scope
+  statement: 可信捕获的所有输出变动应落在获准范围并基于正确基线。
+  applies_to:
+  - submission
+  required_inputs:
+  - submission_ref
+  - trusted_output_manifest
+  checks:
+  - capability_id: ordessa.outputs.scope
+    interface_version: 1.0.0
+    bindings: {}
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+- criterion_id: test_evidence
+  statement: 全部要求的测试必须确实针对所交回的精确输出执行且成功，未知或缺失不是成功。
+  applies_to:
+  - submission
+  required_inputs:
+  - submission_ref
+  - trusted_test_observations
+  - acceptance_mapping
+  checks:
+  - capability_id: ordessa.tests.evidence
+    interface_version: 1.0.0
+    bindings: {}
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+reduction:
+  required_criteria: all_applicable
+  empty_applicable_set: error
+  priority:
+  - block
+  - manual
+  - pass

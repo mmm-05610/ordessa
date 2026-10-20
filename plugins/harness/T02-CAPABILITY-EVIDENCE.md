@@ -1,7 +1,17 @@
 # T02 — three-brand capability evidence ledger
+> **Current owner and evidence note (2026-10-10).** This document contains earlier migration/review evidence. Its body is preserved; old paths and test outcomes below describe the recorded historical snapshot and are not current execution instructions or fresh validation. Current ownership and path mapping:
+>
+> - `runtime/access-entry.mjs` and the prior plugin-local access chain → `apps/server/src/ordessa_server/composition/native_channels/access_entry.mjs`; it selects brand declarations through `selected_launch_ports.mjs` and uses the Agent transport at `packages/execution/agents/src/ordessa_execution_agents/harness/transport/acp.mjs`.
+> - `plugins/harness/tests/access/*.test.mjs` → `tests/integration/harness/access/*.test.mjs`; controlled peer/marker fixtures → `tests/fixtures/harness/access/`; shared sidecar support → `tests/integration/harness/access/support/sidecar_harness.mjs`.
+> - `plugins/harness/tests/access/test_acp_boundaries.py` → `tests/architecture/harness/test_acp_boundaries.py`; `plugins/harness/packaging/tests/test_acp_schema_drift_target.py` → `tests/integration/harness/packaging/test_acp_schema_drift_target.py`.
+> - Historical shared `packaging/<brand>` npm roots → each leaf's `plugins/harness/<brand>/tooling/npm/`; actual launch declarations remain owned by their brand leaf and are selected by the Server port.
+> - The current opaque Go ACP vendor source is `plugins/harness/pi/vendor/acp-adapter`; its build entry and build record are `plugins/harness/pi/tooling/build-acp-adapter-round-h.sh` and `plugins/harness/pi/docs/acp-build-record.md`. The historical table below is preserved as recorded evidence.
+>
+> The source-owner receipt `docs/verification/overnight-upper-structure-20261009/harness-access-test-owner-root-applied.json` records 14 source mappings applied. Four shared discovery/CI files were subsequently integrated in `docs/verification/overnight-upper-structure-20261009/current-test-discovery-root-applied.json`; unsafe `verify-clean.sh` remains held and unrun. It is a migration receipt, not a test result. No suite was run for this documentation candidate. Historical wire names, identifiers, and raw results below remain historical evidence.
+
 
 Snapshot: 2026-09-28, this C0 worktree. This is an implementation plan and a
-source inventory, not G22 acceptance. `docs/design/harness-v2/verification.md`
+source inventory, not G22 acceptance. `docs/implementation/design/harness-v2/verification.md`
 defines L1 (compiler/fixture), L2 (fixed native adapter and controlled native
 endpoint), L3 (Ordessa Server/channel/submit path and controlled endpoint), and
 L4 (external model, outside this authorization). The six required cells are
@@ -12,9 +22,9 @@ template file alone does not prove the currently shipped adapter can apply it.
 
 | Brand | Repository pin and native path | Actual production adapter entry | Present evidence and limit |
 | --- | --- | --- | --- |
-| Pi | `packaging/pi/package-lock.json`: `@automatalabs/pi-acp` 0.5.0, bundled `@earendil-works/pi-coding-agent` 0.84.2, ACP SDK override 1.3.0; `src/ordessa_harness/pi/native.py`: `models.json` | `src/ordessa_harness/pi/production.py` launches `/usr/bin/node` with the pinned artifact entry; isolated `.pi/agent` config and session subtree. The separate Go bridge in `adapters/acp-adapter` uses Pi RPC and `--pi-bin`; `packaging/acp-adapter/BUILD-RECORD.md` records a *different* installed Pi 0.86.1 bundle and hash. Do not merge these pins into one evidence claim. | Production template and Go Pi fake RPC/integration tests exist. They do not establish six-cell product control behavior for the npm production path. |
-| Codex | `packaging/codex/package-lock.json`: `@agentclientprotocol/codex-acp` 1.1.14, `@openai/codex` 0.147.0, ACP SDK override 1.3.0; `src/ordessa_harness/codex/native.py`: `config.toml` | `src/ordessa_harness/codex/production.py` launches `/usr/bin/node` with pinned artifact entry. Separate Go bridge uses `codex app-server` and has fake app-server fixtures; its results cannot be attributed to the npm adapter. | Production template, vendored adapter protocol test, and Go app-server tests cover portions of startup/protocol. No complete six-cell L3 evidence. |
-| Claude Code | `packaging/claude/package-lock.json`: `@agentclientprotocol/claude-agent-acp` 0.81.2, `@anthropic-ai/claude-agent-sdk` 0.3.280, ACP SDK 1.5.0; `src/ordessa_harness/claude/native.py`: `settings.json` | `src/ordessa_harness/claude/production.py` launches `/usr/bin/node` with pinned artifact entry and isolated `CLAUDE_CONFIG_DIR`. Go Claude mode was retired; do not revive or claim its historical tests. | `packaging/claude/PROVIDER-SESSION-PROBE.md` documents fixed-adapter and controlled endpoint routing for A/B/C sessions. It explicitly excludes Ordessa Server/desktop L3. |
+| Pi | `packaging/pi/package-lock.json`: `@automatalabs/pi-acp` 0.5.0, bundled `@earendil-works/pi-coding-agent` 0.84.2, ACP SDK override 1.3.0; `src/pacthold.harness_kit/pi/native.py`: `models.json` | `src/pacthold.harness_kit/pi/production.py` launches `/usr/bin/node` with the pinned artifact entry; isolated `.pi/agent` config and session subtree. The separate Go bridge in `adapters/acp-adapter` uses Pi RPC and `--pi-bin`; `packaging/acp-adapter/BUILD-RECORD.md` records a *different* installed Pi 0.86.1 bundle and hash. Do not merge these pins into one evidence claim. | Production template and Go Pi fake RPC/integration tests exist. They do not establish six-cell product control behavior for the npm production path. |
+| Codex | `packaging/codex/package-lock.json`: `@agentclientprotocol/codex-acp` 1.1.14, `@openai/codex` 0.147.0, ACP SDK override 1.3.0; `src/pacthold.harness_kit/codex/native.py`: `config.toml` | `src/pacthold.harness_kit/codex/production.py` launches `/usr/bin/node` with pinned artifact entry. Separate Go bridge uses `codex app-server` and has fake app-server fixtures; its results cannot be attributed to the npm adapter. | Production template, vendored adapter protocol test, and Go app-server tests cover portions of startup/protocol. No complete six-cell L3 evidence. |
+| Claude Code | `packaging/claude/package-lock.json`: `@agentclientprotocol/claude-agent-acp` 0.81.2, `@anthropic-ai/claude-agent-sdk` 0.3.280, ACP SDK 1.5.0; `src/pacthold.harness_kit/claude/native.py`: `settings.json` | `src/pacthold.harness_kit/claude/production.py` launches `/usr/bin/node` with pinned artifact entry and isolated `CLAUDE_CONFIG_DIR`. Go Claude mode was retired; do not revive or claim its historical tests. | `packaging/claude/PROVIDER-SESSION-PROBE.md` documents fixed-adapter and controlled endpoint routing for A/B/C sessions. It explicitly excludes Ordessa Server/desktop L3. |
 
 The deployment templates provide artifact target, configuration projection and
 environment, but are not proof that a changed file reaches an existing native
@@ -41,7 +51,7 @@ refuse before side effects. A failed stop or uncertain resume stays `unknown`;
 
 ## Other brands: preserve the existing startup baseline
 
-`packaging/` and `src/ordessa_harness/*/production.py` retain OpenCode,
+`packaging/` and `src/pacthold.harness_kit/*/production.py` retain OpenCode,
 Hermes, dsh, Kilo and Qwen packaging/deployment paths; `tests/test_*production_template.py`
 contain baseline template checks. The current `entrypoints.py` directly lists
 OpenCode and Hermes; other brand registration must be checked in product

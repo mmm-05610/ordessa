@@ -8,11 +8,12 @@ or user-service access.
 import pytest
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 
-from ordessa_execution_api.environment import AdmissionRefusedError, IdentityMismatchError
-from ordessa_execution_api.environment.identity import ActivationRef
-from ordessa_execution_api.environment.operations import sealed_mapping
+from ordessa_execution_agents.harness.providers.registry.errors import CatalogAdmissionRefused, CatalogIdentityConflict
+from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
+from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
 from pacthold.public import Environment, InstallationRecord
-from ordessa_execution_api.c1.errors import CoreDTOError, RegistrationConflictError
+from pacthold.core.registration import RegistrationConflictError
+from ordessa_execution_agents.harness.definitions.errors import CoreDTOError
 from pacthold.core.registration import CoreContributionSet
 from ordessa_execution_agents.harness.definitions.configuration_providers import (
     CONFIGURATION_PROVIDER_VERSION, ConfigurationProviderDescriptor, ConfigurationRoute,
@@ -268,11 +269,11 @@ def test_gate3_post_admission_mutation_refuses_configuration_discovery(mutate):
         provider.prepare = None
     if mutate == "owner":
         provider.owner = "fake"
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         env.agent_configuration_contributions()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         services.providers.configuration_list()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         services.providers.configuration_describe(original_ref)
 
 
@@ -287,7 +288,7 @@ def test_gate3_drained_and_replaced_generation_refuses_old_route_queries(tmp_pat
     env.drain(receipt.activation)
     # draining activations are excluded from list discovery, direct query refused
     assert env.agent_configuration_contributions() == ()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         services.providers.configuration_describe(old_ref)
     env.retire(receipt.activation)
     assert env._store.unresolved_provider_usages(
@@ -301,9 +302,9 @@ def test_gate3_drained_and_replaced_generation_refuses_old_route_queries(tmp_pat
     assert view["providerRef"]["generation"] == new.activation.generation
     assert view["recognizedDefinitions"] == [definition("replacement")]
     # retired pin / old definition is never carried across generations
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         services.providers.configuration_describe(old_ref)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         env.agent_configuration_contribution(old_ref)
 
 
@@ -415,7 +416,7 @@ def test_gate6_metadata_has_no_callable_and_copies_never_alias_author_state():
 
 
 def test_admitted_metadata_dto_rejects_unsorted_or_incoherent_runtime_refs():
-    activation = ActivationRef(ENV, "fixture.plugin", 1)
+    activation = HarnessActivationRef(ENV, "fixture.plugin", 1)
     descriptor = ConfigurationProviderDescriptor(
         "fixture.runtime", CONFIGURATION_PROVIDER_VERSION, "sha256:" + "a" * 64,
         (route(),), SUPPORTED_METHODS)
@@ -462,19 +463,19 @@ def test_gate7_missing_provider_is_empty_or_refused_without_fallback():
     env, _ = installed()
     services = unit_services(env)
     assert services.providers.configuration_list() == ()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         services.providers.configuration_describe(definition())
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         env.agent_configuration_contribution(definition())
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(CatalogIdentityConflict):
         services.providers.configuration_describe(definition(environment="other-env"))
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(CatalogIdentityConflict):
         services.providers.configuration_describe({"environmentNamespace": ENV})
     # runtime-only registry: no configuration contribution invented
     runtime_only = Provider()
     activated(env, "fixture.plugin", agent_runtime_providers=(runtime_only,))
     assert services.providers.configuration_list() == ()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         services.providers.configuration_describe(
             dict(runtime_only.descriptor.definition_ref))
 
@@ -485,9 +486,9 @@ def test_read_acl_refuses_configuration_discovery_without_runtime_permission():
     activated(env, "fixture.plugin", agent_runtime_providers=(provider,))
     services = unit_services(env)
     policy.allowed = False
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         env.agent_configuration_contributions()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(CatalogAdmissionRefused):
         services.providers.configuration_describe(
             dict(provider.descriptor.definition_ref))
 

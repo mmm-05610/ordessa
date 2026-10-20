@@ -17,10 +17,13 @@ from ordessa_engineering.application.contracts.commands import (
 )
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.domain.approvals.consent import (
-    ConversationNotice, AuthorizationIntent, ChangeAuthorizationIntent, ConsentChallenge, ConversationEvidence, ApprovalGrant,
+    ConversationNotice, WorkPackageNotice, AuthorizationIntent, ChangeAuthorizationIntent,
+    ConsentChallenge, ConversationEvidence, ApprovalGrant,
 )
 from ordessa_engineering.domain.approvals.consent_codec import decode_record
-from ordessa_engineering.domain.approvals.implementation import ImplementationAuthorizationIntent
+from ordessa_engineering.domain.approvals.implementation import (
+    ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent,
+)
 from ordessa_engineering.domain.approvals.ref_codec import decode_approval_ref
 from ordessa_engineering.domain.common.models.values import Digest, validate_id, validate_text
 from ordessa_engineering.domain.common.outcomes.diagnostics import ReferenceError
@@ -139,6 +142,16 @@ class ApprovalUseCases:
         elif type(intent) is ImplementationAuthorizationIntent:
             from ..packages.authorization import resolve_implementation_intent
             plan = resolve_implementation_intent(uow, intent)
+        elif type(intent) is WorkPackageAuthorizationIntent:
+            from ..packages.authorization import resolve_implementation_intent
+            plan = resolve_implementation_intent(uow, intent)
+            notice = uow.authorization.get_notice(intent.notice_ref)
+            if (type(notice) is not WorkPackageNotice
+                    or notice.authorization != intent.authorization
+                    or notice.policy_ref != intent.policy_ref
+                    or notice.scope != intent.scope):
+                raise ApplicationError('CONSENT_BINDING_MISMATCH')
+            return plan
         elif type(intent) is not AuthorizationIntent:
             raise ApplicationError('ACTION_NOT_AUTHORIZED')
         for target in intent.targets:
@@ -154,11 +167,21 @@ class ApprovalUseCases:
         if self.review_admission is None:
             raise ApplicationError('REVIEW_AUTHORITY_UNAVAILABLE')
         with self.factory.begin(context.scope, 'read') as uow:
+            if type(intent) is WorkPackageAuthorizationIntent:
+                from ..packages.authorization import resolve_implementation_intent
+                facts = resolve_implementation_intent(uow, intent)
+                requirements = facts.requirements
+                supporting_review_refs = facts.review_refs
+                if not requirements:
+                    raise ApplicationError('METHOD_REQUIREMENTS_CHANGED')
+            else:
+                requirements = intent.required_review_requirements
+                supporting_review_refs = getattr(intent, 'supporting_review_refs', ())
             snapshots = tuple(uow.reviews.read_set(ReviewSetKey.for_requirement(req))
-                              for req in intent.required_review_requirements)
+                              for req in requirements)
         with ExitStack() as guards:
             decisions = []
-            for requirement, snapshot in zip(intent.required_review_requirements, snapshots):
+            for requirement, snapshot in zip(requirements, snapshots):
                 records = tuple(item.record for item in snapshot.reviews if item.control.state == 'active')
                 if any(r.identity.schema_version != 2 or r.raw_response_ref is None for r in records):
                     raise ApplicationError('REVIEW_RAW_RESPONSE_REQUIRED')
@@ -170,8 +193,8 @@ class ApprovalUseCases:
                 if not decision.satisfied:
                     raise ApplicationError(decision.code)
                 decisions.append(decision)
-            if (type(intent) is ImplementationAuthorizationIntent
-                    and set(intent.supporting_review_refs) != {ref for d in decisions for ref in d.used_review_refs}):
+            if (type(intent) in (ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent)
+                    and set(supporting_review_refs) != {ref for d in decisions for ref in d.used_review_refs}):
                 raise ApplicationError('METHOD_REQUIREMENTS_CHANGED')
             yield tuple(decisions)
 
@@ -190,8 +213,12 @@ class ApprovalUseCases:
         if replay is not None:
             return replay
         def mutate(uow):
-            for target in notice.targets + (notice.summary_ref,):
-                uow.engineering.resolve_revision(target)
+            if type(notice) is WorkPackageNotice:
+                from ..packages.authorization import resolve_work_package_authorization
+                resolve_work_package_authorization(uow, notice.authorization)
+            else:
+                for target in notice.targets + (notice.summary_ref,):
+                    uow.engineering.resolve_revision(target)
             uow.authorization.put_notice(notice)
             return {'notice_ref': asdict(notice.ref), 'source_trust_grade': notice.source.trust_grade}
         with self._admission().guard_capture(context, notice.source, notice.policy_ref):
@@ -207,9 +234,13 @@ class ApprovalUseCases:
         if replay is not None:
             return replay
         def mutate(uow):
-            self._resolve(uow, intent)
+            plan = self._resolve(uow, intent)
             # Persist declared exact requirements, never an agent-provided pass.
-            for requirement in intent.required_review_requirements:
+            requirements = (plan.requirements if type(intent) is WorkPackageAuthorizationIntent
+                            else intent.required_review_requirements)
+            if type(intent) is WorkPackageAuthorizationIntent and not requirements:
+                raise ApplicationError('METHOD_REQUIREMENTS_CHANGED')
+            for requirement in requirements:
                 uow.reviews.ensure_requirement(requirement)
             uow.authorization.put_intent(intent)
             return {'intent_id': intent.intent_id, 'intent_digest': asdict(intent.digest), 'actions': list(intent.actions)}

@@ -12,9 +12,10 @@ from ..contracts.transactions import UoWFactory
 from .method_runs import build_method_run_bindings
 from .method_management import build_method_management
 from .review_sources import build_review_check_admission
-from .execution_dispatch import bind_execution_dispatch
+from .execution_dispatch import bind_execution_dispatch, bind_agent_execution_dispatch
 from .reviewer_assignments import build_reviewer_assignment_usecases
-from .submission_sources import build_method_unit_report_source, build_submission_acceptance_admission
+from .submission_sources import (build_method_unit_report_source, build_declared_unit_report_source,
+                                 build_submission_acceptance_admission)
 from .intent_admission import (build_intent_admission_router,
     build_change_intent_admission, build_implementation_intent_admission)
 
@@ -32,7 +33,7 @@ def build_engineering_service(factory: UoWFactory, ports: EngineeringPorts) -> E
 __all__ = ["build_engineering_service", "EngineeringPorts",
            "build_method_run_bindings", "build_review_check_admission",
            "build_method_management",
-           "bind_execution_dispatch", "build_reviewer_assignment_usecases",
-           "build_method_unit_report_source", "build_submission_acceptance_admission",
+           "bind_execution_dispatch", "bind_agent_execution_dispatch", "build_reviewer_assignment_usecases",
+           "build_method_unit_report_source", "build_declared_unit_report_source", "build_submission_acceptance_admission",
            "build_intent_admission_router", "build_change_intent_admission",
            "build_implementation_intent_admission"]

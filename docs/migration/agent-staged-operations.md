@@ -1,0 +1,7 @@
+# Agent分阶段操作格式扩展（临时数据库验证）
+
+采用用户2026-10-06裁定；版本staged-operation/1。仅原env_requests新增nullable staged_operation_json TEXT，利用原ensure_operation_columns流程添加。NULL记录保持原冻结OperationIntent/旧reserve调用规则；非NULL为closed contractVersion/rootIntent/phase元数据，完整root与追加phase必须组合回当前operation_json，读取校验原intent hash、版本及组合，不把缺坏数据回退legacy。
+
+首版两阶段：root步骤允许原claim，全部concluded后同事务追加并seal后续完整recipe；未seal不能publish，seal后不能再改。samerequest digest/root全形的新端口重放返回同一最新operation，旧reserve遇staged拒混用；旧key、operationRef、Node/Profile/Usage及目录标识均不改。没有新执行表、registry或可维护的第二真值。
+
+添加字段只在本实施树拥有的隔离临时SQLite做验证，用户数据库没有打开或迁移。新格式及NULL旧记录已在临时数据库验证；已有命名操作且缺新增列的旧数据库升级尚未单独验收，不授升级或处理用户数据权限。较旧软件不会理解staged元数据，支持旧记录不等于支持降级读取staged记录；实际发行须明确最低版本并验failclosed，不宣传降级可用。

@@ -6,6 +6,6 @@ whatever is not pinned here.
 from __future__ import annotations
 
 #: first-hand source: deployment/models.json providers.deepseek.api = "openai-completions".
-from ordessa_harness_pi.acp_model_facts import DIALECT as DIALECTS
-from ordessa_harness_pi.acp_model_facts import NATIVE_TARGET as _TARGETS
+from .acp_model_facts import DIALECT as DIALECTS
+from .acp_model_facts import NATIVE_TARGET as _TARGETS
 NATIVE_TARGET = _TARGETS["pi"]

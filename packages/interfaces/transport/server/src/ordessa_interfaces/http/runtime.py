@@ -35,10 +35,9 @@ from ordessa_interfaces.http.serialization import WireError, decode_request, enc
 from ordessa_interfaces.system_access.contracts.transport import AccessError, WIRE_VERSION
 
 
-def _loopback_authority(value: str) -> bool:
-    host = value.rsplit(":", 1)[0].lower() if not value.startswith("[") else value.split("]", 1)[0] + "]"
-    return host in {"127.0.0.1", "localhost", "[::1]"}
 
+
+from .loopback import _loopback_authority
 
 def create_app(host: HttpHostView, *, on_bound: "Callable[[], None] | None" = None) -> FastAPI:
     """The ASGI app for one composed runtime.

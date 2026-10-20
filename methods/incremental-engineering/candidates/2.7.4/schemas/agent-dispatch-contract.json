@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ordessa:engineering:owner-operation:engineering.executions.dispatch:input:2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dispatch"
+  ],
+  "properties": {
+    "dispatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "One declared Work step (schema-17 work_step_log); never a run.",
+      "required": [
+        "work_id",
+        "action_id",
+        "step_id",
+        "attempt",
+        "agent_ref",
+        "params",
+        "actions",
+        "timeout"
+      ],
+      "properties": {
+        "work_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "action_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "step_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sessionId"
+          ],
+          "properties": {
+            "sessionId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8192
+            }
+          },
+          "description": "Explicit original fixed-session metadata. The Work owner assembles the authored prompt."
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "edit_repository",
+              "run_checks",
+              "create_local_commit",
+              "export_bundle",
+              "publish_branch",
+              "deploy"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "timeout": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 60
+        },
+        "agent_ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "namespace",
+            "instanceId",
+            "bindingDigest"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "agent-instance/1"
+            },
+            "namespace": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "instanceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "bindingDigest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          },
+          "x-maxCanonicalBytes": 8192
+        }
+      }
+    }
+  },
+  "x-maxCanonicalBytes": 2097152,
+  "x-ordessa-capability-binding": {
+    "capability_id": "engineering.executions.dispatch",
+    "kind": "operation",
+    "interface_version": "2",
+    "contract_digest": "e7ee825bc691883b851e0220144e4cce8b0078614bf2b852ce438a8b8233a266"
+  }
+}

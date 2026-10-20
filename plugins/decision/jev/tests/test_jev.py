@@ -7,7 +7,9 @@ import time
 
 import httpx2
 import pytest
-from decision_runtime.definitions import DecisionQuestion, PolicyRef, ModelCallContext, CallPermit, ContractError
+from decision_runtime.definitions.models import DecisionQuestion, PolicyRef
+from decision_runtime.definitions.values import DecisionError
+from decision_runtime.ports import CallPermit, ModelCallContext
 from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings, JevProviderError
 
 pytestmark = pytest.mark.asyncio
@@ -93,7 +95,11 @@ async def test_T35_T36_protocol_rejections(mutation):
 @pytest.mark.parametrize('mutation', ['expected', 'legend', 'keys', 'alias_key'])
 async def test_T36_score_protocol(mutation):
     payload = body('score'); a = payload['answers']['q']
-    if mutation == 'expected': a['score'] = 1.6
+    if mutation == 'expected':
+        # The official endpoint returns the model's own expected score, which is
+        # not an exact probability-weighted average. Only a score outside the
+        # rubric range is a protocol violation.
+        a['score'] = 2.5
     elif mutation == 'legend': a['legend']['0'] = 'other rubric'
     elif mutation == 'keys': a['probabilities']['3'] = a['probabilities'].pop('2')
     else: a['probabilities']['00'] = a['probabilities'].pop('0')
@@ -110,7 +116,7 @@ async def test_T36_choice_tie_is_explicit_not_first():
         answer = await p.decide(q, context(p, q))
         assert answer.value is None
         assert answer.provider_receipt['selection_status'] == 'tie'
-        assert answer.provider_receipt['tied_option_ids'] == ('a', 'b')
+        assert answer.provider_receipt['tied_option_ids'] == ['a', 'b']
     finally: await p.close()
 
 
@@ -212,9 +218,9 @@ async def test_T41_external_injection_stays_data():
 
 async def test_T42_sizes_and_T68_reserved_capacity():
     for options in ({}, {'a': 'one'}, {str(i): 'x' for i in range(67)}):
-        with pytest.raises(ContractError): question(options=options)
+        with pytest.raises(DecisionError): question(options=options)
     for scale in (('one',), tuple(str(i) for i in range(11))):
-        with pytest.raises(ContractError): question('score', scale=scale)
+        with pytest.raises(DecisionError): question('score', scale=scale)
     options = {str(i): 'business' for i in range(64)}
     options.update(none_suitable='reject', insufficient_evidence='need evidence')
     payload = body(); payload['answers']['q'].update(choice='none_suitable', confidence=1.0,
@@ -308,10 +314,10 @@ async def test_T40_gateway_response_allowlist_is_bounded_snapshot():
     ('probability_keys', 'probability_keys'), ('probability_sum', 'probability_sum'),
     ('number_invalid', 'number_invalid'), ('choice_not_maximum', 'choice_not_maximum'),
     ('model_identity', 'model_identity'), ('answer_set', 'answer_set'),
-    ('sdk_schema', 'sdk_response_schema'), ('score_expected', 'score_expected_value'),
+    ('sdk_schema', 'sdk_response_schema'), ('score_range', 'number_invalid'),
 ])
 async def test_T35_T36_safe_protocol_failure_diagnostics(mutation, diagnostic, caplog):
-    kind = 'score' if mutation == 'score_expected' else 'choice'
+    kind = 'score' if mutation == 'score_range' else 'choice'
     payload = body(kind); answer = payload['answers']['q']
     marker = 'private-body-marker-must-not-escape'
     if mutation == 'probability_keys': answer['probabilities'] = {'a': 0.8, marker: 0.2}
@@ -321,7 +327,7 @@ async def test_T35_T36_safe_protocol_failure_diagnostics(mutation, diagnostic, c
     elif mutation == 'model_identity': payload['model'] = marker
     elif mutation == 'answer_set': payload['answers']['extra-'+marker] = dict(answer)
     elif mutation == 'sdk_schema': answer.pop('confidence')
-    else: answer['score'] = 1.6
+    else: answer['score'] = 2.5
     calls = []
     def handler(request): calls.append(request); return httpx2.Response(200, json=payload)
     p = provider(handler); q = question(kind)
@@ -340,3 +346,30 @@ async def test_T40_untrusted_diagnostic_text_is_not_retained():
     error = JevProviderError('protocol_invalid', diagnostic='Bearer private-error-token')
     assert error.diagnostic == 'unspecified'
     assert 'private-error-token' not in repr(error) + str(error)
+
+
+async def test_runner_binds_full_provider_settings_before_mock_transport():
+    from decision_runtime import DecisionRunner
+    calls = []
+    def handler(request):
+        calls.append(json.loads(request.content))
+        payload = body()
+        payload['answers']['ask'] = payload['answers'].pop('q')
+        return httpx2.Response(200, json=payload)
+    p = provider(handler)
+    job = {'spec_version': 'decision-job/1', 'job_id': 'jev-runner', 'version': 1,
+           'input': {'ready': True},
+           'limits': {'max_model_calls': 1, 'max_steps': 1,
+                      'max_value_bytes': 65536, 'timeout_seconds': 5.0},
+           'steps': [{'id': 'ask', 'type': 'ask', 'engine': None,
+                      'when': {'fact': 'input.ready', 'op': 'eq', 'value': True},
+                      'payload': {'question': {'kind': 'choice', 'text': 'Pick',
+                                               'options': {'a': 'A', 'b': 'B'}}}}],
+           'result': {'from': 'ask', 'path': ['answer']}}
+    try:
+        result = await DecisionRunner(provider=p).run_async(job)
+        assert result.status == 'completed' and result.data == {'result': 'a'}
+        assert len(calls) == 1
+        assert result.evidence['receipt']['ask']['provider_settings_digest'] == p.settings_digest
+    finally:
+        await p.close()

@@ -1,0 +1,30 @@
+{
+  "schema": "sdk-policy-port-checkpoint/1",
+  "ports": "Lazy explicit exports of existing pure policy contracts and selected installed-artifact verifier; no runtime executor/permit/journal/grant exported",
+  "brandPolicies": {
+    "plugins/harness/pi/src/ordessa_harness_pi/model_policy.py": {
+      "nonImportASTUnchanged": true,
+      "sha256": "91a7461bf953ed58e337bf2526481abd7f76afd845f6939d6106793d8a9b66cf"
+    },
+    "plugins/harness/codex/src/ordessa_harness_codex/model_policy.py": {
+      "nonImportASTUnchanged": true,
+      "sha256": "71a62037ea5ea08ab6e454a0c296814f23b91ca40bbb50036b396f693e0a257c"
+    },
+    "plugins/harness/claude-code/src/ordessa_harness_claude_code/model_policy.py": {
+      "nonImportASTUnchanged": true,
+      "sha256": "7098a9247e38804b04abf5a9613eaf22eeafc3230d7aa78ece54f2752a5f4646"
+    }
+  },
+  "tests": {
+    "passed": 106,
+    "failed": 0,
+    "skipped": 0,
+    "xml": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/fifteen-brand-sdk-ports-final.xml"
+  },
+  "precedingRun": {
+    "passed": 103,
+    "failed": 3,
+    "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/fifteen-brand-sdk-current.log"
+  },
+  "qualification": "SDK provider-only cohort; no native process/model invocation and no claim of original C4 queue closure"
+}

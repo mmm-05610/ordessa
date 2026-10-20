@@ -1,0 +1,28 @@
+{
+  "loader": "passed",
+  "compiler": "passed",
+  "json_schema": "passed",
+  "unknown_and_uncalibrated_policy": "manual",
+  "tampered_resource": "rejected",
+  "missing_capability": "rejected",
+  "missing_NOR_basis": "rejected_by_schema",
+  "premature_conversion": "rejected_by_schema",
+  "notice_apply_feedback_boundaries": "compiled_owner_waits",
+  "historical_confirmation": "not_rebound_to_new_method",
+  "alternate_method": "compiled_same_compiler",
+  "judgment_cases": 12,
+  "judgment_groups": {
+    "source_semantics": 6,
+    "summary_fidelity": 1,
+    "mechanical_gate": 5
+  },
+  "corpus_revision": 2,
+  "corpus_prior_and_audit": "preserved_and_verified",
+  "explicit_chat_evidence": "schema_accepts_agent_attested_without_platform_claim",
+  "untraceable_or_elevated_confirmation": "rejected_by_schema",
+  "real_pi": "not_run",
+  "real_jev": "not_run",
+  "judgment_quality": "not_validated",
+  "conflict_and_stale_confirmation_runtime": "awaiting_engineering_owner",
+  "end_to_end": "not_complete"
+}

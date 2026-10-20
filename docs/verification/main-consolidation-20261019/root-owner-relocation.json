@@ -1,0 +1,39 @@
+{
+  "scope": "sole original Server lock/proof owner relocation; no product integration completion claim",
+  "classes": {
+    "DataRootOwner": {
+      "originalClassAstUnchanged": true,
+      "sha256": "70bfa4de7c2bf1c26b625bd01b327e470fdd116b8364e4018b3ad2f64b6218fb"
+    },
+    "DataRootPathUnsafeError": {
+      "originalClassAstUnchanged": true,
+      "sha256": "937f71d37b486ab8cb03576a20dd66c1cd01434562f186245cc1bc6d395b5460"
+    },
+    "RuntimeCompositionUnavailable": {
+      "originalClassAstUnchanged": true,
+      "sha256": "aa89f299e04541f40ef8e8367246c5baf46115d67dfe1183d88c08d1d1d3e12d"
+    }
+  },
+  "tests": {
+    "command": "isolated wheel imports + pytest apps/server/tests/platform/test_root_ownership.py",
+    "pass": 6,
+    "skip": 0
+  },
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/ordessa_server/composition/runtime.py",
+      "sha256": "90872e17d7ba298e4113cfdf02b0175222225fd822ab8b76bb19065eaf9e99be"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/root_ownership.py",
+      "sha256": "3996c07bbd5f55930d781ba02509ab06a435bb758a043512368dce07701da023"
+    },
+    {
+      "path": "apps/server/tests/platform/test_root_ownership.py",
+      "sha256": "838ded3cd89a1fe73680e3b5e1d316a530c617550efbe527602beb41ac8fa6ac"
+    }
+  ],
+  "priorOriginalClassSource": "f6d7262af43e6b0e5c75a142af0ee4ca1677e761:apps/server/src/ordessa_server/composition/runtime.py",
+  "resolvedTargets": 187,
+  "pendingTargets": 36
+}

@@ -193,7 +193,8 @@ def test_capability_matrix_is_honest() -> None:
         assert row["observed"] in {"no", "unknown"}, name
     # counter-example gate: nothing auto-switches models or auto-approves
     assert matrix["modelHotSwitch"]["implemented"] == "no-refused"
-    assert matrix["approvalCallback"]["implemented"] == "reply-no-auto"
+    assert matrix["approvalCallback"]["implemented"].startswith("unavailable")
+    assert "reply-no-auto" in matrix["approvalCallback"]["implemented"]
     assert matrix["transportFence"]["observed"] == "no"
 
 

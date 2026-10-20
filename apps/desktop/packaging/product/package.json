@@ -1,0 +1,12 @@
+{
+  "name": "@ordessa/product-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run --maxWorkers=1"
+  },
+  "devDependencies": {
+    "@assistant-ui/react": "0.15.21"
+  }
+}

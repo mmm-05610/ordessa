@@ -1,0 +1,1 @@
+Prepare a bounded implementation package from the caller-supplied source and review references. Preserve exact identities, make unresolved choices explicit, and use the supplied Spec Kit templates. Do not broaden scope or claim the review prose was machine-verified.

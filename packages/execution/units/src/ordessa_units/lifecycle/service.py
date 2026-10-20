@@ -11,15 +11,10 @@ from dataclasses import dataclass
 from typing import Any, Mapping, Protocol
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
-)
-from ordessa_execution_api.environment.identity import ParticipantInstanceRef
-from ordessa_execution_api.environment.operations import (
-    OperationIntent, StepIntent, UsageMutation, node_holder, safe_json,
-)
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch
+from ordessa_units.definitions.admission_identity import AgentNodeRef
+from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, node_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 
 from ordessa_units.admission.invocation import InvocationIssuer
 from ordessa_units.bindings.publication import decode_node_ref, encode_node_ref
@@ -91,7 +86,7 @@ class AgentLifecycle:
     def capabilities(self):
         try:
             store = self._nodes._store()
-        except GuaranteeUnavailableError:
+        except UnitGuaranteeUnavailable:
             return {"nodeLifecycle": False, "supportedLifecycleActions": []}
         available = (isinstance(self._issuer, InvocationIssuer)
                 and self._issuer._store is store
@@ -111,31 +106,31 @@ class AgentLifecycle:
         env = self._environment
         env._check_open()
         if not isinstance(request, RequestKey) or request.principal_scope != env._principal_scope:
-            raise AdmissionRefusedError("lifecycle principal differs from authenticated realm")
+            raise UnitAdmissionRefused("lifecycle principal differs from authenticated realm")
         env._check_environment(request.environment_namespace)
         self._nodes._permission(request=request, action=None if query else action)
         self._nodes._store()
         if (not isinstance(self._issuer, InvocationIssuer) or self._issuer._store is not env._store
                 or env._fingerprint_port is None
                 or not callable(getattr(self._observation_port, "observe", None))):
-            raise GuaranteeUnavailableError("explicit lifecycle authorities on the same store required")
+            raise UnitGuaranteeUnavailable("explicit lifecycle authorities on the same store required")
 
     def _admit(self, node_ref):
         env = self._environment
-        if not isinstance(node_ref, ParticipantInstanceRef):
-            raise IdentityMismatchError("complete Node identity required")
+        if not isinstance(node_ref, AgentNodeRef):
+            raise UnitIdentityMismatch("complete Node identity required")
         env._check_environment(node_ref.environment)
         if env._policy is None or not env._policy.admit_object_access(
                 env._principal_scope, f"{env.environment_id}:agents.node:{node_ref.instance_id}", "read"):
-            raise AdmissionRefusedError("Node lifecycle access refused")
+            raise UnitAdmissionRefused("Node lifecycle access refused")
         node = self._nodes.read(node_ref)
         if node is None:
-            raise GuaranteeUnavailableError("published Node unavailable")
+            raise UnitGuaranteeUnavailable("published Node unavailable")
         return node_ref, node
 
     def _owner(self, ref, node, action):
         if action not in ("stop", "release") or not self._manager_bound():
-            raise GuaranteeUnavailableError("original Unit Manager stop owner required")
+            raise UnitGuaranteeUnavailable("original Unit Manager stop owner required")
         from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessAdmission
         binding = node["binding"]
         admitted = HarnessAdmission(self._environment).describe_for_cleanup(
@@ -146,7 +141,7 @@ class AgentLifecycle:
         try:
             self._unit_manager.find(binding["harnessUnitRef"])
         except UnitManagementRefused as error:
-            raise GuaranteeUnavailableError("original Unit live owner unavailable") from error
+            raise UnitGuaranteeUnavailable("original Unit live owner unavailable") from error
         held_rows = self._environment.read_held_node_usages(
             ref, tuple(item["usageId"] for item in node.get("resourceUsageRefs", ())),
             {"original Harness": binding["harnessProviderRef"],
@@ -159,7 +154,7 @@ class AgentLifecycle:
         kind, cleanup = _ACTION_KINDS[action]
         if (not isinstance(preconditions, Mapping)
                 or any(key not in _PRECONDITION_KEYS for key in preconditions)):
-            raise IdentityMismatchError("fixed lifecycle preconditions required")
+            raise UnitIdentityMismatch("fixed lifecycle preconditions required")
         if "expectedPublicationRevision" in preconditions:
             # PJ04: the stated base publication revision must match the Node's
             # current one; a stale precondition is a conflict, never an override.
@@ -174,7 +169,7 @@ class AgentLifecycle:
         prior = env._store.read_operation(request)
         if prior is not None:
             if prior.digest != digest or prior.intent.kind != kind:
-                raise IdentityMismatchError("spent lifecycle request differs")
+                raise UnitIdentityMismatch("spent lifecycle request differs")
             return prior, None, cleanup, True, None
         admitted, held_rows = self._owner(ref, node, action)
         epoch = node["binding"].get("managementEpoch", node.get("managementEpoch", 0))
@@ -208,7 +203,7 @@ class AgentLifecycle:
                 or not _same(observation.provider_ref, step.pinned_provider_ref)
                 or observation.input_digest != step.input_digest
                 or observation.recovery_correlation != step.recovery_correlation):
-            raise IdentityMismatchError("original lifecycle receipt correlation differs")
+            raise UnitIdentityMismatch("original lifecycle receipt correlation differs")
         self._nodes._owner_ref(observation.evidence_ref, step.pinned_provider_ref,
                               label="lifecycle step evidence")
         if action in ("stop", "release"):
@@ -219,7 +214,7 @@ class AgentLifecycle:
                     or not _same(term["identity"].get("unitRef"), node["binding"]["harnessUnitRef"])
                     or term["identity"].get("inputDigest") != step.input_digest
                     or not isinstance(term.get("outcome"), Mapping) or not term["outcome"]):
-                raise GuaranteeUnavailableError("original termination proof unavailable")
+                raise UnitGuaranteeUnavailable("original termination proof unavailable")
         return observation
 
     @staticmethod
@@ -233,7 +228,7 @@ class AgentLifecycle:
         with env._admission_lock:
             self._permission(request, action=action)
             if action not in ("stop", "release"):
-                raise GuaranteeUnavailableError("Manager recovery is not admitted")
+                raise UnitGuaranteeUnavailable("Manager recovery is not admitted")
             ref, node = self._admit(node_ref)
             operation, admitted, cleanup, replay, held_rows = self._reserve(
                 request, ref, node, preconditions, action)
@@ -271,11 +266,11 @@ class AgentLifecycle:
             else:
                 reply, retirement = self._unit_manager.release_deferred(argument, invocation)
             if not self._issuer.verified_consumption(invocation):
-                raise GuaranteeUnavailableError("Unit did not consume the original invocation")
+                raise UnitGuaranteeUnavailable("Unit did not consume the original invocation")
             observed = self._observe(operation, frozen_step, reply, action, ref, node)
             original = self._unit_manager.records.owner_read_termination(argument["unitId"], action)
             if not _same(original, observed.termination):
-                raise IdentityMismatchError("observation differs from original Unit termination record")
+                raise UnitIdentityMismatch("observation differs from original Unit termination record")
             evidence = {"evidenceRef": _plain(observed.evidence_ref),
                         "termination": _plain(observed.termination) if observed.termination is not None else None,
                         "recoveredBinding": (_plain(observed.recovered_binding)
@@ -323,23 +318,23 @@ class AgentLifecycle:
             self._permission(request, action="release")
             operation = env._store.read_operation(request)
             if operation is None or operation.intent.kind != "agent-release":
-                raise GuaranteeUnavailableError("original release operation required")
+                raise UnitGuaranteeUnavailable("original release operation required")
             ref, node = self._admit(decode_node_ref(operation.intent.node_ref))
             _, rows = self._owner(ref, node, "release")
             snapshot = operation.intent.context_ref.get("nodeUsageFenceSnapshot")
             if snapshot is None or not _same(snapshot, [self._fence_row(row) for row in rows]):
-                raise GuaranteeUnavailableError("original release Usage fence changed or unavailable")
+                raise UnitGuaranteeUnavailable("original release Usage fence changed or unavailable")
             step = operation.intent.steps[0]
             claim = env._store.read_operation_step(request, step.step_id)
             if claim is None or claim.outcome != "possibly-dispatched" or operation.status != "running":
-                raise GuaranteeUnavailableError("original live release claim required")
+                raise UnitGuaranteeUnavailable("original live release claim required")
             argument = node["binding"]["harnessUnitRef"]
             invocation, reply, retirement = self._unit_manager.release_reconciliation(
                 argument, request=request)
             observed = self._observe(operation, step, reply, "release", ref, node)
             original = self._unit_manager.records.owner_read_termination(argument["unitId"], "release")
             if not _same(original, observed.termination):
-                raise IdentityMismatchError("release reconciliation differs from original Unit proof")
+                raise UnitIdentityMismatch("release reconciliation differs from original Unit proof")
             evidence = {"evidenceRef": _plain(observed.evidence_ref),
                         "termination": _plain(observed.termination)}
             holder = node_holder(env.environment_id, ref.instance_id, ref.generation)
@@ -364,10 +359,10 @@ class AgentLifecycle:
             self._permission(request, action="release")
             operation = env._store.read_operation(request)
             if operation is None or operation.intent.kind != "agent-release":
-                raise GuaranteeUnavailableError("original release operation required")
+                raise UnitGuaranteeUnavailable("original release operation required")
             _, node = self._admit(decode_node_ref(operation.intent.node_ref))
             if not self._manager_bound():
-                raise GuaranteeUnavailableError("original Unit Manager release owner required")
+                raise UnitGuaranteeUnavailable("original Unit Manager release owner required")
             self._unit_manager.finalize_committed_release(
                 node["binding"]["harnessUnitRef"], request=request)
             return self.operation_view(env._store.read_operation(request))

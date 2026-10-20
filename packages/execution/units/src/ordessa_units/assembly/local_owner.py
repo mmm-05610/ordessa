@@ -13,10 +13,12 @@ from collections.abc import Mapping
 
 from ordessa_execution_agents.profiles import ProfileService, encode_revision_ref
 from ordessa_execution_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
-from ordessa_execution_api.environment import EnvironmentId
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, safe_json, sealed_mapping
+from ordessa_units.definitions.admission_identity import AdmissionNamespace
+from ordessa_units.definitions.operations import OperationIntent, StepIntent
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.admission.context import UnitAdmissionContext
+from ordessa_units.bindings.profile_admission import UnitProfileAdmission
 from ordessa_units.admission.connection import ConnectionLeasePort
 from ordessa_units.admission.owner_ports import AgentOwnerPorts
 from ordessa_units.admission.owner_selection import AgentOwnerInputs, AgentOwnerUnavailable
@@ -28,6 +30,7 @@ from ordessa_units.management.manager import UnitManagementRefused
 from ordessa_units.sessions.evidence import AcpUnitEvidence
 from .fresh_factory import build_fresh_acp_unit_factory
 from .service import build_unit_manager
+from .owner import AssembledUnitOwner, assemble_unit_owner
 from .profile_selection import resolve_unit_profile
 
 
@@ -40,7 +43,7 @@ class LocalUnitOwner:
                  preparation, materializer, environment_sharing, timeout,
                  callback_approval, process_binding_factory,
                  clock, effect_write_guard_factory=None, acp_turn_opt_in=False,
-                 defer_effect_write_guard_factory=False):
+                 defer_effect_write_guard_factory=False, managed_input_ports=None):
         if (not isinstance(admission_context, UnitAdmissionContext)
                 or type(permission) is not UnitRunPermission
                 or permission.profile_revision.environment_namespace != admission_context.environment_namespace
@@ -60,10 +63,16 @@ class LocalUnitOwner:
         if effect_write_guard_factory is not None and not acp_turn_opt_in:
             raise AgentOwnerUnavailable('Guarded recorded dispatch requires explicit original ACP schema opt-in')
         self.acp_turn_opt_in = acp_turn_opt_in
+        from ordessa_units.channels.acp_input import ManagedAcpInputPorts, ManagedAcpInputs
+        if managed_input_ports is not None and (
+                type(managed_input_ports) is not ManagedAcpInputPorts or not acp_turn_opt_in):
+            raise AgentOwnerUnavailable('Managed ACP input requires fixed owner ports and ACP opt-in')
+        self._managed_inputs = (None if managed_input_ports is None
+                                else ManagedAcpInputs(self, managed_input_ports))
         self._effect_write_guard_factory = effect_write_guard_factory
         self._defer_effect_write_guard_factory = defer_effect_write_guard_factory
         self._effect_write_guard_factory_pending = defer_effect_write_guard_factory
-        self.profile_service = ProfileService(admission_context)
+        self.profile_service = ProfileService(UnitProfileAdmission(admission_context))
         with permission.guard('prepare', clock=clock):
             resolution = resolve_unit_profile(self.profile_service, permission.profile_revision,
                                               admission_context.harness_catalog)
@@ -108,6 +117,7 @@ class LocalUnitOwner:
         self._operations = {}
         self._connections = {}
         self.manager = None
+        self.assembled_owner: AssembledUnitOwner | None = None
 
     @property
     def spec(self):
@@ -172,6 +182,18 @@ class LocalUnitOwner:
     def authorization(self):
         return self.authority.authorization()
 
+    def submit_managed_input(self, unit, authorization, request, captured_ref, *, timeout=60):
+        """Submit/replay an exact capture through this original Unit owner."""
+        if self._managed_inputs is None:
+            raise AgentOwnerUnavailable('Original managed ACP capture/Workspace owners unavailable')
+        return self._managed_inputs.submit(unit, authorization, request, captured_ref, timeout=timeout)
+
+    def read_managed_input(self, authorization, request, unit_ref, captured_ref):
+        """Read the original attempt without capture refresh, relaunch or send."""
+        if self._managed_inputs is None:
+            raise AgentOwnerUnavailable('Original managed ACP capture/Workspace owners unavailable')
+        return self._managed_inputs.read(authorization, request, unit_ref, captured_ref)
+
     @property
     def records(self):
         """Return the exact UnitRecords object installed by the original host."""
@@ -194,6 +216,28 @@ class LocalUnitOwner:
         self.state.attach_owner(ports.provider_view.records, ports.unit_manager)
         self.manager = build_unit_manager(ports.unit_manager, self)
         return self.manager
+
+    def assemble(self, *, journal):
+        """Assemble the original Units owner from a caller-provisioned journal.
+
+        The caller remains responsible for securely provisioning and retaining
+        the journal. This method creates no Environment, store, authority, or
+        durable owner and returns the same public Manager used by ``bind``.
+        """
+        if self.assembled_owner is not None:
+            if self.assembled_owner.journal is journal:
+                return self.manager
+            raise AgentOwnerUnavailable('Local Unit owner is already assembled on another journal')
+        if self._ports is not None:
+            raise AgentOwnerUnavailable('Local Unit owner is already bound to another original assembly')
+        assembled = assemble_unit_owner(self.admission, self.owner_inputs, journal=journal)
+        try:
+            manager = self.bind(assembled.ports)
+        except BaseException:
+            assembled.revoke()
+            raise
+        self.assembled_owner = assembled
+        return manager
 
     def _bound(self):
         self.admission.check_open()
@@ -318,49 +362,6 @@ class LocalUnitOwner:
             self._operations[id(invocation)] = (invocation, request, digest, action)
             return invocation
 
-    def _reserve_captured_input(self, request, unit, authorization, *, operation_ref,
-                                binding, fence_id, fence_revision, marker):
-        """Reserve the input recipe through this original Unit operation owner.
-
-        The coordinator supplies source pins, never an OperationIntent or
-        caller-built native invocation. Keep DTO construction on the existing
-        owner/Store SDK identity used by every other Local Unit operation.
-        """
-        from ordessa_infrastructure.database.records import DomainWrite
-        with self.authority.guard('interaction', authorization):
-            self.native_unit(unit, authorization)
-            if (request.environment_namespace != self.admission.environment_namespace
-                    or request.principal_scope != self.permission.principal_scope
-                    or safe_json(binding.get('unitRef')) != safe_json(unit.identity)
-                    or binding.get('ownerId') != self.owner_id
-                    or binding.get('permissionId') != self.permission.identity
-                    or binding.get('environmentNamespace') != request.environment_namespace):
-                raise AgentOwnerUnavailable('Captured input differs from original Unit operation owner')
-            capture = binding.get('capturedInputRef')
-            expected_operation = 'unit-input-' + _digest({
-                'environmentNamespace': request.environment_namespace,
-                'principalScope': request.principal_scope, 'requestId': request.request_id})[7:55]
-            if (not isinstance(capture, Mapping)
-                    or set(capture) != {'environmentNamespace', 'captureId', 'captureRevision', 'contentDigest'}
-                    or capture.get('environmentNamespace') != request.environment_namespace
-                    or type(capture.get('captureId')) is not str or not capture['captureId']
-                    or type(capture.get('captureRevision')) is not int or capture['captureRevision'] < 1
-                    or operation_ref != expected_operation
-                    or fence_id != 'capture-' + _digest({'unitRef': unit.identity, 'captureId': capture['captureId']})[7:]
-                    or type(fence_revision) is not int or fence_revision < 0
-                    or safe_json(marker) != safe_json({'principalScope': request.principal_scope,
-                        'requestId': request.request_id, 'operationRef': operation_ref,
-                        'captureRevision': capture['captureRevision']})):
-                raise AgentOwnerUnavailable('Captured input operation or fence source differs')
-            digest = _digest(binding)
-            step = StepIntent('prompt', unit.identity['ownerProviderRef'], digest, operation_ref + '.prompt')
-            intent = OperationIntent(operation_ref, 'unit-captured-input', None, binding, (step,))
-            with self.admission.admission_lock:
-                operation = self.admission.store_port.reserve_operation(request, digest, intent, writes=(
-                    DomainWrite('units.captured-input-attempts', fence_id, fence_revision, marker),))
-                claim = self.admission.store_port.claim_operation_step(request, digest, step)
-                return operation, claim
-
     def authorize_acp_turn_query(self, authorization, request, unit_ref, operation_ref,
                                  *, expected_prompt_input_digest):
         """Issue one read-only ticket for an exact receipt in this owner's UnitRecords.
@@ -390,24 +391,29 @@ class LocalUnitOwner:
                 raise InvocationAuthorityRefused('Original ACP schema opt-in is unavailable')
             if not isinstance(unit_ref, Mapping):
                 raise InvocationAuthorityRefused('Complete original Unit reference required')
-            reservation = records.owner_read_unit(unit_ref.get('unitId'))
-            if safe_json(reservation.public_ref) != safe_json(unit_ref):
-                raise InvocationAuthorityRefused('Unit receipt query differs from original records')
-            source = self.state._verify_reservation_source(reservation, reservation.facts.get('nodeRef'))
+            resolver = getattr(records, 'owner_read_unit_for_query', None)
+            if not callable(resolver):
+                raise InvocationAuthorityRefused('Original query identity resolver unavailable')
+            from ordessa_units.records.unit_records import UnitRecordsRefused
+            try:
+                reservation = resolver(unit_ref)
+                if safe_json(reservation.public_ref) != safe_json(unit_ref):
+                    raise UnitRecordsRefused('Unit receipt query differs from original records')
+                source = self.state._verify_query_reservation_source(
+                    reservation, reservation.facts.get('nodeRef'), principal_scope=request.principal_scope)
+            except Exception as error:
+                raise InvocationAuthorityRefused('Receipt query original source unavailable or changed') from error
             context = dict(source.intent.context_ref)
-            run = context.get('localUnitRun', {})
-            if (source.status != 'published' or source.intent.kind != 'unit-public-prepare'
-                    or not source.intent.steps
-                    or safe_json(source.intent.profile_snapshot_ref)
-                       != safe_json(encode_revision_ref(self.permission.profile_revision))
-                    or run.get('ownerId') != self.owner_id
-                    or run.get('permissionId') != self.permission.identity
-                    or run.get('agentId') != self.permission.agent_id
-                    or run.get('environmentIdentity') != self.permission.environment_identity
-                    or safe_json(run.get('profileRevision')) != safe_json(encode_revision_ref(self.permission.profile_revision))
-                    or safe_json(reservation.facts.get('providerRef'))
-                       != safe_json(source.intent.steps[0].pinned_provider_ref)):
-                raise InvocationAuthorityRefused('Receipt query lacks the exact published LocalUnitOwner source')
+            generation = self.state._snapshot_generation().generation
+            context['acpQuerySource'] = self.state._query_source_ref(source)
+            # This is a new query under CURRENT authority, referring to an old
+            # preparation. Never copy the old live owner/permission as our own.
+            context['localUnitRun'] = {
+                'ownerId': self.owner_id, 'permissionId': self.permission.identity,
+                'agentId': self.permission.agent_id,
+                'environmentIdentity': self.permission.environment_identity,
+                'environmentGeneration': generation,
+                'profileRevision': encode_revision_ref(self.permission.profile_revision)}
             digest = records.acp_turn_query_digest(
                 reservation.public_ref, operation_ref, expected_prompt_input_digest)
             query_id = 'unit-acp-read-' + hashlib.sha256(safe_json({
@@ -422,7 +428,6 @@ class LocalUnitOwner:
                 'unitRef': dict(reservation.public_ref),
                 'operationRef': operation_ref,
                 'expectedPromptInputDigest': expected_prompt_input_digest}
-            generation = source.intent.management_epoch
             step = StepIntent('read', reservation.facts['providerRef'], digest,
                               query_id + '.read', management_epoch=generation)
             intent = OperationIntent(query_id, 'unit-acp-query',
@@ -495,13 +500,16 @@ def build_local_unit_owner(*, admission_context, permission, environment_instanc
                            preparation, materializer, environment_sharing, timeout=10,
                            callback_approval=None, process_binding_factory=None,
                            effect_write_guard_factory=None, acp_turn_opt_in=False,
-                           defer_effect_write_guard_factory=False, clock=time.time):
-    """Select one concrete owner; then pass ``owner_inputs`` to host assembly.
+                           defer_effect_write_guard_factory=False, clock=time.time,
+                           managed_input_ports=None):
+    """Select one concrete owner over already-owned Environment/Profile inputs.
 
-    After the host assembles its existing issuer/records, ``bind(owner.ports)``
-    returns public UnitManager. Callers pass ``spec`` and ``authorization()``;
-    they never construct invocation contexts, native receipts or writer grants.
-    Selection opens no new record store and neither acquires nor spawns an environment.
+    ``assemble(journal=...)`` binds a caller-provisioned original journal and
+    returns the public UnitManager. Hosts that already have an assembled
+    ``AgentOwnerPorts`` bundle may continue to call ``bind(ports)``. Callers
+    pass ``spec`` and ``authorization()``; they never construct invocation
+    contexts, native receipts or writer grants. Selection opens no record
+    store and neither acquires nor spawns an Environment.
     """
     return LocalUnitOwner(admission_context=admission_context, permission=permission,
         environment_instance=environment_instance, preparation=preparation, materializer=materializer,
@@ -510,6 +518,7 @@ def build_local_unit_owner(*, admission_context, permission, environment_instanc
         effect_write_guard_factory=effect_write_guard_factory,
         acp_turn_opt_in=acp_turn_opt_in,
         defer_effect_write_guard_factory=defer_effect_write_guard_factory,
+        managed_input_ports=managed_input_ports,
         clock=clock)
 
 

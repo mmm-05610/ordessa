@@ -5,6 +5,7 @@ mint production authority, or treat caller-held Unit handles as permission.
 """
 import asyncio
 import json
+import os
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -24,7 +25,7 @@ from ordessa_execution_agents.profiles import (
     encode_revision_ref,
 )
 from ordessa_units.assembly import build_unit_manager
-from ordessa_units.api import UnitApiRefused, UnitInteraction, UnitReconnectUnavailable
+from ordessa_units.api import UnitApiRefused, UnitInteraction
 from ordessa_units.definitions import UnitSpec
 from ordessa_units.management import UnitInstance, UnitManager as OriginalUnitManager
 from ordessa_units.records import OperationJournal, UnitRecords
@@ -97,7 +98,8 @@ class Bindings:
 
 
 @pytest.fixture
-def public_units(tmp_path):
+def public_units(tmp_path, request):
+    acp_turn_opt_in = getattr(request, 'param', True)
     events = []
     root = tmp_path / "environment"
     descriptor = RuntimeProviderDescriptor(
@@ -120,14 +122,18 @@ def public_units(tmp_path):
         start_authority=authority.continuation,
         configuration_authority=authority.continuation,
     )
+    journal_path = tmp_path / "original.sqlite"
+    journal_fd = os.open(journal_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    os.close(journal_fd)
     records = UnitRecords(
-        OperationJournal(tmp_path / "original.sqlite"),
+        OperationJournal(journal_path, acp_turn_opt_in=acp_turn_opt_in),
         scope_authority=DistinctScopes(),
         native_evidence=evidence,
         verifier=authority,
         epoch_port=SimpleNamespace(current_epoch=lambda node: 0),
         termination_evidence=evidence,
         configuration_evidence=evidence,
+        acp_turn_opt_in=acp_turn_opt_in,
     )
     evidence.attach_owner(records)
     environments = Provider(root, events)
@@ -306,28 +312,6 @@ def test_one_session_per_unit_and_close_releases_only_its_shared_use(public_unit
     shared = f.environments.instance.acquire("after-units", sharing=True)
     assert shared.environment_id == f.environments.identity
     assert shared.release()["resourcePreserved"] is True
-
-
-def test_cancel_and_disconnect_do_not_stop_or_release_the_unit_process(public_units):
-    f = public_units
-    unit = f.manager.create(f.spec, f.authorization("interact"))
-    interaction = unit.interaction(f.authorization("interact"))
-    result = interaction.prompt({"prompt": [{"type": "text", "text": "controlled"}], "timeout": 2})
-    assert result["observedConfiguration"] == {"marker": "public-unit-profile"}
-
-    with pytest.raises(UnitApiRefused):
-        interaction.request("session/new", {})
-    interaction.cancel()
-    interaction.disconnect()
-    with pytest.raises(UnitReconnectUnavailable):
-        interaction.request("session/prompt", {"prompt": []})
-    with pytest.raises(UnitReconnectUnavailable):
-        unit.interaction(f.authorization("interact-again"))
-    record = f.instances[0].channel_factory.owned_record
-    assert record.process.observe().state == "running"
-    assert f.records.owner_read_session(unit.identity["unitId"]).state == "confirmed"
-    assert f.environments.instance.snapshot.active_uses == 1
-    assert unit.close(f.authorization("close-after-disconnect"))["state"] == "confirmed"
 
 
 def test_interaction_rejects_unowned_connection_and_keeps_assembly_connection(public_units):

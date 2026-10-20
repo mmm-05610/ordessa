@@ -14,17 +14,13 @@ from agent_tools_fixtures.management import setup, explicit_capabilities  # noqa
 from agent_tools_fixtures.lifecycle import lifecycle as history_lifecycle  # noqa: F401
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    GuaranteeUnavailableError,
+from ordessa_units.errors import (
+    UnitAdmissionRefused,
+    UnitGuaranteeUnavailable,
 )
-from ordessa_execution_api.environment.identity import ParticipantInstanceRef
-from ordessa_execution_api.environment.operations import (
-    OperationIntent,
-    StepIntent,
-    operation_holder,
-    safe_json,
-)
+from ordessa_units.definitions.admission_identity import AgentNodeRef
+from ordessa_units.definitions.operations import OperationIntent, StepIntent, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.bindings.publication import encode_node_ref
 from ordessa_units.public import OperationNotFound, unit_services
 
@@ -36,7 +32,7 @@ def _services(parts):
 def _reserved_preparation(parts, *, request_id="metadata-preparation", principal="principal",
                           kind="agent-preparation"):
     store, env, _, _, published_node, *_ = parts
-    node = ParticipantInstanceRef(env.environment_id, "planned-node", 1)
+    node = AgentNodeRef(env.environment_id, "planned-node", 1)
     published = parts[3]._nodes.read(published_node)
     provider_ref = published["binding"]["harnessProviderRef"]
     request = RequestKey(env.environment_id, principal, request_id)
@@ -117,7 +113,7 @@ def test_reserved_preparation_reads_its_planned_node_without_claiming_publicatio
     before = _state(parts, request, intent)
 
     assert services.nodes.read(
-        ParticipantInstanceRef("env", "planned-node", 1)
+        AgentNodeRef("env", "planned-node", 1)
     ) is None
     projection = services.operations.read(operation_ref)
 
@@ -126,7 +122,7 @@ def test_reserved_preparation_reads_its_planned_node_without_claiming_publicatio
         "kind": "agent-preparation",
         "revision": 1,
         "status": "reserved",
-        "nodeRef": encode_node_ref(ParticipantInstanceRef("env", "planned-node", 1)),
+        "nodeRef": encode_node_ref(AgentNodeRef("env", "planned-node", 1)),
         "hasResult": False,
     }
     assert _state(parts, request, intent) == before
@@ -139,7 +135,7 @@ def test_nonpreparation_operation_cannot_read_an_absent_target_node(setup):
     )
     services = _services(parts)
 
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         services.operations.read(operation_ref)
     assert _state(parts, request, intent)[0].status == "reserved"
 
@@ -225,7 +221,7 @@ def test_operation_acl_denial_happens_before_identity_lookup(setup, monkeypatch)
     monkeypatch.setattr(policy, "admit_object_access", lambda principal, target, action:
                         not (target == f"env:operation:{operation_ref}" and action == "read"))
 
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         services.operations.read(operation_ref)
 
     assert identity_reads == []
@@ -279,7 +275,7 @@ def test_damaged_identity_holder_is_unverifiable_not_projected(setup, monkeypatc
         return result
 
     monkeypatch.setattr(parts[0], "read_domain", damaged)
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         services.operations.read(operation_ref)
     assert _state(parts, request, intent)[0].status == "reserved"
 

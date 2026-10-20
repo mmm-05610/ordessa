@@ -2,8 +2,25 @@
 import sys
 import asyncio
 import pytest
-from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore, ProcessRequest, EnvironmentRefused
+from ordessa_environments import (
+    EnvironmentManager, SQLiteEnvironmentStore, ProcessRequest, EnvironmentRefused,
+    PROCESS_CAPABILITY, TERMINAL_CAPABILITY, CapabilityReport, CapabilityStatus,
+)
 from ordessa_environments_local import LocalEnvironmentResourceProvider
+
+
+def test_managed_local_use_reports_a_capability_report(tmp_path):
+    root=tmp_path/'files'
+    provider=LocalEnvironmentResourceProvider(default_root=str(root))
+    manager=EnvironmentManager(store=SQLiteEnvironmentStore(tmp_path/'env.db'),providers={'local':provider})
+    instance=manager.create('local',{'root':str(root)})
+    use=instance.acquire('unit',sharing=False)
+    assert isinstance(use.capabilities, CapabilityReport)
+    assert use.capabilities.isolation=='none'
+    assert use.capabilities.values[PROCESS_CAPABILITY] is CapabilityStatus.SUPPORTED
+    assert use.capabilities.values[TERMINAL_CAPABILITY] is CapabilityStatus.UNSUPPORTED
+    assert use.capabilities.provides==frozenset({'process','byte-channel','files','stderr'})
+    use.release()
 
 
 def test_shared_local_uses_keep_original_process_and_file_behavior(tmp_path):

@@ -9,7 +9,7 @@ from agent_tools_fixtures.node_publication import setup as node_fixture, conclud
 from agent_tools_fixtures.invocation_authority import Authority, CurrentState
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import IdentityMismatchError, UnknownResultError, AdmissionRefusedError
+from ordessa_units.errors import UnitIdentityMismatch, UnitOperationUnknown, UnitAdmissionRefused
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import InvocationIssuer, InvocationAuthorityRefused
 from ordessa_execution_agents.harness.providers.registry.contributions import RUNTIME_METHODS
@@ -44,7 +44,7 @@ def test_same_request_different_payload_or_precondition_cannot_apply(setup,field
  else:
   declaration=dict(change.to_dict()['declarations'][0]); declaration['payload']={'modelId':'other'}
   changed=replace(change,declarations=(declaration,))
- with pytest.raises(IdentityMismatchError): apply(setup,change=changed)
+ with pytest.raises(UnitIdentityMismatch): apply(setup,change=changed)
  assert setup[7]['calls']==1
 
 @pytest.mark.parametrize('outcome',['unknown','throw'])
@@ -54,7 +54,7 @@ def test_unknown_and_throw_block_new_key_and_never_dispatch_again(setup,outcome)
  assert old.status=='unknown' and setup[7]['calls']==1
  assert apply(setup)==old
  new=RequestKey('env','principal','different-request')
- with pytest.raises(UnknownResultError): apply(setup,request=new,change=replace(setup[6],request_id=new.request_id))
+ with pytest.raises(UnitOperationUnknown): apply(setup,request=new,change=replace(setup[6],request_id=new.request_id))
  assert setup[0].read_operation(new) is None and setup[7]['calls']==1
  assert 'private-test-secret' not in old.evidence_json
 
@@ -75,7 +75,7 @@ def test_query_reconciles_original_attempt_without_another_apply(setup):
 
 
 def test_stale_native_revision_and_required_unknown_kind_refuse_before_claim(setup):
- with pytest.raises(IdentityMismatchError): apply(setup,change=replace(setup[6],expected_configuration_revision='stale'))
+ with pytest.raises(UnitIdentityMismatch): apply(setup,change=replace(setup[6],expected_configuration_revision='stale'))
  declaration=dict(setup[6].to_dict()['declarations'][0]); declaration['configurationKind']='absent'
  with pytest.raises(ConfigurationUnsupported): apply(setup,change=replace(setup[6],declarations=(declaration,)))
  assert setup[7]['calls']==0 and setup[0].read_operation(setup[5]) is None
@@ -137,7 +137,7 @@ def test_authorized_deferred_query_settles_without_resend_and_keeps_observations
  result=apply(setup,change=change)
  assert result.status=='unknown'
  new=RequestKey('env','principal','competitor')
- with pytest.raises(UnknownResultError):
+ with pytest.raises(UnitOperationUnknown):
   apply(setup,request=new,change=replace(change,request_id=new.request_id))
  setup[7].update(outcome='applied',revision='native-2',model='new')
  final=setup[3].query(setup[4],result.intent.operation_ref)
@@ -263,7 +263,7 @@ def test_unwired_lifecycle_port_is_typed_unsupported(setup,wire,method):
 def test_provider_retirement_before_dispatch_is_denied(setup,node_fixture):
  setup[3].reserve(setup[5],setup[4],setup[6])
  setup[1].retire_activation(node_fixture[-1].activation)
- with pytest.raises(AdmissionRefusedError): apply(setup)
+ with pytest.raises(UnitAdmissionRefused): apply(setup)
  assert setup[7]['calls']==0 and setup[0].read_operation_step(setup[5],'configuration-apply') is None
 
 
@@ -280,7 +280,7 @@ def test_cold_reserved_or_unknown_replay_does_not_query_or_dispatch(setup,node_f
   manager=AgentConfiguration(env,NodePublication(env),invocation_issuer=issuer)
   assert manager.apply(setup[5],setup[4],setup[6])==first
   assert setup[7]['calls']==1 and setup[7]['queryCalls']==0
-  with pytest.raises(AdmissionRefusedError): manager.query(setup[4],first.intent.operation_ref)
+  with pytest.raises(UnitAdmissionRefused): manager.query(setup[4],first.intent.operation_ref)
  finally: reopened.close()
 
 
@@ -299,7 +299,7 @@ def test_sqlite_fence_and_request_reservation_roll_back_together(setup):
 @pytest.mark.parametrize('wrong',[True,1.0])
 def test_owner_applied_confirmation_cannot_change_reference_json_types(setup,target,wrong):
  import json
- from ordessa_execution_api.environment.operations import safe_json
+ from ordessa_infrastructure.encoding.immutable_json import safe_json
  provider=setup[1].agent_runtime_contribution(setup[3]._nodes.read(setup[4])['binding']['harnessDefinitionRef']).provider
  original=provider.apply_configuration
  def mismatched(unit,change,context):
@@ -320,8 +320,8 @@ def test_owner_applied_confirmation_cannot_change_reference_json_types(setup,tar
 @pytest.mark.parametrize('wrong',[True,1.0])
 def test_current_unit_owner_reference_types_checked_before_observation(setup,field,wrong):
  import json
- from ordessa_execution_api.environment.operations import safe_json
- from ordessa_execution_api.environment import GuaranteeUnavailableError
+ from ordessa_infrastructure.encoding.immutable_json import safe_json
+ from ordessa_units.errors import UnitGuaranteeUnavailable
  provider=setup[1].agent_runtime_contribution(setup[3]._nodes.read(setup[4])['binding']['harnessDefinitionRef']).provider
  current=provider.inspect_unit(setup[3]._nodes.read(setup[4])['binding']['harnessUnitRef'])
  ref=json.loads(safe_json(getattr(current,field)))
@@ -329,9 +329,9 @@ def test_current_unit_owner_reference_types_checked_before_observation(setup,fie
  else: ref['ownerProviderRef']['generation']=wrong
  changed=replace(current,**{field:ref})
  provider.inspect_unit=lambda unit:changed
- with pytest.raises(GuaranteeUnavailableError):
+ with pytest.raises(UnitGuaranteeUnavailable):
   setup[3].inspect(setup[4])
- with pytest.raises(GuaranteeUnavailableError):
+ with pytest.raises(UnitGuaranteeUnavailable):
   apply(setup)
  assert setup[0].read_operation(setup[5]) is None
  assert setup[0].read_operation_step(setup[5],'configuration-apply') is None

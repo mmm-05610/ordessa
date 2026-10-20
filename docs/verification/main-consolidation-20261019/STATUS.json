@@ -1,0 +1,392 @@
+{
+  "phase": "Latest main checked out at repository root; all auxiliary worktree directories recoverably archived; Engineering deferred",
+  "headBeforeCheckpoint": "c3dc16add92590829d0cb8830aff8087a33a982a",
+  "main": "bd248744d0699dd019793370a76c561ec1e472a5",
+  "committedConflictTargetsAfterCheckpoint": 212,
+  "pending": 11,
+  "lastProductCohort": {
+    "passed": 42,
+    "skipped": 0,
+    "qualification": "uncommitted product integration; rebuilt current wheel acceptance still required"
+  },
+  "blockers": [
+    {
+      "kind": "required external dependency unavailable",
+      "sources": [
+        "apps/server/pyproject.toml"
+      ],
+      "evidence": "Fresh13localwheel pip check now fails only on missing Linux SecretStorage; former Decision/jsonschema/Graph errors removed after real source adapters and metadata corrections.",
+      "disposition": "External pip installation remains denied twice; no retry or alternate executor. Current snapshot CLI/list/help accepted only; actual Engineering registry and final post-adaptation rebuild remain pending."
+    },
+    {
+      "kind": "Server entry behavior conflict",
+      "sources": [
+        "apps/server/src/ordessa_server/__main__.py",
+        "apps/server/src/ordessa_server/entrypoints/cli.py",
+        "apps/desktop/electron/server-bridge/tests/wire-port.live.test.ts"
+      ],
+      "evidence": "HTTP entry protocol repaired and tested with explicit trusted owner injection. The installed default has no current trusted Agent/HTTP bindings; exact missing inputs and candidates are in http-entrypoint-checkpoint.json.",
+      "disposition": "Do not substitute empty registry, loopback authorization, test fixture or old Unit owner for production inputs."
+    }
+  ],
+  "retainedLimitations": [
+    "Engineering report/review/MethodControl and its SIGSEGV deferred for redesign; source/failed assertions preserved",
+    "Complete product functionality/registry/source acceptance not claimed",
+    "SecretStorage unavailable; external pip/DSH/credential/model restrictions unchanged",
+    "Historical namespaces/codecs retained; conditional old runtime implementations not globally retired"
+  ],
+  "diagnosis": "BLOCKER-DIAGNOSIS.md; blocker-diagnosis.json; blocker-dynamic-diagnostic.json",
+  "engineeringBusinessUnchanged": {
+    "receipt": "business-preservation-v2.json",
+    "qualification": "Original definitions retained; additive adapter methods and DTOs are recorded separately rather than declaring every file byte-identical."
+  },
+  "latestIndependentValidation": {
+    "schemaGeneratorExit": 0,
+    "currentCLIConsumerPassed": 2,
+    "skip": 0,
+    "desktopBridgeLifecyclePassed": 16,
+    "desktopBridgeQualification": "test-owned fake child processes only; actual HTTP Server composition still blocked"
+  },
+  "engineeringAdaptation": "All source preserved for user redesign. Later report/review WIP is unqualified; no further Engineering specialization. Full Engineering chains and its SIGSEGV do not block newly authorized local main convergence.",
+  "httpLaunch": "repaired current host entry and one-shot CLI coexist; 18 tests pass; no default authority/config inferred",
+  "groupedRemaining": "REMAINING-GROUPED.md / remaining-grouped.json",
+  "latestBatches": {
+    "originalServerIdAndNamespaceCodec": {
+      "passed": 34,
+      "skip": 0
+    },
+    "historicalAndCurrentDecisionReads": {
+      "passed": 35,
+      "skip": 0,
+      "commit": "b84492fafa"
+    },
+    "qualification": "source reviewer integration, actual default trusted inputs and installed closure still pending",
+    "parallelAdaptation": {
+      "cliAgentFocused": {
+        "passed": 33,
+        "skip": 0,
+        "qualification": "30 bundle/init + 2 existing Profile/seed + 1 installed controlled HTTP test; not all historical commands"
+      },
+      "rootCLIWithOriginalCommandSourceRetained": {
+        "passed": 31,
+        "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/cli-retained-originals.log"
+      },
+      "currentNativeOwnerSource": {
+        "passed": 13,
+        "skip": 0,
+        "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/native-config-agent/root-final-current-native.log"
+      },
+      "independentProfileSource": {
+        "passed": 23,
+        "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/engineering-profile-agent/current-source.log"
+      },
+      "engineeringOriginalJobProofAndDecisionReads": {
+        "passed": 13,
+        "skip": 0,
+        "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/source-job-proof-final.log"
+      },
+      "neutralDomainRequestAndWriterRelease": {
+        "passed": 31,
+        "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/domain-request-contract-guarded.log"
+      },
+      "workspaceFull": {
+        "passed": 21,
+        "errors": 1,
+        "skip": 0,
+        "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/workspace-conflict-full.log",
+        "error": "Original two-connections fixture takes over the first live SQL writer; original request/CAS assertions pass but original writer release correctly refuses mismatched owner."
+      },
+      "originalNativePorts": {
+        "passed": 30,
+        "failed": 8,
+        "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/native-config-agent/native-original-ports.log"
+      },
+      "realRetirementScan": {
+        "passed": 0,
+        "failed": 1,
+        "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/native-config-agent/retirement-real-path.log"
+      },
+      "originalEngineeringFlows": {
+        "collectionErrors": 3,
+        "log": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/engineering-profile-agent/inherited-flow.log"
+      }
+    },
+    "currentCheckpoint": {
+      "workspaceFull": {
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 20,
+        "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/workspace-conflict-final.xml"
+      },
+      "sharedWriterAndWorkspaceFinal": {
+        "tests": 31,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 31,
+        "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/shared-writer-lifecycle-final.xml"
+      },
+      "sandboxDiscovery": {
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 3,
+        "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/assertion-discovery-owner-v3/sandbox-discovery-root.xml"
+      },
+      "explicitHostLimits": {
+        "tests": 75,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 75,
+        "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/engineering-profile-agent-v2/budget-source-final.xml"
+      },
+      "realFixedProfileAgent": {
+        "tests": 34,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 34,
+        "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/engineering-profile-agent-v3/real-agent-final.xml"
+      },
+      "qualification": "Independent source/controlled peer tests only; original errors and broader acceptance gaps retained. Pending source-review and dispatch tests are not counted as committed closure."
+    },
+    "resumedAdaptation": {
+      "78c801031c": {
+        "scope": "Current source-review durable Decision job and strict separate historical proofs",
+        "validation": {
+          "tests": 168,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "xml": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/source-review-current-adapter/final-current.xml"
+        }
+      },
+      "40d6754cf9": {
+        "scope": "Original method/request guard spans independent permit consumption; suppression/async guards refused",
+        "validation": "22 final core + 6 real source cases; see source-review-current-adapter/guard-span-freeze.json. Prior source exit139 retained; no cause assumed."
+      },
+      "f150d83673": {
+        "scope": "Agent cold reconcile and explicit Unit V1/V2 historical reads",
+        "validation": "9 passed; engineering-dispatch-current-integration/COLD-QUERY-CHECKPOINT.md"
+      },
+      "48f6d114be": {
+        "scope": "Preserved pure brand policy imports through SDK explicit ports",
+        "validation": {
+          "tests": 106,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "xml": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/fifteen-brand-sdk-ports-final.xml"
+        }
+      },
+      "4f76218673": {
+        "scope": "Typed Harness retirement adapter with original Usage/SQL unchanged",
+        "validation": {
+          "tests": 41,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "xml": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/assertion-bca-staged-v4/final-owned-checkpoint.xml"
+        }
+      },
+      "8e92edec65": {
+        "scope": "Current Profile/Harness read owners and original pure proposal input",
+        "validation": "18 passed; decision-read-agent/receipt.json"
+      }
+    },
+    "postScopeRecovery": {
+      "profileSourceFixtures": {
+        "commit": "cd2bc96795",
+        "passed": 30,
+        "qualification": "distinct focused tests; not global acceptance"
+      },
+      "agentWorkDispatch": {
+        "commit": "4296fe32cc",
+        "passed": 73,
+        "skipped": 0,
+        "qualification": "original guards, actual SDK controlled peer, durable records; no production model"
+      },
+      "agentReviewerRoles": {
+        "commit": "39592534ef",
+        "passed": 32,
+        "skipped": 0
+      },
+      "registryCurrentClosure": {
+        "commit": "c3dc16add9",
+        "passed": 69,
+        "skipped": 0,
+        "revision": 127,
+        "engineeringFiles": 329,
+        "decisionFiles": 21,
+        "infrastructureFiles": 14,
+        "receipt": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/registry-closure-v6/HANDOFF.json"
+      },
+      "installedEntry": {
+        "passed": 1,
+        "skipped": 0,
+        "qualification": "13fresh wheels,57/57/82currentowner import audits; dependencies changed after this run, rerun pending; not full pip closure",
+        "commit": "71891b09e9"
+      },
+      "qualification": "Counts refer to separate focused batches and may overlap. Conflict target count remains212/223; none automatically closed by these results.",
+      "agentSubmissionData": {
+        "commit": "da92c99bf2",
+        "passed": 56,
+        "skipped": 0,
+        "qualification": "Data-only new tag/codec/original repository/graph. Original schemas1/2 bytes preserved; no actual report business COMMIT/source/continuation claim."
+      },
+      "installedEntryMetadataRecheck": {
+        "passed": 1,
+        "seconds": 9.79,
+        "skipped": 0,
+        "projects": 13,
+        "sourceAndMetadataFilesStable": 952,
+        "ownerImports": [
+          57,
+          57,
+          82
+        ],
+        "pipCheck": "only SecretStorage missing",
+        "receipt": "installed-metadata-recheck.json",
+        "qualification": "Agent preparation await and report source adaptations continue after this frozen snapshot. Rebuild after their final freeze; this is not final installed Engineering registry acceptance."
+      },
+      "completeAccessRoot": {
+        "commit": "18d6431109",
+        "passed": 27,
+        "finalNarrowCasesPassed": 3,
+        "qualification": "Counts overlap. Broader38PASS/3FAIL failures retained; those exact3capability-filter cases retested PASS. Injectable actual product-root path; no default production trust provider."
+      },
+      "installedAgentWork": {
+        "passed": 3,
+        "skipped": 0,
+        "seconds": 35.26,
+        "freshLocalWheels": 15,
+        "ownerModulesAudited": 517,
+        "receipt": "installed-agent-work-receipt.json",
+        "qualification": "Frozen actual Root flow cases only. Ongoing report/review additions require final combined source/registry/distribution closure."
+      }
+    }
+  },
+  "latestParallelAdaptation": "parallel-adaptation-checkpoint.json",
+  "sourceConflictAccounting": "212/223 resolved; B2 + E8 + G1 pending. This count is source-conflict bookkeeping, not total acceptance.",
+  "approvedDispatchVersioning": {
+    "decision": "新增 Agent 契约版本及对应方法版本，原版本保留历史读取",
+    "implementation": "v2 descriptor and successor actions-v1 candidate 2.7.3 in progress; original 2.7.2 retained"
+  },
+  "distributionGate": "final-distribution-gates.json",
+  "latestResumedAdaptation": "resumed-adaptation-checkpoint.json",
+  "worktreeScopeReview": {
+    "initialActionRejected": true,
+    "reason": "Reviewer could not establish authority for main-consolidation rather than original packages-convergence tree",
+    "newMainConversationEvidenceSupplied": true,
+    "evidenceSentinels": [
+      "Sentinel_2bd7df9126c08191a29f9bbbf2fcb91d",
+      "Sentinel_199b70717aa481919fa07e7b0f448183",
+      "Sentinel_abb95e133ae08191a6cbec8d2322870a",
+      "Sentinel_59a10b1932b48191a4769117c5f872b3"
+    ],
+    "verification": "Read-only status and SHA matched paused fixture; rejected command had not executed. Identical command retried once through same executor/workdir/permission route, approved and9passed; no alternative executor/workaround.",
+    "status": "RESOLVED FOR CURRENT REPOSITORY CONSOLIDATION SCOPE"
+  },
+  "explicitLatestUserDecision": "新增 Agent 契约版本及对应方法版本，原版本保留历史读取",
+  "currentLocalDependencyAudit": {
+    "projects": 53,
+    "activeLocalRequirementEdges": 99,
+    "conflicts": 0,
+    "receipt": "current-local-dependency-constraints.json",
+    "qualification": "Declared local constraints only; metadata confirmed by fresh13wheel build. Third-party full closure remains blocked."
+  },
+  "retirementSnapshot": {
+    "projects": 53,
+    "pythonFiles": 1361,
+    "productionModulesWithLegacyFindings": 116,
+    "hostModulesWithLegacyFindings": 28,
+    "parseErrors": 0,
+    "selectedEntryDirectFindings": 0,
+    "verdict": "INVENTORY_ONLY_AUTHORITY_EXIT_UNDETERMINED",
+    "qualification": "Inventory presence is not runtime authority.116 hits classified separately with root path witnesses; no lexical-zero gate."
+  },
+  "mainIntegrationGates": "FINAL-SCOPE.md supersedes historical MAIN-INTEGRATION-GATES.md",
+  "retirementCriterion": "Exit old runtime authority from active composed/installed paths; retain history/migration/namespace data and legitimate Environment owners. No lexical-zero requirement.",
+  "retirementClassification": {
+    "receipt": "retirement-classification.json",
+    "script": "classify_retirement_findings.py",
+    "symbolHitModules": 116,
+    "historicalReadOrProjection": 2,
+    "legitimateEnvironmentOwner": 3,
+    "packagedTestArtifacts": 2,
+    "retainedWithoutSelectedStaticRootPath": 30,
+    "staticallyReachableOldRuntimeOrMixedAdapter": 79,
+    "qualification": "Static graph overapproximates conditional/function imports.79 is not executed runtime authority count;30 is not proof against arbitrary injected/dynamic paths. Independent review in progress.",
+    "independentReview": "116 records complete, no duplicate module mapping. Most static paths cross a function-local historical preflight import, not an executed current HTTP runtime."
+  },
+  "basisCommitBeforeCheckpoint": "18d6431109",
+  "userPriorityCorrection": "2026-10-19 11:19 UTC: stop spending time on Engineering, preserve outcomes, only lower layout/shared entry/install isolation/source preservation/local main/recoverable cleanup.",
+  "finalDeferredSourceBackup": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-deferred-source-preservation/manifest.json",
+  "mainGateQualification": "212/223 tracks original source provenance targets; residual product features deferred. Does not mean全产品通过.",
+  "localMainClosure": "LOCAL-MAIN-CLOSURE.json",
+  "finalSharedEntry": {
+    "freshWheels": 15,
+    "sourceSnapshotFiles": 2888,
+    "sourceBeforeEqualsAfter": true,
+    "checks": 4,
+    "exits": [
+      0,
+      0,
+      0,
+      2
+    ],
+    "ownerModules": [
+      57,
+      57,
+      82,
+      86
+    ],
+    "noOldRuntimeImports": true,
+    "missingTrustedHttpBindingsRefusesBeforeWrites": true,
+    "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/final-shared-entry"
+  },
+  "fullProductAcceptance": false,
+  "engineeringDeferredByUser": true,
+  "mainQualification": "Implementation HEAD 53ce157d5d; final root-handoff documentation checkpoint follows.",
+  "cleanupCompleted": {
+    "receipt": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/cleanup-receipt.json",
+    "archived": [
+      {
+        "oldPath": "/home/maoqh/projects/ordessa/worktree/architecture-review",
+        "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/architecture-review/tree",
+        "head": "db34f9057e220a2fc8e423b5c2fc2c9ab6703ef7",
+        "rawIndexSha256": "5a75d19076f378f9be9eaac5b7e748fa2e62541e7a8dfd0c1889abfd786d25e3",
+        "originalBackupStatusMatches": true,
+        "rawIndexStillMatches": true
+      },
+      {
+        "oldPath": "/home/maoqh/projects/ordessa/worktree/execution-sdk-fix-20261018",
+        "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/execution-sdk-fix-20261018/tree",
+        "head": "d7979bd34f9a84ad337545c9c0d09cb09c85f631",
+        "rawIndexSha256": "404dd979ca00721890f8644e603fd21c511378ff5c31dabd7f9c73bd35f55c3c",
+        "originalBackupStatusMatches": true,
+        "rawIndexStillMatches": true
+      },
+      {
+        "oldPath": "/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009",
+        "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/nightly-restructure-20261009/tree",
+        "head": "84b9ca02c662b52bada44e6404e2cea9c8a1ecf3",
+        "rawIndexSha256": "a4df6376bc9fe0f2efe50b4751cc1395144353acb110d523a7ef5304cfd4ba87",
+        "originalBackupStatusMatches": true,
+        "rawIndexStillMatches": true
+      }
+    ],
+    "registeredWorktreesRemaining": 3,
+    "occupiedOldTreesRetained": 2,
+    "allSourceAndIgnoredFilesPreserved": true,
+    "supersededBy": "ROOT-MAIN-HANDOFF.json: both retained auxiliary trees are now archived without stopping services."
+  },
+  "rootMainHandoff": "ROOT-MAIN-HANDOFF.json",
+  "developmentRoot": "/home/maoqh/projects/ordessa",
+  "registeredWorktreesRemaining": 1,
+  "remainingOccupiedTreesToArchive": 0
+}

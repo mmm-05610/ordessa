@@ -1,3 +1,4 @@
+import { type HarnessReport } from '@extensions/ordessa.harness-contracts/contract.js'
 // @vitest-environment jsdom
 /**
  * 宿主 UI 的门（PA-12/13/14/19/20/24 + C-08 渲染）。
@@ -10,7 +11,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { runtime } from '@ordessa/extension-host'
-import type { Fault, HarnessReport, SettingsSection } from '@extensions/ordessa.contracts/contract.js'
+import type { Fault, SettingsSection } from '@extensions/ordessa.contracts/contract.js'
 import { AboutPanel, CommandPalette, DiagnosticFragmentList, FaultScreen, HarnessAvailabilityPanel, SettingsPage, type AboutInfo, type PaletteEntryView } from '../renderer/desktop-ui'
 import { buildHostServices } from '../renderer/host-services'
 import { createFixturePlugin, FIXTURE_PLUGIN_ID, type FixtureProbe } from './fixtures/third-party-plugin'
@@ -239,7 +240,7 @@ describe('PA-24 边界反例：受控第三方插件只凭公开契约完成 6 �
       specifier.startsWith('..') || specifier.startsWith('/') || specifier.includes('/src/') || specifier.startsWith('apps/'))
     expect(hostInternals).toEqual([])
     // 它只 import 两个公开面。
-    expect(new Set(specifiers)).toEqual(new Set(['@extensions/ordessa.contracts/contract.js', '@ordessa/extension-api']))
+    expect(new Set(specifiers)).toEqual(new Set(['@extensions/ordessa.contracts/contract.js', '@extensions/ordessa.harness-contracts/contract.js', '@ordessa/extension-api']))
   })
   it('六项接入在真实宿主装配里全部完成，且插件看不到令牌', async () => {
     const services = buildHostServices({ mode: 'dark' })

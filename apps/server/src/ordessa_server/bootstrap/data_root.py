@@ -22,9 +22,8 @@ such, not as documentation:
   file keeps its bytes across a second start, and only the permissions the
   contract names are enforced.
 
-`build_runtime` keeps its own historical-root preflight
-(`bootstrap.runtime._require_legacy_provider_for_historical_root`); this
-module does not re-implement it. `require_migration_provider_for_historical_root`
+`bootstrap.migrations.historical_preflight` owns the shared historical-root
+preflight; this module does not re-implement it or select an online runtime. `require_migration_provider_for_historical_root`
 translates that one refusal into `DATA_ROOT_MIGRATION_REFUSED` so the
 data-root surface has exactly one spelling of "this old root needs a
 migration provider it does not have" (C-01 §4).
@@ -66,6 +65,28 @@ DESKTOP_LOG_FILE: str = f"{LOGS_DIR}/{LAYOUT['logs']['desktopFile']}"
 
 DATA_ROOT_ERROR_CODES: "tuple[str, ...]" = tuple(LAYOUT["dataRootErrors"])
 LAUNCH_ERROR_CODES: "tuple[str, ...]" = tuple(LAYOUT["launchErrors"])
+
+#: The owner marker: name and content are data-compatibility identifiers
+#: (docs/archive/pre-restructure/source/docs/server-host-baseline.md). A pre-existing directory WITHOUT this
+#: marker is a foreign root — `composition.runtime.DataRootOwner` refuses it
+#: (DATA_ROOT_UNOWNED) rather than adopting it. Whoever CREATES a root must
+#: write the marker in the same breath: `ensure_data_root` here for the
+#: Server/CLI path, and `apps/desktop/electron/data-root.ts` for the root the
+#: desktop host creates before it spawns the Server.
+OWNER_MARKER_NAME = ".agentbox-server-root"
+OWNER_MARKER_CONTENT = "agentbox-server-r1\n"
+
+
+def write_owner_marker(root: Path) -> Path:
+    """Write the owner marker for a root THIS call created (C-01 §3).
+
+    Only a creator may call this. Writing the marker onto a pre-existing
+    unmarked directory is exactly the silent adoption the runtime refuses,
+    so this helper is not a "repair" for foreign roots.
+    """
+    marker = root / OWNER_MARKER_NAME
+    marker.write_text(OWNER_MARKER_CONTENT, encoding="utf-8")
+    return marker
 
 
 # -- typed refusals (C-01 §6) ------------------------------------------------
@@ -310,6 +331,11 @@ def ensure_data_root(
     # a root is REFUSED, not corrected.
     if created:
         os.chmod(root, DIR_MODE)
+        # C-01 §3: the creator claims the root it just made. Without this the
+        # Server's own bootstrap (DataRootOwner.acquire) would see a root that
+        # exists without a marker and refuse it as foreign — a fresh CLI/desktop
+        # first start could never succeed (DATA_ROOT_UNOWNED).
+        write_owner_marker(root)
     for name in (SECRETS_DIR, LOGS_DIR, BACKUPS_DIR):
         child = root / name
         if not os.path.lexists(child):
@@ -423,17 +449,16 @@ def instance_lock(root: Path, owner: str | None = None) -> InstanceLock:
 def require_migration_provider_for_historical_root(root: Path) -> None:
     """Refuse a historical root that has no registered migration provider.
 
-    The decision itself is NOT re-implemented here: `build_runtime` already
-    owns the sealed-legacy preflight, and two copies of that rule would be
-    two answers. This wraps the one existing refusal so the data-root
+    The shared historical preflight owns this decision. Both runtime
+    construction and this data-root surface call that same implementation. This wraps the one existing refusal so the data-root
     surface spells it `DATA_ROOT_MIGRATION_REFUSED` (C-01 §6) and keeps the
     original code on the exception as `legacy_code`.
 
     The refusal happens before any marker, lock, token or schema write, so
     a rejected root keeps its original bytes (C-01 §4, counterexample 6).
     """
-    from .runtime import LegacyMigrationProviderMissingError
-    from .runtime import _require_legacy_provider_for_historical_root
+    from ordessa_server.bootstrap.migrations.historical_preflight import LegacyMigrationProviderMissingError
+    from ordessa_server.bootstrap.migrations.historical_preflight import _require_legacy_provider_for_historical_root
 
     try:
         _require_legacy_provider_for_historical_root(root)
@@ -489,7 +514,7 @@ def backups_dir(root: Path) -> Path:
 def launch_env(data_root: Path, origin: str) -> "dict[str, str]":
     """The three C-02 §2 variables, spelled exactly as the connectors read them.
 
-    `plugins/connectors/ordessa/src/target.ts` refuses `ORDESSA_SERVER_ORIGIN`
+    `plugins/agents/connectors/ordessa/src/target.ts` refuses `ORDESSA_SERVER_ORIGIN`
     and `ORDESSA_SERVER_TOKEN_FILE` when they are absent, naming the host as
     the party that must supply them. The values here are the host's side of
     that contract: the origin is an origin and nothing else, and only a

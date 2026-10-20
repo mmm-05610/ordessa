@@ -1,0 +1,63 @@
+{
+  "method_id": "ordessa.incremental-engineering",
+  "release_version": "2.1.0",
+  "status": "integration-candidate",
+  "sources": [
+    {
+      "repository_path": "docs/architecture/software-engineering-harness.md",
+      "sha256": "180c45f8679e32314162fa6ff7f3e103ecfa02d15d235481fbef540091003350",
+      "use": "flow_and_authority_boundaries; direction vs accepted implementation kept distinct"
+    },
+    {
+      "repository_path": "docs/decisions/software-engineering-harness.md",
+      "sha256": "b2281c420734687aeb2645f43b837ed3c3289a918734959cea3c31591f899b6a",
+      "use": "flow_and_authority_boundaries; direction vs accepted implementation kept distinct"
+    },
+    {
+      "repository_path": "docs/implementation/nightly/design-source/ordessa-design/DESIGN.md",
+      "sha256": "8d4f3528f673992638270186dd1da636f3e60f710e45a2d0282458a5034e2cef",
+      "use": "flow_and_authority_boundaries; direction vs accepted implementation kept distinct"
+    }
+  ],
+  "skill_adaptations": [
+    {
+      "skill": "decision-record",
+      "resource": "SKILL.md",
+      "use": "versioned evidence, source/quality/summary review, apply receipt, complete conversion constraints"
+    },
+    {
+      "skill": "did-change-author",
+      "resource": "SKILL.md",
+      "use": "versioned evidence, source/quality/summary review, apply receipt, complete conversion constraints"
+    },
+    {
+      "skill": "did-change-review",
+      "resource": "SKILL.md",
+      "use": "versioned evidence, source/quality/summary review, apply receipt, complete conversion constraints"
+    },
+    {
+      "skill": "did-change-to-spec",
+      "resource": "SKILL.md",
+      "use": "versioned evidence, source/quality/summary review, apply receipt, complete conversion constraints"
+    },
+    {
+      "skill": "spec-package-review",
+      "resource": "SKILL.md",
+      "use": "versioned evidence, source/quality/summary review, apply receipt, complete conversion constraints"
+    }
+  ],
+  "approved_here": [
+    {
+      "decision_record": "docs/decisions/user-confirmation-v1.md",
+      "scope": "explicit user chat forwarded by main Agent as v1 confirmation basis; agent-attested trust only",
+      "policy_path": "policies/product-chat-confirmation.v1.yaml"
+    }
+  ],
+  "pending": [
+    "specific_DID_standard_selection_and_tailoring",
+    "JEV_calibration_policy",
+    "owner_operation_and_event_freeze",
+    "real_Pi_JEV_final_acceptance",
+    "selected_v1_chat_attestation_admission_and_receipt_implementation"
+  ]
+}

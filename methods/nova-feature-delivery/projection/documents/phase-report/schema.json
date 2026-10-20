@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.ordessa.invalid/methods/nova-feature-delivery/phase-report/v1",
+  "title": "Nova feature delivery phase report",
+  "description": "外部阶段报告结构；结构有效不等于上游状态已独立核验。",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "phase": {"enum": ["blueprint", "spec_screening", "design_review", "cycle_approval", "implementation", "gerrit", "zuul_check", "zuul_gate", "merge", "release_preparation", "release", "feedback"]},
+    "reported_at": {"type": "string", "format": "date-time"},
+    "reporter": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"actor_id": {"type": "string", "minLength": 1}, "role_claim": {"type": "string", "minLength": 1}, "reported_at": {"type": "string", "format": "date-time"}},
+      "required": ["actor_id", "role_claim", "reported_at"]
+    },
+    "cycle": {"type": "string", "minLength": 1, "maxLength": 128},
+    "blueprint": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"id": {"type": "string", "minLength": 1}, "url": {"type": "string", "format": "uri"}, "status": {"type": "string", "minLength": 1}, "cycle": {"type": "string", "minLength": 1}},
+      "required": ["id", "url", "status", "cycle"]
+    },
+    "spec_required": {"type": ["boolean", "null"]},
+    "spec": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "object", "additionalProperties": false, "properties": {"url": {"type": "string", "format": "uri"}, "status": {"type": "string", "minLength": 1}, "cycle": {"type": "string", "minLength": 1}}, "required": ["url", "status", "cycle"]}
+      ]
+    },
+    "decision": {"type": "string", "minLength": 1, "maxLength": 256},
+    "decision_record": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"actor_id": {"type": "string", "minLength": 1}, "role_claim": {"type": "string", "minLength": 1}, "decided_at": {"type": "string", "format": "date-time"}, "authority_ref": {"type": "string", "format": "uri"}, "rationale_summary": {"type": "string", "minLength": 1, "maxLength": 4000}},
+      "required": ["actor_id", "role_claim", "decided_at", "authority_ref", "rationale_summary"]
+    },
+    "result": {"enum": ["recorded", "approved", "changes_requested", "rejected", "deferred", "blocked", "waiting", "passed", "failed", "merged", "prepared", "released", "cancelled", "not_applicable"]},
+    "summary": {"type": "string", "minLength": 1, "maxLength": 12000},
+    "patchsets": {"type": "array", "items": {"type": "string", "format": "uri"}, "uniqueItems": true},
+    "gerrit": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "properties": {"change_url": {"type": "string", "format": "uri"}, "change_id": {"type": "string", "minLength": 1}, "patchset": {"type": "string", "minLength": 1}},
+      "required": ["change_url", "change_id", "patchset"]
+    },
+    "zuul": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "properties": {"pipeline": {"enum": ["check", "gate", "post", "merge-check"]}, "buildset_url": {"type": "string", "format": "uri"}, "verified_vote": {"enum": [-2, -1, 0, 1, 2]}, "failure_class": {"enum": ["change_code_or_test", "infrastructure", "flake_or_unrelated", "unknown", "none"]}},
+      "required": ["pipeline", "buildset_url", "verified_vote", "failure_class"]
+    },
+    "merge": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "properties": {"commit": {"type": "string", "minLength": 1}, "merged_at": {"type": "string", "format": "date-time"}, "repository": {"type": "string", "minLength": 1}, "branch": {"type": "string", "minLength": 1}},
+      "required": ["commit", "merged_at", "repository", "branch"]
+    },
+    "release": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "properties": {"version": {"type": "string", "minLength": 1}, "release_url": {"type": "string", "format": "uri"}, "released_at": {"type": "string", "format": "date-time"}, "included_commits": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1}},
+      "required": ["version", "release_url", "released_at", "included_commits"]
+    },
+    "blockers": {"type": "array", "items": {"type": "object", "additionalProperties": false, "properties": {"id": {"type": "string", "minLength": 1}, "description": {"type": "string", "minLength": 1}, "owner": {"type": "string", "minLength": 1}, "opened_at": {"type": "string", "format": "date-time"}, "next_action": {"type": "string", "minLength": 1}, "resume_condition": {"type": "string", "minLength": 1}, "source_url": {"type": "string", "format": "uri"}}, "required": ["id", "description", "owner", "opened_at", "next_action", "resume_condition", "source_url"]}},
+    "feedback_summary": {"type": "string", "minLength": 1, "maxLength": 12000},
+    "follow_ups": {"type": "array", "items": {"type": "object", "additionalProperties": false, "properties": {"action": {"type": "string", "minLength": 1}, "owner": {"type": "string", "minLength": 1}, "due_or_trigger": {"type": "string", "minLength": 1}}, "required": ["action", "owner", "due_or_trigger"]}},
+    "predecessors": {"type": "array", "items": {"type": "object", "additionalProperties": false, "properties": {"report_id": {"type": "string", "minLength": 1}, "artifact_revision": {"type": "string", "minLength": 1}}, "required": ["report_id", "artifact_revision"]}},
+    "evidence_urls": {"type": "array", "items": {"type": "string", "format": "uri"}, "minItems": 1, "uniqueItems": true},
+    "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  },
+  "required": ["schema_version", "report_id", "phase", "reported_at", "reporter", "cycle", "blueprint", "spec_required", "spec", "decision", "decision_record", "result", "summary", "blockers", "predecessors", "evidence_urls", "limitations"],
+  "allOf": [
+    {"if": {"properties": {"phase": {"const": "spec_screening"}}, "required": ["phase"]}, "then": {"required": ["spec_required", "spec"], "properties": {"spec_required": {"type": ["boolean", "null"]}, "spec": {}}}},
+    {"if": {"properties": {"phase": {"const": "cycle_approval"}}, "required": ["phase"]}, "then": {"required": ["spec_required", "spec"]}},
+    {"if": {"properties": {"phase": {"const": "spec_screening"}, "spec_required": {"const": false}}, "required": ["phase", "spec_required"]}, "then": {"properties": {"spec": {"type": "null"}}}},
+    {"if": {"properties": {"phase": {"enum": ["design_review", "cycle_approval"]}, "spec_required": {"const": false}}, "required": ["phase", "spec_required"]}, "then": {"properties": {"spec": {"type": "null"}}}},
+    {"if": {"properties": {"phase": {"const": "design_review"}, "spec_required": {"const": true}, "result": {"enum": ["approved", "changes_requested"]}}, "required": ["phase", "spec_required", "result"]}, "then": {"properties": {"spec": {"type": "object"}}}},
+    {"if": {"properties": {"phase": {"const": "cycle_approval"}, "spec_required": {"const": true}, "result": {"const": "approved"}}, "required": ["phase", "spec_required", "result"]}, "then": {"properties": {"spec": {"type": "object"}}}},
+    {"if": {"properties": {"phase": {"const": "design_review"}, "result": {"const": "not_applicable"}}, "required": ["phase", "result"]}, "then": {"properties": {"spec": {"type": "null"}, "decision": {"minLength": 1}}}},
+    {"if": {"properties": {"phase": {"enum": ["gerrit", "zuul_check", "zuul_gate"]}}, "required": ["phase"]}, "then": {"required": ["gerrit", "patchsets"], "properties": {"gerrit": {"type": "object"}}}},
+    {"if": {"properties": {"phase": {"const": "zuul_check"}}, "required": ["phase"]}, "then": {"required": ["zuul"], "properties": {"zuul": {"type": "object", "properties": {"pipeline": {"const": "check"}}}}}},
+    {"if": {"properties": {"phase": {"const": "zuul_gate"}}, "required": ["phase"]}, "then": {"required": ["zuul"], "properties": {"zuul": {"type": "object", "properties": {"pipeline": {"const": "gate"}}}}}},
+    {"if": {"properties": {"phase": {"const": "merge"}, "result": {"const": "merged"}}, "required": ["phase", "result"]}, "then": {"required": ["merge"], "properties": {"merge": {"type": "object"}}}},
+    {"if": {"properties": {"phase": {"const": "release"}, "result": {"const": "released"}}, "required": ["phase", "result"]}, "then": {"required": ["release"], "properties": {"release": {"type": "object"}}}},
+    {"if": {"properties": {"phase": {"const": "feedback"}}, "required": ["phase"]}, "then": {"required": ["feedback_summary", "follow_ups"]}}
+  ]
+}

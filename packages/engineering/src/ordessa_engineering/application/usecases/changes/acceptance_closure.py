@@ -12,6 +12,7 @@ from ...contracts.snapshots import EngineeringTargetBindings
 from ..proposal_closure import resolve_record
 from ....domain.approvals.implementation import ImplementationAuthorizationIntent
 from ....domain.changes.submission import Submission
+from ....domain.changes.agent_submission_report import AgentSubmissionReport
 from ....domain.changes.submission_binding import validate_submission_graph
 from ....domain.common.outcomes.diagnostics import ReferenceError
 from ....domain.packages.models import ImplementationPackage
@@ -40,6 +41,12 @@ def resolve_submission_acceptance(uow, submission_ref, *, method_runs=None):
     if type(submission_ref) is not SubmissionRef or submission_ref.project_id != uow.scope.project_id or submission_ref.realm_id != uow.scope.realm_id:
         raise ApplicationError('SCOPE_MISMATCH')
     submission = uow.submissions.resolve(submission_ref)
+    if type(submission) is AgentSubmissionReport:
+        raise ApplicationError('SUBMISSION_AGENT_ACCEPTANCE_UNAVAILABLE')
+    if submission.schema_version == 2:
+        # Declared report persistence does not install the later independent
+        # review/acceptance owner, nor may it fall through the legacy graph.
+        raise ApplicationError('SUBMISSION_DECLARED_ACCEPTANCE_UNAVAILABLE')
     package = uow.implementation.resolve_package(submission.package_ref)
     payload = package.payload
     if (submission.scope != uow.scope or package.scope != uow.scope

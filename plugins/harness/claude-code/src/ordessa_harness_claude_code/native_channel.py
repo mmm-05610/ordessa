@@ -13,6 +13,7 @@ from typing import Any, Mapping
 
 FAMILY_ID = "claude"
 COMMAND_CATALOG_ID = "claude-code"
+PROTOCOL = "claude-stream-json/1"
 
 #: CLI/SDK release is not measured locally (no installed artifact in this
 #: environment) — recorded as such, never invented (G1).
@@ -53,7 +54,7 @@ def channel_report() -> dict:
         "sdk_source": {"repository": "https://github.com/anthropics/claude-agent-sdk-python",
                        "commit": SDK_SOURCE_COMMIT, "version": SDK_SOURCE_VERSION,
                        "license": "MIT", "installed": False, "observedRuntime": False},
-        "consumer": {"implemented": "limited synchronous stdlib stream-json consumer",
+        "consumer": {"implemented": "pure SDK launch plan; native protocol bootstrap unavailable",
                      "productionPreference": "reuse official Claude Agent SDK",
                      "notImplemented": ["SDK hooks", "SDK MCP", "background run completion",
                                         "production SDK integration", "durable input recovery"]},
@@ -70,7 +71,7 @@ def channel_report() -> dict:
             "message_types": "system/init, system/api_retry, system/plugin_install, "
             "assistant, user, stream_event, permission_denied, result",
             "stdin_side": "official SDK defines native user/control_request/control_response/control_cancel_request JSONL; "
-            "thin consumer implements explicit initialize, interrupt and can_use_tool decisions; runtime compatibility unknown",
+            "original owner native bootstrap/interrupt/permission routing unavailable; runtime compatibility unknown",
             "version_negotiation": "none; system/init carries a capabilities array "
             "(e.g. interrupt_receipt_v1) for feature detection",
         },
@@ -237,15 +238,15 @@ def compile_config(materials: Mapping[str, Any], *, bidirectional: bool = False)
 def capability_matrix() -> dict[str, dict]:
     """declared/implemented/observed; nothing observed locally (G1 honesty)."""
     return {
-        "prompt": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "cancel": {"declared": "yes", "implemented": "output-only signal / opt-in native interrupt receipt", "observed": "no"},
+        "prompt": {"declared": "yes", "implemented": "no; native bootstrap unavailable", "observed": "no"},
+        "cancel": {"declared": "yes", "implemented": "no; original native control unavailable", "observed": "no"},
         "resume": {"declared": "yes", "implemented": "plan-only", "observed": "no"},
-        "approvalCallback": {"declared": "yes", "implemented": "opt-in explicit native decision / no auto-response", "observed": "no"},
+        "approvalCallback": {"declared": "yes", "implemented": "no; no permission response writer", "observed": "no"},
         "steer": {"declared": "unknown", "implemented": "no", "observed": "no"},
         "modelConfig": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "sessionPersist": {"declared": "yes", "implemented": "init/result session identity / turn completion", "observed": "no"},
+        "sessionPersist": {"declared": "yes", "implemented": "no; no native session owner integrated", "observed": "no"},
         "skillsPluginsMcp": {"declared": "yes", "implemented": "plan-only", "observed": "no"},
-        "unknownExtensions": {"declared": "yes", "implemented": "yes", "observed": "no"},
+        "unknownExtensions": {"declared": "yes", "implemented": "no runtime; historical native facts only", "observed": "no"},
         "transportFence": {"declared": "no", "implemented": "no", "observed": "no"},
         "requestReconciliation": {"declared": "unknown", "implemented": "no; native receipt association only", "observed": "no"},
     }

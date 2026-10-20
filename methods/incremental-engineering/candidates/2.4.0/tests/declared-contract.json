@@ -1,0 +1,22 @@
+{
+  "nominal_answer_conversion": {
+    "contract_version": "ordessa.nominal-choice-status/1",
+    "answer_kind": "choice",
+    "option_statuses": {
+      "supported": "satisfied",
+      "contradicted": "violated",
+      "insufficient": "insufficient"
+    },
+    "tie": "unknown",
+    "missing_answer": "unknown",
+    "incomplete_answer": "unknown",
+    "truncated_input": "unknown",
+    "unmapped_option": "unknown"
+  },
+  "quality_admission": {
+    "contract_version": "ordessa.review-quality-admission/1",
+    "activation": "matching_validated_evaluation_required",
+    "missing_evaluation": "manual",
+    "unresolved_model": "manual"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_only": true,
+  "mutation": {
+    "omit_source_ids": [
+      "src-code-1"
+    ]
+  },
+  "deterministic_checks": {
+    "source_integrity": "insufficient",
+    "claim_coverage": "insufficient"
+  },
+  "decision_expected": "not_invoked_for_missing_C2_evidence",
+  "review_expected": "blocked",
+  "workflow_expected": "revision_required",
+  "dispatch_count": 0
+}

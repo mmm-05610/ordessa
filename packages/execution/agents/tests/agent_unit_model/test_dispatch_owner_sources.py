@@ -5,11 +5,11 @@ import pytest
 from agent_tools_fixtures.manager_joint import build_joint_owner
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.bindings.publication import decode_node_ref
-from ordessa_units.bindings.dispatch_selection import UnitSelectionUnavailable
 from ordessa_units.admission.invocation import InvocationAuthorityRefused
 from ordessa_units.records import UnitRecords, OperationJournal
 from ordessa_units.records.unit_records import UnitRecordsRefused
-from ordessa_execution_api.environment import IdentityMismatchError, AdmissionRefusedError
+from ordessa_units.errors import UnitIdentityMismatch, UnitAdmissionRefused
+from ordessa_units.bindings.dispatch_selection import UnitSelectionUnavailable
 
 
 @pytest.fixture
@@ -58,11 +58,12 @@ def test_original_query_recipe_and_read_cut(owner):
     assert j.events.count('spawn') == 1
 
 
-def test_live_commit_contract_explicitly_refuses_unsynchronized_authority(owner):
+def test_live_guard_refuses_without_original_authenticated_permission_owner(owner):
     j = owner; invocation = authorize(j)
+    unit = j.manager.find(j.unit_ref)
     with pytest.raises(UnitSelectionUnavailable):
-        with guard(j, invocation, require_live=True):
-            raise AssertionError('weak read proof must not enter live COMMIT guard')
+        with guard(j, invocation, require_live=True): pass
+    assert unit.try_quiesce() is True
     assert j.store.read_operation_step(RequestKey('env', 'principal', 'query'), 'read') is None
 
 
@@ -76,7 +77,7 @@ def test_refused_query_does_not_reserve_read_operation(owner, change):
     if change == 'digest': digest = 'not-a-prompt-digest'
     if change == 'authority': j.inputs.authority.allowed = False
     if change == 'policy': j.env._policy.allowed = False
-    with pytest.raises((IdentityMismatchError, AdmissionRefusedError, InvocationAuthorityRefused)):
+    with pytest.raises((UnitIdentityMismatch, UnitAdmissionRefused, InvocationAuthorityRefused)):
         j.services.authorize_acp_turn_query(request, ref, 'turn', expected_prompt_input_digest=digest)
     assert j.store.read_operation(request) is None
 
@@ -91,7 +92,7 @@ def test_guard_exact_original_profile_permission_and_context(owner, change):
     if change == 'authority_revision': j.inputs.authority.revision = 'rev-2'
     if change == 'epoch': j.current.epoch = 1
     if change == 'directory': j.current.permitted = False
-    with pytest.raises((IdentityMismatchError, InvocationAuthorityRefused)):
+    with pytest.raises((UnitIdentityMismatch, InvocationAuthorityRefused)):
         with guard(j, invocation, **changes): pass
 
 
@@ -110,7 +111,7 @@ def test_historical_selection_after_stop_release_uses_records_not_manager(owner)
 
 def test_read_request_cannot_be_rebound_to_another_acp_operation(owner):
     j = owner; authorize(j)
-    with pytest.raises(IdentityMismatchError): authorize(j, operation='different-turn')
+    with pytest.raises(UnitIdentityMismatch): authorize(j, operation='different-turn')
     assert j.store.read_operation(RequestKey('env', 'principal', 'query')).intent.context_ref['acpTurnRead']['operationRef'] == 'turn'
 
 
@@ -118,7 +119,7 @@ def test_original_recorded_turn_new_public_query_cold_digest_and_no_replay(owner
     from types import SimpleNamespace
     j = owner; unit = j.manager.find(j.unit_ref)
     lease = unit.lease_port.grant(j.unit_ref)
-    original = unit.prompt_recorded(j.unit_ref, lease, operation_ref='turn', timeout=2, prompt=[])
+    original = unit.prompt(j.unit_ref, lease, operation_ref='turn', timeout=2, prompt=[])
     assert original['state'] == 'completed'
     invocation = authorize(j, digest=original['inputDigest'])
     def no_native(*_): raise AssertionError('cold read cannot observe native handles')
@@ -135,7 +136,7 @@ def test_original_recorded_turn_new_public_query_cold_digest_and_no_replay(owner
         cold.query_acp_turn(j.unit_ref, 'turn', invocation,
             input_digest=original['inputDigest'], expected_prompt_input_digest=original['inputDigest'])
     with pytest.raises(UnitRecordsRefused, match='no replay'):
-        unit.prompt_recorded(j.unit_ref, lease, operation_ref='turn', prompt=[])
+        unit.prompt(j.unit_ref, lease, operation_ref='turn', prompt=[])
     j.services.profiles.archive(profile_id='joint', expected_version=1,
         request=RequestKey('env', 'principal', 'archive'))
     with guard(j, invocation) as receipt:

@@ -7,6 +7,7 @@ No high-level Sandbox context (delete_on_exit=True), auto-auth or Local fallback
 import base64
 import hashlib
 import json
+import time
 import uuid
 import grpc
 from openshell._proto import datamodel_pb2, openshell_pb2 as pb
@@ -33,7 +34,7 @@ class _Use:
             self.files.probe()
             files_verified = True
         self.capabilities = observation(sandbox, files_verified=files_verified).capabilities
-        self.execution = OpenShellExecution(provider._rpc, workspace=provider.configuration.workspace, sandbox_name=sandbox.name, validate=validate,generation=generation)
+        self.execution = OpenShellExecution(provider._rpc, workspace=provider.configuration.workspace, sandbox_name=sandbox.name, validate=validate,generation=generation,file_root=provider.configuration.file_root)
 
     def release(self):
         # Individual streams/processes are creator-owned and managed by core
@@ -178,10 +179,18 @@ class OpenShellEnvironmentProvider:
             raise EnvironmentOperationUnknown('delete receipt unavailable; do not retry',identity=backend_id,backend_id=backend_id) from None
         if result.sandbox_id not in (None, backend_id):
             raise EnvironmentOperationUnknown('delete addressed a changed backend ID',identity=backend_id,backend_id=backend_id)
-        try:
-            self._lookup(backend_id)
-        except BackendNotFound:
-            return
-        except Exception:
-            raise EnvironmentOperationUnknown('deletion absence is unverifiable',identity=backend_id,backend_id=backend_id) from None
-        raise EnvironmentOperationUnknown('delete acknowledged but sandbox is still present',identity=backend_id,backend_id=backend_id)
+        # v0.1.3 deletion is asynchronous: an ACCEPTED receipt is a request, not
+        # an absence. Only an observed absence confirms the deletion, so poll
+        # the same complete-census lookup the rest of this provider trusts. A
+        # bound that expires stays UNKNOWN; it never claims a completed delete.
+        deadline = time.monotonic() + self.configuration.timeout_seconds
+        while True:
+            try:
+                self._lookup(backend_id)
+            except BackendNotFound:
+                return
+            except Exception:
+                raise EnvironmentOperationUnknown('deletion absence is unverifiable',identity=backend_id,backend_id=backend_id) from None
+            if time.monotonic() >= deadline:
+                raise EnvironmentOperationUnknown('deletion absence was not confirmed within the bound',identity=backend_id,backend_id=backend_id)
+            time.sleep(0.2)

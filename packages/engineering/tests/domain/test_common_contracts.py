@@ -37,6 +37,7 @@ SOURCE = SourceRef("source", "document", SourceLocator("document", provider="pro
     (lambda: RepositorySnapshotRef("realm", "project", "repo", [], None, DIGEST, None), "INVALID_SCHEMA"),
     (lambda: RepositorySnapshotRef("realm", "project", "repo", "git", [], DIGEST, None), "INVALID_SCHEMA"),
     (lambda: Target([], REVISION), "INVALID_SCHEMA"),
+    (lambda: Target("primary", SOURCE), "INVALID_SCHEMA"),
     (lambda: EvidenceLink("claim", SOURCE, ContentSelector("whole_capture"), [], "reason"), "INVALID_EVIDENCE_LINK"),
     (lambda: record_digest([], {}), "INVALID_SCHEMA"),
     (lambda: record_digest("artifact", {"value": float("nan")}), "INVALID_SCHEMA"),

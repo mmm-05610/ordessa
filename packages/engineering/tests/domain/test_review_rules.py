@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import FrozenInstanceError, replace
 
 import pytest
 
@@ -239,6 +239,19 @@ def test_fail_unknown_and_conflict_are_complete_observations_but_never_pass(
     record = _sealed(plan, observations)
     assert record.complete is expected_complete
     assert record.verdict == expected_verdict
+
+
+def test_completed_failed_review_keeps_issues_and_record_is_immutable() -> None:
+    _, plan, (key,) = _case()
+    observation = Observation(key, "fail", (), "candidate omits required design constraint")
+    record = _sealed(plan, (observation,))
+
+    assert record.complete is True
+    assert record.verdict == "fail"
+    assert record.observations == (observation,)
+    assert record.ref.digest == record.digest
+    with pytest.raises(FrozenInstanceError):
+        record.verdict = "pass"
 
 
 def test_required_missing_is_incomplete_and_security_reductions_have_priority() -> None:

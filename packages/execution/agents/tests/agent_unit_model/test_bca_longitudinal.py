@@ -47,20 +47,15 @@ from typing import ClassVar
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    IdentityMismatchError,
-    UnknownResultError,
+from ordessa_units.errors import (
+    UnitAdmissionRefused,
+    UnitIdentityMismatch,
+    UnitOperationUnknown,
 )
-from ordessa_execution_api.environment.identity import ActivationRef, ParticipantInstanceRef
-from ordessa_execution_api.environment.operations import (
-    OperationIntent,
-    StepIntent,
-    UsageMutation,
-    operation_holder,
-    safe_json,
-    sealed_mapping,
-)
+from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
+from ordessa_units.definitions.admission_identity import AgentNodeRef
+from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from ordessa_units.bindings.assembly import (
@@ -685,7 +680,7 @@ def test_bca_longitudinal_chain(tmp_path):
         assert described["recognizedDefinitions"] == [dict(RUNTIME_DEFINITION)]
         assert described["providerRef"]["providerId"] == CONFIG_PROVIDER_ID
         # Missing/unacknowledged definitions are refused, never invented.
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(UnitAdmissionRefused):
             env.agent_configuration_contribution(
                 {"environmentNamespace": ENV, "definitionId": "nobody",
                  "revision": "1"})
@@ -722,7 +717,7 @@ def test_bca_longitudinal_chain(tmp_path):
         # Tampered identities are typed refusals, not silent acceptances.
         foreign_pin = ConfigurationProviderPin(
             CONFIG_PROVIDER_ID, CONFIGURATION_PROVIDER_VERSION,
-            CONFIG_IMPLEMENTATION, ActivationRef(ENV, "fixture.plugin", 99))
+            CONFIG_IMPLEMENTATION, HarnessActivationRef(ENV, "fixture.plugin", 99))
         with pytest.raises(ConfigurationContractError):
             validate_reference_extraction(
                 admitted.descriptor, extraction, expected_pin=foreign_pin,
@@ -754,7 +749,7 @@ def test_bca_longitudinal_chain(tmp_path):
         material_pin = MaterialProviderPin(MATERIAL_PROVIDER_ID, "1.0",
                                            material_activation)
         target = MaterialUseTarget(
-            ParticipantInstanceRef(ENV, "planned-node", 1), directory,
+            AgentNodeRef(ENV, "planned-node", 1), directory,
             MATERIAL_EPOCH, "profile-material")
         # C §1: the consumer pin is an admission-side copy from B's admitted
         # configuration metadata (owner_activation), never self-reported.
@@ -822,7 +817,7 @@ def test_bca_longitudinal_chain(tmp_path):
         # claim or dispatch: the port's admission-side copy is gen-1.
         bad_pin = MaterialConsumerPin(
             CONSUMER_ID, CONSUMER_VERSION,
-            ActivationRef(ENV, "fixture.plugin", 99))
+            HarnessActivationRef(ENV, "fixture.plugin", 99))
         bad_read_request = MaterialRequest(
             resource_ref, material_pin, target,
             material_descriptor.descriptor_digest,
@@ -866,7 +861,7 @@ def test_bca_longitudinal_chain(tmp_path):
             MATERIAL_EPOCH)
         store.reserve_operation(BAD_READ_REQUEST_KEY, BAD_READ_DIGEST,
                                 bad_intent)
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(UnitAdmissionRefused):
             consumption.read(BAD_READ_REQUEST_KEY, BAD_READ_DIGEST, READ_STEP)
         assert store.read_operation_step(BAD_READ_REQUEST_KEY,
                                          READ_STEP) is None
@@ -1006,21 +1001,21 @@ def test_bca_longitudinal_chain(tmp_path):
         before = store.read_staged_operation(PREPARE_REQUEST)
         # s4/§6.2: absent C verification set keeps the occupation unknown —
         # nothing is appended, sealed or called.
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             staged_api.seal(PREPARE_REQUEST, plan, verified_materials=None,
                             declaration_digest=DECLARATION_DIGEST,
                             approved_action_ids=("configure-unit",))
         assert store.read_staged_operation(PREPARE_REQUEST) == before
         assert store.read_operation_step(PREPARE_REQUEST,
                                          "configure-unit") is None
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             staged_api.publish(PREPARE_REQUEST)
         # A material outside the C-verified set is refused (s1 item 3).
         foreign_materials = (
             {"immutableMaterialRef": {"environmentNamespace": ENV,
                                       "resourceId": "elsewhere"},
              "contentDigest": "sha256:" + "e" * 64},)
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             staged_api.seal(PREPARE_REQUEST, plan,
                             verified_materials=foreign_materials,
                             declaration_digest=DECLARATION_DIGEST,
@@ -1033,14 +1028,14 @@ def test_bca_longitudinal_chain(tmp_path):
         tampered_plan = _effect_plan(root, context_ref,
                                      material_refs=verified_materials,
                                      pin=changed_pin)
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             verify_preparation_effect(tampered_plan,
                                       **_original_facts(
                                           root, context_ref,
                                           verified_materials=verified_materials))
         # A changed declaration digest is refused (s1 item 4); the digest is
         # the B extraction's validated digest.
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             staged_api.seal(PREPARE_REQUEST, plan,
                             verified_materials=verified_materials,
                             declaration_digest="sha256:" + "x" * 64,
@@ -1050,7 +1045,7 @@ def test_bca_longitudinal_chain(tmp_path):
         unknown_facts = _original_facts(root, context_ref,
                                         verified_materials=verified_materials)
         unknown_facts["target"] = None
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             verify_preparation_effect(plan, **unknown_facts)
 
         # ---------------- A: staged append + seal with the C-verified set
@@ -1087,7 +1082,7 @@ def test_bca_longitudinal_chain(tmp_path):
         # Effect-step native execution and node publication of the expanded
         # recipe are not claimed: publish fails closed on the unexecuted
         # effect step (A freeze s6 PARTIAL; real Harness is NOT_RUN).
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             staged_api.publish(PREPARE_REQUEST)
         assert store.read_operation(PREPARE_REQUEST).status == "running"
         # The C acquisition occupation is retained end-to-end: read success

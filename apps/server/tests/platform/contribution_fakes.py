@@ -19,7 +19,7 @@ from server_plugin_api import (
     ServerPluginRegistration,
 )
 
-from ordessa_server.plugin_host import MethodRegistry, ServerPluginHost, StreamRouteRegistry
+from ordessa_server.composition.plugin_host import MethodRegistry, ServerPluginHost, StreamRouteRegistry
 
 
 def new_host(**overrides):

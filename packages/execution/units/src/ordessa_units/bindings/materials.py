@@ -12,9 +12,10 @@ import hashlib
 import re
 from typing import Protocol, runtime_checkable
 
-from ordessa_execution_api.environment.errors import GuaranteeUnavailableError
-from ordessa_execution_api.environment.identity import ActivationRef, EnvironmentId, ParticipantInstanceRef
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_units.errors import UnitGuaranteeUnavailable
+from ordessa_units.definitions.admission_identity import MaterialProviderActivationRef
+from ordessa_units.definitions.admission_identity import AdmissionNamespace, AgentNodeRef
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 
 from ordessa_units.definitions.materials import validate_component_id, validate_contract_id
 from ordessa_units.admission.material_contracts import (
@@ -27,7 +28,7 @@ from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import InvocationContext
 
 
-class MaterialUnavailable(GuaranteeUnavailableError):
+class MaterialUnavailable(UnitGuaranteeUnavailable):
     """The optional material capability was not declared by this provider."""
 
     code = "MATERIAL_UNAVAILABLE"
@@ -118,7 +119,7 @@ def _environment(value: object) -> str:
     if type(value) is not str:
         _invalid()
     try:
-        EnvironmentId(value)
+        AdmissionNamespace(value)
     except (TypeError, ValueError):
         _invalid()
     return value
@@ -168,11 +169,11 @@ def _environment_equal(environment: str, *values: str) -> None:
         _invalid()
 
 
-def _copy_activation(value: object) -> ActivationRef:
-    if type(value) is not ActivationRef:
+def _copy_activation(value: object) -> MaterialProviderActivationRef:
+    if type(value) is not MaterialProviderActivationRef:
         _invalid()
     try:
-        return ActivationRef(value.environment, value.plugin_id, value.generation)
+        return MaterialProviderActivationRef(value.environment, value.plugin_id, value.generation)
     except (TypeError, ValueError):
         _invalid()
 
@@ -235,7 +236,7 @@ class ResourceRef:
 class MaterialProviderPin:
     provider_id: str
     provider_version: str
-    owner_activation: ActivationRef
+    owner_activation: MaterialProviderActivationRef
 
     def __post_init__(self) -> None:
         _provider_id(self.provider_id)
@@ -254,23 +255,23 @@ class MaterialProviderPin:
         owner = _closed_dict(value["ownerActivation"], {"environmentNamespace", "pluginId", "generation"})
         try:
             return cls(value["providerId"], value["providerVersion"],
-                       ActivationRef(owner["environmentNamespace"], owner["pluginId"], owner["generation"]))
+                       MaterialProviderActivationRef(owner["environmentNamespace"], owner["pluginId"], owner["generation"]))
         except (TypeError, ValueError):
             _invalid()
 
 
 @dataclass(frozen=True)
 class MaterialUseTarget:
-    node_ref: ParticipantInstanceRef
+    node_ref: AgentNodeRef
     directory_binding_ref: DirectoryBindingRef
     management_epoch: int
     purpose: str
 
     def __post_init__(self) -> None:
-        if type(self.node_ref) is not ParticipantInstanceRef:
+        if type(self.node_ref) is not AgentNodeRef:
             _invalid()
         try:
-            object.__setattr__(self, "node_ref", ParticipantInstanceRef(
+            object.__setattr__(self, "node_ref", AgentNodeRef(
                 self.node_ref.environment, self.node_ref.instance_id, self.node_ref.generation))
         except (TypeError, ValueError):
             _invalid()
@@ -292,7 +293,7 @@ class MaterialUseTarget:
         value = _closed_dict(value, {"nodeRef", "directoryBindingRef", "managementEpoch", "purpose"})
         node = _closed_dict(value["nodeRef"], {"environmentNamespace", "instanceId", "generation"})
         try:
-            node_ref = ParticipantInstanceRef(node["environmentNamespace"], node["instanceId"], node["generation"])
+            node_ref = AgentNodeRef(node["environmentNamespace"], node["instanceId"], node["generation"])
             directory = DirectoryBindingRef.from_dict(value["directoryBindingRef"])
             return cls(node_ref, directory, value["managementEpoch"], value["purpose"])
         except (TypeError, ValueError):
@@ -764,7 +765,7 @@ class MaterialConsumerPin:
 
     consumer_id: str
     consumer_version: str
-    owner_activation: ActivationRef
+    owner_activation: MaterialProviderActivationRef
 
     def __post_init__(self) -> None:
         try:
@@ -786,7 +787,7 @@ class MaterialConsumerPin:
         owner = _closed_dict(value["ownerActivation"], {"environmentNamespace", "pluginId", "generation"})
         try:
             return cls(value["consumerId"], value["consumerVersion"],
-                       ActivationRef(owner["environmentNamespace"], owner["pluginId"], owner["generation"]))
+                       MaterialProviderActivationRef(owner["environmentNamespace"], owner["pluginId"], owner["generation"]))
         except (TypeError, ValueError):
             _invalid()
 

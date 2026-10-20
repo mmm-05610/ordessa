@@ -8,7 +8,7 @@ from typing import ClassVar
 
 import pytest
 
-from ordessa_execution_api.environment import AdmissionRefusedError, GuaranteeUnavailableError
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable
 from ordessa_units.public import (
     AdmittedMaterialProviderMetadata,
     AdmittedResourceProviderMetadata,
@@ -208,7 +208,7 @@ def test_legacy_c1_without_static_capability_keeps_pair_and_quad_but_is_not_adve
     five = env._registry.resource_provider_extension_admission(provider.provider_id)
     assert len(four) == 4 and len(five) == 5
     assert five[:4] == four and five[4] is None
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         MaterialAdmission(env).material_provider_contribution(provider.provider_id)
     assert MaterialAdmission(env).material_provider_contributions() == ()
     assert env._registry.resource_provider(provider.provider_id) == (owner, provider)
@@ -228,7 +228,7 @@ def test_staged_capability_is_invisible_until_commit_and_list_skips_it():
 
     before_reads, before_describes = provider.capability_reads, provider.describe_calls
     assert MaterialAdmission(env).material_provider_contributions() == ()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).material_provider_contribution(provider.provider_id)
     assert provider.capability_reads == before_reads
     assert provider.describe_calls == before_describes
@@ -316,7 +316,7 @@ def test_legacy_stage_then_capability_addition_is_rejected_and_same_id_can_retry
     receipt = env.activate(owner, contributions)
     assert receipt.activation.plugin_id == owner
     assert env._registry.resource_provider(provider.provider_id) == (owner, provider)
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         MaterialAdmission(env).material_provider_contribution(provider.provider_id)
     assert MaterialAdmission(env).material_provider_contributions() == ()
     assert provider.effects == {"acquire": 0, "release": 0, "reconcile": 0}
@@ -329,9 +329,9 @@ def test_active_legacy_pinned_absence_does_not_hide_later_capability_change(late
     _activate(env, provider)
     provider.material_capability = late_value
 
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).material_provider_contribution(provider.provider_id)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).material_provider_contributions()
     assert provider.effects == {"acquire": 0, "release": 0, "reconcile": 0}
 
@@ -345,9 +345,9 @@ def test_active_provider_capability_drift_is_refused_without_mutating_pinned_reg
     pinned = env._registry.resource_provider_extension_admission(provider.provider_id)[4]
     provider._capability = _capability(query=False)
 
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).material_provider_contribution(provider.provider_id)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).material_provider_contributions()
     assert env._registry.resource_provider_extension_admission(provider.provider_id)[4] == pinned
     assert pinned.query_acquire is True
@@ -370,9 +370,9 @@ def test_material_read_acl_precedes_registry_and_provider_metadata_access(monkey
 
     monkeypatch.setattr(registry, "resource_provider_extension_admission", forbidden)
     monkeypatch.setattr(registry, "snapshot", forbidden)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).material_provider_contribution(provider.provider_id)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).material_provider_contributions()
     assert policy.calls[-2:] == [
         ("principal", "env:agents.resources", "read"),
@@ -390,7 +390,7 @@ def test_invalid_exact_material_provider_ids_are_typed_refused_after_acl(provide
     _activate(env, provider)
     before_checks = len(policy.calls)
     before_reads, before_describes = provider.capability_reads, provider.describe_calls
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).material_provider_contribution(provider_id)
     assert policy.calls[before_checks:] == [
         ("principal", "env:agents.resources", "read")]
@@ -445,7 +445,7 @@ def test_inactive_owner_is_omitted_from_list_and_exact_lookup_refuses():
     env.drain(activation)
 
     assert MaterialAdmission(env).material_provider_contributions() == ()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).material_provider_contribution(provider.provider_id)
     _assert_effects_zero(provider)
 
@@ -460,7 +460,7 @@ def test_registry_entry_without_active_original_environment_owner_is_not_visible
     reads, describes = provider.capability_reads, provider.describe_calls
 
     assert MaterialAdmission(env).material_provider_contributions() == ()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         MaterialAdmission(env).material_provider_contribution(provider.provider_id)
     assert env._registry.resource_provider(provider.provider_id) == (
         "registry-only-owner", provider)

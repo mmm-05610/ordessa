@@ -9,9 +9,8 @@ from dataclasses import dataclass
 import re
 from typing import Mapping, Protocol, runtime_checkable
 
-from ordessa_execution_api.environment import EnvironmentId
-from ordessa_execution_api.environment.identity import ActivationRef
-from ordessa_execution_api.environment.operations import sealed_mapping, safe_json
+from ordessa_infrastructure.encoding.immutable_json import sealed_mapping, safe_json
+from .activation import HarnessActivationRef, validate_namespace
 
 RUNTIME_PROVIDER_VERSION = "agent-runtime/2"
 RUNTIME_METHODS = (
@@ -42,7 +41,7 @@ class RuntimeProviderDescriptor:
         if (not isinstance(self.definition_ref, Mapping)
                 or set(self.definition_ref) != {"environmentNamespace", "definitionId", "revision"}):
             raise ValueError("complete definition reference required")
-        EnvironmentId(self.definition_ref["environmentNamespace"])
+        validate_namespace(self.definition_ref["environmentNamespace"])
         for name in ("definitionId", "revision"):
             value = self.definition_ref[name]
             if not isinstance(value, str) or not value or len(value) > 128 or any(ord(c) < 32 for c in value):
@@ -99,7 +98,7 @@ class RuntimeProvider(Protocol):
 
 @dataclass(frozen=True)
 class AdmittedRuntimeProvider:
-    owner_activation: ActivationRef
+    owner_activation: HarnessActivationRef
     descriptor: RuntimeProviderDescriptor
     provider: RuntimeProvider
 

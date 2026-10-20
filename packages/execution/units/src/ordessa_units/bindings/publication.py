@@ -3,16 +3,17 @@
 Internal signatures (no wire or service readiness):
   reserve(request, digest, OperationIntent, *, usages=()) -> OperationRecord
   publish(request, digest, expected_revision, usages) -> NodeRecord projection
-  read(ParticipantInstanceRef) / list() -> frozen NodeRecord projections
+  read(AgentNodeRef) / list() -> frozen NodeRecord projections
 NodeEvidencePort.inspect(operation, steps) -> NodePublicationEvidence is an
 explicit trusted adapter over the original UnitManager and UnitRecords owner
 read faces. It grants no permission or dispatch capability. unit_services
 binds this adapter only when the original trusted owner bundle has a Manager.
 
-AgentNodeRef is the existing ParticipantInstanceRef, encoded with exactly
-three fields. Identity allocation starts at generation 1; advancing an
-existing logical identity requires an explicit migration/replacement contract
-and is refused here. Provider activation generation never allocates nodes.
+AgentNodeRef is the Units-owned node identity formerly represented by the
+generic ParticipantInstanceRef contract, encoded with exactly three fields.
+Identity allocation starts at generation 1; advancing an existing logical
+identity requires an explicit migration/replacement contract and is refused
+here. Provider activation generation never allocates nodes.
 There is no node state machine, configuration value or native-session ledger.
 """
 from __future__ import annotations
@@ -24,23 +25,15 @@ import json
 from typing import Mapping, Protocol
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
-    UnknownResultError,
-)
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown
 from ordessa_infrastructure.database.records import (
     DomainStorePort,
     DomainWrite,
 )
-from ordessa_execution_api.environment.identity import ParticipantInstanceRef
-from ordessa_execution_api.environment.operations import (
-    OperationIntent, OperationStorePort, UsageMutation, node_holder,
-    operation_holder, safe_json, sealed_mapping,
-)
+from ordessa_units.definitions.admission_identity import AgentNodeRef
+from ordessa_units.definitions.operations import OperationIntent, OperationStorePort, UsageMutation, node_holder, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 
-AgentNodeRef = ParticipantInstanceRef
 IDENTITIES = "core.participants"
 NODES = "agents.nodes"
 _BINDING_FIELDS = frozenset({"nodeRef", "harnessProviderRef", "harnessDefinitionRef",
@@ -49,21 +42,21 @@ _BINDING_FIELDS = frozenset({"nodeRef", "harnessProviderRef", "harnessDefinition
 _SOURCE_FIELDS = frozenset({"stepId", "providerRef", "inputDigest", "recoveryCorrelation", "evidenceRef"})
 
 
-def encode_node_ref(ref: ParticipantInstanceRef):
-    if type(ref) is not ParticipantInstanceRef or ref.generation < 1:
-        raise IdentityMismatchError("node identity requires a positive core generation")
+def encode_node_ref(ref: AgentNodeRef):
+    if type(ref) is not AgentNodeRef or ref.generation < 1:
+        raise UnitIdentityMismatch("node identity requires a positive core generation")
     return {"environmentNamespace": ref.environment, "instanceId": ref.instance_id, "generation": ref.generation}
 
 
 def decode_node_ref(value):
     if not isinstance(value, Mapping) or set(value) != {"environmentNamespace", "instanceId", "generation"}:
-        raise IdentityMismatchError("node reference requires exactly its three identity fields")
+        raise UnitIdentityMismatch("node reference requires exactly its three identity fields")
     try:
-        ref = ParticipantInstanceRef(value["environmentNamespace"], value["instanceId"], value["generation"])
+        ref = AgentNodeRef(value["environmentNamespace"], value["instanceId"], value["generation"])
         encode_node_ref(ref)
         return ref
     except (TypeError, ValueError):
-        raise IdentityMismatchError("invalid node reference") from None
+        raise UnitIdentityMismatch("invalid node reference") from None
 
 
 def _request_ref(request):
@@ -91,7 +84,7 @@ def _safe_projection(value):
         if isinstance(item, dict):
             for key, child in item.items():
                 if key.lower().replace("_", "").replace("-", "") in denied:
-                    raise IdentityMismatchError("node projections must contain safe references only")
+                    raise UnitIdentityMismatch("node projections must contain safe references only")
                 walk(child)
         elif isinstance(item, list):
             for child in item: walk(child)
@@ -138,26 +131,26 @@ class NodePublication:
     def _store(self):
         store = self._environment._store
         if not isinstance(store, (OperationStorePort,)) or not isinstance(store, DomainStorePort):
-            raise GuaranteeUnavailableError("nodes require the same store's operation and domain capabilities")
+            raise UnitGuaranteeUnavailable("nodes require the same store's operation and domain capabilities")
         return store
 
     def _permission(self, ref=None, *, request=None, action=None, _closed_inventory=False):
         env = self._environment
         if _closed_inventory:
             if not env._closed or action is not None:
-                raise GuaranteeUnavailableError("closed Node inventory requires a closed read-only Environment")
+                raise UnitGuaranteeUnavailable("closed Node inventory requires a closed read-only Environment")
         else:
             env._check_open()
         if ref is not None: env._check_environment(ref.environment)
         if request is not None:
             env._check_environment(request.environment_namespace)
             if request.principal_scope != env._principal_scope:
-                raise AdmissionRefusedError("node request principal differs from trusted environment principal")
+                raise UnitAdmissionRefused("node request principal differs from trusted environment principal")
         target = f"{env.environment_id}:agents.node:{ref.instance_id if ref else '*'}"
         if env._policy is None or not env._policy.admit_object_access(env._principal_scope, target, "write" if action else "read"):
-            raise AdmissionRefusedError("node target permission unavailable or refused")
+            raise UnitAdmissionRefused("node target permission unavailable or refused")
         if action and not env._policy.admit_invoke(env._principal_scope, f"pacthold.agents.nodes.{action}", "reliable"):
-            raise AdmissionRefusedError("node invocation permission unavailable or refused")
+            raise UnitAdmissionRefused("node invocation permission unavailable or refused")
 
     def reserve(self, request: RequestKey, digest: str, intent: OperationIntent,
                 *, usages: tuple[UsageMutation, ...] = (),
@@ -173,15 +166,15 @@ class NodePublication:
         env = self._environment
         with env._admission_lock:
             if type(intent) is not OperationIntent:
-                raise IdentityMismatchError("node reservation requires a frozen operation intent")
+                raise UnitIdentityMismatch("node reservation requires a frozen operation intent")
             ref = decode_node_ref(intent.node_ref)
             from ordessa_execution_agents.profiles.definitions.models import ProfileRevisionRef
             try:
                 profile = decode_revision_ref(json.loads(safe_json(intent.profile_snapshot_ref)))
             except (ValueError, TypeError):
-                raise IdentityMismatchError("node reservation requires a complete Profile snapshot") from None
+                raise UnitIdentityMismatch("node reservation requires a complete Profile snapshot") from None
             if profile.environment_namespace != ref.environment:
-                raise IdentityMismatchError("node Profile snapshot is in another environment")
+                raise UnitIdentityMismatch("node Profile snapshot is in another environment")
             _safe_projection(intent.context_ref)
             self._permission(ref, request=request, action="prepare")
             store = self._store()
@@ -200,12 +193,12 @@ class NodePublication:
                              for item in HarnessAdmission(env).list()}
             if any(safe_json(step.pinned_provider_ref) not in admitted_pins
                    for step in intent.steps):
-                raise AdmissionRefusedError("operation pins an unavailable Harness declaration")
+                raise UnitAdmissionRefused("operation pins an unavailable Harness declaration")
             row = store.read_domain(env.environment_id, IDENTITIES, ref.instance_id)
             if row is not None:
-                raise IdentityMismatchError("node identity is already reserved; replacement requires an explicit migration contract")
+                raise UnitIdentityMismatch("node identity is already reserved; replacement requires an explicit migration contract")
             if ref.generation != 1:
-                raise IdentityMismatchError("a new core node identity starts at generation 1")
+                raise UnitIdentityMismatch("a new core node identity starts at generation 1")
             return store.reserve_operation(request, digest, intent,
                 writes=(DomainWrite(IDENTITIES, ref.instance_id, 0, identity),) + tuple(writes),
                 usages=usages)
@@ -216,45 +209,45 @@ class NodePublication:
         expected = {"nodeRef": encode_node_ref(ref), "operationRequest": _request_ref(operation.request),
                     "operationRef": operation.intent.operation_ref, "intentDigest": _hash(operation.intent.to_dict())}
         if row is None or row["revision"] != 1 or not _same_reference(row["value"], expected):
-            raise GuaranteeUnavailableError("node reservation source is inconsistent")
+            raise UnitGuaranteeUnavailable("node reservation source is inconsistent")
         return ref
 
     def _owner_ref(self, value, provider, *, label):
         if (not isinstance(value, Mapping) or value.get("environmentNamespace") != self._environment.environment_id
                 or not _same_reference(value.get("ownerProviderRef"), provider) or not isinstance(value.get("sourceRevision"), str)
                 or not value["sourceRevision"] or len(value) < 4):
-            raise GuaranteeUnavailableError(f"{label} lacks complete scoped owner provenance")
+            raise UnitGuaranteeUnavailable(f"{label} lacks complete scoped owner provenance")
         _safe_projection(value)
 
     def _validate_evidence(self, operation, steps, evidence):
         if type(evidence) is not NodePublicationEvidence:
-            raise GuaranteeUnavailableError("actual owner publication evidence unavailable")
+            raise UnitGuaranteeUnavailable("actual owner publication evidence unavailable")
         intent = operation.intent
         ref = decode_node_ref(intent.node_ref)
         binding = evidence.binding
         if set(binding) != _BINDING_FIELDS:
-            raise GuaranteeUnavailableError("incomplete actual AgentBinding")
+            raise UnitGuaranteeUnavailable("incomplete actual AgentBinding")
         if (not _same_reference(binding["nodeRef"], intent.node_ref) or binding["operationRef"] != intent.operation_ref
                 or not _same_reference(binding["profileSnapshotRef"], intent.profile_snapshot_ref)
                 or not _same_reference(binding["preparationContextRef"], intent.context_ref)
                 or not _same_reference(binding["harnessProviderRef"], evidence.provider_ref)):
-            raise IdentityMismatchError("owner binding differs from fixed operation lineage")
+            raise UnitIdentityMismatch("owner binding differs from fixed operation lineage")
         if (not isinstance(binding["harnessDefinitionRef"], Mapping)
                 or binding["harnessDefinitionRef"].get("environmentNamespace") != ref.environment):
-            raise IdentityMismatchError("Harness definition is unscoped")
+            raise UnitIdentityMismatch("Harness definition is unscoped")
         from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessAdmission
         admitted = HarnessAdmission(self._environment).describe(binding["harnessDefinitionRef"])
         if not _same_reference(admitted.provider_ref, evidence.provider_ref):
-            raise IdentityMismatchError("owner provider activation differs from currently admitted provider")
+            raise UnitIdentityMismatch("owner provider activation differs from currently admitted provider")
         for value, label in ((binding["harnessUnitRef"], "unit"), (binding["configurationTargetRef"], "configuration target")):
             self._owner_ref(value, evidence.provider_ref, label=label)
         sessions = binding["nativeSessionRefs"]
         if not isinstance(sessions, tuple) or len(sessions) > 1:
-            raise GuaranteeUnavailableError("native session mapping must be an owner single-session projection")
+            raise UnitGuaranteeUnavailable("native session mapping must be an owner single-session projection")
         for session in sessions: self._owner_ref(session, evidence.provider_ref, label="native session")
         for access in evidence.access_surface_refs: self._owner_ref(access, evidence.provider_ref, label="access surface")
         if len(evidence.step_sources) != len(steps):
-            raise GuaranteeUnavailableError("publication does not cover every provider step source")
+            raise UnitGuaranteeUnavailable("publication does not cover every provider step source")
         for step, source in zip(steps, evidence.step_sources):
             frozen = step.intent
             if (set(source) != _SOURCE_FIELDS or source["stepId"] != frozen.step_id
@@ -263,7 +256,7 @@ class NodePublication:
                     or source["inputDigest"] != frozen.input_digest
                     or source["recoveryCorrelation"] != frozen.recovery_correlation
                     or step.outcome != "concluded" or not _same_reference(step.evidence.get("evidenceRef"), source["evidenceRef"])):
-                raise IdentityMismatchError("actual step evidence differs from fixed dispatch/source correlation")
+                raise UnitIdentityMismatch("actual step evidence differs from fixed dispatch/source correlation")
             self._owner_ref(source["evidenceRef"], evidence.provider_ref, label="step evidence")
 
     def publish(self, request: RequestKey, digest: str, expected_revision: int,
@@ -273,10 +266,10 @@ class NodePublication:
             self._permission(request=request, action="publish")
             store = self._store()
             operation = store.read_operation(request)
-            if operation is None: raise GuaranteeUnavailableError("node operation is not reserved")
+            if operation is None: raise UnitGuaranteeUnavailable("node operation is not reserved")
             ref = self._identity(operation)
             self._permission(ref, request=request, action="publish")
-            if operation.digest != digest: raise IdentityMismatchError("node publication digest changed")
+            if operation.digest != digest: raise UnitIdentityMismatch("node publication digest changed")
             if operation.status == "published":
                 projection = self.read(ref)
                 row = store.read_domain(ref.environment, NODES, f"{ref.instance_id}:{ref.generation}")
@@ -286,27 +279,27 @@ class NodePublication:
                     json.loads(safe_json(projection)))
                 return projection
             if operation.status in {"unknown", "refused", "cancelled"}:
-                raise UnknownResultError("uncertain operation cannot publish a node")
+                raise UnitOperationUnknown("uncertain operation cannot publish a node")
             if self._evidence_port is None:
-                raise GuaranteeUnavailableError("original Unit owner evidence adapter is absent")
+                raise UnitGuaranteeUnavailable("original Unit owner evidence adapter is absent")
             steps = tuple(store.read_operation_step(request, step.step_id) for step in operation.intent.steps)
             if any(step is None or step.outcome != "concluded" for step in steps):
-                raise UnknownResultError("node publication requires concluded native step evidence")
+                raise UnitOperationUnknown("node publication requires concluded native step evidence")
             try:
                 evidence = self._evidence_port.inspect(operation, steps)
             except Exception:
-                raise GuaranteeUnavailableError("actual owner publication evidence unavailable") from None
+                raise UnitGuaranteeUnavailable("actual owner publication evidence unavailable") from None
             self._validate_evidence(operation, steps, evidence)
             if not isinstance(usages, tuple) or not usages:
-                raise GuaranteeUnavailableError("node publication requires held resource Usage transfer")
+                raise UnitGuaranteeUnavailable("node publication requires held resource Usage transfer")
             for usage in usages:
                 if (not _same_reference(usage.expected_holder_ref, operation_holder(request, operation.intent.operation_ref))
                         or not _same_reference(usage.holder_ref, node_holder(ref.environment, ref.instance_id, ref.generation))
                         or usage.state != "active" or usage.expected_revision < 1):
-                    raise IdentityMismatchError("publication must transfer already held Usage to the fixed node")
+                    raise UnitIdentityMismatch("publication must transfer already held Usage to the fixed node")
             if not any(_same_reference(usage.target_ref, evidence.binding["harnessUnitRef"]) and "use" in usage.rights
                        for usage in usages):
-                raise GuaranteeUnavailableError("node publication requires the actual Harness unit's use relationship")
+                raise UnitGuaranteeUnavailable("node publication requires the actual Harness unit's use relationship")
             projection = {"nodeRef": encode_node_ref(ref), "binding": json.loads(safe_json(evidence.binding)),
                 "lineage": {"profileSnapshotRef": json.loads(safe_json(operation.intent.profile_snapshot_ref)),
                             "preparationContextRef": json.loads(safe_json(operation.intent.context_ref))},
@@ -349,10 +342,10 @@ class NodePublication:
             if len(value["sourceSteps"]) != len(operation.intent.steps): raise ValueError("step count")
             _safe_projection(record)
             return sealed_mapping(record)
-        except (ValueError, KeyError, TypeError, AttributeError, IdentityMismatchError):
-            raise GuaranteeUnavailableError("stored node publication is inconsistent") from None
+        except (ValueError, KeyError, TypeError, AttributeError, UnitIdentityMismatch):
+            raise UnitGuaranteeUnavailable("stored node publication is inconsistent") from None
 
-    def read(self, ref: ParticipantInstanceRef):
+    def read(self, ref: AgentNodeRef):
         env = self._environment
         with env._admission_lock:
             encode_node_ref(ref)
@@ -368,12 +361,12 @@ class NodePublication:
             for row in self._store().list_domain(env.environment_id, NODES):
                 try: ref = decode_node_ref(row["value"]["record"]["nodeRef"])
                 except (ValueError, KeyError, TypeError):
-                    raise GuaranteeUnavailableError("stored node identity is inconsistent") from None
+                    raise UnitGuaranteeUnavailable("stored node identity is inconsistent") from None
                 self._permission(ref)
                 result.append(self._read(ref, row))
             return tuple(result)
 
-    def _read_for_closed_inventory(self, ref: ParticipantInstanceRef):
+    def _read_for_closed_inventory(self, ref: AgentNodeRef):
         """Read with the same ACL/integrity after Environment's admission cut.
 
         This private path cannot dispatch or mutate; it is used only before
@@ -411,7 +404,7 @@ class NodePublication:
             for row in self._store().list_domain(env.environment_id, NODES):
                 try: ref = decode_node_ref(row["value"]["record"]["nodeRef"])
                 except (ValueError, KeyError, TypeError):
-                    raise GuaranteeUnavailableError("stored node identity is inconsistent") from None
+                    raise UnitGuaranteeUnavailable("stored node identity is inconsistent") from None
                 self._permission(ref, _closed_inventory=True)
                 result.append(self._read(ref, row))
             return tuple(result)

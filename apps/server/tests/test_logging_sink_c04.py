@@ -15,7 +15,7 @@ import sys
 
 import pytest
 
-from ordessa_server.observability.logging_sink import (
+from ordessa_server.bootstrap.observability.logging_sink import (
     REDACTED,
     JsonLinesSink,
     iter_records,

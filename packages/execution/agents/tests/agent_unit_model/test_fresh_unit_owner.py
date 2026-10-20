@@ -13,8 +13,9 @@ from ordessa_units.records import OperationJournal, UnitRecords, UnitRecordsRefu
 from ordessa_units.records.operation_journal import JournalError
 from ordessa_units.admission.invocation import InvocationAuthorityRefused
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import EnvironmentId
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, safe_json
+from ordessa_units.definitions.admission_identity import AdmissionNamespace
+from ordessa_units.definitions.operations import OperationIntent, StepIntent
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 
 
 @pytest.mark.parametrize('field,value', [
@@ -42,7 +43,7 @@ def test_selected_record_ports_cannot_be_substituted(tmp_path, field):
             'verify_unit_binding', 'verify_association', 'verify_termination')})
         with pytest.raises(AgentOwnerUnavailable, match='original selected records'):
             bind_unit_manager(replace(j.inputs, **{field: substitute}),
-                environment_id=EnvironmentId('env'), provider_view=j.view)
+                environment_id=AdmissionNamespace('env'), provider_view=j.view)
         assert j.factory_calls == [] and j.events == []
 
 
@@ -52,18 +53,18 @@ def test_binding_keeps_one_original_issuer_and_manager_without_factory_effect(tm
         assert j.manager.records is j.records and j.manager.verifier is j.view.verifier
         assert j.records.acp_turn_available and j.records.journal.acp_turn_opt_in
         with pytest.raises(AgentOwnerUnavailable, match='already has'):
-            bind_unit_manager(j.inputs, environment_id=EnvironmentId('env'), provider_view=j.view)
+            bind_unit_manager(j.inputs, environment_id=AdmissionNamespace('env'), provider_view=j.view)
         with pytest.raises(AgentOwnerUnavailable, match='original selected issuer'):
-            bind_unit_manager(j.inputs, environment_id=EnvironmentId('foreign'), provider_view=j.view)
+            bind_unit_manager(j.inputs, environment_id=AdmissionNamespace('foreign'), provider_view=j.view)
         with pytest.raises(AgentOwnerUnavailable, match='original selected issuer'):
-            bind_unit_manager(j.inputs, environment_id=EnvironmentId('env'),
+            bind_unit_manager(j.inputs, environment_id=AdmissionNamespace('env'),
                 provider_view=AgentProviderView(j.records, object()))
         with pytest.raises(AgentOwnerUnavailable, match='original selected records'):
             bind_unit_manager(replace(j.inputs, acp_turn_opt_in=False),
-                environment_id=EnvironmentId('env'), provider_view=j.view)
+                environment_id=AdmissionNamespace('env'), provider_view=j.view)
         j.issuer.close()
         with pytest.raises(AgentOwnerUnavailable, match='original selected issuer'):
-            bind_unit_manager(j.inputs, environment_id=EnvironmentId('env'), provider_view=j.view)
+            bind_unit_manager(j.inputs, environment_id=AdmissionNamespace('env'), provider_view=j.view)
         assert j.factory_calls == []
 
 
@@ -74,7 +75,7 @@ def test_no_legacy_factory_reinterpretation_or_implicit_opt_in(tmp_path):
             preparation_observation_port=SimpleNamespace(observe=lambda *_: None))
         validate_agent_owner_inputs(legacy)
         with pytest.raises(AgentOwnerUnavailable, match='selection is unavailable'):
-            bind_unit_manager(legacy, environment_id=EnvironmentId('env'), provider_view=j.view)
+            bind_unit_manager(legacy, environment_id=AdmissionNamespace('env'), provider_view=j.view)
         with pytest.raises(AgentOwnerUnavailable, match='explicit fresh Unit selection'):
             validate_agent_owner_inputs(replace(legacy, acp_turn_opt_in=True))
         with pytest.raises(AgentOwnerUnavailable):
@@ -86,7 +87,7 @@ def test_no_legacy_factory_reinterpretation_or_implicit_opt_in(tmp_path):
             verifier=j.view.verifier, epoch_port=j.inputs.management_epoch,
             termination_evidence=j.inputs.termination_evidence)
         with pytest.raises(AgentOwnerUnavailable, match='original selected records'):
-            bind_unit_manager(j.inputs, environment_id=EnvironmentId('env'),
+            bind_unit_manager(j.inputs, environment_id=AdmissionNamespace('env'),
                 provider_view=AgentProviderView(cold, j.view.verifier))
         assert j.factory_calls == [] and j.events == []
 
@@ -127,13 +128,13 @@ def test_fresh_manager_node_recorded_prompt_authorized_cold_read_and_original_cl
         assert len(j.factory_calls) == 1 and j.factory_calls[0][2] is j.view
         assert j.events.count('spawn') == 1
         lease = unit.lease_port.grant(ref)
-        receipt = unit.prompt_recorded(ref, lease, operation_ref='fresh-turn', timeout=2, prompt=[])
+        receipt = unit.prompt(ref, lease, operation_ref='fresh-turn', timeout=2, prompt=[])
         assert receipt['state'] == 'completed'
         assert receipt['summary']['successfulRpcResponse'] is True
         assert receipt['summary']['modelQualityVerified'] is False
         assert _cold_query(j, operation, ref, receipt['inputDigest']) == receipt
         with pytest.raises(UnitRecordsRefused, match='no replay'):
-            unit.prompt_recorded(ref, lease, operation_ref='fresh-turn', prompt=[])
+            unit.prompt(ref, lease, operation_ref='fresh-turn', prompt=[])
         j.inputs.authority.allowed = False
         with pytest.raises(InvocationAuthorityRefused):
             _cold_query(j, operation, ref, receipt['inputDigest'], suffix='revoked')
@@ -151,7 +152,7 @@ def test_unselected_durable_schema_cannot_record_a_prompt(tmp_path):
     with build_joint_owner(tmp_path) as j:
         _, _, ref, unit = _prepare(j)
         with pytest.raises(UnitRecordsRefused, match='opt-in'):
-            unit.prompt_recorded(ref, unit.lease_port.grant(ref), operation_ref='fresh-turn', prompt=[])
+            unit.prompt(ref, unit.lease_port.grant(ref), operation_ref='fresh-turn', prompt=[])
         with j.records.journal._connect() as db:
             assert db.execute("SELECT count(*) FROM sqlite_master WHERE name='harness_acp_turn_attempts'").fetchone()[0] == 0
         assert len(j.factory_calls) == 1 and j.events.count('spawn') == 1
@@ -201,5 +202,5 @@ def test_original_journal_identity_is_checked_even_without_durable_opt_in(tmp_pa
             path.touch(exist_ok=False)
         assert j.records.journal.preopened_file_identity_valid is False
         with pytest.raises(AgentOwnerUnavailable, match='original selected records'):
-            bind_unit_manager(j.inputs, environment_id=EnvironmentId('env'), provider_view=j.view)
+            bind_unit_manager(j.inputs, environment_id=AdmissionNamespace('env'), provider_view=j.view)
         assert j.factory_calls == [] and j.events == []

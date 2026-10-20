@@ -11,9 +11,9 @@ import json
 import pytest
 from ordessa_infrastructure.identifiers import RequestKey
 
-from ordessa_execution_api.environment import GuaranteeUnavailableError, IdentityMismatchError, UnknownResultError
-from ordessa_execution_api.environment.operations import OperationRevisionConflict, node_holder
-from ordessa_execution_api.environment.identity import ParticipantInstanceRef
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown
+from ordessa_units.definitions.operations import OperationRevisionConflict, node_holder
+from ordessa_units.definitions.admission_identity import AgentNodeRef
 
 from agent_tools_fixtures.assembly import (
     Authority, CurrentState, Policy, source, Environment, InstallationRecord,
@@ -70,7 +70,7 @@ def test_new_explicit_stop_reconciles_unknown_before_release(lifecycle):
     coordinator.stop(first, node_ref, {})
     assert store.read_operation_step(first, "stop").outcome == "unknown"
     release = RequestKey("env", "principal", "release-before-reconciliation")
-    with pytest.raises(UnknownResultError, match="unresolved effect claim"):
+    with pytest.raises(UnitOperationUnknown, match="unresolved effect claim"):
         coordinator.release(release, node_ref, {})
     assert store.read_operation_step(release, "release") is None
     provider.fail_lifecycle = None
@@ -93,7 +93,7 @@ def test_older_concluded_stop_cannot_reconcile_later_unknown_stop(lifecycle):
     unknown = RequestKey("env", "principal", "later-unknown-stop")
     coordinator.stop(unknown, node_ref, {})
     assert store.read_operation_step(unknown, "stop").outcome == "unknown"
-    with pytest.raises(UnknownResultError, match="unresolved effect claim"):
+    with pytest.raises(UnitOperationUnknown, match="unresolved effect claim"):
         coordinator.release(RequestKey("env", "principal", "release-after-later-unknown"), node_ref, {})
     assert provider.lifecycle_calls.count("release") == 0
 
@@ -106,7 +106,7 @@ def test_unconfirmed_termination_records_unknown_step(lifecycle):
 
 
 def test_release_requires_exact_active_publication_set(lifecycle):
-    from ordessa_execution_api.environment.operations import node_holder
+    from ordessa_units.definitions.operations import node_holder
     coordinator, owner, provider, node_ref, node, env, store, request, provider_ref, current = lifecycle
     holder = node_holder("env", node_ref.instance_id, node_ref.generation)
     rows_before = store.read_usages("env", holder)
@@ -123,7 +123,7 @@ def test_release_requires_exact_active_publication_set(lifecycle):
     assert coordinator.release(request, node_ref, {}) == view
     assert provider.lifecycle_calls.count("release") == 1
     # a NEW release request sees a non-active set and is refused before dispatch
-    with pytest.raises(GuaranteeUnavailableError, match="active publication Usages"):
+    with pytest.raises(UnitGuaranteeUnavailable, match="active publication Usages"):
         coordinator.release(RequestKey("env", "principal", "release-again"), node_ref, {})
     assert provider.lifecycle_calls.count("release") == 1
 
@@ -148,7 +148,7 @@ def test_recover_refuses_after_original_node_usages_are_released(lifecycle):
     assert store.read_operation_step(request, "release").outcome == "concluded"
     before = list(provider.lifecycle_calls)
     recover = RequestKey("env", "principal", "recover-after-release")
-    with pytest.raises(GuaranteeUnavailableError, match="recover requires the exact original Node Usage set"):
+    with pytest.raises(UnitGuaranteeUnavailable, match="recover requires the exact original Node Usage set"):
         coordinator.recover(recover, node_ref, {})
     assert store.read_operation_step(recover, "recover") is None
     assert provider.lifecycle_calls == before
@@ -162,7 +162,7 @@ def test_unknown_node_usage_refuses_recover_before_reservation(lifecycle):
                         (rows[0]["usageId"],))
     store._conn.commit()
     request = RequestKey("env", "principal", "recover-unknown-held-usage")
-    with pytest.raises(GuaranteeUnavailableError,
+    with pytest.raises(UnitGuaranteeUnavailable,
                        match="recover requires the exact original Node Usage set"):
         coordinator.recover(request, node_ref, {})
     assert store.read_operation(request) is None
@@ -202,7 +202,7 @@ def test_first_held_snapshot_change_before_reservation_cannot_dispatch(lifecycle
 def test_preconditions_shape_and_unknown_keys_are_refused(lifecycle):
     coordinator, owner, provider, node_ref, node, env, store, request, provider_ref, current = lifecycle
     for bad in ("string", 5, {"unknownKey": 1}):
-        with pytest.raises(IdentityMismatchError, match="preconditions"):
+        with pytest.raises(UnitIdentityMismatch, match="preconditions"):
             coordinator.stop(RequestKey("env", "principal", "bad-" + str(type(bad).__name__)), node_ref, bad)
     assert provider.lifecycle_calls == []
 
@@ -211,24 +211,24 @@ def test_lifecycle_requires_composed_authorities(lifecycle):
     coordinator, owner, provider, node_ref, node, env, store, request, provider_ref, current = lifecycle
     bare = AgentLifecycle(env, coordinator._nodes, invocation_issuer=coordinator._issuer)
     assert bare.capabilities() == {"nodeLifecycle": False}
-    with pytest.raises(GuaranteeUnavailableError, match="lifecycle authorities"):
+    with pytest.raises(UnitGuaranteeUnavailable, match="lifecycle authorities"):
         bare.stop(RequestKey("env", "principal", "bare"), node_ref, {})
     assert coordinator.capabilities() == {"nodeLifecycle": True}
 
 
 def test_draining_exact_owner_can_stop_release_then_retire_without_new_admission(lifecycle):
-    from ordessa_execution_api.environment.identity import ActivationRef
-    from ordessa_execution_api.environment.operations import node_holder
-    from ordessa_execution_api.environment import AdmissionRefusedError
+    from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
+    from ordessa_units.definitions.operations import node_holder
+    from ordessa_units.errors import UnitAdmissionRefused
     coordinator, owner, provider, node_ref, node, env, store, request, pin, current = lifecycle
     activation = pin["ownerActivationRef"]
-    ref = ActivationRef("env", activation["pluginId"], activation["generation"])
+    ref = HarnessActivationRef("env", activation["pluginId"], activation["generation"])
     state, blockers = env.retire_activation(ref)
     assert state == "retire-pending" and any(value.startswith("agent-unit-usage:") for value in blockers)
     current.active = False  # current-state port reports ordinary admission closed
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         env.agent_runtime_contribution(provider.descriptor.definition_ref)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         coordinator.recover(RequestKey("env", "principal", "recover-draining"), node_ref, {})
     assert store.read_operation(RequestKey("env", "principal", "recover-draining")) is None
     stopped = coordinator.stop(request, node_ref, {})

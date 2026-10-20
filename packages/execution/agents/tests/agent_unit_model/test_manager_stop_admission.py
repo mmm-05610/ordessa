@@ -4,7 +4,7 @@ This group does not qualify a native stop or complete Manager assembly.
 """
 from types import SimpleNamespace
 import pytest
-from ordessa_execution_api.environment import GuaranteeUnavailableError
+from ordessa_units.errors import UnitGuaranteeUnavailable
 from ordessa_units.admission.owner_ports import AgentOwnerPorts, AgentProviderView
 from ordessa_units.management.manager import UnitManager
 from test_manager_node_joint import joint, managed_lifecycle
@@ -22,7 +22,7 @@ def test_missing_manager_never_dispatches_legacy_runtime_or_reserves(lifecycle):
     coordinator, _, provider, node_ref, _, _, store, request, _, _ = lifecycle
     assert coordinator.capabilities() == {
         'nodeLifecycle': False, 'supportedLifecycleActions': []}
-    with pytest.raises(GuaranteeUnavailableError, match='Unit Manager'):
+    with pytest.raises(UnitGuaranteeUnavailable, match='Unit Manager'):
         coordinator.stop(request, node_ref, {})
     assert store.read_operation(request) is None
     assert provider.lifecycle_calls == []
@@ -32,7 +32,7 @@ def test_missing_manager_never_dispatches_legacy_runtime_or_reserves(lifecycle):
 def test_unqualified_actions_refuse_without_legacy_dispatch(lifecycle, action):
     coordinator, _, provider, node_ref, _, _, store, request, _, _ = lifecycle
     expected = 'Unit Manager' if action == 'release' else 'not admitted'
-    with pytest.raises(GuaranteeUnavailableError, match=expected):
+    with pytest.raises(UnitGuaranteeUnavailable, match=expected):
         getattr(coordinator, action)(request, node_ref, {})
     assert store.read_operation(request) is None
     assert provider.lifecycle_calls == []

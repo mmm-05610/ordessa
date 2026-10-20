@@ -1,0 +1,214 @@
+{
+  "schema": "verify-clean-current-python-gates/1",
+  "historical_equivalence": "NOT_PROVEN: original shell stored aggregate counts but no node-id ledger",
+  "success_policy": "Every target must collect at least one test; every collected node id must receive exactly one actual passing call result and passing setup/teardown; no failures, errors, or skips; JUnit testcase count and status totals must agree; any absent target or nonzero child exit fails the gate.",
+  "groups": [
+    {
+      "id": "pacthold_kernel",
+      "legacy_target": "packages/execution/kernel",
+      "targets": [
+        "apps/server/tests/integration/harness/test_acp_configuration_selection.py",
+        "apps/server/tests/integration/harness/test_action_execution_controlled.py",
+        "apps/server/tests/integration/harness/test_c4_product_selection.py",
+        "apps/server/tests/integration/harness/test_codex_plugin.py",
+        "apps/server/tests/integration/harness/test_codex_wiring.py",
+        "apps/server/tests/integration/harness/test_configuration_service_controlled.py",
+        "apps/server/tests/integration/harness/test_contribution_registry.py",
+        "apps/server/tests/integration/harness/test_external_adapter_product.py",
+        "apps/server/tests/integration/harness/test_generic_profile_store.py",
+        "apps/server/tests/integration/harness/test_instance_directory.py",
+        "apps/server/tests/integration/harness/test_launch_descriptors.py",
+        "apps/server/tests/integration/harness/test_managed_transport_fence.py",
+        "apps/server/tests/integration/harness/test_native_config_capabilities_honesty.py",
+        "apps/server/tests/integration/harness/test_native_configuration_readback.py",
+        "apps/server/tests/integration/harness/test_native_history_owner_gates.py",
+        "apps/server/tests/integration/harness/test_native_model_backend.py",
+        "apps/server/tests/integration/harness/test_native_operation_state.py",
+        "apps/server/tests/integration/harness/test_native_session_history.py",
+        "apps/server/tests/integration/harness/test_pi_action_executor.py",
+        "apps/server/tests/integration/harness/test_pi_production_template.py",
+        "apps/server/tests/integration/harness/test_pi_provider_registration_service.py",
+        "apps/server/tests/integration/harness/test_profile_owner.py",
+        "apps/server/tests/integration/harness/test_provider_restoration_service.py",
+        "apps/server/tests/integration/harness/test_server_acp_admission_binding.py",
+        "apps/server/tests/integration/harness/test_server_acp_recovery_view.py",
+        "apps/server/tests/integration/harness/test_server_acp_stop_hook.py",
+        "packages/execution/agents/tests/agent_unit_model/test_intent_merge.py",
+        "packages/execution/agents/tests/agent_unit_model/test_operation_journal.py",
+        "packages/execution/agents/tests/agent_unit_model/test_private_generation.py",
+        "packages/execution/agents/tests/agent_unit_model/test_unit_records.py",
+        "packages/execution/agents/tests/agents/harness_records/test_native_unit_confirmation.py",
+        "packages/execution/kernel/tests",
+        "packages/execution/agents/tests/harness",
+        "plugins/harness/claude-code/tests/test_claude_native_channel.py",
+        "plugins/harness/claude-code/tests/test_claude_production_template.py",
+        "plugins/harness/codex/tests/test_codex_composition_adapter.py",
+        "plugins/harness/codex/tests/test_codex_credential_binding_p0.py",
+        "plugins/harness/codex/tests/test_codex_executable_bundle.py",
+        "plugins/harness/codex/tests/test_codex_managed_account.py",
+        "plugins/harness/codex/tests/test_codex_native_channel.py",
+        "plugins/harness/codex/tests/test_codex_production_template.py",
+        "plugins/harness/codex/tests/test_codex_remote.py",
+        "plugins/harness/copilot/tests/test_copilot_native_channel.py",
+        "plugins/harness/dsh/tests/test_dsh_production_template.py",
+        "plugins/harness/gemini_cli/tests/test_gemini_native_channel.py",
+        "plugins/harness/goose/tests/test_goose_native_channel.py",
+        "plugins/harness/hermes/tests/test_hermes_production_template.py",
+        "plugins/harness/kilo/tests/test_kilo_production_template.py",
+        "plugins/harness/kimi/tests/test_kimi_native_channel.py",
+        "plugins/harness/opencode/tests/test_opencode_native_channel.py",
+        "plugins/harness/opencode/tests/test_opencode_production_template.py",
+        "plugins/harness/pi/tests/test_pi_native_channel.py",
+        "plugins/harness/qoder/tests/test_qoder_native_config_114.py",
+        "plugins/harness/qwen/tests/test_qwen_native_channel.py",
+        "plugins/harness/vibe/tests/test_vibe_native_channel.py",
+        "tests/architecture/test_agent_unit_source_ownership.py",
+        "tests/architecture/test_boundaries.py",
+        "tests/architecture/test_brand_organization_gates.py",
+        "tests/architecture/test_core_identity.py",
+        "tests/architecture/test_family_dialect_tables.py",
+        "tests/architecture/test_module_isolation.py",
+        "tests/architecture/test_presence_verdict_lnx002.py",
+        "tests/architecture/test_retired_direct_factories.py",
+        "tests/architecture/test_retired_model_adapters.py",
+        "tests/architecture/test_single_distribution.py",
+        "tests/integration/decision/evaluation/test_edge_flow_probe.py",
+        "tests/integration/decision/evaluation/test_live_acceptance.py",
+        "tests/integration/decision/evaluation/test_rank_flow_probe.py",
+        "tests/integration/decision/evaluation/test_reference_flow_probe.py",
+        "tests/integration/decision/test_core_read_counterexamples.py",
+        "tests/integration/decision/test_vertical.py",
+        "tests/integration/harness/configuration_model/test_adapters_conformance.py",
+        "tests/integration/harness/configuration_model/test_catalog.py",
+        "tests/integration/harness/configuration_model/test_initial_auth.py",
+        "tests/integration/harness/configuration_model/test_managed_model.py",
+        "tests/integration/harness/configuration_model/test_ownership.py",
+        "tests/integration/harness/configuration_model/test_pi_live_model.py",
+        "tests/integration/harness/configuration_model/test_pi_live_runtime.py",
+        "tests/integration/harness/configuration_model/test_request_params.py",
+        "tests/integration/harness/packaging/test_acp_schema_drift_target.py",
+        "tests/integration/harness/test_codex_owner_attacks.py",
+        "tests/integration/harness/test_native_evidence_boundaries.py",
+        "tests/integration/harness/test_qwen_production_template.py",
+        "tests/integration/harness/test_unit_configuration_records.py",
+        "tests/integration/install/test_packaging_boundaries.py",
+        "tests/integration/release/test_release.py"
+      ],
+      "evidence": [
+        "kernel-test-owner-root-applied.json",
+        "kernel-test-owner-remainder-root-applied.json",
+        "native-evidence-current-root-retirement.json (old Kernel test source to current integration boundary target)",
+        "current-test-discovery-luna.json resolves the stale remainder receipt target through the current integration owner"
+      ],
+      "mapping_note": "Current Kernel tests plus each extant test_*.py target whose old source path was under packages/execution/kernel/tests in the two applied migration receipts.",
+      "absent_targets": [],
+      "target_resolution_notes": [
+        "One prior remainder receipt points to the now-absent plugins/harness/packaging/tests/test_acp_schema_drift_target.py while current-test-discovery-luna maps the same basename from plugins/harness/packaging/tests to tests/integration/harness/packaging. It is included at the resolved current target in both the original Kernel-origin scope and Harness-origin scope; historical membership is ambiguous, so this is duplicate coverage rather than a claimed unique historical case."
+      ]
+    },
+    {
+      "id": "harness",
+      "legacy_target": "plugins/harness",
+      "targets": [
+        "plugins/harness",
+        "tests/architecture/harness/test_acp_boundaries.py",
+        "tests/integration/harness/packaging/test_acp_schema_drift_target.py"
+      ],
+      "evidence": [
+        "current-test-discovery-luna.json",
+        "harness-access-test-owner-root-applied.json"
+      ],
+      "mapping_note": "Current brand test tree plus exact extant Python test targets migrated from plugins/harness sources where receipts record the old path.",
+      "absent_targets": []
+    },
+    {
+      "id": "server",
+      "legacy_target": "apps/server",
+      "targets": [
+        "apps/server/tests"
+      ],
+      "evidence": [
+        "current owner tree; apps/server/tests"
+      ],
+      "mapping_note": "Current Server test tree.",
+      "absent_targets": []
+    },
+    {
+      "id": "acp_orchestration",
+      "legacy_target": "tests/integration/acp_orchestration",
+      "targets": [
+        "tests/integration/acp_orchestration"
+      ],
+      "evidence": [
+        "current owner tree; path remains present"
+      ],
+      "mapping_note": "Current integration test tree.",
+      "absent_targets": []
+    },
+    {
+      "id": "environment_api",
+      "legacy_target": "packages/interfaces/execution/c1-api",
+      "targets": [
+        "packages/execution/environments/tests",
+        "packages/execution/units/tests/runtime",
+        "packages/execution/units/tests/materials",
+        "packages/execution/agents/tests/harness",
+        "packages/execution/agents/tests/profiles",
+        "packages/interfaces/system-access/bindings/tests/test_agent_error_mapping.py",
+        "tests/architecture/test_retired_c1_engine_contracts.py"
+      ],
+      "evidence": [
+        "docs/migration/execution-c1-resource-owners-20261013.md"
+      ],
+      "mapping_note": "Actual receiving-owner behavior and complete C1 absence; no legacy interface package.",
+      "absent_targets": ["packages/interfaces/execution/c1-api"]
+    },
+    {
+      "id": "kernel_persistence",
+      "legacy_target": "packages/execution/kernel/tests/adapters/sqlite/environment",
+      "targets": [
+        "packages/execution/units/tests/persistence"
+      ],
+      "evidence": [
+        "docs/implementation/packages-convergence-20261012/execution/units-api/C1-STORE-OWNER-20261014.json"
+      ],
+      "mapping_note": "Current Unit-owned original SQLite operation/domain/Usage/writer tests; generic Kernel authority/reference/activation equivalence remains unproven.",
+      "absent_targets": []
+    },
+    {
+      "id": "platform_services",
+      "legacy_target": "packages/execution/kernel/tests/platform/test_platform_services.py",
+      "targets": [
+        "packages/execution/kernel/tests/platform/test_platform_services.py"
+      ],
+      "evidence": [
+        "current owner tree; platform services test path"
+      ],
+      "mapping_note": "Exact current subject test file.",
+      "absent_targets": []
+    },
+    {
+      "id": "cross_persistence",
+      "legacy_target": "tests/integration/persistence",
+      "targets": [
+        "tests/integration/persistence"
+      ],
+      "evidence": [
+        "current owner tree; cross-persistence integration path"
+      ],
+      "mapping_note": "Current cross-owner persistence integration tests.",
+      "absent_targets": []
+    },
+    {
+      "id": "all_current_python_supplement",
+      "legacy_target": "full current Python tree (supplemental revision-5 gate)",
+      "targets": [
+        "."
+      ],
+      "evidence": [
+        "current full-tree collection/execution contract; supplemental only"
+      ],
+      "mapping_note": "Supplemental full-tree test gate retained in addition to the eight historical scopes."
+    }
+  ]
+}

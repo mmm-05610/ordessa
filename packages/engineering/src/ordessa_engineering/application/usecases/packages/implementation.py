@@ -113,9 +113,14 @@ class ImplementationUseCases:
             if (not payload.documents or any(document_roles.count(role)!=1 for role in required_roles)
                     or any(role not in required_roles for role in document_roles)):
                 raise ApplicationError('PACKAGE_DOCUMENT_ROLES_INCOMPLETE')
-            for source in (payload.baseline,payload.candidate,
-                           *(document.source_ref for document in payload.documents)):
+            for source in (payload.baseline,payload.candidate):
                 verify_external_source(context,source,self.source_materials)
+            if self.blobs is None:
+                raise ApplicationError('PACKAGE_DOCUMENT_BLOB_AUTHORITY_MISMATCH')
+            for document in payload.documents:
+                source = document.source_ref
+                raw = verify_external_source(context, source, self.source_materials)
+                self.blobs.put_verified(raw, source.capture.content_digest, source.media_type)
             with self.factory.begin(context.scope,'read') as uow:
                 proposal=uow.proposals.get_proposal(payload.change_ref)
                 proposal_control=uow.proposals.get_control(payload.change_ref)

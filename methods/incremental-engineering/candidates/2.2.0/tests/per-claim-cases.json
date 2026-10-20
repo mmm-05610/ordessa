@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "purpose": "Consumer counterexample specifications, not executed assertions or real JEV judgments.",
+  "method_selection": "all_declared_claims",
+  "cases": [
+    {"id":"design-choice-retained","input":"A declared design_choice with genuine user Q&A as design basis","expected":"Produce its claim_support CheckKey; do not exempt by kind or invent external source","runtime_validation":"pending_engineering_consumer"},
+    {"id":"missing-evidence-retained","input":"A declared claim with no source_ids/evidence links","expected":"Still produce its CheckKey; insufficient result blocks under unchanged policy","runtime_validation":"pending_engineering_consumer"},
+    {"id":"link-presence-not-support","input":"An unrelated source link attached to a declared claim","expected":"Still judge semantic support; source existence cannot satisfy claim_support","runtime_validation":"pending_engineering_consumer"},
+    {"id":"omit-original-claim","input":"Consumer selects only one of two original revision claims","expected":"Reject incomplete claim/check collection","runtime_validation":"pending_engineering_consumer"},
+    {"id":"empty-required-claims","input":"An applicable required claim_support criterion with an empty revision claim collection","expected":"Error; cannot pass or fabricate NA under current method","runtime_validation":"pending_engineering_consumer"},
+    {"id":"same-id-different-target","input":"Two exact revision targets each contain claim C1","expected":"Keep two target-bound CheckKeys; do not deduplicate by claim_id alone","runtime_validation":"pending_engineering_consumer"},
+    {"id":"reordered-input","input":"The same exact target/criterion/claim set supplied in different orders","expected":"Canonical exact set and plan digest unchanged","runtime_validation":"pending_engineering_consumer"},
+    {"id":"changed-statement-or-revision","input":"A substituted ClaimRef statement_digest or owner_revision_ref","expected":"Reject exact binding mismatch","runtime_validation":"pending_engineering_consumer"},
+    {"id":"missing-review-answer","input":"Plan has two claim CheckKeys but response answers only one","expected":"Reject incomplete answers; no grant from partial review","runtime_validation":"pending_engineering_consumer"},
+    {"id":"old-release-not-reinterpreted","input":"The frozen 2.1.0 MethodRef lacks new binding declarations","expected":"Keep historical bytes; no silent upgrade to new all_declared_claims semantics","runtime_validation":"pending_engineering_consumer"},
+    {"id":"manual-not-pass","input":"Every per-claim answer is supported and satisfied maps to manual","expected":"Preserve manual disposition; not automatic approval","runtime_validation":"pending_engineering_consumer"}
+  ]
+}

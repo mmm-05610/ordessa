@@ -32,7 +32,7 @@ require explicit user confirmation with concrete evidence.
 
 ## Verification gates — two evidence kinds, cited separately
 
-**Gate Q (quantity gate).** `scripts/verify-clean.sh` asserts each suite's
+**Gate Q (quantity gate).** `tooling/checks/verify-clean.sh` asserts each suite's
 pass/fail/skip/error **counts** against the expected ledger and fails on
 collection interruptions or count deviation. Authoritative run **run6**
 (clean clone of `03050f493e`, exit 0, **17/0 gates PASS**): npm ci/typecheck,
@@ -74,7 +74,7 @@ gate-parsing bug of the script itself).
 
 - `source-destination.md` — root-switch table v3 (rename-landing) + rollback (user confirmation required before execution)
 - `backend-migration-table.md`, `desktop-migration-table.md` — per-path old→new maps (from the subagents, lead-verified)
-- `backend-build-test.md`, `desktop-build-test.md` — commands, versions, results, red-ledger classification
+- [backend-build-test](../archive/pre-restructure/source/docs/migration/backend-build-test.md), [desktop-build-test](../archive/pre-restructure/source/docs/migration/desktop-build-test.md) — historical commands, versions, results, red-ledger classification
 - `independent-review.md` — lead-executed review record + external-review corrections
 - `remote-plan.md` — reuse of the agent-box remote identity (prepared; **not executed**)
 - `desktop-cp-candidate-readme.md` — the HD-002 CP candidate README (provenance)
@@ -155,3 +155,13 @@ by a PR instead of a temporary relaxation.
    `ordessa-old-root/` by the rename.
 4. Old trial servers 18790/18810 are stopped; the hd004b leg (57411) still
    runs from the frozen bc-native tree and was not touched.
+
+Current nightly scope: [explicit Engineering schema3 snapshots](engineering-schema3-snapshots.md), synthetic validation only; no user database upgrade was performed.
+
+Current application slice: [explicit Engineering schema4 Artifact/UoW/journal](engineering-schema4-application.md), same original authority; production routes and full review/confirmation remain incomplete.
+
+Current review slice: [explicit Engineering schema5 reviews](engineering-schema5-reviews.md), frozen requirements/plans, complete predicate sets, immutable facts and controlled projections on the same authority. Production admission/control remain unavailable; no user DB was upgraded. [Durable raw references](engineering-review-raw-blobs.md) now reuse the existing byte authority without a DB DDL change.
+
+Current material slice: [explicit Engineering schema6](engineering-schema6-materials.md), historical revision1 bytes preserved and current revision2 writes require explicit upgrade. All work used synthetic databases; no automatic or user-data migration.
+
+当前提案切片：[显式 schema7](engineering-schema7-proposals.md)，同原库原子写入 Change/Proposal/Requirement/control/journal；原历史保持，生产授权与首CLI闭环未完成。

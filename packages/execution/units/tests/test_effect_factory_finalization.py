@@ -9,7 +9,7 @@ import pytest
 pytest_plugins = ("test_local_owner",)
 
 from ordessa_execution_agents.harness.transport import EffectWriteGuard
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.admission.owner_selection import AgentOwnerUnavailable
 from ordessa_units.admission.invocation import InvocationAuthorityRefused
 from ordessa_units.management.manager import UnitManagementRefused
@@ -117,7 +117,7 @@ def test_deferred_owner_refuses_create_until_factory_then_uses_original_guard(li
     effect_thread = native.effect_write_thread
     lease = owner.authorize("interaction", unit, authorization)
     prompt = [{"type": "text", "text": "effect factory finalized"}]
-    response = native.prompt_recorded(
+    response = native.prompt(
         unit.identity,
         lease,
         operation_ref="factory-finalization-turn",

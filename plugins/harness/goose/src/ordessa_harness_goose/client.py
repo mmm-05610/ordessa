@@ -1,60 +1,67 @@
-"""Goose consumer client (family ``goose``, protocol ``acp/v1``).
+"""Goose-owned pure Profile validation/preparation through the public SDK.
 
-Pinned facts (N010, official https://goose-docs.ai/docs/gdk/acp/ read
-2026-10-04):
-
-- Channel: **goose as an ACP agent/server** (NOT goose consuming other
-  agents as providers — a different product surface). stdio mode:
-  ``goose acp`` launched as a subprocess by the client, which owns the
-  process lifetime. HTTP/WebSocket mode: ``goose serve`` (default
-  127.0.0.1:3284, ACP endpoint ``/acp``) with ``GOOSE_SERVER__SECRET_KEY``
-  and ``X-Secret-Key`` (browser WS: ``?token=``). stdio is chosen here.
-- ``--dangerously-unauthenticated`` exists upstream but MUST NOT be used
-  (docs restrict it to isolated local development) — launches planned here
-  never carry it (SAFETY).
-- Session/permission semantics beyond standard ACP are documented on a
-  separate reference page and are registered unknown here; standard ACP
-  (``session/request_permission`` etc.) is served by the shared seam and is
-  never auto-answered.
-- Version/license unspecified on the page (upstream moved to the Agentic AI
-  Foundation, aaif-goose/goose) — recorded as unpinned (G1).
+The former direct ProcessChannel/AcpClient consumer is retired. This provider
+never starts a process, reads login state, owns a Unit/session ledger or answers
+permissions. Unsupported bootstrap/configuration is refused explicitly.
 """
-
-from __future__ import annotations
-
-from typing import Any
-
-from ordessa_execution_agents.harness.protocols.acp import AcpClient
-
-FAMILY_ID = "goose"
-PROTOCOL = "acp/v1"
+from ordessa_execution_agents.sdk import (HarnessDescriptor,HarnessError,PrepareContext,
+    ProfileContent,LaunchPlan)
+from .native_channel import compile_config,ConfigRefusal
 
 
-class GooseClient(AcpClient):
-    """One owned ``goose acp`` stdio process."""
+class GooseHarnessProvider:
+    def __init__(self,definition_ref,implementation_digest):
+        self.descriptor=HarnessDescriptor('goose',definition_ref,implementation_digest,'acp',
+            ('work','home','config','data','state','cache','tmp'),('goose.configuration/1',))
 
-    FAMILY_ID = FAMILY_ID
-    PROTOCOL = PROTOCOL
+    def _options(self,content):
+        if type(content) is not ProfileContent or dict(content.harness_definition_ref)!=dict(self.descriptor.definition_ref):
+            raise HarnessError('PROFILE_HARNESS_PIN_MISMATCH')
+        options={}
+        for declaration in content.declarations:
+            if (declaration.configuration_kind!='goose.configuration' or declaration.schema_version!='1'
+                    or declaration.action!='value' or declaration.resource_refs):
+                raise HarnessError('CONFIGURATION_UNSUPPORTED')
+            try:values=dict(declaration.payload)
+            except (TypeError,ValueError):raise HarnessError('CONFIGURATION_INVALID') from None
+            if set(options)&set(values):raise HarnessError('CONFIGURATION_CONFLICT')
+            options.update(values)
+        try:return compile_config(options)
+        except ConfigRefusal:raise HarnessError('CONFIGURATION_UNSUPPORTED') from None
 
-    #: Pre-spawn fence: even a caller who bypasses the harness planner cannot
-    #: get this flag through (SAFETY; upstream restricts it to isolated
-    #: local development).
-    _FORBIDDEN_FLAGS = ("--dangerously-unauthenticated",)
+    def validate_profile(self,content):self._options(content)
 
-    @classmethod
-    def launch(cls, spec: Any, *, name: str = "goose-acp") -> "GooseClient":
-        for token in getattr(spec, "argv", ()):
-            base = token.split("=", 1)[0]
-            if base in cls._FORBIDDEN_FLAGS:
-                raise ValueError(f"refusing launch: {base} is never used (SAFETY)")
-        return super().launch(spec, name=name)  # type: ignore[return-value]
+    def prepare(self,content,context):
+        compiled=self._options(content)
+        if type(context) is not PrepareContext:raise HarnessError('PREPARE_CONTEXT_REQUIRED')
+        if not set(self.descriptor.required_roots)<=set(context.private_dirs):raise HarnessError('APPROVED_ROOTS_UNAVAILABLE')
+        if not {'launcher','communicate'}<=set(context.endpoint_facts.get('members',())):
+            raise HarnessError('ENDPOINT_CAPABILITY_UNAVAILABLE')
+        if compiled['session_params']:raise HarnessError('SESSION_CONFIGURATION_UNAVAILABLE')
+        if context.credential_refs:raise HarnessError('CREDENTIAL_BINDING_UNAVAILABLE')
+        if context.session_bootstrap.mode!='fresh':raise HarnessError('SESSION_MODE_UNSUPPORTED')
+        environment=dict(context.launch_environment)
+        required=('HOME','PATH','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_STATE_HOME','XDG_CACHE_HOME','TMPDIR')
+        if any(not environment.get(key) for key in required):raise HarnessError('EXPLICIT_LAUNCH_ENVIRONMENT_REQUIRED')
+        if any(any(marker in key.upper() for marker in ('TOKEN','SECRET','PASSWORD','API_KEY','APIKEY')) for key in environment):
+            raise HarnessError('CREDENTIAL_REFERENCE_REQUIRED')
+        if any(token.split('=',1)[0]=='--dangerously-unauthenticated' for token in context.command_prefix):
+            raise HarnessError('UNAUTHENTICATED_MODE_REFUSED')
+        environment.update({'LANG':'C.UTF-8','LC_ALL':'C.UTF-8','TERM':'dumb'})
+        return LaunchPlan(context.command_prefix+('acp',),context.private_dirs['work'],
+            environment,(),(),context.prepared_configuration_refs,context.materials,context.session_bootstrap,('launcher','communicate'))
 
-    def describe(self) -> dict[str, Any]:
-        return {
-            "familyId": FAMILY_ID,
-            "channel": "stdio-acp (goose as ACP server)",
-            "protocol": PROTOCOL,
-            "alternateTransport": "goose serve HTTP/WS at 127.0.0.1:3284 /acp (not chosen)",
-            "auth": "GOOSE_SERVER__SECRET_KEY applies to serve mode; stdio mode is process-owned",
-            "forbiddenFlag": "--dangerously-unauthenticated is never used (SAFETY)",
-        }
+    async def open_session(self,process,context):
+        if type(context) is not PrepareContext:raise HarnessError('PREPARE_CONTEXT_REQUIRED')
+        open_session=getattr(process,'open_acp_session',None)
+        if not callable(open_session):raise HarnessError('ACP_BOOTSTRAP_UNAVAILABLE')
+        return await open_session(context.session_bootstrap)
+
+
+class GooseProviderFactory:
+    def build(self,bindings):
+        if set(bindings)!={'definition_ref','implementation_digest'}:raise HarnessError('HARNESS_BINDINGS_INVALID')
+        return GooseHarnessProvider(bindings['definition_ref'],bindings['implementation_digest'])
+
+
+factory=GooseProviderFactory()

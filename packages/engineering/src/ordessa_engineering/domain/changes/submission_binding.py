@@ -1,13 +1,44 @@
 """Pure exact package/tree/file/effect binding; never authenticates execution."""
 from .submission import Submission
+from .agent_submission_report import AgentSubmissionReport
 from .repository_baseline import RepositoryBaseline
-from ..packages.models import ImplementationPackage
+from ..packages.models import ImplementationPackage, PreparedPackagePayload
 from ..approvals.consent import ApprovalGrant
-from ..approvals.implementation import ImplementationAuthorizationIntent
+from ..approvals.implementation import ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent
 from ..common.outcomes.diagnostics import ReferenceError
 
 
 def validate_submission_graph(record, package, grant, baselines, resulting):
+    if type(record) is AgentSubmissionReport:
+        if (type(package) is not ImplementationPackage or type(package.payload) is not PreparedPackagePayload
+                or type(grant) is not ApprovalGrant or type(grant.intent) is not WorkPackageAuthorizationIntent
+                or baselines != () or resulting != ()):
+            raise ReferenceError('INVALID_SUBMISSION_GRAPH')
+        payload, authorization = package.payload, grant.intent.authorization
+        if (record.scope != package.scope or record.package_ref != package.ref
+                or authorization.package_ref != package.ref or authorization.scope != record.scope
+                or record.authorization_refs != (grant.ref,)
+                or record.change_set.proposal_refs != (payload.change_ref,)
+                or record.source_refs != (payload.baseline, payload.candidate)
+                or record.method_content.schema_ref.method_ref != payload.method_ref
+                or authorization.method_ref != payload.method_ref):
+            raise ReferenceError('SUBMISSION_PACKAGE_BINDING_MISMATCH')
+        return record
+    if type(record) is Submission and record.schema_version == 2:
+        if (type(package) is not ImplementationPackage or type(package.payload) is not PreparedPackagePayload
+                or type(grant) is not ApprovalGrant or type(grant.intent) is not WorkPackageAuthorizationIntent
+                or baselines != () or resulting != ()):
+            raise ReferenceError('INVALID_SUBMISSION_GRAPH')
+        payload, authorization = package.payload, grant.intent.authorization
+        if (record.scope != package.scope or record.package_ref != package.ref
+                or authorization.package_ref != package.ref or authorization.scope != record.scope
+                or record.authorization_refs != (grant.ref,)
+                or record.change_set.proposal_refs != (payload.change_ref,)
+                or record.source_refs != (payload.baseline, payload.candidate)
+                or record.method_content.schema_ref.method_ref != payload.method_ref
+                or authorization.method_ref != payload.method_ref):
+            raise ReferenceError('SUBMISSION_PACKAGE_BINDING_MISMATCH')
+        return record
     if (type(record) is not Submission or type(package) is not ImplementationPackage
             or type(grant) is not ApprovalGrant or type(grant.intent) is not ImplementationAuthorizationIntent
             or type(baselines) is not tuple or type(resulting) is not tuple

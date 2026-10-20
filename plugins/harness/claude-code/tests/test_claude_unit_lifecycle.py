@@ -13,7 +13,7 @@ from agent_tools_fixtures import configuration_records as shared_fixture
 from agent_tools_fixtures.native_evidence import UnitEvidence
 from ordessa_units.records.operation_journal import OperationJournal
 from ordessa_units.records.unit_records import UnitRecords, UnitRecordsRefused
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_harness_claude_code.provider import ClaudeCodeRuntimeProvider
 from ordessa_harness_claude_code.unit_lifecycle import ClaudeUnitCoordinationRefused
 

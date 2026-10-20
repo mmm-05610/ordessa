@@ -19,8 +19,9 @@ from ordessa_units.bindings.publication import NodePublication, NodePublicationE
 from ordessa_execution_agents.profiles.management.service import ProfileService
 from ordessa_execution_agents.harness.providers.registry.contributions import AgentContributionSet, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import IdentityMismatchError, AdmissionRefusedError, GuaranteeUnavailableError
-from ordessa_execution_api.environment.operations import UsageMutation, operation_holder, safe_json
+from ordessa_units.errors import UnitIdentityMismatch, UnitAdmissionRefused, UnitGuaranteeUnavailable
+from ordessa_units.definitions.operations import UsageMutation, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from ordessa_units.public import unit_services, AGENT_MANAGEMENT_CONTRACT_VERSION

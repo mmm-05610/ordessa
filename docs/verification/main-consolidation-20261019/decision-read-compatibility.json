@@ -1,0 +1,93 @@
+{
+  "scope": "read-only historical decision-evidence/1 and original current job result readback; no graph/runtime/sink compatibility",
+  "proof": {
+    "_close_once": "preserved original AST",
+    "_run_id": "preserved original AST",
+    "_root": "preserved original AST",
+    "_open_file": "preserved original AST",
+    "_read": "preserved original AST",
+    "FileEvidenceReader": "preserved original AST",
+    "claim_run": "existing claim/write algorithm AST unchanged",
+    "complete_run": "existing claim/write algorithm AST unchanged"
+  },
+  "originalHistoricalTestFunctionsUnchanged": [
+    "test_frozen_031_fixture_is_locatable_with_original_bytes",
+    "_copy_for_reader",
+    "_write_json",
+    "test_frozen_031_chain_reads_as_committed_without_source_mutation",
+    "test_parseable_digest_tampering_never_reads_as_completed"
+  ],
+  "fixture": [
+    {
+      "path": "docs/implementation/specifications/031-jev-decision-module/evidence/adversarial-20261005/live-injection/durable/0cf02263-2bbf-4e92-b604-a7184c1a6442/events.jsonl",
+      "sha256": "23fbb738779715f73e87c7e07eb158d12eb9e68405d3a9f84f49b078ea194ad8"
+    },
+    {
+      "path": "docs/implementation/specifications/031-jev-decision-module/evidence/adversarial-20261005/live-injection/durable/0cf02263-2bbf-4e92-b604-a7184c1a6442/terminal.json",
+      "sha256": "0ade1ebbf4c124cc4e15d83619198180e40e5289e920bdc082077481f1cbaa92"
+    },
+    {
+      "path": "docs/implementation/specifications/031-jev-decision-module/evidence/adversarial-20261005/live-injection/durable/0cf02263-2bbf-4e92-b604-a7184c1a6442/writer.lock",
+      "sha256": "75d7a49536493f392fee39347b64382dbfc48b73b4e7ae1575afb3713ade209f"
+    }
+  ],
+  "tests": {
+    "command": "isolated pytest historical_reader + original_run_read + scoped_evidence + evidence_durability + capability",
+    "passed": 35,
+    "skip": 0
+  },
+  "actualNewRunEvidence": "Two controlled provider answers passed original permit/receipt validation, were collected by a real rules step and stored by the existing capability claim/result writer. Read result body and summary agree on job/result/answer digests. UNKNOWN remains UNKNOWN; reads dispatch nothing and leave all bytes unchanged. No real provider/model called.",
+  "minimalAddedPort": "_ScopedEvidenceStore.read_run(request_id,request_digest) reads the existing original claim/result, verifies original scope/operation/claim/result digests, never creates missing records or replays execution. Caller still requires its existing read authority; no CLI operation or grant added.",
+  "historicalRead": "Reader-only extraction from verified nightly actual source; original chain/terminal digest/permissions/opaque authority checks retained. Three exact frozen fixture files restored with original pinned hashes. No sink, event writer, graph, Unit runtime, migration or old root API alias restored.",
+  "remainingSourceReviewerAdapter": "0.1 source reviewer must still route old receipts to historical reads and compile new bounded job/results under original MethodControl/SQLite/BlobStore/role/fence rules. This batch proves genuine producers/readers exist but does not claim that adapter or full Engineering compatibility.",
+  "files": [
+    {
+      "path": "packages/execution/decision/src/decision_runtime/evidence.py",
+      "sha256": "fdb02c7648bc6086ccd179fcb3396f57d72ebadb98f84ecf20cea44d74bddbb1"
+    },
+    {
+      "path": "packages/execution/decision/tests/evidence/test_historical_reader.py",
+      "sha256": "86111f308b53a820df120fe6ae7f31ab183e5917215d891709b8617167022152"
+    },
+    {
+      "path": "packages/execution/decision/tests/test_original_run_read.py",
+      "sha256": "0daf7749a74bd0d02a22692e1802de9f464687d08064687036e56eaa539ba4ab"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/historical/__init__.py",
+      "sha256": "d2eff67c9bbd9ebe57ffb06a1bbfe251178f4fa426794785baaca117f1af82bf"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/historical/codec.py",
+      "sha256": "91d8ca2f1f1b1e20ebd16426f0bf2f0bf992ab6ec5b733d34b56446f127f342c"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/historical/context.py",
+      "sha256": "85c3c33369f57f2cda95295dc52d4e83d25529fbb357b56382cd1777d454a0cd"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/historical/errors.py",
+      "sha256": "8a45969cb3b52dce941773c8a89629042f06bc80723ef0ffbb248e4357c39696"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/historical/reader.py",
+      "sha256": "b9bb4d81a1e2d941fbee90a25c9367e0bc71383a2788354df14a9035f6b6dbd8"
+    },
+    {
+      "path": "packages/execution/decision/src/decision_runtime/historical/values.py",
+      "sha256": "e938cee3fcb6e6b6e9e65ac2724c5d7839f4a33c515c048c2148aa1df6f04056"
+    },
+    {
+      "path": "docs/implementation/specifications/031-jev-decision-module/evidence/adversarial-20261005/live-injection/durable/0cf02263-2bbf-4e92-b604-a7184c1a6442/events.jsonl",
+      "sha256": "23fbb738779715f73e87c7e07eb158d12eb9e68405d3a9f84f49b078ea194ad8"
+    },
+    {
+      "path": "docs/implementation/specifications/031-jev-decision-module/evidence/adversarial-20261005/live-injection/durable/0cf02263-2bbf-4e92-b604-a7184c1a6442/terminal.json",
+      "sha256": "0ade1ebbf4c124cc4e15d83619198180e40e5289e920bdc082077481f1cbaa92"
+    },
+    {
+      "path": "docs/implementation/specifications/031-jev-decision-module/evidence/adversarial-20261005/live-injection/durable/0cf02263-2bbf-4e92-b604-a7184c1a6442/writer.lock",
+      "sha256": "75d7a49536493f392fee39347b64382dbfc48b73b4e7ae1575afb3713ade209f"
+    }
+  ]
+}

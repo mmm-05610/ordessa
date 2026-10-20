@@ -1,0 +1,47 @@
+schema_version: 1
+policy_id: ordessa.product.v1.chat-attested-confirmation
+revision: 2
+status: explicitly_selected_product_policy
+selection_authority: product_composition_and_configured_engineering_admission
+method_may_select_arbitrary_policy: false
+authorized_attestor_role: registered_main_agent
+accepted_source_trust_level: agent-attested
+accepted_evidence_kinds:
+- question_answer
+- captured_instruction
+instruction_evidence_contract: ordessa.captured-user-instruction/1
+instruction_source_reuse: one_source_one_grant
+instruction_subject: exact_work_package_implementation_only
+required_evidence:
+  question_answer:
+  - actual_question_necessary_context_and_verbatim_answer
+  - original_source_locator_message_refs_or_explicit_limitations
+  captured_instruction:
+  - verbatim_user_instruction_without_fabricated_question_or_answer
+  - original_business_context
+  - original_source_locator_message_refs_or_explicit_limitations
+  - stable_capture_provenance
+  - exact_work_intent_notice_and_action_scope_binding_registered_by_main_agent
+  - explicit_disclosure_that_new_mechanical_identifiers_were_not_presented_as_new_qa
+  common:
+  - policy_revision_and_digest
+  - exact_object_versions_and_scope_by_action
+  - registered_attestor_and_capture_provenance
+  - stable_evidence_identity_and_original_owner_receipt
+clear_explicit_instruction: admissible_basis_for_one_exact_authorization_under_selected_product_policy
+ambiguous_or_out_of_scope: pending_and_clarify
+later_substantive_revision: does_not_inherit_prior_confirmation
+user_silence: not_confirmation
+model_review: opinion_not_permission
+agent_assertion_without_actual_source: reject
+instruction_capture_time: provenance_not_a_new_authorization_event
+repeat_floating_window_confirmation: not_required
+model_call_count: separate_from_formal_action_effect_budget
+allows_automatic_method_trust_elevation: false
+mechanism_obligations:
+- verify selected product policy and registered attestor
+- bind the unchanged actual instruction and original business context to the exact intent
+- persist exact evidence and receipt through the original approval owner
+- reject source reuse for another challenge even with renamed evidence or capture time
+- retain original nonce expiry method review scope control revocation and action budget checks
+- do not restore consumed unknown attempts or imply independent platform human authentication

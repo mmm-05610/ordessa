@@ -50,3 +50,40 @@ def test_T09_T10_T17_T18_unknown():
     with pytest.raises(ContractError): CheckBatch((ObligationResult('c','passed','owner','1',{'c':'1'}),),True).require((c,))
     p=dataclasses.replace(proposal(),preconditions=(c,))
     with pytest.raises(ContractError): validate_ready(p,receipt(p,(ObligationResult('config','passed','owner','1',{},('e',)),)))
+
+
+def _sized_question(size):
+    def build(filler):
+        return DecisionQuestion('q','1','choice',{'filler':filler},'Choose the finite option.',
+            options={'a':'A','b':'B'}, allowed_answer_ids=('a','b'),
+            policy_ref=PolicyRef('p','1','d'))
+    base=len(canonical(build(''),max_string=524288,max_bytes=524288))
+    return build('x'*(size-base))
+
+def test_T67_complete_question_budget_is_512kib_at_its_own_boundary():
+    limit=524288
+    question=_sized_question(limit)
+    assert len(canonical(question,max_string=limit,max_bytes=limit))==limit
+    with pytest.raises(ContractError,match='json_size'): _sized_question(limit+1)
+
+def test_T68_shared_codec_defaults_stay_64kib_string_and_256kib_object():
+    assert canonical({'text':'x'*65536})
+    with pytest.raises(ContractError,match='string_size'): canonical({'text':'x'*65537})
+    payload={f'k{i}':'x'*60000 for i in range(5)}
+    with pytest.raises(ContractError,match='json_size'): canonical(payload)
+    assert canonical(payload,max_bytes=524288)
+    assert canonical({'text':'x'*100000},max_string=524288)
+    assert digest('request',{'a':1})==digest('request',{'a':1},max_string=65536,max_bytes=2097152)
+    # the widened question budget is not handed to any other DTO
+    with pytest.raises(ContractError,match='string_size'): TaskBrief('t','1','',inputs=({'text':'x'*65537},))
+
+def test_T69_only_the_complete_question_widens_the_budget_and_binds_its_digest():
+    question=_sized_question(524288)
+    assert question.question_digest==digest('question',question,max_string=524288,max_bytes=524288)
+    with pytest.raises(ContractError,match='string_size'): digest('question',question)
+    with pytest.raises(ContractError,match='string_size'): canonical(question)
+    # five <64KiB strings: the DTO admits ~300KiB, the shared 256KiB object default still refuses
+    widened=DecisionQuestion('q','1','choice',{'filler':{f'k{i}':'x'*60000 for i in range(5)}},
+        'Choose the finite option.',options={'a':'A','b':'B'},allowed_answer_ids=('a','b'),
+        policy_ref=PolicyRef('p','1','d'))
+    with pytest.raises(ContractError,match='json_size'): canonical(widened)

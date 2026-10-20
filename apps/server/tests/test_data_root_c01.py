@@ -25,6 +25,8 @@ from ordessa_server.bootstrap.data_root import (
     DataRootNotWritableError,
     DataRootSymlinkError,
     InstanceLock,
+    OWNER_MARKER_CONTENT,
+    OWNER_MARKER_NAME,
     ensure_data_root,
     instance_lock,
     launch_env,
@@ -55,10 +57,27 @@ def test_an_existing_root_is_reused_not_rebuilt(tmp_path):
     assert marker.read_text(encoding="utf-8") == "keep me"
 
 
+def test_a_created_root_is_claimed_and_reuse_never_rewrites_the_marker(tmp_path):
+    """B-005: creating a root writes the owner marker; reusing one does not
+    "repair" bytes it finds. The runtime refuses a pre-existing unmarked
+    directory as foreign (DATA_ROOT_UNOWNED) — see test_stage_a_server.py."""
+    spec = resolve_data_root({}, home=str(tmp_path))
+    first = ensure_data_root(spec)
+    marker = first.path / OWNER_MARKER_NAME
+    assert marker.read_text(encoding="utf-8") == OWNER_MARKER_CONTENT
+
+    # Reuse must not touch the marker: the bytes a user (or a foreign tool)
+    # left are preserved here and judged by the runtime, not silently fixed.
+    marker.write_text("bytes-a-user-changed\n", encoding="utf-8")
+    second = ensure_data_root(spec)
+    assert second.created is False
+    assert marker.read_text(encoding="utf-8") == "bytes-a-user-changed\n"
+
+
 def test_a_second_start_keeps_the_token_bytes_identical(tmp_path):
     """C-01 §7 case 4. The token is the Server's identity handshake; a
     rewritten token would invalidate every client mid-session."""
-    from ordessa_server.bootstrap.runtime import _ensure_token
+    from ordessa_server.composition.runtime import _ensure_token
 
     spec = resolve_data_root({}, home=str(tmp_path))
     ensure_data_root(spec)
@@ -225,16 +244,14 @@ def test_a_historical_root_without_a_provider_is_refused_and_untouched(
     import importlib.util
     import sqlite3
 
-    real_find_spec = importlib.util.find_spec
-    # The preflight does `from importlib.util import find_spec` INSIDE the
-    # function, so the only seam that reaches it is the module attribute.
-    # Patching anything on `runtime` would be a no-op that quietly turns this
-    # canary into a test of whatever the machine happens to have installed.
-    assert real_find_spec("pacthold_runtime_compat") is not None, (
-        "this canary needs the compatibility distribution INSTALLED, so that "
-        "removing it is a real removal rather than a no-op"
+    from ordessa_server.bootstrap.migrations import legacy_source
+    # The current packaged provider is real and ready before the counterexample
+    # makes its sealed resource directory absent. This reaches the actual
+    # preflight resource validation rather than mocking the retired import seam.
+    assert legacy_source.legacy_migration_source().directory.is_dir(), (
+        "this canary requires the actual packaged migration resources"
     )
-    monkeypatch.setattr(importlib.util, "find_spec", lambda name: None)
+    monkeypatch.setattr(legacy_source, "MIGRATIONS_DIR", tmp_path / "missing-sealed-sql")
 
     root = ensure_data_root(resolve_data_root({}, home=str(tmp_path))).path
     state = root / "state"
@@ -410,11 +427,11 @@ def _source_of(target: str) -> str:
 
 
 def test_the_headless_smoke_wrapper_passes_an_explicit_root():
-    """`scripts/start-server.sh` always passes `--data-root`, so it neither
+    """`tooling/dev/start-server.sh` always passes `--data-root`, so it neither
     needs nor depends on the default. It is P-C's file, and this asserts
     rather than edits."""
     wrapper = (
-        Path(__file__).resolve().parents[3] / "scripts" / "start-server.sh"
+        Path(__file__).resolve().parents[3] / "tooling" / "dev" / "start-server.sh"
     ).read_text(encoding="utf-8")
     assert "--data-root" in wrapper
 

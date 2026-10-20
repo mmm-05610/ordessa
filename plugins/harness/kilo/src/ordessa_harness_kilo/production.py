@@ -36,7 +36,8 @@ from typing import Any, Mapping, Sequence
 
 # H-KILO-001 (approvals/H-KILO-001-release.md): the family package imports the
 # brand-neutral core directly (direction: family -> core, the target shape).
-from ordessa_execution_agents.harness.definitions.harness_capabilities import CANONICAL_CAPABILITY_IDS
+# Historical deployment-document field validation only; not runtime capabilities.
+CANONICAL_CAPABILITY_IDS=('start','observe','finish','attach','steer','stream','permissions','native_continuation')
 
 KILO_PROVIDER = "deepseek"
 #: The product/ProviderModel model id the user confirmed. It is also an entry

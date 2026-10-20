@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "corpus_revision": 2,
+  "scope": "synthetic test inputs and label candidates; no production policy change",
+  "method_ref_unchanged": {
+    "method_id": "ordessa.incremental-engineering",
+    "release_version": "2.1.0",
+    "schema_version": 1,
+    "snapshot_digest": {
+      "algorithm": "sha256",
+      "hex": "17806723db6fccc980611587fe6b639d46577a3689e094507f90e81dbf926d48"
+    }
+  },
+  "model_calls": 0,
+  "group_counts": {
+    "source_semantics": 6,
+    "summary_fidelity": 1,
+    "mechanical_gate": 5
+  },
+  "files": [
+    {
+      "path": "judgment-cases.json",
+      "sha256": "3ef838fd38da27c851a6b4a86dd27a571e119b7cd77eaa6936073dcf8323fe0b"
+    },
+    {
+      "path": "history/judgment-cases.pre-audit-v1.json",
+      "sha256": "aa1d6f879109c1c05ac4d82a98e09e25b64b13f52e01fc4c4c315b3dd4091b99"
+    },
+    {
+      "path": "review-evidence/independent-audit-20261011.json",
+      "sha256": "b8d65f9e109049015a2d3b2f5e1dff88dffe550fc6774aa9512f2b1ee67d3357"
+    },
+    {
+      "path": "JUDGMENT-CORPUS.md",
+      "sha256": "2c7f1854298aa9abafd8b24ca951fab0bba71aa931b9105ad3dc29e9665e354e"
+    },
+    {
+      "path": "validate_assets.py",
+      "sha256": "c9655e6d31a1ca8a79433b950dd2d634b42b0de5f0ee6e4d57c4e897fda33b62"
+    },
+    {
+      "path": "judgment-corpus-rev2-validation.json",
+      "sha256": "d2557e6a2bfe30a9c40c080ff13d3e7ca5e1308bca810792656ce4f1b4a9d8ec"
+    }
+  ],
+  "root_fixture_lock": "unchanged_under_test_only_authorization; parent_reseal_required_before_distribution",
+  "accuracy_claim": "none"
+}

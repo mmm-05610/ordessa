@@ -14,6 +14,7 @@ from ..domain.artifacts.method_binding import MethodRef
 from ..methods.loading.parsing import parse_document
 from .execution_profiles import (
     NativeProfileChoice, NativeProfileSelectionSource, NativeProfileUnitCreator,
+    NativeProfileAgentCreator,
 )
 from .persistence.sqlite.method_control import SQLiteMethodControl
 
@@ -62,12 +63,13 @@ class MethodExecutionSelection:
 
     The process composition supplies existing owners once. Ordinary callers
     select with their admitted context and task, then pass an existing exact
-    Unit authorization to create. This class creates neither permission nor a
-    Decision run/provider, and retains no second durable or mutable run state.
+    native authorization to the explicitly composed Unit or Agent creator.
+    This class creates neither permission nor a Decision run/provider, and retains no second durable or mutable run state.
     """
-    def __init__(self, methods, method_ref, candidates, units):
+    def __init__(self, methods, method_ref, candidates, units=None, *, agents=None):
         self._methods, self._method_ref = methods, method_ref
         self._candidates, self._units = candidates, units
+        self._agents = agents
 
     def policy_ref(self, context):
         """Exact native policy pin for the existing DecisionServices assembly."""
@@ -80,12 +82,27 @@ class MethodExecutionSelection:
             gateway=gateway, request_id=request_id)
 
     def create(self, context, profile_ref, authorization):
+        if self._units is None:
+            raise ApplicationError('PROFILE_SELECTION_UNIT_UNAVAILABLE')
         # Method preflight is released before native creation. Actual Unit
         # authorization and later package/dispatch write-cut guards remain
         # their original owners; no through-COMMIT claim is made here.
         with self._methods.guard_method(context, self._method_ref):
             self._candidates.validate(profile_ref)
         return self._units.create(profile_ref, authorization)
+
+    async def create_agent(self, context, profile_ref, authorization):
+        """Preflight method and exact candidate, then start through Agent owner.
+
+        The method guard is released before awaiting. The original Agent
+        lifecycle authority and physical guard own actual effects; this is not
+        a through-send Engineering method-fence guarantee.
+        """
+        if self._agents is None:
+            raise ApplicationError('PROFILE_SELECTION_AGENT_UNAVAILABLE')
+        with self._methods.guard_method(context, self._method_ref):
+            self._candidates.validate(profile_ref)
+        return await self._agents.create(profile_ref, authorization)
 
 
 def build_method_execution_selection(methods, profiles, *, method_ref,
@@ -99,5 +116,17 @@ def build_method_execution_selection(methods, profiles, *, method_ref,
                                 environment_reference=environment_reference))
 
 
+def build_method_agent_execution_selection(methods, profiles, *, method_ref,
+        allowed_revisions, agent_manager, endpoint, request_factory, invocation_resolver):
+    """Explicit current Agent composition; no old Unit authorization conversion."""
+    if type(methods) is not SQLiteMethodControl or type(method_ref) is not MethodRef:
+        raise ApplicationError('PROFILE_METHOD_AUTHORITY_UNAVAILABLE')
+    return MethodExecutionSelection(methods, method_ref,
+        NativeProfileSelectionSource(profiles, allowed_revisions=allowed_revisions),
+        agents=NativeProfileAgentCreator(agent_manager, endpoint=endpoint,
+            request_factory=request_factory, invocation_resolver=invocation_resolver))
+
+
 __all__ = ['read_method_profile_selection_policy', 'select_profile_for_method',
-           'build_method_execution_selection', 'MethodExecutionSelection']
+           'build_method_execution_selection', 'build_method_agent_execution_selection',
+           'MethodExecutionSelection']

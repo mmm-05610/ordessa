@@ -1,8 +1,8 @@
 """Execution environment contracts.
 
 ``ordessa_environments`` owns the stable, extensible execution-space contract.
-It has no concrete execution mechanics and no dependencies beyond the standard
-library; providers implement it under ``plugins/environments/<kind>``.
+It has no concrete execution mechanics; shared digest mechanics belong to
+Infrastructure; providers implement it under ``plugins/environments/<kind>``.
 """
 from .definitions import (
     BackendNotFound,
@@ -13,20 +13,22 @@ from .definitions import (
     BackendObservation,
     EnvironmentSnapshot,
     EnvironmentOperationReceipt,
-    ProviderDescriptor,
+    ProviderFacts,
     BackendUse,
     EnvironmentResourceProvider,
+    CAPABILITY_KEYS,
+    OUTBOUND_NETWORK_CAPABILITY,
+    CapabilityReport,
+    CapabilityStatus,
+    require_capabilities,
     BYTE_CHANNEL_CAPABILITY,
     FILE_AREA_CAPABILITY,
     KNOWN_CAPABILITIES,
     PROCESS_CAPABILITY,
     STREAMING_STDERR_CAPABILITY,
     TERMINAL_CAPABILITY,
-    Capabilities,
     EnvironmentFailure,
     EnvironmentGuaranteeUnmet,
-    EnvironmentHandle,
-    EnvironmentProvider,
     EnvironmentRefused,
     ExecutionSpace,
     FileArea,
@@ -34,22 +36,40 @@ from .definitions import (
     ProcessHandleStale,
     ProcessRequest,
     ProcessStartFailed,
-    require_guarantees,
+)
+from . import composition
+from .composition import (
+    CONTRACT_ID,
+    CompositionAttemptRecord,
+    CompositionError,
+    CompositionErrorCode,
+    CompositionPreflightReceipt,
+    CompositionRejected,
+    MountPlan,
+    NativeCorrelationSet,
+    PreparedMountSource,
+    RuntimeBinding,
+    RuntimeBundle,
+    RuntimePreparationRejected,
+    StartAmbiguous,
+    attempt_key,
 )
 from .management import EnvironmentInstance, EnvironmentManager, EnvironmentUse, SQLiteEnvironmentStore
 
 __all__ = [
+    "CAPABILITY_KEYS",
+    "OUTBOUND_NETWORK_CAPABILITY",
+    "CapabilityReport",
+    "CapabilityStatus",
+    "require_capabilities",
     "BYTE_CHANNEL_CAPABILITY",
     "FILE_AREA_CAPABILITY",
     "KNOWN_CAPABILITIES",
     "PROCESS_CAPABILITY",
     "STREAMING_STDERR_CAPABILITY",
     "TERMINAL_CAPABILITY",
-    "Capabilities",
     "EnvironmentFailure",
     "EnvironmentGuaranteeUnmet",
-    "EnvironmentHandle",
-    "EnvironmentProvider",
     "EnvironmentRefused",
     "ExecutionSpace",
     "FileArea",
@@ -57,10 +77,31 @@ __all__ = [
     "ProcessHandleStale",
     "ProcessRequest",
     "ProcessStartFailed",
-    "require_guarantees",
     "BackendNotFound", "EnvironmentOperationUnknown", "ProcessWaitTimeout",
     "ProcessObservation", "ProcessCancellation",
     "BackendObservation", "EnvironmentSnapshot", "EnvironmentOperationReceipt",
-    "ProviderDescriptor", "BackendUse", "EnvironmentResourceProvider",
+    "ProviderFacts", "BackendUse", "EnvironmentResourceProvider",
     "EnvironmentInstance", "EnvironmentManager", "EnvironmentUse", "SQLiteEnvironmentStore",
+    "composition",
+    "CONTRACT_ID",
+    "CompositionAttemptRecord",
+    "CompositionError",
+    "CompositionErrorCode",
+    "CompositionPreflightReceipt",
+    "CompositionRejected",
+    "MountPlan",
+    "NativeCorrelationSet",
+    "PreparedMountSource",
+    "RuntimeBinding",
+    "RuntimeBundle",
+    "RuntimePreparationRejected",
+    "StartAmbiguous",
+    "attempt_key",
 ]
+
+from .management.ownership import OwnerScope, EnvironmentUseOperations
+
+__all__ += ["OwnerScope", "EnvironmentUseOperations"]
+
+from .management.endpoints import EnvironmentEndpoints
+__all__ += ["EnvironmentEndpoints"]

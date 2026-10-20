@@ -8,7 +8,7 @@ from threading import Barrier
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError, UnknownResultError
+from ordessa_execution_agents.profiles import ProfileAccessRefused, ProfileStoreUnavailable, ProfileRevisionConflict, ProfileChangeUnknown
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from pacthold.public import Environment, EnvironmentClosedError
@@ -124,9 +124,9 @@ def test_request_replay_conflicts_and_restart(tmp_path):
     catalog = unit_services(env).profiles
     first = create(catalog)
     assert create(catalog) == first
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(ProfileRevisionConflict):
         create(catalog, content=manifest("changed"))
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(ProfileRevisionConflict):
         catalog.rename("one", name="New", expected_version=1,
                        request=key("create-one"))
     env.close()
@@ -148,7 +148,7 @@ def test_missing_required_resource_refuses_write(isolated, missing):
     _, store, _ = isolated
     env = environment(store, **{missing: None})
     catalog = unit_services(env).profiles
-    with pytest.raises(AdmissionRefusedError if missing == "policy" else GuaranteeUnavailableError):
+    with pytest.raises(ProfileAccessRefused if missing == "policy" else ProfileStoreUnavailable):
         create(catalog)
     assert store.read_request(key("create-one")) is None
     env.close()
@@ -159,7 +159,7 @@ def test_policy_and_principal_denial_do_not_spend_key(isolated):
     for options, request in [(dict(policy=Policy(write=False)), key("denied-write")),
                              ({}, key("forged-principal", principal="user:other"))]:
         env = environment(store, **options)
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(ProfileAccessRefused):
             create(unit_services(env).profiles, request=request)
         assert store.read_request(request) is None
         env.close()
@@ -170,16 +170,16 @@ def test_read_permission_and_cross_environment_ref(isolated):
     first = create(catalog)
     denied = environment(store, policy=Policy(read=False))
     try:
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(ProfileAccessRefused):
             unit_services(denied).profiles.get_revision(first.current_revision)
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(ProfileAccessRefused):
             unit_services(denied).profiles.list()
     finally:
         denied.close()
     foreign = ProfileRevisionRef("other-env", "one", 1, first.current_revision.digest)
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(ProfileRevisionConflict):
         catalog.get_revision(foreign)
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(ProfileRevisionConflict):
         create(catalog, request=key("foreign-request", environment="other-env"))
 
 
@@ -208,7 +208,7 @@ def test_unknown_spent_request_is_not_reused(isolated):
     digest = fingerprint().fingerprint(request, "pacthold.agents.profiles.rename",
                                       "sha256:" + hashlib.sha256(content.encode()).hexdigest())
     assert store.claim_dispatch(request, digest)
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(ProfileChangeUnknown):
         catalog.rename("one", name="New", expected_version=1, request=request)
     assert catalog.get("one") == first
     assert store.read_request(request)["current"]["outcome"] == "unknown"
@@ -304,7 +304,7 @@ def test_target_write_permission_is_separate_from_surface_permission(isolated):
             return mode == "read"
     env = environment(store, policy=TargetDenied())
     try:
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(ProfileAccessRefused):
             create(unit_services(env).profiles)
         assert store.read_request(key("create-one")) is None
         assert unit_services(env).profiles.list() == ()
@@ -335,10 +335,10 @@ def test_corrupt_domain_identity_revision_or_digest_fails_closed(isolated, tampe
                       "catalog-test", namespace, record_id))
     if namespace == "agents.profile-catalog":
         for call in [catalog.list, lambda: catalog.get("one")]:
-            with pytest.raises(GuaranteeUnavailableError):
+            with pytest.raises(ProfileStoreUnavailable):
                 call()
     else:
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(ProfileStoreUnavailable):
             catalog.get_revision(first.current_revision)
 
 
@@ -358,7 +358,8 @@ def test_secret_reference_uses_existing_contract_without_implying_applicability(
 
 
 def test_plugin_cannot_claim_core_agent_surface(isolated):
-    from pacthold.public import InstallationRecord, CoreContributionSet, RegistrationConflictError
+    from pacthold.public import InstallationRecord, CoreContributionSet
+    from pacthold.core.registration import RegistrationConflictError
     env, _, _ = isolated
     @dataclass(frozen=True)
     class ForgedCore:
@@ -371,7 +372,8 @@ def test_plugin_cannot_claim_core_agent_surface(isolated):
 
 
 def test_plugin_cannot_claim_builtin_core_owner(isolated):
-    from pacthold.public import InstallationRecord, RegistrationConflictError
+    from pacthold.public import InstallationRecord
+    from pacthold.core.registration import RegistrationConflictError
     env, _, _ = isolated
     env.install(InstallationRecord('pacthold.agents', 'a' * 64))
     env.enable('pacthold.agents')

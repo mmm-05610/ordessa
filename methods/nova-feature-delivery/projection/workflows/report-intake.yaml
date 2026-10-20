@@ -1,0 +1,24 @@
+schema_version: 1
+workflow_id: nova-feature-delivery-report-intake
+entry: record_phase_report
+context_slots:
+- artifact_kind
+- initial
+- method_refs
+steps:
+- id: record_phase_report
+  kind: operation
+  operation: engineering.artifacts.create
+  inputs:
+    kind: artifact_kind
+    initial: initial
+    method_refs: method_refs
+  outcomes:
+    completed:
+      stop: report_record_created
+    rejected:
+      stop: report_record_rejected
+stop_outcomes:
+- report_record_created
+- report_record_rejected
+wait_kinds: []

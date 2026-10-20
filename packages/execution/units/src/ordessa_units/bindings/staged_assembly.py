@@ -28,14 +28,12 @@ from ordessa_execution_agents.profiles.definitions.codec import encode_content, 
 import hashlib
 from collections.abc import Mapping
 
-from ordessa_execution_api.environment import (
-    GuaranteeUnavailableError, IdentityMismatchError, UnknownResultError,
-)
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown
 from ordessa_infrastructure.database.records import DomainWrite
-from ordessa_execution_api.environment.operations import (
+from ordessa_units.definitions.operations import (
     OperationIntent, StepIntent, UsageMutation, node_holder, operation_holder,
 )
-from ordessa_execution_api.environment.staged_operations import OperationRecipePhase, StagedOperationRecord
+from ordessa_units.definitions.staged_operations import OperationRecipePhase, StagedOperationRecord
 
 from ordessa_units.bindings.assembly import hashed, plain, public_parameters
 from ordessa_execution_agents.profiles.definitions.models import ProfileRevision, ProfileRevisionRef
@@ -73,7 +71,7 @@ class StagedAgentAssembly:
             if (profile_ref is None) == (profile_manifest is None):
                 raise ProfileValidationError("exactly one configuration source required")
             if not isinstance(context, Mapping) or not isinstance(options, Mapping):
-                raise IdentityMismatchError("explicit preparation parameters required")
+                raise UnitIdentityMismatch("explicit preparation parameters required")
             snapshot_write = None
             if profile_ref is None:
                 if not isinstance(profile_manifest, Mapping):
@@ -82,7 +80,7 @@ class StagedAgentAssembly:
                 manifest = ProfileRevision(profile_ref,
                     decode_content(profile_manifest, env.environment_id))
             elif type(profile_ref) is not ProfileRevisionRef:
-                raise IdentityMismatchError("fixed Profile and explicit preparation parameters required")
+                raise UnitIdentityMismatch("fixed Profile and explicit preparation parameters required")
             else:
                 manifest = assembly._profiles.get_revision(profile_ref)
             fixed = {"profileRef": encode_revision_ref(profile_ref), "context": public_parameters(context),
@@ -92,7 +90,7 @@ class StagedAgentAssembly:
             prior = env._store.read_staged_operation(request)
             if prior is not None:
                 if prior.operation.digest != digest or prior.root_intent.kind != "agent-preparation":
-                    raise IdentityMismatchError("spent preparation request differs")
+                    raise UnitIdentityMismatch("spent preparation request differs")
                 return prior
             def unresolved(value):
                 if isinstance(value, Mapping):
@@ -102,7 +100,7 @@ class StagedAgentAssembly:
                     return any(unresolved(item) for item in value)
                 return False
             if unresolved(encode_content(manifest.content)):
-                raise GuaranteeUnavailableError(
+                raise UnitGuaranteeUnavailable(
                     "C1 material acquisition and authorized SecretRef resolution not composed")
             admitted = assembly._admitted(encode_content(manifest.content)["harnessDefinitionRef"])
             identity = hashed({"environmentNamespace": request.environment_namespace,
@@ -157,7 +155,7 @@ class StagedAgentAssembly:
                 assembly._permission(request)
                 staged = env._store.read_staged_operation(request)
                 if staged is None:
-                    raise GuaranteeUnavailableError("staged preparation is not reserved")
+                    raise UnitGuaranteeUnavailable("staged preparation is not reserved")
                 operation = staged.operation
                 if (operation.status in {"published", "unknown", "refused", "cancelled"}
                         or staged.sealed):
@@ -182,12 +180,12 @@ class StagedAgentAssembly:
             try:
                 reply = assembly._dispatch(target_step, argument, invocation)
                 if not assembly._issuer.verified_consumption(invocation):
-                    raise GuaranteeUnavailableError(
+                    raise UnitGuaranteeUnavailable(
                         "provider did not consume the original invocation")
                 observed = assembly._observe(operation, target_step, reply)
                 if (target_step.step_id == "start"
                         and not _same_reference(observed.prepared_unit, argument)):
-                    raise IdentityMismatchError(
+                    raise UnitIdentityMismatch(
                         "start receipt changed the original prepared Unit")
                 evidence = {"evidenceRef": plain(observed.evidence_ref),
                             "preparedUnit": plain(observed.prepared_unit),
@@ -215,17 +213,17 @@ class StagedAgentAssembly:
         assembly = self._assembly
         env = assembly._environment
         if type(plan) is not PreparationEffectPlan:
-            raise IdentityMismatchError("a fixed PreparationEffectPlan is required")
+            raise UnitIdentityMismatch("a fixed PreparationEffectPlan is required")
         with env._admission_lock:
             staged = env._store.read_staged_operation(request)
             if staged is None:
-                raise GuaranteeUnavailableError("staged preparation is not reserved")
+                raise UnitGuaranteeUnavailable("staged preparation is not reserved")
             operation = staged.operation
             root = staged.root_intent
             for frozen_step in root.steps:
                 record = env._store.read_operation_step(request, frozen_step.step_id)
                 if record is None or record.outcome != "concluded":
-                    raise UnknownResultError(
+                    raise UnitOperationUnknown(
                         "root operation steps must be conclusively recorded before sealing")
             context = plain(operation.intent.context_ref)
             installation = (context.get("contextSources") or {}).get("installationRef") or {}
@@ -286,12 +284,12 @@ class StagedAgentAssembly:
             assembly._permission(request)
             staged = env._store.read_staged_operation(request)
             if staged is None:
-                raise GuaranteeUnavailableError("staged preparation is not reserved")
+                raise UnitGuaranteeUnavailable("staged preparation is not reserved")
             operation = staged.operation
             if operation.status in {"published", "unknown", "refused", "cancelled"}:
                 return operation
             if not staged.sealed:
-                raise UnknownResultError("staged operation must be sealed before publication")
+                raise UnitOperationUnknown("staged operation must be sealed before publication")
             assembly._current_plan(request, operation)
             ref = decode_node_ref(operation.intent.node_ref)
             owner = operation_holder(request, operation.intent.operation_ref)
@@ -302,7 +300,7 @@ class StagedAgentAssembly:
             for step in operation.intent.steps:
                 record = env._store.read_operation_step(request, step.step_id)
                 if record is None or record.outcome != "concluded":
-                    raise UnknownResultError("publication requires complete step evidence")
+                    raise UnitOperationUnknown("publication requires complete step evidence")
                 for item in record.evidence.get("acquiredUsages", ()):
                     transfers.append(UsageMutation(
                         item["usageId"], 1, owner, destination, item["targetRef"],

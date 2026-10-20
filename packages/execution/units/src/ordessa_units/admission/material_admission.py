@@ -1,8 +1,8 @@
 """Policy-gated metadata and exact-provider admission for Units materials."""
 from __future__ import annotations
 
-from ordessa_execution_api.environment import AdmissionRefusedError, GuaranteeUnavailableError
-from ordessa_execution_api.environment.identity import ActivationRef
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable
+from ordessa_units.definitions.admission_identity import MaterialProviderActivationRef
 
 from .material_contracts import (
     AdmittedMaterialProviderMetadata,
@@ -19,10 +19,10 @@ class MaterialAdmission:
         catalog = getattr(context, "material_catalog", None)
         if (catalog is None or not callable(getattr(catalog, "provider", None))
                 or not callable(getattr(catalog, "_provider_pin", None))):
-            raise GuaranteeUnavailableError("Units material catalog binding unavailable")
+            raise UnitGuaranteeUnavailable("Units material catalog binding unavailable")
         namespace = getattr(context, "environment_namespace", None)
         if namespace is not None and namespace != getattr(catalog, "environment_namespace", None):
-            raise GuaranteeUnavailableError("Units material catalog belongs to another Environment")
+            raise UnitGuaranteeUnavailable("Units material catalog belongs to another Environment")
         self._context = context
         self._catalog = catalog
 
@@ -31,7 +31,7 @@ class MaterialAdmission:
         if lock is None:
             lock = self._catalog.admission_lock
         if not callable(getattr(lock, "__enter__", None)):
-            raise GuaranteeUnavailableError("Units admission lock is unavailable")
+            raise UnitGuaranteeUnavailable("Units admission lock is unavailable")
         return lock
 
     def _check_open(self):
@@ -42,7 +42,7 @@ class MaterialAdmission:
             check()
             return
         if getattr(self._context, "closed", False):
-            raise GuaranteeUnavailableError("Units admission context is closed")
+            raise UnitGuaranteeUnavailable("Units admission context is closed")
 
     def _admit_resource_metadata_read(self):
         policy = getattr(self._context, "policy", None)
@@ -51,14 +51,14 @@ class MaterialAdmission:
         if (policy is None or not isinstance(principal, str) or not principal
                 or not isinstance(namespace, str) or not namespace
                 or not callable(getattr(policy, "admit_object_access", None))):
-            raise GuaranteeUnavailableError("ResourceProvider discovery policy is unavailable")
+            raise UnitGuaranteeUnavailable("ResourceProvider discovery policy is unavailable")
         try:
             admitted = policy.admit_object_access(
                 principal, f"{namespace}:agents.resources", "read")
         except Exception:
-            raise AdmissionRefusedError("ResourceProvider discovery refused") from None
+            raise UnitAdmissionRefused("ResourceProvider discovery refused") from None
         if not admitted:
-            raise AdmissionRefusedError("ResourceProvider discovery refused")
+            raise UnitAdmissionRefused("ResourceProvider discovery refused")
 
     @staticmethod
     def _resource_metadata(pin: object) -> AdmittedResourceProviderMetadata:
@@ -69,16 +69,16 @@ class MaterialAdmission:
                 supported_contract_ids=pin.supported_contract_ids,
             )
         except Exception:
-            raise AdmissionRefusedError("ResourceProvider metadata is unavailable") from None
+            raise UnitAdmissionRefused("ResourceProvider metadata is unavailable") from None
 
     def _resource_provider_metadata_locked(self, provider_id: str, *, omit_inactive: bool):
         if type(provider_id) is not str or not provider_id:
-            raise AdmissionRefusedError("ResourceProvider identity is unavailable")
+            raise UnitAdmissionRefused("ResourceProvider identity is unavailable")
         pin = self._catalog._provider_pin(provider_id)
         if pin is None:
             if omit_inactive:
                 return None
-            raise AdmissionRefusedError("ResourceProvider is not admitted in this Unit")
+            raise UnitAdmissionRefused("ResourceProvider is not admitted in this Unit")
         try:
             methods = tuple(getattr(pin.provider, name, None)
                             for name in ("describe", "acquire", "release", "reconcile"))
@@ -96,9 +96,9 @@ class MaterialAdmission:
                 descriptor.id, descriptor.display_name, descriptor.version,
                 descriptor.reconcile_support)
         except Exception:
-            raise AdmissionRefusedError("ResourceProvider metadata is unavailable or changed") from None
+            raise UnitAdmissionRefused("ResourceProvider metadata is unavailable or changed") from None
         if descriptor != pin.descriptor or coverage != pin.supported_contract_ids:
-            raise AdmissionRefusedError("ResourceProvider metadata changed after admission")
+            raise UnitAdmissionRefused("ResourceProvider metadata changed after admission")
         metadata = self._resource_metadata(pin)
         return metadata
 
@@ -118,16 +118,16 @@ class MaterialAdmission:
 
     def _material_provider_metadata_locked(self, provider_id: str, *, omit_missing_capability: bool):
         if type(provider_id) is not str or not provider_id.strip():
-            raise AdmissionRefusedError("material provider identity is unavailable")
+            raise UnitAdmissionRefused("material provider identity is unavailable")
         pin = self._catalog._provider_pin(provider_id)
         if pin is None:
             if omit_missing_capability:
                 return None
-            raise AdmissionRefusedError("material provider is not admitted in this Unit")
+            raise UnitAdmissionRefused("material provider is not admitted in this Unit")
         if pin.capability is None:
             if omit_missing_capability:
                 return None
-            raise GuaranteeUnavailableError("authorized material capability is unavailable")
+            raise UnitGuaranteeUnavailable("authorized material capability is unavailable")
         resource_metadata = self._resource_provider_metadata_locked(
             provider_id, omit_inactive=omit_missing_capability)
         if resource_metadata is None:
@@ -135,9 +135,9 @@ class MaterialAdmission:
         try:
             capability = snapshot_material_capability(pin.provider)
         except MaterialContractError:
-            raise AdmissionRefusedError("material provider capability changed after admission") from None
+            raise UnitAdmissionRefused("material provider capability changed after admission") from None
         if capability is None or capability != pin.capability:
-            raise AdmissionRefusedError("material provider capability changed after admission")
+            raise UnitAdmissionRefused("material provider capability changed after admission")
         return AdmittedMaterialProviderMetadata(resource_metadata, pin.capability)
 
     def material_provider_contribution(self, provider_id: str):
@@ -165,8 +165,8 @@ class MaterialAdmission:
             if (type(provider_id) is not str or not provider_id.strip()
                     or type(contract_id) is not str or not contract_id.strip()
                     or type(provider_version) is not str or not provider_version.strip()
-                    or type(owner_activation) is not ActivationRef):
-                raise AdmissionRefusedError("fixed material provider identity is unavailable")
+                    or type(owner_activation) is not MaterialProviderActivationRef):
+                raise UnitAdmissionRefused("fixed material provider identity is unavailable")
             metadata = self._material_provider_metadata_locked(
                 provider_id, omit_missing_capability=False)
             pin = self._catalog._provider_pin(provider_id)
@@ -174,7 +174,7 @@ class MaterialAdmission:
                     or pin.descriptor.version != provider_version
                     or pin.owner_activation != owner_activation
                     or metadata.resource_provider.owner_activation != owner_activation):
-                raise AdmissionRefusedError("material provider pin or contract changed")
+                raise UnitAdmissionRefused("material provider pin or contract changed")
             # The provider is the same object held by the catalog; no alias or
             # cross-layer forwarding object is introduced.
             return metadata, pin.provider

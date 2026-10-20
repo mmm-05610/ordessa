@@ -1,0 +1,43 @@
+schema_version: 1
+method_id: ordessa.gitlab-product-change.report-smoke
+release_version: 0.1.0
+display_name: GitLab Product Development Flow — report capture smoke projection
+compiler_contract: ordessa.methods/v1
+entry:
+  resource: workflow.product_change_report
+documents:
+- document_type: gitlab-product-change-report
+  schema:
+    resource: document.product_change_report.schema
+  template:
+    resource: document.product_change_report.template
+  validation_target: method_content
+skills: {}
+resources:
+- id: document.product_change_report.schema
+  kind: document_schema
+  path: documents/product-change-report.schema.json
+  media_type: application/schema+json
+  sha256: 9a1332c66276964a87a28e5430f702f7250c6ef9368fa5b2a7e838fba577d309
+- id: document.product_change_report.template
+  kind: document_template
+  path: documents/product-change-report.template.md
+  media_type: text/markdown
+  sha256: 52493030646b321ad8f89dd010ab83d38ef895adf46383cae915ac9f4e443903
+- id: workflow.product_change_report
+  kind: workflow
+  path: workflows/report-capture.yaml
+  media_type: application/yaml
+  sha256: 364f733127d07fa591b17ab60e1bec153a3d2d1fcec2edc5901c530300a42ffe
+requires:
+- capability_id: engineering.artifacts.create
+  kind: operation
+  interface_version: "2"
+  contract_digest: 0bc02e9e5a17ada14fc47a3da92abd6c360247768ab0ab1debfc6ec444b213f4
+metadata:
+  status: design_only
+  full_flow_support: unsupported
+  compile_projection: one_artifact_capture_command_only
+  runtime_execution: not_verified
+  complete_external_lifecycle_execution: false
+  production_activation: not_claimed

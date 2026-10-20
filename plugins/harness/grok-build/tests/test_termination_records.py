@@ -22,7 +22,7 @@ from types import SimpleNamespace
 import pytest
 
 from ordessa_units.admission.invocation import InvocationVerifier
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_harness_grok_build import (
     ChannelRecord, GrokBuildConnectionLeasePort, GrokBuildLeaseRefused, GrokBuildProviderRefused,
     GrokBuildRuntimeProvider, GrokBuildTerminationEvidencePort, GrokBuildTerminationRefused,

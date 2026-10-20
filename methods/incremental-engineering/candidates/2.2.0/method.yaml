@@ -1,0 +1,437 @@
+schema_version: 1
+method_id: ordessa.incremental-engineering
+release_version: 2.2.0
+display_name: 渐进工程方法
+compiler_contract: ordessa.methods/v1
+entry:
+  resource: workflow.change_cycle
+documents:
+- document_type: did
+  schema:
+    resource: document.did.schema
+  template:
+    resource: document.did.template
+  validation_target: method_content
+- document_type: implementation-package
+  schema:
+    resource: document.implementation_package.schema
+  template:
+    resource: document.implementation_package.template
+  validation_target: method_content
+- document_type: submission
+  schema:
+    resource: document.submission.schema
+  template:
+    resource: document.submission.template
+  validation_target: method_content
+- document_type: decision-context
+  schema:
+    resource: document.decision_context.schema
+  template:
+    resource: document.decision_context.template
+  validation_target: method_content
+- document_type: did-change
+  schema:
+    resource: document.did_change.schema
+  template:
+    resource: document.did_change.template
+  validation_target: method_content
+- document_type: session-summary
+  schema:
+    resource: document.session_summary.schema
+  template:
+    resource: document.session_summary.template
+  validation_target: method_content
+- document_type: did-application
+  schema:
+    resource: document.did_application.schema
+  template:
+    resource: document.did_application.template
+  validation_target: method_content
+- document_type: spec-kit-package
+  schema:
+    resource: document.spec_kit_package.schema
+  template:
+    resource: document.spec_kit_package.template
+  validation_target: method_content
+- document_type: method-feedback
+  schema:
+    resource: document.method_feedback.schema
+  template:
+    resource: document.method_feedback.template
+  validation_target: method_content
+- document_type: standard-profile
+  schema:
+    resource: document.standard_profile.schema
+  template:
+    resource: document.standard_profile.template
+  validation_target: method_content
+- document_type: confirmation-evidence
+  schema:
+    resource: document.confirmation_evidence.schema
+  template:
+    resource: document.confirmation_evidence.template
+  validation_target: method_content
+skills:
+  main_agent:
+    resource: skill.main_agent
+  executor:
+    resource: skill.executor
+  decision_record:
+    resource: skill.decision_record
+  did_author:
+    resource: skill.did_author
+  did_review:
+    resource: skill.did_review
+  did_apply:
+    resource: skill.did_apply
+  spec_converter:
+    resource: skill.spec_converter
+  package_review:
+    resource: skill.package_review
+resources:
+- id: decision.change_consistency
+  kind: question_set
+  path: decisions/change-consistency.yaml
+  media_type: application/yaml
+  sha256: a39dcdedc5f405272ddcc313ac3b14350bd06b2b1336336f17419112086edb79
+- id: decision.source_support
+  kind: question_set
+  path: decisions/source-support.yaml
+  media_type: application/yaml
+  sha256: 9d570b1a8da4dbd7afae39d3b69061c692eb4bbbe7c681f3e535e3bba7a0cb4c
+- id: document.did.schema
+  kind: document_schema
+  path: documents/did/schema.json
+  media_type: application/schema+json
+  sha256: e8dd0cf80d418dd9d6aaf4585bdf39075af64d625138939456087c1618da7e62
+- id: document.did.template
+  kind: document_template
+  path: documents/did/template.md
+  media_type: text/markdown
+  sha256: a6e3289b3eb978ea940ed608f1dc712764d8e5a6ceddc6833c8b3b31d3a389f7
+- id: document.implementation_package.schema
+  kind: document_schema
+  path: documents/implementation-package/schema.json
+  media_type: application/schema+json
+  sha256: 3096671b65964b8df6d720e4494517b3a03c8fc77454575516cac1164d8bc354
+- id: document.implementation_package.template
+  kind: document_template
+  path: documents/implementation-package/template.md
+  media_type: text/markdown
+  sha256: 26d73a943cbde0a7c28d48b0a37665fc61cae4a15fe56a47bc88ab593681a1fd
+- id: document.submission.schema
+  kind: document_schema
+  path: documents/submission/schema.json
+  media_type: application/schema+json
+  sha256: 42d49c53ae3cab600382f63387745026bdea79579c237303af7e45333ab0cf2a
+- id: document.submission.template
+  kind: document_template
+  path: documents/submission/template.md
+  media_type: text/markdown
+  sha256: d03da4c5b663dedeea79176eea0f47d207ab9a24c6f9e56ead11494667bef21f
+- id: skill.executor
+  kind: skill
+  path: skills/executor/SKILL.md
+  media_type: text/markdown
+  sha256: 7d0ec22cc996ecc86e94f952c5c786b1d8ca7b944ec3835b57e27e2640ecc2a3
+- id: skill.main_agent
+  kind: skill
+  path: skills/main-agent/SKILL.md
+  media_type: text/markdown
+  sha256: a343cb329940d5a21982e80228b2b36f8730a20cf808e701152a6d6b4fe2c368
+- id: standard.acceptance
+  kind: standard
+  path: standards/acceptance.yaml
+  media_type: application/yaml
+  sha256: 43affb614d6fff51038c4e41b5dcf7b2466bd4a8f27848e302297c3d2779f3a6
+- id: standard.quality_review
+  kind: standard
+  path: standards/quality-review.yaml
+  media_type: application/yaml
+  sha256: 3276d91f7320ea4ead9f019f5740fa8cb32a0ef709ad13cba05bbced3968ab60
+- id: standard.source_review
+  kind: standard
+  path: standards/source-review.yaml
+  media_type: application/yaml
+  sha256: 499cb9abe2b5f4d83c0c6bb700b72f2c5fd7bdb7f63e53b7ed13459f2af4697f
+- id: workflow.change_cycle
+  kind: workflow
+  path: workflows/change-cycle.yaml
+  media_type: application/yaml
+  sha256: c864c2e56eca935846043473693bf03f6327378bc09dc2479c5c058026e62d04
+- id: document.decision_context.schema
+  kind: document_schema
+  path: documents/decision-context/schema.json
+  media_type: application/schema+json
+  sha256: 5dee4bc40e0688342631e3636b3016f9a3bf47c2e9a39901371a491b1bda979c
+- id: document.decision_context.template
+  kind: document_template
+  path: documents/decision-context/template.md
+  media_type: text/markdown
+  sha256: b049a88cb0abfaffc5a24626a1554a98410686b9747ba38299057577272b6801
+- id: document.did_change.schema
+  kind: document_schema
+  path: documents/did-change/schema.json
+  media_type: application/schema+json
+  sha256: 52c1f3706553305a4d82f11eb5762937a56d8e2357ea5b242a6a13eba78050d4
+- id: document.did_change.template
+  kind: document_template
+  path: documents/did-change/template.md
+  media_type: text/markdown
+  sha256: 1ccf69c565121cd92a94162d3a4d4c08eae42a92512be6c5716e685907fb2d42
+- id: document.session_summary.schema
+  kind: document_schema
+  path: documents/session-summary/schema.json
+  media_type: application/schema+json
+  sha256: 095e77ceb8e95c479a1f402934d35c251e18e3ea65a78e51658462fc03f8a8df
+- id: document.session_summary.template
+  kind: document_template
+  path: documents/session-summary/template.md
+  media_type: text/markdown
+  sha256: 0991a2cbb58665037b21f9c61ea2b0cd274d441817f6cc94601ade7c039e092b
+- id: document.did_application.schema
+  kind: document_schema
+  path: documents/did-application/schema.json
+  media_type: application/schema+json
+  sha256: 7cc71fc394c13a115865c6121bd9dd7f136b119cc1eabf4b70527aee88e38ecb
+- id: document.did_application.template
+  kind: document_template
+  path: documents/did-application/template.md
+  media_type: text/markdown
+  sha256: 2aa36839220bcd2adaf8405fde9df6d1afcc6caf417f0a040c38d730860b99a4
+- id: document.spec_kit_package.schema
+  kind: document_schema
+  path: documents/spec-kit-package/schema.json
+  media_type: application/schema+json
+  sha256: 3f60726fbe25e793bec476b17bd907427ecadb283ad7b20e6d9c75db3d1fa7ae
+- id: document.spec_kit_package.template
+  kind: document_template
+  path: documents/spec-kit-package/template.md
+  media_type: text/markdown
+  sha256: 84088e80aeb928f5e456c14219f849b6eda6a4e8e549016c95857b90364d4553
+- id: document.method_feedback.schema
+  kind: document_schema
+  path: documents/method-feedback/schema.json
+  media_type: application/schema+json
+  sha256: 1202946df063e55615f4100a690b1da222716987c37f11e1d1142f9ddbd2ecde
+- id: document.method_feedback.template
+  kind: document_template
+  path: documents/method-feedback/template.md
+  media_type: text/markdown
+  sha256: 197a52fd1ff4c5637785dc6f11e4a980fe479c6eb2b91de59d24e09757542214
+- id: document.standard_profile.schema
+  kind: document_schema
+  path: documents/standard-profile/schema.json
+  media_type: application/schema+json
+  sha256: ad3b61adfca83c252b3d8a8ea8f3316546006bcbdb7bdcf01f0577aca5b4e72d
+- id: document.standard_profile.template
+  kind: document_template
+  path: documents/standard-profile/template.md
+  media_type: text/markdown
+  sha256: b3b19f1f13651b9180cb410bb1475a4d9214633f451f830ec360c1a81bd4c966
+- id: skill.decision_record
+  kind: skill
+  path: skills/decision-record/SKILL.md
+  media_type: text/markdown
+  sha256: 3ffcd304ea02358b594baa5b6976d21220641030a771c58dfbe5a78006d6d811
+- id: skill.did_author
+  kind: skill
+  path: skills/did-author/SKILL.md
+  media_type: text/markdown
+  sha256: 5bb613e404a4d445126476987e136da3068bfca89ad9864320b32e4902f7740b
+- id: skill.did_review
+  kind: skill
+  path: skills/did-review/SKILL.md
+  media_type: text/markdown
+  sha256: f8484a90fd8d5da49fef2fe267c19e0c8095869752c298487da0cec447e17b16
+- id: skill.did_apply
+  kind: skill
+  path: skills/did-apply/SKILL.md
+  media_type: text/markdown
+  sha256: 397a601da5e968747f3cd0af79fff179ecc9b7ea994946fd5df5a6db6c24b713
+- id: skill.spec_converter
+  kind: skill
+  path: skills/spec-converter/SKILL.md
+  media_type: text/markdown
+  sha256: 19fd4159aa4638922929403ae9871aebe5b55c1a018985ee429805f95fbe16e7
+- id: skill.package_review
+  kind: skill
+  path: skills/package-review/SKILL.md
+  media_type: text/markdown
+  sha256: 0f70dbcaf30e669e1f6eb8c152f926453c69fa9c78a0a684dbf033eb2699e8a0
+- id: standard.summary_review
+  kind: standard
+  path: standards/summary-review.yaml
+  media_type: application/yaml
+  sha256: b95d3deb8e0e43718d3e7fda165cff546d49e24af6e712d0bbab76d85f8de767
+- id: decision.summary_fidelity
+  kind: question_set
+  path: decisions/summary-review.yaml
+  media_type: application/yaml
+  sha256: 3124c21aad0e18c928707445cb58cf7825efaa2b2c0a6b152672cb073ea72548
+- id: standard.engineering_content
+  kind: standard
+  path: standards/engineering-content.yaml
+  media_type: application/yaml
+  sha256: e9cebf755973bf8325b78de89bb60ab37ae0f006930e74f014f5279e49900ede
+- id: decision.engineering_content
+  kind: question_set
+  path: decisions/engineering-content.yaml
+  media_type: application/yaml
+  sha256: 182e9b15f56ef00a8e0375baae1ec40210280a6c99253b2af335b4ba27ebc6b7
+- id: template.spec_kit.README
+  kind: document_template
+  path: templates/spec-kit/README.md
+  media_type: text/markdown
+  sha256: 4b7e8c2f817e4f2e1a5d39142575e403ac672a5abd1a7a6ed29f16237e1540be
+- id: template.spec_kit.acceptance
+  kind: document_template
+  path: templates/spec-kit/acceptance.md
+  media_type: text/markdown
+  sha256: 18df46c08465b2c19a99bdbff5adeeb649955ba668958de6aac62cddf3117194
+- id: template.spec_kit.baseline
+  kind: document_template
+  path: templates/spec-kit/baseline.md
+  media_type: text/markdown
+  sha256: 49c3f5c1045346e7234499de4b98d57a7475fe58d0452d2cd3e20933d3d1eea7
+- id: template.spec_kit.change_map
+  kind: document_template
+  path: templates/spec-kit/change-map.md
+  media_type: text/markdown
+  sha256: da43c327ff71c3e4e4f9672fcc7b00028cc34e65d65c26e9a6de0c7cb0a20042
+- id: template.spec_kit.plan
+  kind: document_template
+  path: templates/spec-kit/plan.md
+  media_type: text/markdown
+  sha256: 3ddb25b1f961c3fec62bf521a9daff4cb1b92f305d46514ba192c9c9ad78f306
+- id: template.spec_kit.spec
+  kind: document_template
+  path: templates/spec-kit/spec.md
+  media_type: text/markdown
+  sha256: 660ee849a1bb9931e191e294b9427a06d334f81c7ed9d31fe3b7d155968dbc51
+- id: template.spec_kit.tasks
+  kind: document_template
+  path: templates/spec-kit/tasks.md
+  media_type: text/markdown
+  sha256: cbb11ca678c46685b07e1367aa3f3a909c1b9fab7c9edcb104f6a0d2c341187b
+- id: document.confirmation_evidence.schema
+  kind: document_schema
+  path: documents/confirmation-evidence/schema.json
+  media_type: application/schema+json
+  sha256: 00c221017f86a42fd6bc68c263149e05615662d1b14d3caace4a3c899ec78092
+- id: document.confirmation_evidence.template
+  kind: document_template
+  path: documents/confirmation-evidence/template.md
+  media_type: text/markdown
+  sha256: e9bd545d9d2001cf919fcd43a2e418339047838ffa10c09a2a2ac960463f79d2
+requires:
+- capability_id: engineering.acceptance.adopt
+  kind: operation
+  interface_version: 1.0.0
+  contract_digest: 092f20beb48f31481c59aea6c40578255db4d1ea5d8d87a458d74ae070f69398
+- capability_id: engineering.acceptance.request
+  kind: operation
+  interface_version: 1.0.0
+  contract_digest: 7f86dc4143c10de0c66858dcbea5e56f17a54199a3f5c95bf633214c94c28f14
+- capability_id: engineering.approvals.prepare_intent
+  kind: operation
+  interface_version: 1.0.0
+  contract_digest: d02d2ea9b29f5764462136b4e320f3d18b2f08f9391a93bd5a7b3bddac7c5542
+- capability_id: engineering.approvals.request
+  kind: operation
+  interface_version: 1.0.0
+  contract_digest: a21b324ad3cad9d6ea970f5d804595a62f8e9f53703a69b3455111944229bc90
+- capability_id: engineering.artifacts.append_revision
+  kind: operation
+  interface_version: '2'
+  contract_digest: 9124b5ae338d56a7ac12b6ec39141125b1664d2e4cdd5649f096954c87edaf7b
+- capability_id: engineering.artifacts.create
+  kind: operation
+  interface_version: '2'
+  contract_digest: 0bc02e9e5a17ada14fc47a3da92abd6c360247768ab0ab1debfc6ec444b213f4
+- capability_id: engineering.executions.dispatch
+  kind: operation
+  interface_version: 1.0.0
+  contract_digest: cf88bf160ccc43e858addcc6caa7b3856103c3964129402cd03ed9ae5acca6e2
+- capability_id: engineering.packages.derive
+  kind: operation
+  interface_version: 1.0.0
+  contract_digest: 500e925e82ac30f7ced2f525d7b8ac5bebbaf5c14ab7818075c1421d22352723
+- capability_id: engineering.proposals.create
+  kind: operation
+  interface_version: '1'
+  contract_digest: 10c0bdbb3e27e13b91f53a8438d375b6201ceb85e43fe1c1253da586458afe69
+- capability_id: engineering.reviews.request
+  kind: operation
+  interface_version: 1.0.0
+  contract_digest: 4b4fac6228c274742241f9652dcdd6a01cfe223b2a4f087fe81290470dd27bd5
+- capability_id: engineering.submissions.record
+  kind: operation
+  interface_version: 1.0.0
+  contract_digest: bfe468d17d5d6f384d64d7c7ecb528ad302cc3881fddb64d697ccb313990e55d
+- capability_id: ordessa.claims.coverage
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: 160be566e11310e1f47f6187cbb400e13eaaced843d95216c781101b18ca8641
+- capability_id: ordessa.decision.evaluate
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: 70661659910b318e789177aac7656318e22a5082e33e0916798f6dd9b8a1d3b7
+- capability_id: ordessa.outputs.scope
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: e3a14e193ddddc271885c89160941aabfe2c164a34a5f400e3927ede383a3497
+- capability_id: ordessa.proposal.consistency
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: 3c5bfb80579b46ec30f76174a6327768620cb5eda05fb7cab8f6fdf230769cea
+- capability_id: ordessa.schema.validate
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: 0f9c544a13bf8813f517079f1009357f80029efda921f2de22f0e4c98cbb3be1
+- capability_id: ordessa.sources.integrity
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: b9b03291d8566da6b17e57693d5f7113c84bca29c8a18129c2c92d8e79076af3
+- capability_id: ordessa.submission.binding
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: a6941bd1756c943b5f99ac46717ed08c53e5c5caf92c47edd65b3cb3299d2933
+- capability_id: ordessa.tests.evidence
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: e6bc661774ff5dc3d9e82f4789edef3dced2a736c04626b219084ba824a23e1f
+supporting_fixture_path: examples/minimal-change
+metadata:
+  status: integration-candidate
+  production_activation: requires_frozen_operations_real_pi_real_jev_accepted_standard_profile_and_judgment_evaluation
+  templates_are_advisory: true
+  judgment_quality: not_validated
+  threshold_status: historical_demo_policies_are_not_approved_production_rules
+  pending_owner_events:
+  - engineering.notice.published
+  - engineering.baseline.applied
+  - engineering.feedback.recorded
+  pending_proposal_event_bindings:
+  - decisions_ref
+  - baseline_ref
+  - summary_ref
+  - standard_profile_ref
+  owner_events_must_be_verified: authenticated_resume_not_user_supplied_receipts
+  logical_roles:
+    main_agent: discussion_and_coordination
+    executor:
+      required_provider: pi
+      real_native_input_and_records: true
+    semantic_judge:
+      required_provider: jev
+      real_response_and_usage: true
+      judgment_quality: not_validated
+    trusted_human: configured_product_confirmation_policy_with_authorized_main_agent_chat_attestation;
+      optional_stronger_provider
+  product_confirmation_policy:
+    policy_id: ordessa.product.v1.chat-attested-confirmation
+    revision: 1
+    sha256: 102d4a74144348ac83ced83200a26ab2b5b99660984ebc3572e21e6f5910df2b
+    selection: product_configuration_only_not_arbitrary_method_trust_elevation

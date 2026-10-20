@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-permissions-backend"
+version = "0.1.0"
+description = "Ordessa Permissions backend: authoritative approval facts store and the §C1 authorizer service"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+# Dependency direction by design: stdlib + the permissions domain contract +
+# the server plugin contract. No host, no compat layer, no pacthold, no harness.
+dependencies = [
+    "ordessa-permissions-api>=0.1.0,<1",
+    "ordessa-server-plugin-api>=0.1.0,<1",
+]
+
+[project.optional-dependencies]
+# Runtime-independent package tests use pytest. Cross-owner integration tests
+# run under the repository's explicit python-workspace.json test closure, not
+# a plugin extra that imports host implementations or retired distributions.
+dev = ["pytest>=7"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ordessa_permissions_backend = ["py.typed"]

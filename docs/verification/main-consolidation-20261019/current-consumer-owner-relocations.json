@@ -1,0 +1,18 @@
+{
+  "paths": {
+    "tests/integration/packages_convergence/test_agent_lifecycle_process_clients.py": {
+      "assertASTUnchanged": true
+    },
+    "tests/integration/packages_convergence/test_agent_tools_capability_consumer.py": {
+      "assertASTUnchanged": true
+    },
+    "tests/integration/packages_convergence/test_agent_registry_source_cut.py": {
+      "assertASTUnchanged": true
+    }
+  },
+  "validation": {
+    "currentSourceCut": "4passed current-source-cut-relocation-final.xml",
+    "otherTwoConsumerFiles": "All3cases passed in earlier current-consumer-current-owner-final.xml; that complete5file run remained6pass4fail, not full green. Source-cut2fail subsequently repaired4pass; Reviewer issuer and installed Server console separately remain under migration."
+  },
+  "qualification": "Original actual owner imports/tool path updated; no assertion removed. Interfaces44files assembled from prior wheel and individually matched current source; Server/Agent/Engineering load current sources."
+}

@@ -1,0 +1,1235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ordessa:engineering:owner-operation:engineering.submissions.record_report:input:2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record"
+  ],
+  "properties": {
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "realm_id",
+        "project_id",
+        "submission_id",
+        "created_at",
+        "created_by",
+        "change_set",
+        "authorization_refs",
+        "package_ref",
+        "output_refs",
+        "coverage",
+        "source_refs",
+        "method_content",
+        "checkpoint_ref",
+        "digest",
+        "schemaVersion",
+        "execution_ref"
+      ],
+      "properties": {
+        "realm_id": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "submission_id": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "created_by": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "actor_id",
+            "actor_kind",
+            "issuer"
+          ],
+          "properties": {
+            "actor_id": {
+              "type": "string"
+            },
+            "actor_kind": {
+              "enum": [
+                "human",
+                "agent",
+                "checker",
+                "service"
+              ]
+            },
+            "issuer": {
+              "type": "string"
+            }
+          }
+        },
+        "change_set": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "proposal_refs",
+            "digest"
+          ],
+          "properties": {
+            "proposal_refs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "realm_id",
+                  "project_id",
+                  "change_id",
+                  "proposal_id",
+                  "digest",
+                  "kind"
+                ],
+                "properties": {
+                  "realm_id": {
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "type": "string"
+                  },
+                  "change_id": {
+                    "type": "string"
+                  },
+                  "proposal_id": {
+                    "type": "string"
+                  },
+                  "digest": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "algorithm",
+                      "hex"
+                    ],
+                    "properties": {
+                      "algorithm": {
+                        "const": "sha256"
+                      },
+                      "hex": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    }
+                  },
+                  "kind": {
+                    "const": "proposal"
+                  }
+                }
+              }
+            },
+            "digest": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "algorithm",
+                "hex"
+              ],
+              "properties": {
+                "algorithm": {
+                  "const": "sha256"
+                },
+                "hex": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            }
+          }
+        },
+        "authorization_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "realm_id",
+              "project_id",
+              "approval_id",
+              "grant_digest",
+              "kind"
+            ],
+            "properties": {
+              "realm_id": {
+                "type": "string"
+              },
+              "project_id": {
+                "type": "string"
+              },
+              "approval_id": {
+                "type": "string"
+              },
+              "grant_digest": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "algorithm",
+                  "hex"
+                ],
+                "properties": {
+                  "algorithm": {
+                    "const": "sha256"
+                  },
+                  "hex": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "kind": {
+                "const": "approval"
+              }
+            }
+          }
+        },
+        "package_ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "realm_id",
+            "project_id",
+            "package_id",
+            "digest",
+            "kind"
+          ],
+          "properties": {
+            "realm_id": {
+              "type": "string"
+            },
+            "project_id": {
+              "type": "string"
+            },
+            "package_id": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "algorithm",
+                "hex"
+              ],
+              "properties": {
+                "algorithm": {
+                  "const": "sha256"
+                },
+                "hex": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "kind": {
+              "const": "implementation_package"
+            }
+          }
+        },
+        "output_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "digest",
+              "byte_length",
+              "media_type",
+              "storage_object_id"
+            ],
+            "properties": {
+              "kind": {
+                "const": "blob"
+              },
+              "digest": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "algorithm",
+                  "hex"
+                ],
+                "properties": {
+                  "algorithm": {
+                    "const": "sha256"
+                  },
+                  "hex": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "byte_length": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "media_type": {
+                "type": "string"
+              },
+              "storage_object_id": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "coverage": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "proposal_ref",
+              "output_refs",
+              "file_change_ids",
+              "evidence_refs",
+              "disposition",
+              "reason"
+            ],
+            "properties": {
+              "proposal_ref": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "realm_id",
+                  "project_id",
+                  "change_id",
+                  "proposal_id",
+                  "digest",
+                  "kind"
+                ],
+                "properties": {
+                  "realm_id": {
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "type": "string"
+                  },
+                  "change_id": {
+                    "type": "string"
+                  },
+                  "proposal_id": {
+                    "type": "string"
+                  },
+                  "digest": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "algorithm",
+                      "hex"
+                    ],
+                    "properties": {
+                      "algorithm": {
+                        "const": "sha256"
+                      },
+                      "hex": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    }
+                  },
+                  "kind": {
+                    "const": "proposal"
+                  }
+                }
+              },
+              "output_refs": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "kind",
+                        "digest",
+                        "byte_length",
+                        "media_type",
+                        "storage_object_id"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "blob"
+                        },
+                        "digest": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "algorithm",
+                            "hex"
+                          ],
+                          "properties": {
+                            "algorithm": {
+                              "const": "sha256"
+                            },
+                            "hex": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            }
+                          }
+                        },
+                        "byte_length": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "media_type": {
+                          "type": "string"
+                        },
+                        "storage_object_id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "realm_id",
+                        "project_id",
+                        "artifact_id",
+                        "revision_id",
+                        "digest",
+                        "kind"
+                      ],
+                      "properties": {
+                        "realm_id": {
+                          "type": "string"
+                        },
+                        "project_id": {
+                          "type": "string"
+                        },
+                        "artifact_id": {
+                          "type": "string"
+                        },
+                        "revision_id": {
+                          "type": "string"
+                        },
+                        "digest": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "algorithm",
+                            "hex"
+                          ],
+                          "properties": {
+                            "algorithm": {
+                              "const": "sha256"
+                            },
+                            "hex": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            }
+                          }
+                        },
+                        "kind": {
+                          "const": "artifact_revision"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "file_change_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "kind",
+                        "digest",
+                        "byte_length",
+                        "media_type",
+                        "storage_object_id"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "blob"
+                        },
+                        "digest": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "algorithm",
+                            "hex"
+                          ],
+                          "properties": {
+                            "algorithm": {
+                              "const": "sha256"
+                            },
+                            "hex": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            }
+                          }
+                        },
+                        "byte_length": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "media_type": {
+                          "type": "string"
+                        },
+                        "storage_object_id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "realm_id",
+                        "project_id",
+                        "artifact_id",
+                        "revision_id",
+                        "digest",
+                        "kind"
+                      ],
+                      "properties": {
+                        "realm_id": {
+                          "type": "string"
+                        },
+                        "project_id": {
+                          "type": "string"
+                        },
+                        "artifact_id": {
+                          "type": "string"
+                        },
+                        "revision_id": {
+                          "type": "string"
+                        },
+                        "digest": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "algorithm",
+                            "hex"
+                          ],
+                          "properties": {
+                            "algorithm": {
+                              "const": "sha256"
+                            },
+                            "hex": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            }
+                          }
+                        },
+                        "kind": {
+                          "const": "artifact_revision"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "disposition": {
+                "enum": [
+                  "implemented",
+                  "unchanged_with_reason",
+                  "not_implemented"
+                ]
+              },
+              "reason": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source_id",
+              "kind",
+              "locator",
+              "capture",
+              "captured_at",
+              "captured_by",
+              "media_type",
+              "byte_length",
+              "original_url"
+            ],
+            "properties": {
+              "source_id": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "chat_message",
+                  "agents_file",
+                  "code",
+                  "document",
+                  "artifact",
+                  "tool_observation"
+                ]
+              },
+              "locator": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "provider",
+                  "conversation_id",
+                  "message_id",
+                  "repository_id",
+                  "path",
+                  "document_id",
+                  "artifact_ref",
+                  "observation_id"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "chat_message",
+                      "agents_file",
+                      "code",
+                      "document",
+                      "artifact",
+                      "tool_observation"
+                    ]
+                  },
+                  "provider": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "conversation_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "message_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "repository_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "path": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "document_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "artifact_ref": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "realm_id",
+                          "project_id",
+                          "artifact_id",
+                          "revision_id",
+                          "digest",
+                          "kind"
+                        ],
+                        "properties": {
+                          "realm_id": {
+                            "type": "string"
+                          },
+                          "project_id": {
+                            "type": "string"
+                          },
+                          "artifact_id": {
+                            "type": "string"
+                          },
+                          "revision_id": {
+                            "type": "string"
+                          },
+                          "digest": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "algorithm",
+                              "hex"
+                            ],
+                            "properties": {
+                              "algorithm": {
+                                "const": "sha256"
+                              },
+                              "hex": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{64}$"
+                              }
+                            }
+                          },
+                          "kind": {
+                            "const": "artifact_revision"
+                          }
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "observation_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "capture": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "upstream_version",
+                      "content_digest",
+                      "kind"
+                    ],
+                    "properties": {
+                      "upstream_version": {
+                        "type": "string"
+                      },
+                      "content_digest": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "algorithm",
+                          "hex"
+                        ],
+                        "properties": {
+                          "algorithm": {
+                            "const": "sha256"
+                          },
+                          "hex": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{64}$"
+                          }
+                        }
+                      },
+                      "kind": {
+                        "const": "immutable_version"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "blob_ref",
+                      "excerpt_digest",
+                      "selector",
+                      "upstream_version",
+                      "kind"
+                    ],
+                    "properties": {
+                      "blob_ref": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "digest",
+                          "byte_length",
+                          "media_type",
+                          "storage_object_id"
+                        ],
+                        "properties": {
+                          "digest": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "algorithm",
+                              "hex"
+                            ],
+                            "properties": {
+                              "algorithm": {
+                                "const": "sha256"
+                              },
+                              "hex": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{64}$"
+                              }
+                            }
+                          },
+                          "byte_length": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "media_type": {
+                            "type": "string"
+                          },
+                          "storage_object_id": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "excerpt_digest": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "algorithm",
+                          "hex"
+                        ],
+                        "properties": {
+                          "algorithm": {
+                            "const": "sha256"
+                          },
+                          "hex": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{64}$"
+                          }
+                        }
+                      },
+                      "selector": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "kind",
+                          "start",
+                          "end",
+                          "pointer",
+                          "schema_version"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "enum": [
+                              "whole_capture",
+                              "byte_range",
+                              "json_pointer"
+                            ]
+                          },
+                          "start": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          },
+                          "end": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          },
+                          "pointer": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "schema_version": {
+                            "const": 1
+                          }
+                        }
+                      },
+                      "upstream_version": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "kind": {
+                        "const": "immutable_excerpt"
+                      }
+                    }
+                  }
+                ]
+              },
+              "captured_at": {
+                "type": "string"
+              },
+              "captured_by": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "actor_id",
+                  "actor_kind",
+                  "issuer"
+                ],
+                "properties": {
+                  "actor_id": {
+                    "type": "string"
+                  },
+                  "actor_kind": {
+                    "enum": [
+                      "human",
+                      "agent",
+                      "checker",
+                      "service"
+                    ]
+                  },
+                  "issuer": {
+                    "type": "string"
+                  }
+                }
+              },
+              "media_type": {
+                "type": "string"
+              },
+              "byte_length": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16777216
+              },
+              "original_url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "method_content": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_ref",
+            "value",
+            "rendered_body_ref"
+          ],
+          "properties": {
+            "schema_ref": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "method_ref",
+                "logical_path",
+                "resource_digest",
+                "resource_id"
+              ],
+              "properties": {
+                "method_ref": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "method_id",
+                    "release_version",
+                    "schema_version",
+                    "snapshot_digest"
+                  ],
+                  "properties": {
+                    "method_id": {
+                      "type": "string"
+                    },
+                    "release_version": {
+                      "type": "string"
+                    },
+                    "schema_version": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "snapshot_digest": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "algorithm",
+                        "hex"
+                      ],
+                      "properties": {
+                        "algorithm": {
+                          "const": "sha256"
+                        },
+                        "hex": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{64}$"
+                        }
+                      }
+                    }
+                  }
+                },
+                "logical_path": {
+                  "type": "string"
+                },
+                "resource_digest": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "algorithm",
+                    "hex"
+                  ],
+                  "properties": {
+                    "algorithm": {
+                      "const": "sha256"
+                    },
+                    "hex": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    }
+                  }
+                },
+                "resource_id": {
+                  "type": "string"
+                }
+              }
+            },
+            "value": {},
+            "rendered_body_ref": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "digest",
+                "byte_length",
+                "media_type",
+                "storage_object_id"
+              ],
+              "properties": {
+                "digest": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "algorithm",
+                    "hex"
+                  ],
+                  "properties": {
+                    "algorithm": {
+                      "const": "sha256"
+                    },
+                    "hex": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    }
+                  }
+                },
+                "byte_length": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "media_type": {
+                  "type": "string"
+                },
+                "storage_object_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "checkpoint_ref": {
+          "type": "null"
+        },
+        "digest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "algorithm",
+            "hex"
+          ],
+          "properties": {
+            "algorithm": {
+              "const": "sha256"
+            },
+            "hex": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "schemaVersion": {
+          "const": "engineering-agent-submission-report/1"
+        },
+        "execution_ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "agent_ref_bytes",
+            "turn_ref_bytes",
+            "source_revision",
+            "operation_ref",
+            "engineering_attempt_ref",
+            "prompt_input_digest",
+            "query_digest",
+            "captured_observation_ref"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "engineering-agent-execution-ref/2"
+            },
+            "agent_ref_bytes": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schemaVersion",
+                "namespace",
+                "instanceId",
+                "bindingDigest"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": "agent-instance/1"
+                },
+                "namespace": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "instanceId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "bindingDigest": {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                }
+              },
+              "x-maxCanonicalBytes": 8192
+            },
+            "turn_ref_bytes": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schemaVersion",
+                "instanceRef",
+                "turnId"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": "agent-turn-ref/1"
+                },
+                "instanceRef": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "schemaVersion",
+                    "namespace",
+                    "instanceId",
+                    "bindingDigest"
+                  ],
+                  "properties": {
+                    "schemaVersion": {
+                      "const": "agent-instance/1"
+                    },
+                    "namespace": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 512
+                    },
+                    "instanceId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 512
+                    },
+                    "bindingDigest": {
+                      "type": "string",
+                      "pattern": "^sha256:[0-9a-f]{64}$"
+                    }
+                  },
+                  "x-maxCanonicalBytes": 8192
+                },
+                "turnId": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "source_revision": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation_ref": {
+              "type": "string",
+              "minLength": 1
+            },
+            "engineering_attempt_ref": {
+              "type": "string",
+              "minLength": 1
+            },
+            "prompt_input_digest": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "algorithm",
+                "hex"
+              ],
+              "properties": {
+                "algorithm": {
+                  "const": "sha256"
+                },
+                "hex": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "query_digest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "captured_observation_ref": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "digest",
+                "byte_length",
+                "media_type",
+                "storage_object_id"
+              ],
+              "properties": {
+                "digest": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "algorithm",
+                    "hex"
+                  ],
+                  "properties": {
+                    "algorithm": {
+                      "const": "sha256"
+                    },
+                    "hex": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    }
+                  }
+                },
+                "byte_length": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "media_type": {
+                  "type": "string"
+                },
+                "storage_object_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-ordessa-capability-binding": {
+    "capability_id": "engineering.submissions.record_report",
+    "kind": "operation",
+    "interface_version": "2",
+    "contract_digest": "52014021880cb59e3cee50a6d93ec562d334780e2fc8fed41b2ad60f5c043308"
+  }
+}

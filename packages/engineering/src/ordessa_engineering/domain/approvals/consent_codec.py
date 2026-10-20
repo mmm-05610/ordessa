@@ -11,7 +11,7 @@ from ..changes.models import ChangeSet
 from ..changes.application_plan import HeadExpectation
 from .consent import (ConsentPolicyRef, ConversationSource, NoticeRef, ConversationNotice,
                       WorkPackageNotice, AuthorizationIntent, ChangeAuthorizationIntent,
-                      ConsentChallenge, ConversationEvidence, ApprovalGrant)
+                      ConsentChallenge, ConversationEvidence, CapturedInstructionEvidence, ApprovalGrant)
 
 from .implementation import (ImplementationAuthorizationIntent, ActionBudgetSlot,
                              WorkPackageAuthorization, WorkPackageAuthorizationIntent,
@@ -22,10 +22,19 @@ from ..reviews.ref_codec import decode_review_ref
 
 _TYPES = (ImplementationAuthorizationIntent, ConsentPolicyRef, ConversationSource, NoticeRef, ConversationNotice,
           WorkPackageAuthorization, WorkPackageNotice, WorkPackageAuthorizationIntent,
-          AuthorizationIntent, ChangeAuthorizationIntent, ConsentChallenge, ConversationEvidence, ApprovalGrant)
+          AuthorizationIntent, ChangeAuthorizationIntent, ConsentChallenge, ConversationEvidence,
+          CapturedInstructionEvidence, ApprovalGrant)
 
 
 def _decode(value, cls):
+    if (cls is ConversationEvidence and type(value) is dict
+            and ('schema_version' in value or 'evidence_kind' in value)):
+        # The original command decodes this evidence family. New forms are
+        # explicit, never guessed from a missing question or downgraded to Q&A.
+        if (type(value.get('schema_version')) is not int or value.get('schema_version') != 2
+                or value.get('evidence_kind') != 'captured_instruction'):
+            raise ReferenceError('INVALID_CONSENT_RECORD')
+        cls = CapturedInstructionEvidence
     if cls is AuthorizationIntent and type(value) is dict and value.get('intent_kind') == 'change_apply':
         cls = ChangeAuthorizationIntent
     if cls is AuthorizationIntent and type(value) is dict and value.get('intent_kind') == 'implementation':
@@ -51,7 +60,7 @@ def _decode(value, cls):
     require_object(value, {f.name for f in fields(cls)}, 'INVALID_CONSENT_RECORD')
     result = {}
     for key, item in value.items():
-        if key == 'digest' and cls in (ConversationNotice, AuthorizationIntent, ChangeAuthorizationIntent, ImplementationAuthorizationIntent, ConversationEvidence, ApprovalGrant,
+        if key == 'digest' and cls in (ConversationNotice, AuthorizationIntent, ChangeAuthorizationIntent, ImplementationAuthorizationIntent, ConversationEvidence, CapturedInstructionEvidence, ApprovalGrant,
                                        WorkPackageAuthorization, WorkPackageNotice, WorkPackageAuthorizationIntent):
             continue
         if key == 'intent_kind' and cls in (ChangeAuthorizationIntent, ImplementationAuthorizationIntent, WorkPackageAuthorizationIntent):
@@ -59,9 +68,16 @@ def _decode(value, cls):
                 raise ReferenceError('INVALID_CONSENT_RECORD')
             continue
         if key == 'schema_version' and cls in (WorkPackageAuthorization,
-                                               WorkPackageAuthorizationIntent, WorkPackageNotice):
+                                               WorkPackageAuthorizationIntent, WorkPackageNotice,
+                                               CapturedInstructionEvidence):
             # An unknown schema version is refused, never coerced to v2.
             if item != WORK_PACKAGE_SCHEMA_VERSION:
+                raise ReferenceError('INVALID_CONSENT_RECORD')
+            continue
+        if cls is CapturedInstructionEvidence and key in ('evidence_kind', 'binding_origin'):
+            expected = {'evidence_kind': 'captured_instruction',
+                        'binding_origin': 'registered-main-agent'}
+            if item != expected[key]:
                 raise ReferenceError('INVALID_CONSENT_RECORD')
             continue
         if key == 'subject_kind' and cls is WorkPackageAuthorization:

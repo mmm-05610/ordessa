@@ -4,6 +4,8 @@ This owner projects state from the original OperationStore, Harness catalog,
 Environment instance/Use handle and UnitRecords. It creates no grants or rows.
 """
 from __future__ import annotations
+from ordessa_units.bindings.harness_admission import read_harness_definition
+from ordessa_units.errors import UnitApiRefused
 
 import hashlib
 import json
@@ -12,7 +14,7 @@ import re
 from threading import RLock
 from typing import Mapping
 
-from ordessa_execution_api.environment.operations import safe_json, sealed_mapping
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_execution_agents.profiles import encode_revision_ref
 
@@ -157,7 +159,7 @@ class FixedUnitCurrentState:
                     or not operation.intent.steps
                     or not _same(operation.intent.steps[0].pinned_provider_ref, provider_ref)):
                 continue
-            admitted = self.harness_catalog.describe(context["harnessDefinitionRef"])
+            admitted = read_harness_definition(self.harness_catalog, context["harnessDefinitionRef"])
             if not _same(getattr(admitted, "provider_ref", None), provider_ref):
                 continue
             request = operation.request
@@ -224,6 +226,11 @@ class FixedUnitCurrentState:
             return None
         local = context_ref.get("localUnitRun")
         snapshot = self._snapshot_generation() if historical_query else self._snapshot()
+        if historical_query and (not isinstance(local, Mapping)
+                or set(local) != {'ownerId', 'permissionId', 'environmentIdentity',
+                                  'environmentGeneration', 'agentId', 'profileRevision'}
+                or type(local.get('environmentGeneration')) is not int):
+            return None
         if (not isinstance(local, Mapping)
                 or local.get("ownerId") != self.owner_id
                 or local.get("permissionId") != self.permission_id
@@ -235,7 +242,16 @@ class FixedUnitCurrentState:
             return None
         try:
             roots = self._roots(node_ref, context_ref.get("privateRootFacts"))
-            directory = self.directory_ref(node_ref, roots)
+            if historical_query:
+                step = next((item for item in operation.intent.steps if item.step_id == 'read'), None)
+                if step is None:
+                    return None
+                _, source = self._query_reservation(
+                    context_ref, node_ref, step.pinned_provider_ref,
+                    principal_scope=request.principal_scope)
+                directory = DirectoryBindingRef.from_dict(dict(source.intent.context_ref['directoryBindingRef']))
+            else:
+                directory = self.directory_ref(node_ref, roots)
             persisted = DirectoryBindingRef.from_dict(dict(context_ref.get("directoryBindingRef", {})))
         except Exception:
             return None
@@ -249,7 +265,7 @@ class FixedUnitCurrentState:
             return None
         return operation, local, roots
 
-    def _query_reservation(self, context_ref, node_ref, provider_ref):
+    def _query_reservation(self, context_ref, node_ref, provider_ref, *, principal_scope):
         """Resolve cold-read provenance from the original UnitRecords row only."""
         records, _manager = self._require_owner()
         read = context_ref.get("acpTurnRead")
@@ -259,35 +275,120 @@ class FixedUnitCurrentState:
                 or unit_ref.get("environmentNamespace") != self.environment_namespace
                 or not isinstance(unit_ref.get("unitId"), str) or not unit_ref["unitId"]):
             raise UnitRecordsRefused("exact original Unit reference required for receipt query")
-        reservation = records.owner_read_unit(unit_ref["unitId"])
+        resolver = getattr(records, 'owner_read_unit_for_query', None)
+        if not callable(resolver):
+            raise UnitRecordsRefused('original query identity resolver unavailable')
+        reservation = resolver(unit_ref)
         if (not _same(reservation.public_ref, unit_ref)
                 or not _same(reservation.facts.get("nodeRef"), node_ref)
                 or not _same(reservation.facts.get("providerRef"), provider_ref)):
             raise UnitRecordsRefused("receipt query differs from the original Unit reservation")
-        source = self._verify_reservation_source(reservation, node_ref)
-        if (source.status != "published" or source.intent.kind != "unit-public-prepare"
-                or not source.intent.steps
-                or not _same(source.intent.steps[0].pinned_provider_ref, provider_ref)
-                or not _same(source.intent.context_ref.get("localUnitRun"), context_ref.get("localUnitRun"))
+        source = self._verify_query_reservation_source(
+            reservation, node_ref, principal_scope=principal_scope)
+        if (not _same(context_ref.get('acpQuerySource'), self._query_source_ref(source))
                 or not _same(source.intent.context_ref.get("privateRootFacts"), context_ref.get("privateRootFacts"))
                 or not _same(source.intent.context_ref.get("directoryBindingRef"), context_ref.get("directoryBindingRef"))
                 or not _same(source.intent.context_ref.get("harnessDefinitionRef"), context_ref.get("harnessDefinitionRef"))):
             raise UnitRecordsRefused("receipt query lost its exact published LocalUnitOwner source")
-        return reservation
+        return reservation, source
+
+    @staticmethod
+    def _query_source_ref(source):
+        """Closed reference to the stored preparation, never an old permission."""
+        request = source.request
+        return {'contractVersion': 'unit-acp-query-source/1',
+                'request': {'environmentNamespace': request.environment_namespace,
+                            'principalScope': request.principal_scope,
+                            'requestId': request.request_id},
+                'operationRef': source.intent.operation_ref,
+                'intentDigest': 'sha256:' + hashlib.sha256(source.intent_json.encode()).hexdigest()}
+
+    def _verify_query_reservation_source(self, reservation, node_ref, *, principal_scope):
+        """Validate historical provenance independently of this live owner ID.
+
+        The current query still needs this owner's permission and epoch. Only
+        the immutable preparation's IDs are used to check its original scope
+        and directory; no old authority, scope index or Unit is reconstructed.
+        """
+        try:
+            facts = reservation.facts
+            correlation = json.loads(facts['correlation'])
+            request_fields = correlation['request']
+            if (set(correlation) != {'request', 'operationRef', 'stepId'}
+                    or set(request_fields) != {'environmentNamespace', 'principalScope', 'requestId'}
+                    or request_fields['environmentNamespace'] != self.environment_namespace
+                    or request_fields['principalScope'] != principal_scope
+                    or correlation['stepId'] != 'prepare'):
+                raise ValueError()
+            request = RequestKey(request_fields['environmentNamespace'], principal_scope,
+                                 request_fields['requestId'])
+            source = self.store.read_operation(request)
+            if source is None:
+                raise ValueError()
+            context = source.intent.context_ref
+            run = context.get('localUnitRun')
+            step = next((s for s in source.intent.steps if s.step_id == 'prepare'), None)
+            profile = encode_revision_ref(self.profile_revision)
+            if (source.request != request or source.status != 'published'
+                    or source.intent.kind != 'unit-public-prepare'
+                    or source.intent.operation_ref != correlation['operationRef']
+                    or not isinstance(run, Mapping)
+                    or set(run) != {'ownerId', 'permissionId', 'environmentIdentity',
+                                    'environmentGeneration', 'agentId', 'profileRevision'}
+                    or any(type(run.get(k)) is not str or not run[k] for k in ('ownerId', 'permissionId'))
+                    or run['environmentIdentity'] != self.environment_instance.identity
+                    or type(run['environmentGeneration']) is not int
+                    or run['environmentGeneration'] != self._snapshot_generation().generation
+                    or run['agentId'] != self.agent_id
+                    or not _same(run['profileRevision'], profile)
+                    or not _same(source.intent.profile_snapshot_ref, profile)
+                    or not _same(source.intent.node_ref, node_ref)
+                    or not _same(context.get('nodeRef'), node_ref)
+                    or not _same(facts.get('nodeRef'), node_ref)
+                    or source.intent.management_epoch != run['environmentGeneration']
+                    or facts.get('managementEpoch') != run['environmentGeneration']
+                    or step is None or step.management_epoch != run['environmentGeneration']
+                    or step.input_digest != facts['inputDigest']
+                    or not _same(step.pinned_provider_ref, facts['providerRef'])
+                    or not isinstance(source.result, Mapping)
+                    or source.result.get('action') != 'prepare'
+                    or not _same(source.result.get('nodeRef'), node_ref)
+                    or not _same(source.result.get('unitRef'), reservation.public_ref)):
+                raise ValueError()
+            roots = self._roots(node_ref, facts['privateRootFacts'])
+            if (not _same(context.get('privateRootFacts'), roots)
+                    or not isinstance(context.get('harnessDefinitionRef'), Mapping)
+                    or context['harnessDefinitionRef'].get('environmentNamespace') != self.environment_namespace):
+                raise ValueError()
+            identity = {'nodeRef': dict(node_ref), 'roots': roots,
+                        'ownerId': run['ownerId'], 'permissionId': run['permissionId']}
+            directory = DirectoryBindingRef(self.environment_namespace,
+                'unit-' + hashlib.sha256(safe_json(identity).encode()).hexdigest()[:32],
+                node_ref['generation'], _digest(identity))
+            scope_identity = {'providerRef': dict(facts['providerRef']), **identity}
+            scope = CanonicalConfigurationScopeRef(self.environment_namespace,
+                'unit-scope-' + hashlib.sha256(safe_json(scope_identity).encode()).hexdigest()[:40],
+                _digest(scope_identity))
+            if (DirectoryBindingRef.from_dict(dict(context.get('directoryBindingRef', {}))) != directory
+                    or reservation.scope_ref != scope):
+                raise ValueError()
+            return source
+        except Exception as error:
+            raise UnitRecordsRefused('receipt query lost its original preparation provenance') from error
 
     def _provider(self, ref, *, cleanup, definition_ref=None):
         if not isinstance(definition_ref, Mapping):
             raise UnitRecordsRefused("original Harness definition reference required")
-        admitted = (self.harness_catalog.describe_for_cleanup(definition_ref, ref)
-                    if cleanup else self.harness_catalog.describe(definition_ref))
+        admitted = read_harness_definition(self.harness_catalog, definition_ref,
+            cleanup_provider_ref=ref if cleanup else None)
         pinned = getattr(admitted, "provider_ref", None)
         if not isinstance(pinned, Mapping) or not _same(pinned, ref):
             raise UnitRecordsRefused("active Harness provider pin differs")
         try:
             active = _same(
-                getattr(self.harness_catalog.describe(definition_ref), "provider_ref", None), ref
+                getattr(read_harness_definition(self.harness_catalog, definition_ref), "provider_ref", None), ref
             )
-        except Exception:
+        except UnitApiRefused:
             active = False
         if not cleanup and not active:
             raise UnitRecordsRefused("Harness provider is not currently active")
@@ -394,7 +495,8 @@ class FixedUnitCurrentState:
             if not isinstance(definition_ref, Mapping):
                 return None
             if historical_query:
-                reservation = self._query_reservation(context_ref, node, pinned_provider_ref)
+                reservation, _source = self._query_reservation(
+                    context_ref, node, pinned_provider_ref, principal_scope=request.principal_scope)
                 acquired_target, evidence_ref = node, reservation.public_ref
                 # Cold reads use the immutable provider pin on the original Unit
                 # row; they do not reactivate a provider or require its runtime.

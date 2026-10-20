@@ -1,0 +1,820 @@
+{
+  "scope": {
+    "realm_id": "local-source-chain-test",
+    "project_id": "caller-authored-project"
+  },
+  "baseline": {
+    "source_id": "itemized-source-mapping-DID",
+    "kind": "document",
+    "locator": {
+      "kind": "document",
+      "provider": "project-files",
+      "conversation_id": null,
+      "message_id": null,
+      "repository_id": null,
+      "path": null,
+      "document_id": "itemized-source-mapping-DID",
+      "artifact_ref": null,
+      "observation_id": null
+    },
+    "capture": {
+      "upstream_version": "itemized-baseline-v1",
+      "content_digest": {
+        "algorithm": "sha256",
+        "hex": "bd9b64e28aed0c256b3abb7c3fadaded1c6df7446c2adb6050e81720022bf2cc"
+      },
+      "kind": "immutable_version"
+    },
+    "captured_at": "2026-10-14T12:00:00.000000Z",
+    "captured_by": {
+      "actor_id": "local-source-author",
+      "actor_kind": "human",
+      "issuer": "controlled-local-caller"
+    },
+    "media_type": "text/markdown",
+    "byte_length": 2632,
+    "original_url": null
+  },
+  "candidate": {
+    "source_id": "itemized-source-mapping-DID",
+    "kind": "document",
+    "locator": {
+      "kind": "document",
+      "provider": "project-files",
+      "conversation_id": null,
+      "message_id": null,
+      "repository_id": null,
+      "path": null,
+      "document_id": "itemized-source-mapping-DID",
+      "artifact_ref": null,
+      "observation_id": null
+    },
+    "capture": {
+      "upstream_version": "itemized-candidate-v2",
+      "content_digest": {
+        "algorithm": "sha256",
+        "hex": "9b535f9703b4ff7e75dd165b26e3ea68c62821998c3a6855371fd06af196c058"
+      },
+      "kind": "immutable_version"
+    },
+    "captured_at": "2026-10-14T12:00:00.000000Z",
+    "captured_by": {
+      "actor_id": "local-source-author",
+      "actor_kind": "human",
+      "issuer": "controlled-local-caller"
+    },
+    "media_type": "text/markdown",
+    "byte_length": 7848,
+    "original_url": null
+  },
+  "checks": [
+    {
+      "check_id": "source-version-preservation",
+      "claim": "The proposed explicit mappings preserve two different captures of one document at two distinct paths.",
+      "evidence": [
+        {
+          "source_ref": {
+            "source_id": "itemized-source-mapping-DID",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "itemized-source-mapping-DID",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-candidate-v2",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "9b535f9703b4ff7e75dd165b26e3ea68c62821998c3a6855371fd06af196c058"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 7848,
+            "original_url": null
+          },
+          "excerpt": "## One small change\n\nUse `ProjectSourceMaterials(factory, scope, root, source_mappings)` for the local\nread port. Each mapping is a complete SourceRef plus an explicit safe relative\nfile path. Retain the baseline rule that the host selects only a finite set of\nrefs in one scope, and that the source port is read-only. Replace only the\nbaseline's document-ID-to-file-path inference. Two versions of one document now\nhave two explicit paths, so the caller can preserve both captures without\noverwriting either. There is no automatic source registration or copying by the\nsource port; the caller authors and retains the files."
+        },
+        {
+          "source_ref": {
+            "source_id": "source-test-capture",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "source-test-capture",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-capture-v1",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "04a8108517c7c848a0f36b88c44fe34ec2b123b9e52ddc9e2f86fbd3003319bb"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 9276,
+            "original_url": null
+          },
+          "excerpt": "def test_same_document_versions_require_distinct_explicit_files(tmp_path):\n    old = b\"DID: old revision\\n\"\n    new = b\"DID: new revision\\n\"\n    (tmp_path / \"archive\").mkdir()\n    (tmp_path / \"archive\" / \"v1.md\").write_bytes(old)\n    (tmp_path / \"current.md\").write_bytes(new)\n    old_ref = _source(\"design.md\", old, version=\"v1\")\n    new_ref = _source(\"design.md\", new, version=\"v2\")\n    reader = ProjectSourceMaterials(object(), scope=SCOPE, root=tmp_path,\n        source_mappings=((old_ref, \"archive/v1.md\"), (new_ref, \"current.md\")))\n    try:\n        assert reader.read(_context(), old_ref) == old\n        assert reader.read(_context(), new_ref) == new\n        missing = _source(\"design.md\", b\"unavailable\", version=\"v3\")\n        with pytest.raises(ApplicationError, match=\"SOURCE_VERSION_MISMATCH\"):\n            reader.read(_context(), missing)\n    finally:\n        reader.close()"
+        }
+      ]
+    },
+    {
+      "check_id": "scoped-read-boundary",
+      "claim": "The source port retains finite read-only selection in the configured scope; it grants no broader source access.",
+      "evidence": [
+        {
+          "source_ref": {
+            "source_id": "itemized-source-mapping-DID",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "itemized-source-mapping-DID",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-baseline-v1",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "bd9b64e28aed0c256b3abb7c3fadaded1c6df7446c2adb6050e81720022bf2cc"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 2632,
+            "original_url": null
+          },
+          "excerpt": "## Required change and constraints\n\nSeparate logical source identity from an explicitly supplied relative path so\nthe caller can retain v1 and v2 in two different files. Preserve complete ref\nchecking, length/digest checks, scoped finite selection and read-only behavior.\nDo not infer paths or versions, create fallback chains, expand read authority,\nchange public SourceRef or SourceMaterialPort, scan Git/projects, or add a second\nEngineering record owner."
+        },
+        {
+          "source_ref": {
+            "source_id": "adapter-capture",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "adapter-capture",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-capture-v1",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "b4d039843f035e9ab90c6daf8a5d8c2ac50bae2231c7ccb89d8f63377257bfdf"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 8961,
+            "original_url": null
+          },
+          "excerpt": "    def read(self, context: CommandContext, ref: SourceRef) -> bytes:\n        if type(context) is not CommandContext or context.scope != self.scope:\n            raise ApplicationError(\"SOURCE_UNAVAILABLE\")\n        if type(ref) is not SourceRef:\n            raise ApplicationError(\"SOURCE_UNAVAILABLE\")\n        mapping = next((parts for item, parts in self.source_mappings if item == ref), None)\n        if mapping is None:\n            same_source = any(item.source_id == ref.source_id and item.locator == ref.locator\n                              for item, _ in self.source_mappings)\n            if same_source:\n                raise ApplicationError(\"SOURCE_VERSION_MISMATCH\")\n            raise ApplicationError(\"SOURCE_UNAVAILABLE\")\n        _document_parts(ref)\n        fd = self._open_pinned_file(mapping)\n        try:\n            before = os.fstat(fd)\n            if (not stat.S_ISREG(before.st_mode) or before.st_size != ref.byte_length\n                    or before.st_size > MAX_CONTENT_BYTES):\n                raise ApplicationError(\"SOURCE_CONTENT_MISMATCH\")\n            chunks = []\n            remaining = ref.byte_length + 1\n            while remaining:\n                chunk = os.read(fd, min(65536, remaining))\n                if not chunk:\n                    break\n                chunks.append(chunk)\n                remaining -= len(chunk)\n            raw = b\"\".join(chunks)\n            after = os.fstat(fd)\n            if self._stable_identity(before) != self._stable_identity(after):\n                raise ApplicationError(\"SOURCE_CONTENT_MISMATCH\")\n            if (len(raw) != ref.byte_length or hashlib.sha256(raw).hexdigest()\n                    != ref.capture.content_digest.hex):\n                raise ApplicationError(\"SOURCE_CONTENT_MISMATCH\")\n            return raw\n        except OSError as exc:\n            raise ApplicationError(\"SOURCE_UNAVAILABLE\") from exc\n        finally:\n            os.close(fd)\n\n\n__all__ = [\"ProjectSourceMaterials\"]"
+        }
+      ]
+    },
+    {
+      "check_id": "evidence-support",
+      "claim": "The explicit SourceRef/path mappings resolve the baseline problem that one mutable inferred path cannot supply two different exact captures.",
+      "evidence": [
+        {
+          "source_ref": {
+            "source_id": "itemized-source-mapping-DID",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "itemized-source-mapping-DID",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-baseline-v1",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "bd9b64e28aed0c256b3abb7c3fadaded1c6df7446c2adb6050e81720022bf2cc"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 2632,
+            "original_url": null
+          },
+          "excerpt": "For this trial baseline, one mutable file holds one document's currently\nretained bytes. Two versions with the same locator therefore resolve to the\nsame path. If version v1 and v2 have different bytes, that one file cannot supply\nboth exact captures at the same time. A mismatch must be refused, never disguised\nas a historical version. The caller must not overwrite a previously pinned\nversion to make a different reference succeed."
+        },
+        {
+          "source_ref": {
+            "source_id": "itemized-source-mapping-DID",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "itemized-source-mapping-DID",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-candidate-v2",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "9b535f9703b4ff7e75dd165b26e3ea68c62821998c3a6855371fd06af196c058"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 7848,
+            "original_url": null
+          },
+          "excerpt": "## One small change\n\nUse `ProjectSourceMaterials(factory, scope, root, source_mappings)` for the local\nread port. Each mapping is a complete SourceRef plus an explicit safe relative\nfile path. Retain the baseline rule that the host selects only a finite set of\nrefs in one scope, and that the source port is read-only. Replace only the\nbaseline's document-ID-to-file-path inference. Two versions of one document now\nhave two explicit paths, so the caller can preserve both captures without\noverwriting either. There is no automatic source registration or copying by the\nsource port; the caller authors and retains the files."
+        },
+        {
+          "source_ref": {
+            "source_id": "adapter-capture",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "adapter-capture",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-capture-v1",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "b4d039843f035e9ab90c6daf8a5d8c2ac50bae2231c7ccb89d8f63377257bfdf"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 8961,
+            "original_url": null
+          },
+          "excerpt": "        # Historical versions of one logical document cannot share a mutable path.\n        for index, (ref, path) in enumerate(mapped):\n            for other_ref, other_path in mapped[index + 1:]:\n                same_document = ref.locator == other_ref.locator\n                same_version = ref.capture.upstream_version == other_ref.capture.upstream_version\n                if (same_document and same_version\n                        and (ref.capture.content_digest != other_ref.capture.content_digest\n                             or ref.byte_length != other_ref.byte_length)):\n                    raise ApplicationError(\"SOURCE_UNAVAILABLE\")\n                if (same_document and not same_version and path == other_path):\n                    raise ApplicationError(\"SOURCE_UNAVAILABLE\")"
+        }
+      ]
+    },
+    {
+      "check_id": "unique-record-authority",
+      "claim": "Source selection is composed on the original EngineeringLibrary factory; the change adds no second persisted record authority.",
+      "evidence": [
+        {
+          "source_ref": {
+            "source_id": "itemized-source-mapping-DID",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "itemized-source-mapping-DID",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-candidate-v2",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "9b535f9703b4ff7e75dd165b26e3ea68c62821998c3a6855371fd06af196c058"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 7848,
+            "original_url": null
+          },
+          "excerpt": "**C4: record authority remains the original Engineering chain.** Composition\npasses this source port with the original factory into the existing\nEngineeringPorts/EngineeringService. Source refs are recorded in the original\nChange/Proposal, Review and Package owners; no Artifact mirror, second journal\nor run store is created. The controlled Service regression creates and reviews\nexact sources, associates the review, freezes explicit spec/plan/tasks refs,\nand reconnects the original SQLite library to read/replay the same references.\nEvidence: `final-service-chain.json` (9 scoped cases, exit0, no skips). Those\ncases use the earlier 2.7.0 declaration and `example-DID` captures: they support\nthe existing mechanism, not an already completed review of this trial pair or\nthe new 2.7.1 declaration. New-pair checks are separately required before the\nlive invocation. These checks do not authenticate a production caller/reviewer. A prepared Package\nhas `dispatchable=false`; missing execution envelope still refuses dispatch."
+        },
+        {
+          "source_ref": {
+            "source_id": "service-fixture-capture",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "service-fixture-capture",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-current-job-fixture-v2",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "ae7d052fb48752a5ab3499fa54babad7278366088b3c8a24729dac715a589922"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 20736,
+            "original_url": null
+          },
+          "excerpt": "    library = EngineeringLibrary.create((directory/'engineering.sqlite').resolve(),\n        library_id='local-source-chain', schema_version=16)\n    factory, snapshots = SQLiteUoWFactory(library), SQLiteSnapshotStore(library)\n    loaded = load_method(MethodSource(method_directory, 'method.json'), FileResourceReader())\n    assert loaded.ok, loaded.error\n    published = publish_method_declaration(loaded.value, snapshots)\n    assert published.ok, published.error\n    method = published.value\n    controls = SQLiteMethodControl(factory, snapshots)\n    management = build_method_management(factory, access=ControlledLocalAccess(),\n        snapshots=snapshots, management=ControlledMethodManagement())\n    # Public control command persists original events/journal. Publication itself\n    # supplies neither control nor a compiled/adopted workflow.\n    management.control(method, context('enable-local-declaration'), expected_version=0,\n        enabled=True, reason='controlled local source-chain validation')\n    project = directory/'caller-files'\n    project.mkdir()\n    mappings = []\n    entries = material_entries if material_entries is not None else (\n        ('example-DID', 'v1', 'did-v1.md', BASE_RAW),\n        ('example-DID', 'v2', 'did-v2.md', CANDIDATE_RAW),\n        ('example-spec', 'v1', 'spec.md', b'Caller supplied specification.\\n'),\n        ('example-plan', 'v1', 'plan.md', b'Caller supplied implementation plan.\\n'),\n        ('example-tasks', 'v1', 'tasks.md', b'Caller supplied tasks.\\n'),\n    )\n    for logical, version, path, raw in entries:\n        (project/path).write_bytes(raw)\n        mappings.append((source(logical, version, raw), path))\n    baseline, candidate = (mappings[i][0] for i in (0,1))\n    materials = ProjectSourceMaterials(factory, scope=SCOPE, root=project,\n                                       source_mappings=tuple(mappings))\n    bindings = DeclaredSourceReviewBindings(factory, controls, scope=SCOPE, method_ref=method,\n        baseline=baseline, candidate=candidate, action_id='incremental.review-change',\n        binding_resource_id='source-review-binding', criteria_resource_id='change-review-criteria',\n        prompt_resource_id='change-review-prompt', result_schema_resource_id='review-result-schema',\n        reviewer_roles=('reviewer',),\n        **({'caller_materials_ref':mappings[caller_material_index][0],\n            'caller_input_schema_resource_id':'caller-review-input-schema'}\n           if caller_material_index is not None else {}))\n    plan = bindings.plan(context('select-plan'), 'local-source-review')\n    blobs = SQLiteBlobStore(library)\n    (directory/'decision-runs').mkdir(mode=0o700)\n    evidence_owner = FilesystemEvidenceStore(directory/'decision-runs')\n    evidence_scope = EvidenceScope('principal', 'local-source-chain')\n    services = SourceReviewJobServices(provider, evidence_owner, lambda ctx: ctx,\n        lambda *_: evidence_scope, lambda ctx, request_id: replace(ctx, request_id=request_id),\n        host_limits={**default_host_limits(), 'timeout_seconds':240.0},\n        job_document_max_bytes=MAX_JOB_DOCUMENT_BYTES)\n    reviewer = DecisionReviewerSource(factory, blobs, controls, materials, bindings,\n        scope=SCOPE, principal_id=PRINCIPAL, reviewer=REVIEWER, roles=('reviewer',), services=services)\n    admission = EngineeringReviewAdmission(factory, controls, None, reviewer,\n        source_materials=materials, method_guard=controls, source_review_bindings=bindings)\n    service = build_engineering_service(factory, EngineeringPorts(ControlledLocalAccess(),\n        review_admission=admission, source_materials=materials, method_guard=controls,\n        source_review_bindings=bindings, blobs=blobs))"
+        }
+      ]
+    },
+    {
+      "check_id": "public-call-chain",
+      "claim": "The explicitly composed public EngineeringService consumes this source port for review recording and Package operations.",
+      "evidence": [
+        {
+          "source_ref": {
+            "source_id": "service-fixture-capture",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "service-fixture-capture",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-current-job-fixture-v2",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "ae7d052fb48752a5ab3499fa54babad7278366088b3c8a24729dac715a589922"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 20736,
+            "original_url": null
+          },
+          "excerpt": "    reviewer = DecisionReviewerSource(factory, blobs, controls, materials, bindings,\n        scope=SCOPE, principal_id=PRINCIPAL, reviewer=REVIEWER, roles=('reviewer',), services=services)\n    admission = EngineeringReviewAdmission(factory, controls, None, reviewer,\n        source_materials=materials, method_guard=controls, source_review_bindings=bindings)\n    service = build_engineering_service(factory, EngineeringPorts(ControlledLocalAccess(),\n        review_admission=admission, source_materials=materials, method_guard=controls,\n        source_review_bindings=bindings, blobs=blobs))"
+        },
+        {
+          "source_ref": {
+            "source_id": "service-fixture-capture",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "service-fixture-capture",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-current-job-fixture-v2",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "ae7d052fb48752a5ab3499fa54babad7278366088b3c8a24729dac715a589922"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 20736,
+            "original_url": null
+          },
+          "excerpt": "def request_and_run_review(env, *, run_cleanup=None):\n    requested = asyncio.run(env.service.execute('engineering.reviews.request',\n        {'plan':decode_json(encode_plan(env.plan))}, context('request-source-review')))\n    with env.factory.begin(SCOPE, 'read') as uow:\n        request = uow.reviews.get_request(env.plan.review_id)\n    async def run_once():\n        try:\n            return await env.reviewer.run_review(context('run-source-review'), env.plan, request)\n        finally:\n            if run_cleanup is not None:\n                await run_cleanup()\n    raw_ref = asyncio.run(run_once())\n    receipt = decode_json(env.blobs.read_verified(raw_ref))\n    try:\n        recorded = asyncio.run(env.service.execute('engineering.reviews.record', {\n            'review_id':env.plan.review_id, 'request_version':request.version,\n            'fence':request.fence, 'raw_response_utf8':env.blobs.read_verified(raw_ref).decode()},\n            context('record-source-review')))\n    except ApplicationError as exc:\n        # Native completion survives a later Engineering admission refusal.\n        # Retain the original run identity for the bounded probe's cold reader.\n        exc.decision_run_id = receipt['run_id']\n        exc.decision_status = 'completed'\n        raise\n    return requested, recorded, receipt"
+        },
+        {
+          "source_ref": {
+            "source_id": "service-fixture-capture",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "service-fixture-capture",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-current-job-fixture-v2",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "ae7d052fb48752a5ab3499fa54babad7278366088b3c8a24729dac715a589922"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 20736,
+            "original_url": null
+          },
+          "excerpt": "def associate_and_freeze(env, proposal_ref, review_ref):\n    associated = asyncio.run(env.service.execute('engineering.proposals.associate_review', {\n        'proposal_ref':asdict(proposal_ref), 'expected_version':1, 'review_ref':asdict(review_ref)},\n        context('associate-source-review')))\n    successor = decode_proposal_ref(associated.result['proposal_ref'])\n    documents = tuple(PackageDocument(role, env.mappings[i][0])\n                      for role,i in (('spec',2),('plan',3),('tasks',4)))\n    package = ImplementationPackage(SCOPE, 'caller-prepared-package', NOW, AUTHOR,\n        PreparedPackagePayload(env.baseline, env.candidate, successor, (review_ref,),\n                               env.method, env.resources, documents))\n    wire = decode_json(encode_package(package))\n    frozen = asyncio.run(env.service.execute('engineering.packages.freeze',\n        {'record':wire}, context('freeze-source-package')))\n    assert frozen.result['dispatchable'] is False\n    return successor, package, wire, frozen"
+        }
+      ]
+    },
+    {
+      "check_id": "changed-source-refusal",
+      "claim": "Missing and changed captured source bytes are refused, with no lookup of another version or fallback.",
+      "evidence": [
+        {
+          "source_ref": {
+            "source_id": "adapter-capture",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "adapter-capture",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-capture-v1",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "b4d039843f035e9ab90c6daf8a5d8c2ac50bae2231c7ccb89d8f63377257bfdf"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 8961,
+            "original_url": null
+          },
+          "excerpt": "    def read(self, context: CommandContext, ref: SourceRef) -> bytes:\n        if type(context) is not CommandContext or context.scope != self.scope:\n            raise ApplicationError(\"SOURCE_UNAVAILABLE\")\n        if type(ref) is not SourceRef:\n            raise ApplicationError(\"SOURCE_UNAVAILABLE\")\n        mapping = next((parts for item, parts in self.source_mappings if item == ref), None)\n        if mapping is None:\n            same_source = any(item.source_id == ref.source_id and item.locator == ref.locator\n                              for item, _ in self.source_mappings)\n            if same_source:\n                raise ApplicationError(\"SOURCE_VERSION_MISMATCH\")\n            raise ApplicationError(\"SOURCE_UNAVAILABLE\")\n        _document_parts(ref)\n        fd = self._open_pinned_file(mapping)\n        try:\n            before = os.fstat(fd)\n            if (not stat.S_ISREG(before.st_mode) or before.st_size != ref.byte_length\n                    or before.st_size > MAX_CONTENT_BYTES):\n                raise ApplicationError(\"SOURCE_CONTENT_MISMATCH\")\n            chunks = []\n            remaining = ref.byte_length + 1\n            while remaining:\n                chunk = os.read(fd, min(65536, remaining))\n                if not chunk:\n                    break\n                chunks.append(chunk)\n                remaining -= len(chunk)\n            raw = b\"\".join(chunks)\n            after = os.fstat(fd)\n            if self._stable_identity(before) != self._stable_identity(after):\n                raise ApplicationError(\"SOURCE_CONTENT_MISMATCH\")\n            if (len(raw) != ref.byte_length or hashlib.sha256(raw).hexdigest()\n                    != ref.capture.content_digest.hex):\n                raise ApplicationError(\"SOURCE_CONTENT_MISMATCH\")\n            return raw\n        except OSError as exc:\n            raise ApplicationError(\"SOURCE_UNAVAILABLE\") from exc\n        finally:\n            os.close(fd)\n\n\n__all__ = [\"ProjectSourceMaterials\"]"
+        },
+        {
+          "source_ref": {
+            "source_id": "source-test-capture",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "source-test-capture",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-capture-v1",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "04a8108517c7c848a0f36b88c44fe34ec2b123b9e52ddc9e2f86fbd3003319bb"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 9276,
+            "original_url": null
+          },
+          "excerpt": "def test_configured_but_missing_file_is_unavailable(tmp_path):\n    source = _source(\"design.md\", b\"DID: absent\\n\")\n    reader = ProjectSourceMaterials(object(), scope=SCOPE, root=tmp_path,\n        source_mappings=((source, \"archive/v1.md\"),))\n    try:\n        with pytest.raises(ApplicationError, match=\"SOURCE_UNAVAILABLE\"):\n            reader.read(_context(), source)\n    finally:\n        reader.close()\n\n\ndef test_changed_local_bytes_are_content_mismatch_not_a_new_version(tmp_path):\n    original = b\"DID: same length old\\n\"\n    document = tmp_path / \"design.md\"\n    document.write_bytes(original)\n    source = _source(\"design.md\", original)\n    reader = ProjectSourceMaterials(object(), scope=SCOPE, root=tmp_path, source_mappings=((source, \"design.md\"),))\n    try:\n        document.write_bytes(b\"DID: same length new\\n\")\n        with pytest.raises(ApplicationError, match=\"SOURCE_CONTENT_MISMATCH\"):\n            reader.read(_context(), source)\n    finally:\n        reader.close()"
+        }
+      ]
+    },
+    {
+      "check_id": "acceptance-coverage",
+      "claim": "The source acceptance cases explicitly cover both distinct-version reads and refusals for changed refs, missing files and changed bytes.",
+      "evidence": [
+        {
+          "source_ref": {
+            "source_id": "itemized-source-mapping-DID",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "itemized-source-mapping-DID",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-baseline-v1",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "bd9b64e28aed0c256b3abb7c3fadaded1c6df7446c2adb6050e81720022bf2cc"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 2632,
+            "original_url": null
+          },
+          "excerpt": "Acceptance must demonstrate two versions of one logical document read from two\nexplicit files, and refusals for changed refs, content, unavailable files and\nscope. Source-level controlled tests can support those mechanism claims; they\ncannot establish production authorization or model review quality."
+        },
+        {
+          "source_ref": {
+            "source_id": "source-test-capture",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "source-test-capture",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-capture-v1",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "04a8108517c7c848a0f36b88c44fe34ec2b123b9e52ddc9e2f86fbd3003319bb"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 9276,
+            "original_url": null
+          },
+          "excerpt": "@pytest.mark.parametrize(\"field,expected\", [\n    (\"digest\", \"SOURCE_VERSION_MISMATCH\"),\n    (\"length\", \"SOURCE_VERSION_MISMATCH\"),\n    (\"media_type\", \"SOURCE_VERSION_MISMATCH\"),\n    (\"captured_by\", \"SOURCE_VERSION_MISMATCH\"),\n    (\"captured_at\", \"SOURCE_VERSION_MISMATCH\"),\n    (\"original_url\", \"SOURCE_VERSION_MISMATCH\"),\n    (\"locator\", \"SOURCE_UNAVAILABLE\"),\n])\ndef test_every_source_ref_field_is_part_of_the_exact_pin(tmp_path, field, expected):\n    raw = b\"DID: exact source reference\\n\"\n    (tmp_path / \"design.md\").write_bytes(raw)\n    source = _source(\"design.md\", raw)\n    reader = ProjectSourceMaterials(object(), scope=SCOPE, root=tmp_path,\n        source_mappings=((source, \"design.md\"),))\n    changed = {\n        \"digest\": replace(source, capture=VersionCapture(source.capture.upstream_version,\n            Digest(\"sha256\", hashlib.sha256(b\"other content\").hexdigest()))),\n        \"length\": replace(source, byte_length=source.byte_length + 1),\n        \"media_type\": replace(source, media_type=\"text/plain\"),\n        \"captured_by\": replace(source, captured_by=ActorRef(\"other-capture\", \"service\", \"trusted-local-composition\")),\n        \"captured_at\": replace(source, captured_at=\"2026-10-14T10:01:00.000000Z\"),\n        \"original_url\": replace(source, original_url=\"https://example.com/source\"),\n        \"locator\": replace(source, locator=SourceLocator(\"document\", provider=\"project-files\", document_id=\"other.md\")),\n    }[field]\n    try:\n        with pytest.raises(ApplicationError, match=expected):\n            reader.read(_context(), changed)\n    finally:\n        reader.close()"
+        },
+        {
+          "source_ref": {
+            "source_id": "source-test-capture",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "source-test-capture",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-capture-v1",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "04a8108517c7c848a0f36b88c44fe34ec2b123b9e52ddc9e2f86fbd3003319bb"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 9276,
+            "original_url": null
+          },
+          "excerpt": "def test_same_document_versions_require_distinct_explicit_files(tmp_path):\n    old = b\"DID: old revision\\n\"\n    new = b\"DID: new revision\\n\"\n    (tmp_path / \"archive\").mkdir()\n    (tmp_path / \"archive\" / \"v1.md\").write_bytes(old)\n    (tmp_path / \"current.md\").write_bytes(new)\n    old_ref = _source(\"design.md\", old, version=\"v1\")\n    new_ref = _source(\"design.md\", new, version=\"v2\")\n    reader = ProjectSourceMaterials(object(), scope=SCOPE, root=tmp_path,\n        source_mappings=((old_ref, \"archive/v1.md\"), (new_ref, \"current.md\")))\n    try:\n        assert reader.read(_context(), old_ref) == old\n        assert reader.read(_context(), new_ref) == new\n        missing = _source(\"design.md\", b\"unavailable\", version=\"v3\")\n        with pytest.raises(ApplicationError, match=\"SOURCE_VERSION_MISMATCH\"):\n            reader.read(_context(), missing)\n    finally:\n        reader.close()\n\n\ndef test_two_versions_cannot_share_one_mutable_path(tmp_path):\n    raw = b\"DID: same bytes\\n\"\n    (tmp_path / \"design.md\").write_bytes(raw)\n    first = _source(\"design.md\", raw, version=\"v1\")\n    second = _source(\"design.md\", raw, version=\"v2\")\n    with pytest.raises(ApplicationError, match=\"SOURCE_UNAVAILABLE\"):\n        ProjectSourceMaterials(object(), scope=SCOPE, root=tmp_path,\n            source_mappings=((first, \"design.md\"), (second, \"design.md\")))\n\n\ndef test_same_version_cannot_name_two_content_identities(tmp_path):\n    first_bytes = b\"DID: first content\\n\"\n    second_bytes = b\"DID: second content\\n\"\n    first = _source(\"design.md\", first_bytes, version=\"v1\")\n    second = _source(\"design.md\", second_bytes, version=\"v1\")\n    with pytest.raises(ApplicationError, match=\"SOURCE_UNAVAILABLE\"):\n        ProjectSourceMaterials(object(), scope=SCOPE, root=tmp_path,\n            source_mappings=((first, \"v1-a.md\"), (second, \"v1-b.md\")))\n\n\ndef test_configured_but_missing_file_is_unavailable(tmp_path):\n    source = _source(\"design.md\", b\"DID: absent\\n\")\n    reader = ProjectSourceMaterials(object(), scope=SCOPE, root=tmp_path,\n        source_mappings=((source, \"archive/v1.md\"),))\n    try:\n        with pytest.raises(ApplicationError, match=\"SOURCE_UNAVAILABLE\"):\n            reader.read(_context(), source)\n    finally:\n        reader.close()\n\n\ndef test_changed_local_bytes_are_content_mismatch_not_a_new_version(tmp_path):\n    original = b\"DID: same length old\\n\"\n    document = tmp_path / \"design.md\"\n    document.write_bytes(original)\n    source = _source(\"design.md\", original)\n    reader = ProjectSourceMaterials(object(), scope=SCOPE, root=tmp_path, source_mappings=((source, \"design.md\"),))\n    try:\n        document.write_bytes(b\"DID: same length new\\n\")\n        with pytest.raises(ApplicationError, match=\"SOURCE_CONTENT_MISMATCH\"):\n            reader.read(_context(), source)\n    finally:\n        reader.close()"
+        }
+      ]
+    },
+    {
+      "check_id": "declared-limitations",
+      "claim": "The material limits its evidence to source/controlled mechanisms and does not claim production authentication, model acceptance, dispatch or an immutable history service.",
+      "evidence": [
+        {
+          "source_ref": {
+            "source_id": "itemized-source-mapping-DID",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "itemized-source-mapping-DID",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-baseline-v1",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "bd9b64e28aed0c256b3abb7c3fadaded1c6df7446c2adb6050e81720022bf2cc"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 2632,
+            "original_url": null
+          },
+          "excerpt": "This design concerns only local bounded source reads. It does not provide a\nhistorical immutable archive or default Product authentication. It does not\napprove any change, execute a method, produce a human Grant or dispatch work.\nReview, association and Package recording retain their original separate gates."
+        },
+        {
+          "source_ref": {
+            "source_id": "itemized-source-mapping-DID",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "itemized-source-mapping-DID",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-candidate-v2",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "9b535f9703b4ff7e75dd165b26e3ea68c62821998c3a6855371fd06af196c058"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 7848,
+            "original_url": null
+          },
+          "excerpt": "**C4: record authority remains the original Engineering chain.** Composition\npasses this source port with the original factory into the existing\nEngineeringPorts/EngineeringService. Source refs are recorded in the original\nChange/Proposal, Review and Package owners; no Artifact mirror, second journal\nor run store is created. The controlled Service regression creates and reviews\nexact sources, associates the review, freezes explicit spec/plan/tasks refs,\nand reconnects the original SQLite library to read/replay the same references.\nEvidence: `final-service-chain.json` (9 scoped cases, exit0, no skips). Those\ncases use the earlier 2.7.0 declaration and `example-DID` captures: they support\nthe existing mechanism, not an already completed review of this trial pair or\nthe new 2.7.1 declaration. New-pair checks are separately required before the\nlive invocation. These checks do not authenticate a production caller/reviewer. A prepared Package\nhas `dispatchable=false`; missing execution envelope still refuses dispatch."
+        },
+        {
+          "source_ref": {
+            "source_id": "itemized-source-mapping-DID",
+            "kind": "document",
+            "locator": {
+              "kind": "document",
+              "provider": "project-files",
+              "conversation_id": null,
+              "message_id": null,
+              "repository_id": null,
+              "path": null,
+              "document_id": "itemized-source-mapping-DID",
+              "artifact_ref": null,
+              "observation_id": null
+            },
+            "capture": {
+              "upstream_version": "itemized-candidate-v2",
+              "content_digest": {
+                "algorithm": "sha256",
+                "hex": "9b535f9703b4ff7e75dd165b26e3ea68c62821998c3a6855371fd06af196c058"
+              },
+              "kind": "immutable_version"
+            },
+            "captured_at": "2026-10-14T12:00:00.000000Z",
+            "captured_by": {
+              "actor_id": "local-source-author",
+              "actor_kind": "human",
+              "issuer": "controlled-local-caller"
+            },
+            "media_type": "text/markdown",
+            "byte_length": 7848,
+            "original_url": null
+          },
+          "excerpt": "## Itemized review boundary\n\nThis input proposes no production authority or new review engine. Method 2.7.2 fixes eight required pair-level checks. The caller supplies each claim and exact cited text separately; JEV supplies only a finite choice per check. Existing Engineering owners bind original native answers to materials and aggregate all required results. Neither caller assertions nor retrievable citations are automatically accepted. Missing items refuse; unknown never passes. Complex design reasoning belongs to the author and independent reviewer agents. This material does not claim that the new itemized code has already passed real JEV review."
+        }
+      ]
+    }
+  ]
+}

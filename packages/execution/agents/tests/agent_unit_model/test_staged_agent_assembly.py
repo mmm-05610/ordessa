@@ -21,12 +21,11 @@ import re
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    GuaranteeUnavailableError, IdentityMismatchError, UnknownResultError,
+from ordessa_units.errors import (
+    UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown,
 )
-from ordessa_execution_api.environment.operations import (
-    UsageMutation, node_holder, operation_holder, safe_json,
-)
+from ordessa_units.definitions.operations import UsageMutation, node_holder, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from ordessa_units.bindings.assembly import AgentAssembly, PreparationContext, PreparationObservation
@@ -251,7 +250,7 @@ def _provider_hold_transfer(bundle, operation):
 
 def _assert_unsealed_publish_refused(bundle):
     operation = bundle.store.read_operation(bundle.request)
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         bundle.store.publish_operation(
             bundle.request, operation.digest, operation.revision,
             tuple(step.step_id for step in operation.intent.steps), (),
@@ -299,7 +298,7 @@ def test_seal_requires_conclusively_recorded_root_steps(bundle):
     staged_api = bundle.coordinator.staged_assembly()
     record = staged_api.reserve(bundle.request, bundle.ref, {}, {})
     plan = _effect_plan(record.root_intent)
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         _seal(staged_api, bundle, plan)
     assert bundle.store.read_staged_operation(bundle.request).sealed is False
     assert bundle.store.read_operation_step(bundle.request, "configure-unit") is None
@@ -308,7 +307,7 @@ def test_seal_requires_conclusively_recorded_root_steps(bundle):
 def test_unknown_effect_materials_keep_occupation_without_seal(bundle):
     staged_api, record, _ = _reserve_and_run(bundle)
     plan = _effect_plan(record.root_intent)
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         _seal(staged_api, bundle, plan, verified_materials=None)
     current = bundle.store.read_staged_operation(bundle.request)
     assert current.sealed is False
@@ -316,7 +315,7 @@ def test_unknown_effect_materials_keep_occupation_without_seal(bundle):
     assert bundle.store.read_operation_step(bundle.request, "configure-unit") is None
     _assert_unsealed_publish_refused(bundle)
     # A replay of the same unknown verification changes nothing.
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         _seal(staged_api, bundle, plan, verified_materials=None)
     assert bundle.store.read_staged_operation(bundle.request) == current
 
@@ -328,7 +327,7 @@ def test_material_outside_the_verified_set_is_refused(bundle):
                                        "resourceId": "resource-elsewhere"},
               "contentDigest": "sha256:" + "e" * 64},)
     before = bundle.store.read_staged_operation(bundle.request)
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         _seal(staged_api, bundle, plan, verified_materials=other)
     assert bundle.store.read_staged_operation(bundle.request) == before
 
@@ -364,7 +363,7 @@ def test_gate1_changed_plan_facts_are_refused_at_seal(bundle, case):
         facts = dict(verified_materials=CONTROLLED_VERIFIED_MATERIALS,
                      declaration_digest=plan.declaration_digest,
                      approved_action_ids=approved)
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         staged_api.seal(bundle.request, plan, **facts)
     assert bundle.store.read_staged_operation(bundle.request) == before
 
@@ -392,7 +391,7 @@ def test_seal_kills_old_invocation_context_and_replays_are_read_only(bundle):
 
 def test_replay_with_changed_preparation_input_is_refused(bundle):
     staged_api, _, _ = _reserve_and_run(bundle)
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         staged_api.reserve(bundle.request, bundle.ref, {}, {"different": True})
 
 
@@ -451,7 +450,7 @@ def test_publish_refuses_incomplete_or_unprovenanced_sealed_recipe(bundle):
     # Effect steps are frozen into the recipe but not executed: without a
     # real authorized-materials entry the publish seam must fail closed and
     # never fabricate a node (gate 6 PARTIAL boundary).
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         staged_api.publish(bundle.request)
     step = sealed.phase.steps[0]
     claim = bundle.store.claim_operation_step(
@@ -461,6 +460,6 @@ def test_publish_refuses_incomplete_or_unprovenanced_sealed_recipe(bundle):
         bundle.request, sealed.operation.digest, step.step_id, step.input_digest,
         claim.step.revision, "concluded",
         {"evidenceRef": "controlled-effect-receipt", "acquiredUsages": []})
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         staged_api.publish(bundle.request)
     assert bundle.store.read_operation(bundle.request).status == "running"

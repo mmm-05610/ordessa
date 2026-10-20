@@ -5,10 +5,10 @@ neither provisions storage nor grants authority; callers supply the original
 journal and trusted owner ports explicitly.
 """
 from .operation_journal import OperationJournal, JournalError, FenceObservation, NativeActivationReceipt
-from .unit_records import (UnitRecords, UnitRecordsRefused, TerminationRecordTicket,
+from .unit_records import (UnitRecords, UnitRecordsRefused, AcpEvidenceCapacityRefused, TerminationRecordTicket,
                            NativeTerminationEvidencePort,
                            TERMINATION_VERSION, TERMINATION_ACTIONS)
 
 __all__ = ["OperationJournal", "JournalError", "FenceObservation", "NativeActivationReceipt",
-           "UnitRecords", "UnitRecordsRefused", "TerminationRecordTicket",
+           "UnitRecords", "UnitRecordsRefused", "AcpEvidenceCapacityRefused", "TerminationRecordTicket",
            "NativeTerminationEvidencePort", "TERMINATION_VERSION", "TERMINATION_ACTIONS"]

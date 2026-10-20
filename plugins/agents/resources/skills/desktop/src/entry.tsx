@@ -1,0 +1,193 @@
+/** ordessa.skills — the Workbench settings section and module for Skills.
+ *
+ * Registration goes through the platform seams only (FR14): a settings section
+ * and a module through `WorkbenchComposition`, the detail surface as a
+ * contributor-owned overlay so the Workbench owns dismissal and focus
+ * restoration. No host internals, no second navigation root.
+ *
+ * Absence of the composition surface is refused, not papered over — the
+ * contract says a consumer "must reject absence rather than silently
+ * substituting legacy navigation or view IDs", and a settings page with nowhere
+ * to live is exactly that case.
+ */
+import type { PluginContext } from '@ordessa/extension-api'
+import { F5InteractionToken, WirePortToken, WorkbenchToken, type Workbench, type WirePort, type f5 } from '@extensions/ordessa.contracts/contract.js'
+import type { ChatContributionsService } from '@extensions/ordessa.chat-api/contract.js'
+import type { SkillsGateway, WorkspaceListPort, ProjectEntry } from '../../contracts/src/gateway'
+import type { SkillsChatSnapshotPort } from '../../contracts/src/chat'
+import { attachSkillsChatContribution } from './chatContribution'
+import type { WireCaller } from './gateway'
+import { createSkillsGateway } from './gateway'
+import { createSkillsSnapshotGateway, unloadedSkillsSnapshotPort } from './snapshotGateway'
+import { createSkillsModel } from './model'
+import { createInteractionModel } from './task-integration'
+import { SKILLS_DETAIL_OVERLAY_ID, SKILLS_SETTINGS_SECTION_ID, SkillDetailOverlay, SkillsSection } from './view'
+
+export interface SkillsDependencies {
+  gateway: SkillsGateway
+  workspaces: WorkspaceListPort
+  /** Optional chat-api surface (chat checkpoint r3). When the product provides
+   * the `ordessa.chat.contributions.v1` service, Skills publishes its `/` and
+   * `+` rows through it. Absence is normal for this slice: the settings
+   * surface ships without the chat contribution rather than importing a Chat
+   * internal. */
+  chat?: ChatContributionsService
+  /** The real snapshot source (api-requests.md §R-Q1-2, Q1's half): a wire
+   * caller for the published `skills.resolve`/`skills.previewEffective`
+   * family. When present, the chat section reads the backend's confirmed
+   * snapshot through `snapshotGateway.ts`. */
+  wire?: WireCaller
+  /** Injected-port escape hatch for tests and for a product that owns a
+   * better snapshot producer: it always wins over `wire`. */
+  chatSnapshot?: SkillsChatSnapshotPort
+  /** Production F5 task, notification and progress service. */
+  interaction?: f5.InteractionService
+}
+
+export const SKILLS_MODULE_ID = 'ordessa.skills'
+
+/** The loadable product entry: the loader's only seam. It ignores whatever the
+ * loader passes (the extension-api namespace carries no transport) and takes
+ * the platform's ONE wire port instead — the C-03 token, whose absence is an
+ * explicit `No provider` resolution failure, never an empty library. */
+export default function createPlugin() {
+  return {
+    id: SKILLS_MODULE_ID,
+    autoStart: true,
+    requires: [WorkbenchToken, WirePortToken, F5InteractionToken],
+    provides: undefined,
+    activate(context: PluginContext, workbench: Workbench, wire: WirePort, interaction: f5.InteractionService) {
+      return createSkillsPlugin({ ...wireDependencies(wire), interaction }).activate(context, workbench)
+    },
+  }
+}
+
+/** WireResult 三态 → WireCaller 的适配（包内私用）：`Accepted` 交出 result，
+ * `Refused`/`Unknown` 按类型抛出——gateway 的 "empty wire response" 兜底由此
+ * 永不替身。 */
+function wireCallerOf(wire: WirePort): WireCaller {
+  return {
+    async call(method, params) {
+      const result = await wire.call(method, method.startsWith('skills.')
+        ? { ...params, requestId: params.requestId ?? globalThis.crypto.randomUUID() }
+        : params)
+      if (result.kind === 'Accepted') return result.result
+      throw Error(`skills wire call ${method} ${result.kind}: ${result.reason}`)
+    },
+  }
+}
+
+/** The project picker over the same port: the workspace family's one read.
+ * `includeArchived` is the descriptor's REQUIRED param, spelled here. */
+function workspaceListPortOf(wire: WirePort): WorkspaceListPort {
+  const caller = wireCallerOf(wire)
+  return {
+    async listProjects(): Promise<ProjectEntry[]> {
+      const answer = await caller.call('workspaces.list', { includeArchived: false }) as {
+        items?: ReadonlyArray<{ id?: unknown; displayName?: unknown; accessibility?: { readable?: unknown; reasons?: unknown } }>
+      }
+      return (answer.items ?? []).map(row => ({
+        projectId: String(row.id ?? ''),
+        displayName: String(row.displayName ?? row.id ?? ''),
+        state: row.accessibility?.readable === true
+          ? 'available' as const
+          : JSON.stringify(row.accessibility?.reasons ?? []).includes('unauthor')
+            ? 'unauthorized' as const
+            : 'missing' as const,
+      }))
+    },
+  }
+}
+
+/** The wire-backed dependency set the product entry activates with. */
+function wireDependencies(wire: WirePort) {
+  const caller = wireCallerOf(wire)
+  return {
+    gateway: createSkillsGateway(caller),
+    workspaces: workspaceListPortOf(wire),
+    wire: caller,
+  }
+}
+
+export function createSkillsPlugin(injected?: unknown) {
+  return {
+    id: SKILLS_MODULE_ID,
+    autoStart: true,
+    requires: [WorkbenchToken],
+    provides: undefined,
+    activate(context: PluginContext, workbench: Workbench) {
+      const composition = workbench.composition
+      if (composition === undefined) {
+        throw Error('ordessa.skills requires a Workbench with composition support')
+      }
+      const deps = requireDependencies(injected)
+      const businessModel = createSkillsModel(deps.gateway, deps.workspaces)
+      const model = deps.interaction === undefined
+        ? businessModel // isolated historical fixture path; production requires F5InteractionToken
+        : createInteractionModel(businessModel, context.resources, deps.interaction)
+      const scoped = composition.forScope(context.resources)
+      const views = workbench.forScope(context.resources)
+      // The chat input contribution is registered under the host-issued scope,
+      // so leaving the product disposes it and withdraws exactly this source.
+      // The snapshot port resolution is honest by construction: injected port
+      // (tests / a better producer) → real `skills.resolve` wire gateway →
+      // the unloaded port, whose every read answers "not confirmed" and which
+      // therefore renders the 未确认/待解析 notice — never an empty-success
+      // list (api-requests.md §R-Q1-2).
+      if (deps.chat !== undefined) {
+        const snapshot = deps.chatSnapshot
+          ?? (deps.wire === undefined ? unloadedSkillsSnapshotPort : createSkillsSnapshotGateway(deps.wire))
+        attachSkillsChatContribution(deps.chat, context.resources, { snapshot })
+      }
+      // The same business page, two entry points: settings section + module
+      // home view. The module's default views are verified by the Workbench on
+      // activation, so a missing home view is a visible error, not a fallback.
+      views.addView({
+        id: 'ordessa.skills.home', title: 'Skills', presentation: 'region', region: 'main',
+        component: () => (
+          <SkillsSection model={model} overlays={{ open: (id, options) => composition.openOverlay(id, options) }} />
+        ),
+      })
+      scoped.addModule({ id: SKILLS_MODULE_ID, title: 'Skills', order: 40, homeViewId: 'ordessa.skills.home' })
+      scoped.addOverlay({
+        id: SKILLS_DETAIL_OVERLAY_ID, title: 'Skill 详情', presentation: 'dialog',
+        component: ({ close }) => <SkillDetailOverlay model={model} close={close} />,
+      })
+      return scoped.addSettingsSection({
+        id: SKILLS_SETTINGS_SECTION_ID, title: 'Skills', order: 40,
+        component: () => (
+          <SkillsSection model={model} overlays={{ open: (id, options) => composition.openOverlay(id, options) }} />
+        ),
+      })
+    },
+  }
+}
+
+/**
+ * The transport seam, demanded not assumed.
+ *
+ * `SkillsGateway` speaks the published `skills.*` family and the project picker
+ * is fed by the Workspace list port. The host API exposes no generic wire call
+ * to extensions yet, so an un-injected activation fails loudly instead of
+ * mounting an empty library that a user would read as "no Skills installed".
+ * The product/integration wave passes `{ gateway, workspaces }` when it admits
+ * this extension.
+ */
+function requireDependencies(injected: unknown): SkillsDependencies {
+  const candidate = injected as Partial<SkillsDependencies> | null | undefined
+  if (candidate !== null && candidate !== undefined && candidate.gateway && candidate.workspaces) {
+    return {
+      gateway: candidate.gateway,
+      workspaces: candidate.workspaces,
+      ...(candidate.chat === undefined ? {} : { chat: candidate.chat }),
+      ...(candidate.wire === undefined ? {} : { wire: candidate.wire }),
+      ...(candidate.chatSnapshot === undefined ? {} : { chatSnapshot: candidate.chatSnapshot }),
+      ...(candidate.interaction === undefined ? {} : { interaction: candidate.interaction }),
+    }
+  }
+  throw Error(
+    'ordessa.skills needs a skills.* gateway and the Workspace project list: '
+    + 'no generic wire-call seam is published to extensions yet, so activation refuses '
+    + 'rather than showing an empty library as if nothing were installed.',
+  )
+}

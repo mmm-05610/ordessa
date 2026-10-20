@@ -84,3 +84,37 @@ select wrappers through `AgentToolsDeployment(..., agent_contract_version=
 Current deployment refuses provider publication on an existing root because
 durable cold activation generations are not yet composed. Native production
 ports, task readiness and successful cold recovery remain unverified.
+
+
+## SDK runtime cutover (2026-10-19)
+
+The actual `CodexHarnessProvider` plus `ordessa.harness_providers` factory now
+replace the Unit RuntimeProvider/direct-client path. The SDK is the only imported
+execution contract. Preparation validates the exact Profile harness pin, explicit
+approved command and private HOME/XDG/CODEX_HOME, with no executable discovery,
+ambient credential inheritance, resource acquisition, automatic approval or native
+process write. It emits a frozen native LaunchPlan only.
+
+The protocol remains `codex-app-server/1`, **not ACP**. Its original Agent-owned guarded
+bootstrap/interaction is unavailable. `open_session` explicitly raises
+`NATIVE_PROTOCOL_BOOTSTRAP_UNAVAILABLE`; composition must refuse unsupported native
+protocol before launch. ACP wrappers/artifact resources are retained as packaged
+knowledge, never selected as a fallback by this provider. Credential materialization,
+resume, live configuration and previous Unit state are not automatically adopted.
+
+The exact retired Python execution modules are listed in SDK-RETIRED-SOURCE.txt.
+This includes direct client/channel/lease, Unit projection/lifecycle/configuration
+executors and old registration/server-plugin paths. Native configuration compiler
+facts, native_channel planning/refusal reasons, production deployment data and
+packaged build assets remain. Original tests retain their assertions and native
+peer scripts, but old-API tests are unported/RED requirements, not a green runtime
+claim. Historical observed matrix values refer to the original recorded probe,
+not this SDK path. The new SDK tests cover only pure preparation, explicit refusals
+and ProfileService/SQLite validation. No tests, installs, builds or models ran in
+this leaf worker. Real native protocol L1/L2 acceptance remains incomplete.
+
+Known consumers requiring coordinated migration include product/server's Codex
+server-plugin composition and live-model-service adapters (Pi configuration service
+and Codex live runtime), Agent/Unit owner tests and historical model/credential
+acceptance tests. This leaf removal does not establish their consumer switch or
+complete Units retirement.

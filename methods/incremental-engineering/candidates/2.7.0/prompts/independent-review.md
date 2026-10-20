@@ -1,0 +1,1 @@
+Review the implementation report independently against the exact package and its acceptance criteria. Cite evidence, state passed, rejected, cancelled, or unknown explicitly, and identify any requested rework. Do not treat the implementation agent's conclusion as the review result.

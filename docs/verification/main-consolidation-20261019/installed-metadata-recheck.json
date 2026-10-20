@@ -1,0 +1,84 @@
+{
+  "result": "1passed in9.79s,0skip",
+  "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 timeout -k2s150s ORIGINAL_VENV/bin/python -S /tmp/ordessa-installed-server-entry.py metadata-recheck tests/integration/packages_convergence/test_default_agent_registry.py::test_installed_console_and_cli_module_share_registry_without_kernel --basetemp=/tmp/ordessa-installed-entry-check-metadata-v1",
+  "local_wheels": [
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/decision_runtime-0.2.0-py3-none-any.whl",
+      "sha256": "b267529369492933e4145b31e83f20e80ad366f7c453c0a6666389de1eb532e0"
+    },
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/ordessa_engineering-0.1.0-py3-none-any.whl",
+      "sha256": "9dda5fb973de8bbc0d0a0c5a34b4f6166b3d28a01dd5160a62e7105460ec8488"
+    },
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/ordessa_environments-0.1.0-py3-none-any.whl",
+      "sha256": "8e1c6daa69733b6e8f3d0d23e2cb78efa0f6f95dc99a39f8bf0023bb22eac246"
+    },
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/ordessa_environments_local-0.1.0-py3-none-any.whl",
+      "sha256": "ceba84bf82ffc33a33b48b7b4f35360f814579ace735915f3b5910ea105a827f"
+    },
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/ordessa_execution_agents-0.1.0-py3-none-any.whl",
+      "sha256": "73b5f626a8592884c2d3ec4dce50c25aac73ab5939bf9f0b84af7eda0ccbcb83"
+    },
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/ordessa_harness_pi-0.1.0a1-py3-none-any.whl",
+      "sha256": "4c9f1277a8f8fd73ec64ed928e6d3f34c2122002ee41362f38ce24c064be332d"
+    },
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/ordessa_infrastructure-0.1.0-py3-none-any.whl",
+      "sha256": "66e175cdfd31506eb70c7c4dcc9c5c4a5c400b0b4ce3e542a21addaf0f9d57a8"
+    },
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/ordessa_interfaces-0.1.0-py3-none-any.whl",
+      "sha256": "45100cfb12a0bd993f1430f8e979a33e0642466197e75a462df1bc3def1aff0d"
+    },
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/ordessa_interfaces_contracts-0.1.0-py3-none-any.whl",
+      "sha256": "5180066e6270b98accc087a8abe9e39bb31d56dbb522e4cdba8d76a6caced881"
+    },
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/ordessa_server-2.0.0a1-py3-none-any.whl",
+      "sha256": "dea9085b1d4f8af2d1eab00300e491dac7895b65068196d6e91774fd99c2c3cc"
+    },
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/ordessa_server_plugin_api-0.1.0-py3-none-any.whl",
+      "sha256": "541b6175f3190336b6169de05309e1778ae70423cd06c680516b579d49c38223"
+    },
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/ordessa_system_access_bindings-0.1.0-py3-none-any.whl",
+      "sha256": "1a0ec7b7b50619ef838ce637e5947ad0980e4eff3740bdcaf62ac3ae55b3d145"
+    },
+    {
+      "path": "/tmp/ordessa-installed-entry-check-metadata-v1/test_installed_console_and_cli0/wheels/ordessa_units-0.1.0-py3-none-any.whl",
+      "sha256": "02b743ddb371394f78763cc6fe70ad714895b339aa35822ff384312f71da8e56"
+    }
+  ],
+  "owner_audit_module_counts": {
+    "entry-imports-0.json": 57,
+    "entry-imports-1.json": 57,
+    "http-help-imports.json": 82
+  },
+  "wheel_overlap": [],
+  "pip_check": {
+    "returncode": 1,
+    "stdout": "ordessa-server 2.0.0a1 requires secretstorage, which is not installed.\n",
+    "stderr": "WARNING: The directory '/home/maoqh/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\n"
+  },
+  "source_snapshot": {
+    "before": "metadata-recheck-source-before.json",
+    "after": "metadata-recheck-source-after.json",
+    "identical": true,
+    "projects": 13,
+    "source_files": 952
+  },
+  "metadata_input_sha256": {
+    "packages/engineering/pyproject.toml": "e86661cf55a4b7a6ca7a1e64d3ca2ea6bcb5d4bdc65bcc5c34b9f6aea47438b5",
+    "packages/interfaces/system-access/bindings/pyproject.toml": "df173beaec8d78f70dd00e20a7cc030d884b662868b8b0a82c7e1b343d6dfa94"
+  },
+  "scope_limit": "Installed CLI list and HTTP help only; Engineering load_registry is not exercised. AgentSubmissionReport may require next explicit registry source-closure refresh, no Engineering installed-registry acceptance claim.",
+  "connection_note": "Read-only exec transport disconnected during polling; same original run completed exit0; recovered by reading existing log/exit/after snapshots, no rerun.",
+  "evidence": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/installed-server-entry/metadata-recheck-freeze.json",
+  "subsequentChanges": "Agent preparation await and report source adaptations continue after this frozen snapshot. Rebuild after their final freeze; this is not final installed Engineering registry acceptance."
+}

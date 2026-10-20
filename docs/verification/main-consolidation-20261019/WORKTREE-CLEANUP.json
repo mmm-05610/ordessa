@@ -1,0 +1,94 @@
+[
+  {
+    "oldPath": "/home/maoqh/projects/ordessa/worktree/architecture-review",
+    "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/architecture-review/tree",
+    "preservedGitAdmin": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/architecture-review/git-admin",
+    "head": "db34f9057e220a2fc8e423b5c2fc2c9ab6703ef7",
+    "branch": "refs/heads/codex/architecture-review",
+    "rawIndexSha256": "5a75d19076f378f9be9eaac5b7e748fa2e62541e7a8dfd0c1889abfd786d25e3",
+    "removalExit": 0,
+    "stdout": "",
+    "stderr": "",
+    "wholeDirectoryRenamedSameFilesystem": true,
+    "allIgnoredFilesPreserved": true,
+    "archiveIndexAndSourceReadable": true,
+    "originalBackupStatusMatches": true,
+    "restoredStatusBytes": 15433,
+    "detachedHeadVerification": {
+      "returncode": 0,
+      "statusBytes": 19245,
+      "stderr": "",
+      "baselineCandidates": [
+        "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/workspaces/architecture-review/original-status.nul"
+      ],
+      "matchedBaselines": [
+        "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/workspaces/architecture-review/original-status.nul"
+      ],
+      "commandMode": "detached recorded HEAD, copied raw index, --untracked-files=all"
+    },
+    "rawIndexStillMatches": true,
+    "priorDirectAdminStatusComparison": "Unqualified: moved linked-worktree admin cannot directly resolve common refs. Superseded by detached verification."
+  },
+  {
+    "oldPath": "/home/maoqh/projects/ordessa/worktree/execution-sdk-fix-20261018",
+    "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/execution-sdk-fix-20261018/tree",
+    "preservedGitAdmin": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/execution-sdk-fix-20261018/git-admin",
+    "head": "d7979bd34f9a84ad337545c9c0d09cb09c85f631",
+    "branch": "refs/heads/codex/execution-sdk-fix-20261018",
+    "rawIndexSha256": "404dd979ca00721890f8644e603fd21c511378ff5c31dabd7f9c73bd35f55c3c",
+    "removalExit": 0,
+    "stdout": "",
+    "stderr": "",
+    "wholeDirectoryRenamedSameFilesystem": true,
+    "allIgnoredFilesPreserved": true,
+    "archiveIndexAndSourceReadable": true,
+    "originalBackupStatusMatches": true,
+    "restoredStatusBytes": 777114,
+    "detachedHeadVerification": {
+      "returncode": 0,
+      "statusBytes": 0,
+      "stderr": "",
+      "baselineCandidates": [
+        "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/workspaces/execution-sdk-fix/original-status.nul"
+      ],
+      "matchedBaselines": [
+        "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/workspaces/execution-sdk-fix/original-status.nul"
+      ],
+      "commandMode": "detached recorded HEAD, copied raw index, --untracked-files=all"
+    },
+    "rawIndexStillMatches": true,
+    "priorDirectAdminStatusComparison": "Unqualified: moved linked-worktree admin cannot directly resolve common refs. Superseded by detached verification."
+  },
+  {
+    "oldPath": "/home/maoqh/projects/ordessa/worktree/nightly-restructure-20261009",
+    "preservedTree": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/nightly-restructure-20261009/tree",
+    "preservedGitAdmin": "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/retired-worktrees/nightly-restructure-20261009/git-admin",
+    "head": "84b9ca02c662b52bada44e6404e2cea9c8a1ecf3",
+    "branch": "refs/heads/codex/nightly-restructure-20261009",
+    "rawIndexSha256": "a4df6376bc9fe0f2efe50b4751cc1395144353acb110d523a7ef5304cfd4ba87",
+    "removalExit": 0,
+    "stdout": "",
+    "stderr": "",
+    "wholeDirectoryRenamedSameFilesystem": true,
+    "allIgnoredFilesPreserved": true,
+    "archiveIndexAndSourceReadable": true,
+    "originalBackupStatusMatches": true,
+    "restoredStatusBytes": 852378,
+    "detachedHeadVerification": {
+      "returncode": 0,
+      "statusBytes": 1679659,
+      "stderr": "",
+      "baselineCandidates": [
+        "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/workspaces/nightly-restructure/original-status.nul",
+        "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/workspaces/nightly-restructure-v3/original-status.nul"
+      ],
+      "matchedBaselines": [
+        "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/workspaces/nightly-restructure/original-status.nul",
+        "/home/maoqh/projects/ordessa-preservation/20261019-main-consolidation-053043/workspaces/nightly-restructure-v3/original-status.nul"
+      ],
+      "commandMode": "detached recorded HEAD, copied raw index, --untracked-files=all"
+    },
+    "rawIndexStillMatches": true,
+    "priorDirectAdminStatusComparison": "Unqualified: moved linked-worktree admin cannot directly resolve common refs. Superseded by detached verification."
+  }
+]

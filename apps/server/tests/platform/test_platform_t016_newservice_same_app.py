@@ -36,8 +36,8 @@ from server_plugin_api import (
     ServerPluginRegistration,
 )
 
-from ordessa_server.bootstrap import build_runtime
-from ordessa_server.transport.http import create_app
+from ordessa_server.composition.runtime import build_runtime
+from ordessa_interfaces.http import create_app
 
 NEW_PLUGIN_ID = "t016.test-controlled-service"
 NEW_ROUTE_PATH = "/api/v1/t016-test/echo"
@@ -113,7 +113,7 @@ class ControlledNewPlugin:
 
 
 def _product_plugins():
-    from ordessa_server_product.composition import create_composition
+    from ordessa_server.composition.configuration.product_selection import create_host_product_composition as create_composition
     return tuple(create_composition().compatibility_plugins())
 
 
@@ -128,8 +128,11 @@ def test_a_controlled_new_plugin_composes_with_the_default_product_with_no_host_
                             server_plugins=_product_plugins() + (first,))
     try:
         runtime.start()
+        # 032: ordessa.server-compat retired; the compatibility pair is the
+        # workspace + ACP channel selection, and the controlled plugin joins
+        # them on the same app with no host change.
         assert runtime.plugin_host.active_ids() == (
-            "ordessa.workspace", "ordessa.server-compat", "ordessa.harness.acp",
+            "ordessa.workspace", "ordessa.harness.acp",
             NEW_PLUGIN_ID)
         assert NEW_METHOD_ID in runtime.plugin_host.methods.handler_view()
         snapshot = runtime.core_binding.snapshot()

@@ -7,7 +7,7 @@ DomainWrite CAS on the same Store; no second database, registry or persistent
 identifier is created.
 
 The fresh-environment initialization evidence is written by the deployment in
-the same transaction that creates a new persistent EnvironmentId on its own
+the same transaction that creates a new persistent AdmissionNamespace on its own
 exclusive root. It is never a request parameter or plugin declaration. An
 existing database without that evidence is refused: nothing is guessed, and
 generation 1 is never silently re-seeded.
@@ -29,7 +29,7 @@ import re
 from typing import Any, Callable, Mapping
 from uuid import uuid4
 
-from ordessa_execution_api.environment import GuaranteeUnavailableError
+from ordessa_units.errors import UnitGuaranteeUnavailable
 from ordessa_infrastructure.database.records import (
     DomainRevisionConflict,
     DomainWrite,
@@ -50,7 +50,7 @@ INTERNAL_PRINCIPAL = "pacthold.internal"
 _REQUEST_NONCE = re.compile(r"[a-z0-9]{8,32}$")
 
 
-class ActivationGenerationRefused(GuaranteeUnavailableError):
+class ActivationGenerationRefused(UnitGuaranteeUnavailable):
     """Durable generation allocation is unavailable or its evidence damaged."""
 
 
@@ -76,7 +76,7 @@ def seed_fresh_environment(connection: Any, environment_id: str) -> Mapping[str,
     """Write the fresh-environment basis inside the deployment's birth transaction.
 
     ``connection`` is the open transaction of the sole Store that is creating
-    the new persistent EnvironmentId; the basis row commits together with the
+    the new persistent AdmissionNamespace; the basis row commits together with the
     deployment identity rows. Only a deployment that creates a brand-new
     persistent Environment on its own exclusive root may call this.
     """

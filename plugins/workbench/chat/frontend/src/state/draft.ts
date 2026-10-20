@@ -1,0 +1,143 @@
+// Draft composition state for one Chat pane (input-contracts §2). The draft
+// owns: controlled text, input items with their attachment lifecycle phases,
+// and a revision that bumps on every user-visible mutation. Backend authority
+// (sessions, runs, channels) stays with the facade — this is UI state only.
+//
+// Object URL ownership (input-spec A05): preview URLs are created for image
+// items and revoked when the item is removed or the store is disposed.
+import type { ChatInputItem, ChatInputItemKind } from '@extensions/ordessa.chat-api/contract.js'
+
+export interface DraftComposition {
+  text: string
+  items: readonly ChatInputItem[]
+  revision: number
+}
+
+const EMPTY_COMPOSITION: DraftComposition = { text: '', items: [], revision: 0 }
+
+/** The single-editor lease of one pane (T010-07): at most one editor may edit
+ * a draft composition at a time. */
+export interface DraftEditorLease {
+  readonly editorId: string
+  readonly pane: string
+  release(): void
+}
+
+export class DraftStore {
+  private readonly panes = new Map<string, DraftComposition>()
+  private readonly editors = new Map<string, string>() // pane → editorId (lease)
+  private readonly objectUrls = new Map<string, string>() // itemId → URL (revocable)
+  private readonly listeners = new Set<() => void>()
+
+  read = (pane: string): DraftComposition => this.panes.get(pane) ?? EMPTY_COMPOSITION
+
+  /** Claim the pane's editor lease (stable draftId/revision/editorLease,
+   * T010-07). A second editor is refused — one writer per pane. */
+  claimEditor(pane: string, editorId: string): DraftEditorLease {
+    const held = this.editors.get(pane)
+    if (held !== undefined && held !== editorId) throw new Error('DRAFT_EDITOR_LEASE_HELD')
+    this.editors.set(pane, editorId)
+    return {
+      editorId, pane,
+      release: () => { if (this.editors.get(pane) === editorId) this.editors.delete(pane) },
+    }
+  }
+
+  private assertEditor(pane: string, editorId?: string): void {
+    const held = this.editors.get(pane)
+    if (held !== undefined && editorId !== held) throw new Error('DRAFT_EDITOR_LEASE_HELD')
+  }
+
+  /** Whether this pane still has a live composition. */
+  has = (pane: string): boolean => this.panes.has(pane)
+
+  /** Identity-stable snapshot for useSyncExternalStore: user mutations update
+   * the owner snapshot and its F5 edit session together. */
+  subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener)
+    return () => { this.listeners.delete(listener) }
+  }
+  private changed(): void {
+    for (const listener of [...this.listeners]) listener()
+  }
+
+  /** Owner mutation primitive used by composer edits and input insertion. */
+  write(pane: string, next: DraftComposition): void {
+    this.panes.set(pane, next)
+    this.changed()
+  }
+
+  addItem(pane: string, item: ChatInputItem, editorId?: string): void {
+    this.assertEditor(pane, editorId)
+    const current = this.read(pane)
+    if (current.items.some(existing => existing.id === item.id)) return
+    if (item.kind === 'image' && item.previewUrl) this.objectUrls.set(item.id, item.previewUrl)
+    this.write(pane, { ...current, items: [...current.items, item], revision: current.revision + 1 })
+  }
+
+  updateItem(pane: string, itemId: string, patch: Partial<ChatInputItem>, editorId?: string): void {
+    this.assertEditor(pane, editorId)
+    const current = this.read(pane)
+    if (!current.items.some(item => item.id === itemId)) return
+    this.write(pane, {
+      ...current,
+      items: current.items.map(item => (item.id === itemId ? { ...item, ...patch } : item)),
+      revision: current.revision + 1,
+    })
+  }
+
+  removeItem(pane: string, itemId: string, editorId?: string): void {
+    this.assertEditor(pane, editorId)
+    const current = this.read(pane)
+    if (!current.items.some(item => item.id === itemId)) return
+    this.reclaimItem(itemId)
+    this.write(pane, { ...current, items: current.items.filter(item => item.id !== itemId), revision: current.revision + 1 })
+  }
+
+  setText(pane: string, text: string, editorId?: string): void {
+    this.assertEditor(pane, editorId)
+    const current = this.read(pane)
+    if (current.text === text) return
+    this.write(pane, { ...current, text, revision: current.revision + 1 })
+  }
+
+  private reclaimItem(itemId: string): void {
+    const url = this.objectUrls.get(itemId)
+    if (url !== undefined) {
+      URL.revokeObjectURL(url)
+      this.objectUrls.delete(itemId)
+    }
+  }
+
+  disposePane(pane: string): void {
+    // Discarding a draft reclaims every preview URL still owned by the store.
+    for (const item of this.read(pane).items) this.reclaimItem(item.id)
+    this.panes.delete(pane)
+  }
+
+  dispose(): void {
+    for (const pane of [...this.panes.keys()]) this.disposePane(pane)
+  }
+
+  itemCountByKind(pane: string, kind: ChatInputItemKind): number {
+    return this.read(pane).items.filter(item => item.kind === kind).length
+  }
+
+  /** Prepared attachments the store still owns in this pane. The discard path
+   * releases these through the owning service before tearing the pane down. */
+  releaseCandidates(pane: string): readonly ChatInputItem[] {
+    return this.read(pane).items.filter(item => item.phase.state === 'ready')
+  }
+}
+
+/** Send gate (input-spec A04): every attachment must be `ready`; one failed,
+ * undecidable or still-preparing item blocks the send and names the reason. */
+export function attachmentBlockReason(items: readonly ChatInputItem[]): string | null {
+  const failed = items.find(item => item.phase.state === 'failed')
+  if (failed) return `附件「${failed.displayName}」未就绪：${failed.phase.state === 'failed' ? failed.phase.reason : ''}`
+  const unknown = items.find(item => item.phase.state === 'unknown')
+  if (unknown) return `附件「${unknown.displayName}」准备结果未知，已保留；核实后可重试。`
+  const preparing = items.find(item => item.phase.state === 'preparing' || item.phase.state === 'selected')
+  if (preparing) return `附件「${preparing.displayName}」仍在准备中`
+  return null
+}

@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@ordessa/extension-api": [
+        "../../../../packages/interfaces/channels/workbench/extension-api/src/index.ts"
+      ],
+      "@extensions/ordessa.chat-api/contract.js": [
+        "./src/contract.ts"
+      ],
+      "@ordessa/ui-components/api": [
+        "../../../../packages/interfaces/channels/workbench/extension-runtime/ui-components/api/ui-components.ts"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "tests"
+  ]
+}

@@ -2498,7 +2498,7 @@
       "capability_id": "engineering.packages.freeze",
       "kind": "operation",
       "interface_version": "1",
-      "contract_digest": "4b4b09d58c55facfb770a6974590bea8a1212d21e3419ce471d712f3ff222d9b",
+      "contract_digest": "80a7fd36f627f2be3af4a020374f785fe13e3b11abef764362a9680a09067b7b",
       "contract": {
         "input_schema": {
           "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -3730,6 +3730,52 @@
                   }
                 }
               }
+            },
+            "document_source_ref": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "realm_id",
+                "project_id",
+                "artifact_id",
+                "revision_id",
+                "digest",
+                "kind"
+              ],
+              "properties": {
+                "realm_id": {
+                  "type": "string"
+                },
+                "project_id": {
+                  "type": "string"
+                },
+                "artifact_id": {
+                  "type": "string"
+                },
+                "revision_id": {
+                  "type": "string"
+                },
+                "digest": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "algorithm",
+                    "hex"
+                  ],
+                  "properties": {
+                    "algorithm": {
+                      "const": "sha256"
+                    },
+                    "hex": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    }
+                  }
+                },
+                "kind": {
+                  "const": "artifact_revision"
+                }
+              }
             }
           },
           "x-maxCanonicalBytes": 2097152
@@ -3746,7 +3792,7 @@
       "capability_id": "engineering.executions.dispatch",
       "kind": "operation",
       "interface_version": "1",
-      "contract_digest": "ddf76600cd07aaab2051d180b441405438abf8d78a6aa2c650fdc5a3c1ed92d7",
+      "contract_digest": "90a59907fb68a88cac7d402b2158b4b771fc314930a82fb38ec1b380b4f9d172",
       "contract": {
         "contract_version": "ordessa.engineering-owner-operation/1",
         "input_schema_id": "urn:ordessa:engineering:owner-operation:engineering.executions.dispatch:input:1",
@@ -3876,12 +3922,80 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "package_slot"
+            "package_slot",
+            "task_prompt"
           ],
           "properties": {
             "package_slot": {
               "type": "string",
               "minLength": 1
+            },
+            "task_prompt": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "template_resource",
+                "bindings",
+                "actions",
+                "timeout"
+              ],
+              "properties": {
+                "template_resource": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "bindings": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "maxProperties": 32,
+                  "propertyNames": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                  },
+                  "additionalProperties": {
+                    "type": "string",
+                    "enum": [
+                      "run_id",
+                      "step_id",
+                      "attempt",
+                      "package_id",
+                      "implementation_intent_id",
+                      "package_ref",
+                      "method_ref",
+                      "change_set",
+                      "design_targets",
+                      "resolved_file_manifest",
+                      "proposal_coverage",
+                      "baseline_snapshots",
+                      "allowed_actions",
+                      "execution_profile_ref",
+                      "instructions_ref",
+                      "skill_snapshot_refs"
+                    ]
+                  }
+                },
+                "actions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "edit_repository",
+                      "run_checks",
+                      "create_local_commit",
+                      "export_bundle",
+                      "publish_branch",
+                      "deploy"
+                    ]
+                  },
+                  "minItems": 1,
+                  "uniqueItems": true
+                },
+                "timeout": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 60
+                }
+              }
             }
           }
         }

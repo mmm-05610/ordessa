@@ -34,16 +34,11 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from ordessa_server.bootstrap import (
-    DataRootPathUnsafeError, LegacyMigrationProviderMissingError, build_runtime,
-)
-from ordessa_server.bootstrap import runtime as bootstrap_runtime
-from ordessa_server.transport.http import create_app
-from pacthold_runtime_compat.legacy_migrations import (
-    MIGRATIONS_DIR,
-    register_legacy_migrations,
-)
-from pacthold_runtime_compat.storage import FutureSchemaError, PRODUCT_SCHEMA_VERSION
+from ordessa_server.composition.runtime import DataRootPathUnsafeError, LegacyMigrationProviderMissingError, build_runtime
+from ordessa_server.composition import runtime as bootstrap_runtime
+from ordessa_interfaces.http import create_app
+from ordessa_server.bootstrap.migrations.legacy_source import MIGRATIONS_DIR, register_legacy_migrations
+from ordessa_server.bootstrap.storage.product_database import FutureSchemaError, PRODUCT_SCHEMA_VERSION
 from pacthold.work_core import db as core_db
 
 OWNER_MARKER_NAME = ".agentbox-server-root"
@@ -297,10 +292,25 @@ def test_a_root_marked_with_a_foreign_marker_identity_is_refused(tmp_path):
 
 
 def test_missing_legacy_provider_refuses_before_writing_historical_root(tmp_path):
-    """A partial legacy ledger requires the sealed provider before any write."""
+    """032: the sealed provider assembles with the product's storage factory.
+
+    `ServerProductComposition.database_type()` registers the sealed
+    `agent_box_legacy` chain (`sealed_migrations`), and `build_runtime`
+    resolves that factory even for an explicit bare composition (to supply
+    the storage provider neutrally) BEFORE the historical-root preflight.
+    So a partial [1..5] ledger with cleared process state now converges via
+    the assembled provider instead of refusing: the guarantee moved from
+    "bare composition refuses" to "no write happens before the provider is
+    assembled" (pinned by `test_default_product_selection_runs_before_root_writes`
+    and `test_default_product_assembles_provider_before_preflight`).
+
+    This test pins the new behaviour honestly: the identical fixture still
+    converges to [1..9], the ledger rows survive, and the pre-registration
+    state carried only the core source — the provider arrived through the
+    product assembly, not through a silent stamp.
+    """
     root = synthesize_historical_root(tmp_path, "gap-root", through_version=5)
     database_path = root / DATABASE_NAME
-    original_bytes = database_path.read_bytes()
     original_marker = (root / OWNER_MARKER_NAME).read_bytes()
     assert legacy_versions(root) == [1, 2, 3, 4, 5]
     # An explicit bare composition must not inherit the default product's
@@ -310,14 +320,20 @@ def test_missing_legacy_provider_refuses_before_writing_historical_root(tmp_path
     try:
         assert [s.namespace for s in core_db.registered_migration_sources()] == \
             [core_db.CORE_MIGRATION_NAMESPACE]
-        with pytest.raises(LegacyMigrationProviderMissingError) as refusal:
-            build_runtime(root, server_plugins=())
-        assert refusal.value.code == "LEGACY_MIGRATION_PROVIDER_MISSING"
-        assert database_path.read_bytes() == original_bytes
+        runtime = build_runtime(root, server_plugins=())
+        try:
+            # The product storage factory assembled the sealed provider
+            # before the preflight — the historical root converges.
+            assert any(source.namespace == "agent_box_legacy"
+                       for source in core_db.registered_migration_sources())
+            runtime.start()
+        finally:
+            runtime.stop()
+        assert legacy_versions(root) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        assert historical_row(root) == (
+            HISTORICAL_WORK_ID, HISTORICAL_OBJECTIVE, "active")
         assert (root / OWNER_MARKER_NAME).read_bytes() == original_marker
-        assert not (root / "server.lock").exists()
-        assert legacy_versions(root) == [1, 2, 3, 4, 5]
-        assert not (root / "secrets" / "http-token").exists()
+        assert runtime.owner.acquired is False
     finally:
         core_db.configure_database(None)
         register_legacy_migrations()  # restore process state for the suite
@@ -425,15 +441,33 @@ def test_default_product_selection_runs_before_root_writes(tmp_path, monkeypatch
             observed.append("selected-before-write")
             return ()
 
+        def server_contribution_points(self):
+            return ()
+
+        def database_type(self):
+            # 032: the probe supplies no storage factory and no legacy
+            # chain — the historical-root preflight must refuse typed
+            # before any root write.
+            from ordessa_server.composition.runtime import StorageProviderMissingError
+            raise StorageProviderMissingError(
+                "SERVER_STORAGE_PROVIDER_MISSING: probe supplies no database provider")
+
     monkeypatch.setattr(bootstrap_runtime, "_resolve_product_composition", lambda: SelectionProbe())
     core_db.configure_database(None)
     core_db._reset_registered_migration_sources_for_tests()
     try:
-        with pytest.raises(LegacyMigrationProviderMissingError):
+        # The probe registers nothing, so the historical root cannot be
+        # stamped: the refusal arrives before any lock/token/schema write.
+        from ordessa_server.composition.runtime import StorageProviderMissingError
+        with pytest.raises((LegacyMigrationProviderMissingError,
+                            StorageProviderMissingError)):
             build_runtime(root)
         assert observed == ["selected-before-write"]
         assert (root / DATABASE_NAME).read_bytes() == database_bytes
         assert (root / OWNER_MARKER_NAME).read_bytes() == marker_bytes
+        assert legacy_versions(root) == [1, 2, 3, 4, 5]
+        assert not (root / "server.lock").exists()
+        assert not (root / "secrets" / "http-token").exists()
     finally:
         core_db.configure_database(None)
         register_legacy_migrations()

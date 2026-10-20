@@ -8,6 +8,7 @@ silently normalized.
 from __future__ import annotations
 
 import os
+import tempfile
 
 from ordessa_environments import EnvironmentRefused
 
@@ -78,6 +79,29 @@ class LocalFileArea:
         target = self.path(relative)
         with open(target, 'w', encoding='utf-8') as stream:
             stream.write(content)
+
+    def write_text_atomic(self, relative: str, content: str, *, mode: int = 384) -> None:
+        """Bounded replacement for explicitly granted configuration writes.
+
+        Local isolation=none does not protect against concurrent adversarial
+        filesystem mutation; physical containment is revalidated before publish.
+        """
+        if type(content) is not str or len(content.encode('utf-8')) > 262144 or type(mode) is not int or mode not in (384, 420):
+            raise EnvironmentRefused('invalid bounded atomic configuration write')
+        target = self.path(relative)
+        parent = os.path.dirname(target)
+        descriptor, temporary = tempfile.mkstemp(prefix='.ordessa-config-', dir=parent)
+        try:
+            with os.fdopen(descriptor, 'w', encoding='utf-8') as stream:
+                os.fchmod(stream.fileno(), mode)
+                stream.write(content)
+                stream.flush()
+                os.fsync(stream.fileno())
+            self.path(relative)
+            os.replace(temporary, target)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
 
     def __repr__(self) -> str:  # pragma: no cover - diagnostics only
         return f"<LocalFileArea {self._root}>"

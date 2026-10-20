@@ -17,13 +17,14 @@ from typing import Mapping, Protocol, runtime_checkable
 import uuid
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment.errors import GuaranteeUnavailableError, IdentityMismatchError, UnknownResultError
-from ordessa_execution_api.environment.operations import OperationStorePort, safe_json, sealed_mapping
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown
+from ordessa_units.definitions.operations import OperationStorePort
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 
 
-class InvocationAuthorityRefused(GuaranteeUnavailableError):
+class InvocationAuthorityRefused(UnitGuaranteeUnavailable):
     code = "INVOCATION_AUTHORITY_REFUSED"
 
 
@@ -287,7 +288,7 @@ class InvocationIssuer:
         if operation is None:
             raise InvocationAuthorityRefused("operation has not been durably reserved")
         if operation.digest != digest:
-            raise IdentityMismatchError("operation digest differs from reserved input")
+            raise UnitIdentityMismatch("operation digest differs from reserved input")
         intent = operation.intent
         step = next((candidate for candidate in intent.steps if candidate.step_id == step_id), None)
         if step is None:
@@ -388,7 +389,7 @@ class InvocationIssuer:
                     claim = self._store.claim_operation_step(
                         request, digest, step, node_usage_fence=node_usage_fence)
                 if not claim.claimed:
-                    raise UnknownResultError("existing step claim cannot authorize another invocation")
+                    raise UnitOperationUnknown("existing step claim cannot authorize another invocation")
                 claim_revision = claim.step.revision
             # Failure here deliberately preserves a possibly-dispatched durable claim.
             latest_state = self._state(request, operation, step, binding, action, query=query, expected_epoch=state.management_epoch)
@@ -521,7 +522,7 @@ class InvocationIssuer:
             if context._payload != registered[1]:
                 raise InvocationAuthorityRefused("invocation context content changed")
             if registered[3] != "issued":
-                raise UnknownResultError("invocation permission has already been consumed")
+                raise UnitOperationUnknown("invocation permission has already been consumed")
             # Set before calling any trusted port, including reentrant callbacks.
             registered[3] = "verifying"
             registered[4] = False

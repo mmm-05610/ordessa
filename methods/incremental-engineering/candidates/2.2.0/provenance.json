@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "candidate_release": "2.2.0",
+  "status": "frozen_candidate_pending_parent_review_and_consumer_validation",
+  "baseline": "methods/incremental-engineering@2.1.0",
+  "baseline_snapshot_sha256": "17806723db6fccc980611587fe6b639d46577a3689e094507f90e81dbf926d48",
+  "decision_capture": {
+    "received_date": "2026-10-11",
+    "source_kind": "parent_instruction_relayed_by_engineering_owner",
+    "source_thread_id": "01a1292f-d25b-7765-b7bb-1537beda50b7",
+    "available_message_refs": [],
+    "source_limitations": "Decision is supplied in the delegated task text; no original human message ID or independent platform verification was provided.",
+    "explicit_semantics": [
+      "No automatic exemption by kind, including design_choice",
+      "All declared claims marked for review by this method are checked",
+      "Genuine user Q&A or confirmed decision context may support a design decision; do not invent external sources",
+      "Missing evidence does not remove a claim from expansion; insufficient blocks under unchanged policy",
+      "Required empty claim set does not automatically pass; current method has no NA rule and requires error"
+    ],
+    "authorization_scope": "Create a separate versioned candidate and static loader/compiler evidence; do not rewrite published 2.1.0 or historical refs; Engineering implements consumption separately"
+  },
+  "owner_implementation_choice": {
+    "candidate_location": "methods/incremental-engineering/candidates/2.2.0",
+    "standard_revision": "2.2.0",
+    "reason": "New semantics have a distinct standard resource identity in the proposed method release",
+    "parent_review_status": "pending"
+  },
+  "sources": [
+    "docs/architecture/software-engineering-harness.md",
+    "docs/decisions/software-engineering-harness.md",
+    "docs/implementation/nightly/design-source/ordessa-design/DESIGN.md",
+    "docs/implementation/nightly/evidence/engineering-convergence-20261011/v1-authorization/per-claim-implementation-plan.md",
+    "methods/incremental-engineering/standards/source-review.yaml"
+  ],
+  "unchanged_scope": ["question_set", "iteration", "policies", "answer vocabulary", "reduction", "other declared resources", "2.1.0 release bytes", "historical references"],
+  "real_model_quality": "not_validated",
+  "runtime_consumer": "pending_engineering_owner",
+  "final_acceptance": "not_complete"
+}

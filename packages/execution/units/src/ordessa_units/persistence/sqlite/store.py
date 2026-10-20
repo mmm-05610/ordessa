@@ -15,14 +15,15 @@ from functools import wraps
 from threading import RLock
 from typing import Any, Mapping
 
-from ordessa_execution_api.environment import IdentityMismatchError
+from ordessa_units.errors import UnitIdentityMismatch
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_infrastructure.database.records import (
     DomainWrite,
     DomainRevisionConflict,
+    DomainRequestConflict,
 )
-from ordessa_execution_api.environment.errors import GuaranteeUnavailableError, UnknownResultError
-from ordessa_execution_api.environment.staged_operations import STAGED_OPERATION_STORE_VERSION
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitOperationUnknown
+from ordessa_units.definitions.staged_operations import STAGED_OPERATION_STORE_VERSION
 from .operation_records import OperationRecordsMixin
 
 SCHEMA_VERSION = 1
@@ -204,6 +205,7 @@ class SqliteUnitStore(OperationRecordsMixin):
         self._ensure_operation_columns()
         self._writer_release_confirmed = False
         self._connection_closed = False
+        self._shared_close_owner = None
         self._acquire_writer_lock(allow_takeover=allow_takeover)
 
     @property
@@ -249,7 +251,7 @@ class SqliteUnitStore(OperationRecordsMixin):
         # This transaction fences the exact SQL marker seen at admission;
         # no lease age, timeout, request state, or Usage is changed.
         if self._conn.in_transaction:
-            raise GuaranteeUnavailableError("writer acquisition cannot nest in another transaction")
+            raise UnitGuaranteeUnavailable("writer acquisition cannot nest in another transaction")
         try:
             self._conn.execute("BEGIN IMMEDIATE")
             row = self._conn.execute(
@@ -270,14 +272,14 @@ class SqliteUnitStore(OperationRecordsMixin):
             else:
                 old = row["owner_token"]
                 if not isinstance(old, str) or not old:
-                    raise GuaranteeUnavailableError("previous SQL writer marker is malformed")
+                    raise UnitGuaranteeUnavailable("previous SQL writer marker is malformed")
                 changed = self._conn.execute(
                     "UPDATE env_writer_lock SET owner_token=?, acquired_at=? "
                     "WHERE id=1 AND owner_token=?",
                     (self._token, time.time(), old),
                 )
                 if changed.rowcount != 1:
-                    raise GuaranteeUnavailableError("previous SQL writer marker changed during takeover")
+                    raise UnitGuaranteeUnavailable("previous SQL writer marker changed during takeover")
             self._conn.commit()
         except BaseException:
             if self._conn.in_transaction:
@@ -296,26 +298,26 @@ class SqliteUnitStore(OperationRecordsMixin):
         if self._writer_release_confirmed:
             return
         if self._connection_closed or self._conn.in_transaction:
-            raise GuaranteeUnavailableError("writer release state is not comparable")
+            raise UnitGuaranteeUnavailable("writer release state is not comparable")
         try:
             self._conn.execute("BEGIN IMMEDIATE")
             row = self._conn.execute(
                 "SELECT owner_token FROM env_writer_lock WHERE id=1").fetchone()
             if row is None or row["owner_token"] != self._token:
-                raise GuaranteeUnavailableError(
+                raise UnitGuaranteeUnavailable(
                     "original SQL writer lock is absent or belongs to another owner")
             deleted = self._conn.execute(
                 "DELETE FROM env_writer_lock WHERE id=1 AND owner_token=?",
                 (self._token,))
             if deleted.rowcount != 1:
-                raise GuaranteeUnavailableError("writer release CAS did not match")
+                raise UnitGuaranteeUnavailable("writer release CAS did not match")
             self._conn.commit()
         except BaseException:
             if self._conn.in_transaction:
                 try:
                     self._conn.rollback()
                 except BaseException as rollback_error:
-                    raise GuaranteeUnavailableError(
+                    raise UnitGuaranteeUnavailable(
                         "writer release and rollback outcomes are unknown") from rollback_error
             raise
         self._writer_release_confirmed = True
@@ -333,6 +335,42 @@ class SqliteUnitStore(OperationRecordsMixin):
         self.release_writer()
         self._conn.close()
         self._connection_closed = True
+
+    def close_shared_connection(self, *, writer_owner) -> None:
+        """Close a peer connection while its explicit original writer stays live.
+
+        Sharing a writer token already admits independent connections to the
+        same SQLite owner. Only that owner releases the SQL marker. A peer must
+        not take it over or manufacture successful release during cleanup.
+        Both original handles and markers are checked while their locks are
+        held; this does not admit another writer or release any request/Usage.
+        """
+        if type(writer_owner) is not SqliteUnitStore or writer_owner is self:
+            raise UnitGuaranteeUnavailable("distinct original shared writer owner required")
+        first, second = sorted((self, writer_owner), key=id)
+        with first._lock, second._lock:
+            if self._connection_closed and self._shared_close_owner is writer_owner:
+                return
+            if (self._connection_closed or writer_owner._connection_closed
+                    or self._writer_release_confirmed or writer_owner._writer_release_confirmed
+                    or self._conn.in_transaction or writer_owner._conn.in_transaction
+                    or self._token != writer_owner._token
+                    or str(self._path) == ':memory:'
+                    or self._path.resolve() != writer_owner._path.resolve()):
+                raise UnitGuaranteeUnavailable("original shared writer identity is unavailable or changed")
+            try:
+                if not self._path.samefile(writer_owner._path):
+                    raise OSError()
+            except OSError:
+                raise UnitGuaranteeUnavailable("original shared SQLite file is unavailable or changed") from None
+            for store in (self, writer_owner):
+                row = store._conn.execute(
+                    "SELECT owner_token FROM env_writer_lock WHERE id=1").fetchone()
+                if row is None or row["owner_token"] != self._token:
+                    raise UnitGuaranteeUnavailable("original shared SQL writer marker changed")
+            self._conn.close()
+            self._connection_closed = True
+            self._shared_close_owner = writer_owner
 
     @_serialized
     def inspect_and_close(self, inspector):
@@ -402,7 +440,7 @@ class SqliteUnitStore(OperationRecordsMixin):
                 raise ValueError("domain record is not an object")
             return {"record_id": row["record_id"], "revision": row["revision"], "value": value}
         except (TypeError, ValueError, RecursionError):
-            raise GuaranteeUnavailableError("stored domain record is unreadable") from None
+            raise UnitGuaranteeUnavailable("stored domain record is unreadable") from None
 
     @_serialized
     def list_domain(self, environment: str,
@@ -422,11 +460,11 @@ class SqliteUnitStore(OperationRecordsMixin):
             receipt = json.loads(existing["receipt"]) if existing["receipt"] else None
             current = json.loads(existing["current"]) if existing["current"] else None
         except (TypeError, ValueError) as exc:
-            raise UnknownResultError("stored domain result is unreadable") from exc
+            raise UnitOperationUnknown("stored domain result is unreadable") from exc
         if (existing["dispatch_state"] != "concluded" or not isinstance(current, dict)
                 or current.get("outcome") != "concluded" or not isinstance(receipt, dict)
                 or not isinstance(receipt.get("domain_result"), dict)):
-            raise UnknownResultError("spent request has no complete concluded domain result")
+            raise UnitOperationUnknown("spent request has no complete concluded domain result")
         return receipt["domain_result"]
 
     @_serialized
@@ -449,7 +487,7 @@ class SqliteUnitStore(OperationRecordsMixin):
         A spent uncertain request remains spent, even without a domain result.
         """
         if self._conn.in_transaction:
-            raise GuaranteeUnavailableError("domain commit cannot nest inside an open transaction")
+            raise UnitGuaranteeUnavailable("domain commit cannot nest inside an open transaction")
         identities = [(write.namespace, write.record_id) for write in writes]
         if len(set(identities)) != len(identities):
             raise ValueError("duplicate domain record in one change")
@@ -510,7 +548,7 @@ class SqliteUnitStore(OperationRecordsMixin):
         """Atomically claim a request key; True when newly claimed.
 
         A spent key returns True only for the SAME digest (the caller replays
-        the stored receipt); a different digest raises IdentityMismatchError
+        the stored receipt); a different digest raises UnitIdentityMismatch
         semantics via False-with-conflict marker ``KeyConflictError``."""
         try:
             with self._conn:
@@ -619,7 +657,7 @@ class SqliteUnitStore(OperationRecordsMixin):
             "SELECT usage_id FROM env_usages WHERE environment=? AND state IN ('active','unknown') ORDER BY usage_id", (environment_namespace,)))
 
 
-class KeyConflictError(IdentityMismatchError):
+class KeyConflictError(UnitIdentityMismatch, DomainRequestConflict):
     """Same request key, different digest — never a re-dispatch."""
 
     code = "KEY_CONFLICT"

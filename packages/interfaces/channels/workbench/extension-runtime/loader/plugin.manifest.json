@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "logicalPluginId": "ordessa.extension-loader",
+  "displayName": "Extension loader",
+  "categories": [
+    "platform"
+  ],
+  "versionSource": "package.json",
+  "artifacts": [
+    {
+      "kind": "npm",
+      "path": ".",
+      "releaseIdentity": "ordessa.extension-loader"
+    }
+  ],
+  "entries": [
+    {
+      "entryId": "loader",
+      "package": "@ordessa/extension-loader",
+      "entrypoint": "src/index.ts",
+      "executionDomain": "frontend"
+    }
+  ]
+}

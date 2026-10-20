@@ -26,11 +26,11 @@ from agent_tools_fixtures.management import setup, explicit_capabilities  # noqa
 from test_apply_profile import _base_ref, _profile
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError, IdentityMismatchError, UnknownResultError,
+from ordessa_units.errors import (
+    UnitAdmissionRefused, UnitIdentityMismatch, UnitOperationUnknown,
 )
 from ordessa_infrastructure.database.records import DomainRevisionConflict, DomainWrite
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.configuration.contracts import ApplicationPolicy
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import InvocationAuthorityRefused
@@ -129,7 +129,7 @@ def test_pre_dispatch_refusal_restores_prior_source_replays_and_allows_new_key(
 
     expected_exception = (InvocationAuthorityRefused
                           if changed in {"directory-permission", "issuer-authorization"}
-                          else AdmissionRefusedError)
+                          else UnitAdmissionRefused)
     with pytest.raises(expected_exception):
         _apply_profile(parts, request, next_profile, prior.current_revision, "native-2")
     refused = store.read_operation(request)
@@ -189,7 +189,7 @@ def test_claimed_step_cannot_be_converted_to_unclaimed_refusal(setup, monkeypatc
         return operation
 
     monkeypatch.setattr(service, "reserve", fail_after_claim)
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         _apply_profile(parts, request, next_profile, base, "native-1")
     operation = store.read_operation(request)
     step = store.read_operation_step(request, "configuration-apply")
@@ -321,7 +321,7 @@ def test_optional_refusal_capability_missing_fails_closed_without_releasing_fenc
         return operation
 
     monkeypatch.setattr(parts[3], "reserve", reserve_then_remove_capability)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         _apply_profile(parts, request, next_profile, prior.current_revision, "native-2")
     operation = store.read_operation(request)
     assert operation is not None and operation.status == "reserved"
@@ -359,7 +359,7 @@ def test_legacy_intent_without_rollback_facts_fails_closed(setup, monkeypatch):
         return store.read_operation(request)
 
     monkeypatch.setattr(parts[3], "reserve", reserve_then_remove_fixed_fact)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         _apply_profile(parts, request, next_profile, prior.current_revision, "native-2")
     operation = store.read_operation(request)
     assert operation is not None and operation.status == "reserved"
@@ -418,7 +418,7 @@ def test_refusal_store_same_arguments_replay_and_changed_writes_are_idempotent_o
     changed_value = {**write.value, "principalScope": "other-principal"}
     changed_write = DomainWrite(write.namespace, write.record_id,
                                 write.expected_revision, changed_value)
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         original_refusal(arguments[0], arguments[1], arguments[2], arguments[3], (changed_write,))
     assert store.read_operation(request) == refused
     assert _scope_record(parts) == fence
@@ -437,7 +437,7 @@ def test_refusal_store_rejects_a_concluded_step_without_changing_publication(set
     assert store.read_operation_step(request, "configuration-apply").outcome == "concluded"
     fence = _scope_record(parts)
 
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         store.refuse_unclaimed_operation(
             request, operation.digest, operation.revision,
             {"phase": "owner-recheck", "reason": "owner-evidence-changed"}, ())

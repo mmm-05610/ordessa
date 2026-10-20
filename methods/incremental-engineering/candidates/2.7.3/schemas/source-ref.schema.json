@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Captured external SourceRef contract based on the existing domain codec shape. It provides identity only; it does not grant access or recover historical bytes.",
+  "type": "object", "additionalProperties": false,
+  "required": ["source_id", "kind", "locator", "capture", "captured_at", "captured_by", "media_type", "byte_length", "original_url"],
+  "properties": {
+    "source_id": {"type": "string", "minLength": 1}, "kind": {"const": "document"},
+    "locator": {"type": "object", "additionalProperties": false,
+      "required": ["kind", "provider", "conversation_id", "message_id", "repository_id", "path", "document_id", "artifact_ref", "observation_id"],
+      "properties": {"kind": {"const": "document"}, "provider": {"const": "project-files"},
+        "conversation_id": {"type": ["string", "null"]}, "message_id": {"type": ["string", "null"]},
+        "repository_id": {"type": ["string", "null"]}, "path": {"type": ["string", "null"]},
+        "document_id": {"type": "string", "minLength": 1}, "artifact_ref": {"const": null},
+        "observation_id": {"type": ["string", "null"]}}},
+    "capture": {"type": "object", "additionalProperties": false, "required": ["kind", "upstream_version", "content_digest"],
+      "properties": {"kind": {"const": "immutable_version"}, "upstream_version": {"type": "string", "minLength": 1},
+        "content_digest": {"type": "object", "additionalProperties": false, "required": ["algorithm", "hex"],
+          "properties": {"algorithm": {"const": "sha256"}, "hex": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}}},
+    "captured_at": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "captured_by": {"type": "object", "additionalProperties": false, "required": ["actor_id", "actor_kind", "issuer"],
+      "properties": {"actor_id": {"type": "string", "minLength": 1}, "actor_kind": {"enum": ["human", "agent", "checker", "service"]}, "issuer": {"type": "string", "minLength": 1}}},
+    "media_type": {"type": "string", "minLength": 1, "maxLength": 256}, "byte_length": {"type": "integer", "minimum": 0},
+    "original_url": {"type": ["string", "null"]}
+  }
+}

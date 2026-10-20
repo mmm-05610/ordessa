@@ -290,7 +290,7 @@ class _OpenTrace:
 def _install_open_trace(monkeypatch, trace, *, before_open=None, after_open=None):
     from acp.connection import Connection
     from ordessa_environments.management.store import SQLiteEnvironmentStore
-    from ordessa_execution_agents.harness.transport.environment_channel import EnvironmentProcessChannel
+    from ordessa_units.sessions.environment_channel import EnvironmentProcessChannel
     from ordessa_units.sessions.sdk_client import SdkAcpClient, _ManagedTransport
 
     original_connection_init = Connection.__init__

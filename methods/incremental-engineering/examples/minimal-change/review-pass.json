@@ -1,0 +1,12 @@
+{
+  "fixture_only": true,
+  "decision_invocations_file": "decision-invocations.json",
+  "deterministic_checks": {
+    "source_integrity": "satisfied",
+    "claim_coverage": "satisfied",
+    "document_shape": "satisfied",
+    "intent_binding": "satisfied"
+  },
+  "review_expected": "passed",
+  "production_with_fixture_evaluation_expected": "manual"
+}

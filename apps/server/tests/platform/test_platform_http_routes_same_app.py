@@ -21,8 +21,8 @@ from server_plugin_api import (
     ServerPluginRegistration,
 )
 
-from ordessa_server.bootstrap import build_runtime
-from ordessa_server.transport.http import create_app
+from ordessa_server.composition.runtime import build_runtime
+from ordessa_interfaces.http import create_app
 
 from contribution_fakes import ContribPlugin, RecordingHandler, contribution
 

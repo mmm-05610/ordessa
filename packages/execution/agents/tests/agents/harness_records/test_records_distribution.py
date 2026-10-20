@@ -7,9 +7,26 @@ import sys
 
 ROOT=Path(__file__).resolve().parents[6]
 
+def _brand_wheelhouse():
+    configured=os.environ.get('ORDESSA_BRAND_WHEELHOUSE')
+    candidates=([Path(configured)] if configured else [])+[ROOT/'.nightly-cache'/'brand-yaml-wheel-root']
+    for path in candidates:
+        if path.is_dir() and any(path.glob('pyyaml-*.whl')) and any(path.glob('tomli_w-*.whl')):
+            return str(path)
+    raise AssertionError('offline PyYAML and tomli-w wheelhouse unavailable')
+
+def _acp_wheelhouse():
+    configured=os.environ.get('ORDESSA_ACP_WHEELHOUSE')
+    if not configured:
+        raise AssertionError('official ACP SDK offline wheelhouse must be explicitly supplied')
+    path=Path(configured)
+    if not path.is_dir() or not any(path.glob('agent_client_protocol-0.12.1-*.whl')):
+        raise AssertionError('verified ACP SDK 0.12.1 offline wheelhouse unavailable')
+    return str(path)
+
 def test_records_wheel_preserves_one_journal_owner_without_monolith(tmp_path):
     sources=[]
-    packages=('packages/interfaces/execution/c1-api','packages/execution/kernel','packages/execution/agents','packages/infrastructure')
+    packages=('packages/execution/agents','packages/execution/units','packages/execution/environments','packages/infrastructure')
     for index,relative in enumerate(packages):
         source=ROOT/relative;clean=tmp_path/('source-'+str(index));clean.mkdir()
         shutil.copy2(source/'pyproject.toml',clean/'pyproject.toml')
@@ -29,7 +46,8 @@ def test_records_wheel_preserves_one_journal_owner_without_monolith(tmp_path):
     assert len(artifacts)==len(packages)
     isolated=tmp_path/'venv';run([sys.executable,'-m','venv',str(isolated)])
     python=str(isolated/'bin/python')
-    run([python,'-m','pip','install','--no-index','--find-links',str(wheels),*map(str,artifacts)])
+    run([python,'-m','pip','install','--no-index','--find-links',str(wheels),
+        '--find-links',_brand_wheelhouse(),'--find-links',_acp_wheelhouse(),*map(str,artifacts)])
     run([python,'-m','pip','check'])
     program='''
 import importlib.util,sqlite3
@@ -44,7 +62,7 @@ from ordessa_units.records import OperationJournal,UnitRecords,UnitRecordsRefuse
 from ordessa_units.records.unit_records import OperationJournal as UnitJournal
 assert UnitJournal is OperationJournal
 sqlite3.connect=old_connect
-assert all(importlib.util.find_spec(name) is None for name in ('ordessa_harness','ordessa_server',
+assert all(importlib.util.find_spec(name) is None for name in ('ordessa_execution_api','pacthold','ordessa_harness','ordessa_server',
     'ordessa_agent_tools','server_plugin_api','ordessa_harness_pi','ordessa_harness_codex','ordessa_harness_claude_code'))
 from ordessa_execution_agents.harness.definitions import ApplicationTarget,Plan,Refused,ErrorCode
 now=datetime.now(timezone.utc)

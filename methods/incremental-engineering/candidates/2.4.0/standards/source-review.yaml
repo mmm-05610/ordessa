@@ -1,0 +1,116 @@
+schema_version: 1
+standard_id: source-review
+revision: 2.4.0
+purpose: provenance_support
+criteria:
+- criterion_id: source_integrity
+  statement: 每条使用的依据必须有可核对的不可变内容及正确范围。
+  applies_to:
+  - did
+  - did-change
+  required_inputs:
+  - source_captures
+  - claim_bindings
+  checks:
+  - capability_id: ordessa.sources.integrity
+    interface_version: 1.0.0
+    bindings: {}
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+- criterion_id: claim_coverage
+  statement: 用户要求、观察和推断的依据链必须完整；已知反证不得省略。设计选择应明确标注。
+  applies_to:
+  - did
+  - did-change
+  required_inputs:
+  - claim_bindings
+  - source_captures
+  checks:
+  - capability_id: ordessa.claims.coverage
+    interface_version: 1.0.0
+    bindings:
+      human_review_admission:
+        contract_version: ordessa.human-review-admission/1
+        activation: selected_product_policy_required
+        policy_id: ordessa.product.v1.chat-attested-human-review
+        policy_revision: 1
+        policy_digest: sha256:833be965ff8e43b0fec817e205a4d2f7817f45b7b36777a405a905fff44ec008
+        status_dispositions:
+          satisfied: pass
+          violated: block
+          insufficient: block
+          unknown: manual
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+- criterion_id: claim_support
+  statement: 依据是否实际支持该条主张，不能只证明来源存在。
+  applies_to:
+  - did
+  - did-change
+  required_inputs:
+  - claim_bindings
+  - source_captures
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.source_support
+      iteration: each_evidence_required_claim
+      claim_selection: all_declared_claims
+      empty_claim_set: error
+      human_review_admission:
+        contract_version: ordessa.human-review-admission/1
+        activation: selected_product_policy_required
+        policy_id: ordessa.product.v1.chat-attested-human-review
+        policy_revision: 1
+        policy_digest: sha256:833be965ff8e43b0fec817e205a4d2f7817f45b7b36777a405a905fff44ec008
+        status_dispositions:
+          satisfied: pass
+          violated: block
+          insufficient: block
+          unknown: manual
+      nominal_answer_conversion:
+        contract_version: ordessa.nominal-choice-status/1
+        answer_kind: choice
+        option_statuses:
+          supported: satisfied
+          contradicted: violated
+          insufficient: insufficient
+        tie: unknown
+        missing_answer: unknown
+        incomplete_answer: unknown
+        truncated_input: unknown
+        unmapped_option: unknown
+      quality_admission:
+        contract_version: ordessa.review-quality-admission/1
+        activation: matching_validated_evaluation_required
+        missing_evaluation: manual
+        unresolved_model: manual
+  policy:
+    satisfied: manual
+    violated: block
+    insufficient: block
+    unknown: manual
+  answer_vocabulary:
+    kind: choice
+    options:
+    - option_id: supported
+      description: 提供的冻结证据支持完整主张且不存在未处理反证。
+    - option_id: contradicted
+      description: 提供的冻结证据与主张相矛盾。
+    - option_id: insufficient
+      description: 现有证据不能确定完整主张得到支持。
+reduction:
+  required_criteria: all_applicable
+  empty_applicable_set: error
+  priority:
+  - block
+  - manual
+  - pass

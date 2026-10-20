@@ -12,7 +12,7 @@ TREE = Path(__file__).resolve().parents[3]
 
 
 def test_the_wire_version_is_unchanged():
-    from ordessa_server.wire.handlers import WIRE_VERSION
+    from ordessa_interfaces.system_access.services.invocation import WIRE_VERSION
 
     assert WIRE_VERSION == "wire/1"
 
@@ -23,6 +23,6 @@ def test_the_agentbox_variable_prefix_stands():
     # code that reads the bindings, and the host keeps naming the prefix it
     # no longer owns out of. Both spellings must still be read somewhere in
     # the composed tree — a rename may not drop them silently.
-    workspace_connectors = (TREE / "plugins" / "workspace" / "src"
+    workspace_connectors = (TREE / 'plugins' / 'agents' / 'workspace' / "src"
                             / "ordessa_workspace" / "connectors.py").read_text(encoding="utf-8")
     assert "AGENT_BOX_" in workspace_connectors

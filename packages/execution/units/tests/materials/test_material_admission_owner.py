@@ -4,7 +4,7 @@ import threading
 
 import pytest
 
-from ordessa_execution_api.environment import AdmissionRefusedError
+from ordessa_units.errors import UnitAdmissionRefused
 from ordessa_units.definitions.materials import ResourceProviderDescriptor
 from ordessa_units.definitions.materials import ReconcileSupport
 from ordessa_units.admission.material_contracts import (
@@ -62,7 +62,7 @@ def test_invalid_resource_role_does_not_publish_any_catalog_entry():
         pass
 
     catalog = MaterialCatalog("environment")
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         catalog.stage("owner", 1, (IncompleteProvider(),), ())
     assert catalog.providers() == ()
 
@@ -96,7 +96,7 @@ def test_commit_refuses_material_capability_drift_without_publication():
     provider.material_capability = MaterialCapability(
         AGENT_MATERIAL_CONTRACT_VERSION, ("dynamic",), True, "both")
 
-    with pytest.raises(AdmissionRefusedError, match="metadata changed"):
+    with pytest.raises(UnitAdmissionRefused, match="metadata changed"):
         staged.commit()
     assert catalog.provider("owner.material") is None
     assert provider.effect_calls == 0

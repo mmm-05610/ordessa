@@ -42,21 +42,10 @@ from collections.abc import Mapping
 from typing import Any, Protocol, runtime_checkable
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
-    UnknownResultError,
-)
-from ordessa_execution_api.environment.identity import ActivationRef
-from ordessa_execution_api.environment.operations import (
-    OperationStorePort,
-    OperationRevisionConflict,
-    StepRecord,
-    UsageMutation,
-    operation_holder,
-    safe_json,
-)
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown
+from ordessa_units.definitions.admission_identity import MaterialProviderActivationRef
+from ordessa_units.definitions.operations import OperationStorePort, OperationRevisionConflict, StepRecord, UsageMutation, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 
 from ordessa_units.admission.material_contracts import MaterialContractError
 from ordessa_units.admission.invocation import InvocationAuthorityRefused, InvocationIssuer
@@ -94,7 +83,7 @@ RELEASE_ACTION = "release"
 
 
 def _fail(message: str = "material consumption facts are invalid") -> None:
-    raise IdentityMismatchError(message)
+    raise UnitIdentityMismatch(message)
 
 
 def _plain(value):
@@ -117,8 +106,8 @@ def _consumer_pin_equal(left: MaterialConsumerPin, right: MaterialConsumerPin) -
             and left.owner_activation.generation == right.owner_activation.generation)
 
 
-def _activation_data(value: ActivationRef) -> dict[str, Any]:
-    if type(value) is not ActivationRef:
+def _activation_data(value: MaterialProviderActivationRef) -> dict[str, Any]:
+    if type(value) is not MaterialProviderActivationRef:
         _fail()
     return {"environmentNamespace": value.environment,
             "pluginId": value.plugin_id, "generation": value.generation}
@@ -300,44 +289,44 @@ class MaterialConsumption:
     def _gate(self, request: RequestKey):
         env = self._environment
         if type(request) is not RequestKey:
-            raise IdentityMismatchError("complete material consumption request identity required")
+            raise UnitIdentityMismatch("complete material consumption request identity required")
         with env._admission_lock:
             env._check_open()
             env._check_environment(request.environment_namespace)
             if request.principal_scope != env._principal_scope:
-                raise AdmissionRefusedError("material consumption principal differs from this Environment")
+                raise UnitAdmissionRefused("material consumption principal differs from this Environment")
             self._material_admission._admit_resource_metadata_read()
         store = env._store
         if not isinstance(store, OperationStorePort):
-            raise GuaranteeUnavailableError("same-Environment operation Store is unavailable")
+            raise UnitGuaranteeUnavailable("same-Environment operation Store is unavailable")
         if not isinstance(self._issuer, InvocationIssuer) or self._issuer._store is not store:
             raise InvocationAuthorityRefused("same-Store InvocationIssuer is required")
         return store
 
     def _read_operation(self, store, request: RequestKey, operation_digest: str):
         if type(operation_digest) is not str or not operation_digest:
-            raise IdentityMismatchError("fixed material consumption operation digest is required")
+            raise UnitIdentityMismatch("fixed material consumption operation digest is required")
         operation = store.read_operation(request)
         if operation is None:
-            raise UnknownResultError("material consumption operation is not reserved")
+            raise UnitOperationUnknown("material consumption operation is not reserved")
         if operation.digest != operation_digest:
-            raise IdentityMismatchError("material consumption operation digest differs from its reservation")
+            raise UnitIdentityMismatch("material consumption operation digest differs from its reservation")
         return operation
 
     @staticmethod
     def _consumer_pin_gate(consumer_pin: MaterialConsumerPin, admitted_consumer,
                            material_request: MaterialRequest) -> None:
         if admitted_consumer is None:
-            raise GuaranteeUnavailableError("admission-side consumer evidence is unavailable")
+            raise UnitGuaranteeUnavailable("admission-side consumer evidence is unavailable")
         try:
             admitted = admitted_consumer.admitted_consumer_pin(
                 consumer_pin.consumer_id, consumer_pin.consumer_version)
         except Exception:
-            raise GuaranteeUnavailableError("admission-side consumer evidence is unavailable") from None
+            raise UnitGuaranteeUnavailable("admission-side consumer evidence is unavailable") from None
         if admitted is None:
-            raise AdmissionRefusedError("consumer is not admitted on the admission side")
+            raise UnitAdmissionRefused("consumer is not admitted on the admission side")
         if not _consumer_pin_equal(consumer_pin, admitted):
-            raise AdmissionRefusedError("consumer pin is not an admission-side copy")
+            raise UnitAdmissionRefused("consumer pin is not an admission-side copy")
         if (consumer_pin.owner_activation.environment
                 != material_request.resource_ref.environment_namespace):
             _fail("consumer pin crosses Environment identity")
@@ -352,21 +341,21 @@ class MaterialConsumption:
                 pin.provider_version,
                 pin.owner_activation,
             )
-        except (AdmissionRefusedError, GuaranteeUnavailableError):
+        except (UnitAdmissionRefused, UnitGuaranteeUnavailable):
             raise
         except Exception:
-            raise GuaranteeUnavailableError("admitted material provider is unavailable") from None
+            raise UnitGuaranteeUnavailable("admitted material provider is unavailable") from None
         if (metadata.resource_provider.descriptor.id != material_request.resource_ref.provider_id
                 or metadata.resource_provider.descriptor.version != pin.provider_version
                 or metadata.resource_provider.owner_activation != pin.owner_activation
                 or material_request.resource_ref.contract_id not in metadata.resource_provider.supported_contract_ids):
-            raise AdmissionRefusedError("material provider pin or contract changed")
+            raise UnitAdmissionRefused("material provider pin or contract changed")
         return metadata, provider
 
     @staticmethod
     def _check_lifetime(metadata, descriptor: ResourceMaterialDescriptor) -> None:
         if descriptor.lifetime not in metadata.capability.lifetimes:
-            raise GuaranteeUnavailableError("material provider does not support the fixed resource lifetime")
+            raise UnitGuaranteeUnavailable("material provider does not support the fixed resource lifetime")
 
     @staticmethod
     def _check_descriptor(provider, principal: str, material_request: MaterialRequest,
@@ -375,9 +364,9 @@ class MaterialConsumption:
             described = provider.describe_material(material_request.resource_ref, principal)
             snapshot = ResourceMaterialDescriptor.from_dict(_descriptor_data(described))
         except Exception:
-            raise GuaranteeUnavailableError("material provider description is unavailable") from None
+            raise UnitGuaranteeUnavailable("material provider description is unavailable") from None
         if safe_json(_descriptor_data(snapshot)) != safe_json(_descriptor_data(descriptor)):
-            raise AdmissionRefusedError("material provider descriptor differs from its fixed facts")
+            raise UnitAdmissionRefused("material provider descriptor differs from its fixed facts")
 
     @staticmethod
     def _check_read_result(result: MaterialReadResult, material_request: MaterialRequest,
@@ -413,11 +402,11 @@ class MaterialConsumption:
         items must equal the original receipt's pointer fields.
         """
         if type(step_id) is not str or not step_id:
-            raise IdentityMismatchError("fixed material read step identity is required")
+            raise UnitIdentityMismatch("fixed material read step identity is required")
         intent = operation.intent
         step = next((item for item in intent.steps if item.step_id == step_id), None)
         if step is None:
-            raise IdentityMismatchError("material read step is outside the fixed operation recipe")
+            raise UnitIdentityMismatch("material read step is outside the fixed operation recipe")
         context = intent.context_ref
         try:
             envelope = _plain(context["materialReads"][step_id])
@@ -443,11 +432,11 @@ class MaterialConsumption:
             if set(binding) != {"action", "targetRef", "delegationRef", "cleanup"}:
                 raise ValueError()
         except (KeyError, TypeError, ValueError, AttributeError, RecursionError):
-            raise IdentityMismatchError("fixed material read facts differ from its recipe") from None
+            raise UnitIdentityMismatch("fixed material read facts differ from its recipe") from None
 
         if (binding["action"] != READ_ACTION or binding["cleanup"] is not False
                 or binding["delegationRef"] is not None):
-            raise IdentityMismatchError("material read binding is not the frozen read family")
+            raise UnitIdentityMismatch("material read binding is not the frozen read family")
         expected_target = material_invocation_target(material_request)
         try:
             if (safe_json(binding["targetRef"]) != safe_json(expected_target)
@@ -461,7 +450,7 @@ class MaterialConsumption:
                     or original_ref["environmentNamespace"] != request.environment_namespace):
                 raise ValueError()
         except (TypeError, ValueError, AttributeError, RecursionError):
-            raise IdentityMismatchError("fixed material read binding differs from its step") from None
+            raise UnitIdentityMismatch("fixed material read binding differs from its step") from None
 
         # Cross-identity environment gate (freeze §1): consumer pin env ==
         # material resource env == target envs == acquisition evidence envs.
@@ -483,18 +472,18 @@ class MaterialConsumption:
                                       original_ref["principalScope"], original_ref["requestId"])
         original_operation = store.read_operation(original_request)
         if original_operation is None or original_operation.digest != original_ref["operationDigest"]:
-            raise GuaranteeUnavailableError("original material acquisition operation is unavailable")
+            raise UnitGuaranteeUnavailable("original material acquisition operation is unavailable")
         original_step = store.read_operation_step(original_request, original_ref["stepId"])
         if (original_step is None or original_step.outcome != "concluded"
                 or "materialResult" not in original_step.evidence):
-            raise GuaranteeUnavailableError("original material acquisition evidence is unavailable")
+            raise UnitGuaranteeUnavailable("original material acquisition evidence is unavailable")
         original_receipt_dict = original_step.evidence["materialResult"].get("receipt")
         if not isinstance(original_receipt_dict, dict):
-            raise GuaranteeUnavailableError("original material acquisition receipt is unavailable")
+            raise UnitGuaranteeUnavailable("original material acquisition receipt is unavailable")
         try:
             original_receipt = MaterialReceipt.from_dict(original_receipt_dict)
         except (TypeError, ValueError, KeyError, AttributeError, RecursionError):
-            raise GuaranteeUnavailableError("original material acquisition receipt is invalid") from None
+            raise UnitGuaranteeUnavailable("original material acquisition receipt is invalid") from None
 
         # Four handoff items must equal the original receipt (§1/§6.1).
         try:
@@ -526,7 +515,7 @@ class MaterialConsumption:
             original_envelope = _plain(original_operation.intent.context_ref["materialRequests"][original_ref["stepId"]])
             descriptor = ResourceMaterialDescriptor.from_dict(_plain(original_envelope["descriptor"]))
         except (KeyError, TypeError, ValueError, AttributeError, RecursionError):
-            raise GuaranteeUnavailableError("original material descriptor is unavailable") from None
+            raise UnitGuaranteeUnavailable("original material descriptor is unavailable") from None
         return step, material_request, consumer_pin, acquisition_evidence, original_receipt, binding, descriptor
 
     def _persist_read(self, store, operation, step, material_request, claim,
@@ -547,9 +536,9 @@ class MaterialConsumption:
             current = store.read_operation_step(operation.request, step.step_id)
             if current is not None:
                 return current
-            raise GuaranteeUnavailableError("material read result could not be durably associated") from None
+            raise UnitGuaranteeUnavailable("material read result could not be durably associated") from None
         except Exception:
-            raise GuaranteeUnavailableError("material read result could not be durably recorded") from None
+            raise UnitGuaranteeUnavailable("material read result could not be durably recorded") from None
 
     def _authorize_read_replay(self, request, operation, step, binding):
         """Revalidate fixed facts and admission for a recorded read step.
@@ -581,7 +570,7 @@ class MaterialConsumption:
             self._consumer_pin_gate(consumer_pin, self._admitted_consumer, material_request)
             current = store.read_operation_step(request, step_id)
             if current is None:
-                raise GuaranteeUnavailableError("material read claim disappeared during authorized read")
+                raise UnitGuaranteeUnavailable("material read claim disappeared during authorized read")
             return current
 
         # Consumer pin admission-side copy check before any claim (freeze §1/§6.3).
@@ -594,7 +583,7 @@ class MaterialConsumption:
 
         current_metadata, current_provider = self._provider(material_request)
         if current_provider is not provider or current_metadata != metadata:
-            raise AdmissionRefusedError("material provider pin changed before dispatch")
+            raise UnitAdmissionRefused("material provider pin changed before dispatch")
 
         claim = None
         try:
@@ -603,8 +592,8 @@ class MaterialConsumption:
                 binding["targetRef"], delegation_ref=None, cleanup=False)
             claim = store.read_operation_step(request, step.step_id)
             if claim is None:
-                raise GuaranteeUnavailableError("material read dispatch claim is missing")
-        except UnknownResultError:
+                raise UnitGuaranteeUnavailable("material read dispatch claim is missing")
+        except UnitOperationUnknown:
             current = store.read_operation_step(request, step_id)
             if current is not None and claim is None:
                 metadata, _ = self._provider(material_request)
@@ -626,16 +615,16 @@ class MaterialConsumption:
         try:
             current_metadata, current_provider = self._provider(material_request)
             if current_provider is not provider or current_metadata != metadata:
-                raise AdmissionRefusedError("material provider pin changed before dispatch")
+                raise UnitAdmissionRefused("material provider pin changed before dispatch")
             reader = getattr(provider, "read_material", None)
             if not callable(reader):
-                raise GuaranteeUnavailableError("material provider cannot serve authorized reads")
+                raise UnitGuaranteeUnavailable("material provider cannot serve authorized reads")
             result_value = reader(_request_snapshot(material_request), context)
             current_metadata, current_provider = self._provider(material_request)
             if current_provider is not provider or current_metadata != metadata:
-                raise AdmissionRefusedError("material provider pin changed after dispatch")
+                raise UnitAdmissionRefused("material provider pin changed after dispatch")
             if not self._issuer.verified_consumption(context):
-                raise GuaranteeUnavailableError("provider did not verify the original material read invocation")
+                raise UnitGuaranteeUnavailable("provider did not verify the original material read invocation")
             result = _read_result_snapshot(result_value)
             self._check_read_result(result, material_request, acquisition_evidence)
         except Exception:
@@ -656,11 +645,11 @@ class MaterialConsumption:
         non-reuse and digest-binding rules.
         """
         if type(step_id) is not str or not step_id:
-            raise IdentityMismatchError("fixed material release step identity is required")
+            raise UnitIdentityMismatch("fixed material release step identity is required")
         intent = operation.intent
         step = next((item for item in intent.steps if item.step_id == step_id), None)
         if step is None:
-            raise IdentityMismatchError("material release step is outside the fixed operation recipe")
+            raise UnitIdentityMismatch("material release step is outside the fixed operation recipe")
         context = intent.context_ref
         try:
             envelope = _plain(context["materialReleases"][step_id])
@@ -682,11 +671,11 @@ class MaterialConsumption:
             if set(binding) != {"action", "targetRef", "delegationRef", "cleanup"}:
                 raise ValueError()
         except (KeyError, TypeError, ValueError, AttributeError, RecursionError):
-            raise IdentityMismatchError("fixed material release facts differ from its recipe") from None
+            raise UnitIdentityMismatch("fixed material release facts differ from its recipe") from None
 
         if (binding["action"] != RELEASE_ACTION or binding["cleanup"] is not True
                 or binding["delegationRef"] is not None):
-            raise IdentityMismatchError("material release binding is not the frozen release family")
+            raise UnitIdentityMismatch("material release binding is not the frozen release family")
         expected_target = material_invocation_target(material_request)
         try:
             if (safe_json(binding["targetRef"]) != safe_json(expected_target)
@@ -699,7 +688,7 @@ class MaterialConsumption:
                     or original_step_id == step_id):
                 raise ValueError()
         except (TypeError, ValueError, AttributeError, RecursionError):
-            raise IdentityMismatchError("fixed material release binding differs from its step") from None
+            raise UnitIdentityMismatch("fixed material release binding differs from its step") from None
 
         pin_env = consumer_pin.owner_activation.environment
         try:
@@ -715,14 +704,14 @@ class MaterialConsumption:
         original_step = store.read_operation_step(request, original_step_id)
         if (original_step is None or original_step.outcome != "concluded"
                 or "materialResult" not in original_step.evidence):
-            raise GuaranteeUnavailableError("original material acquisition evidence is unavailable")
+            raise UnitGuaranteeUnavailable("original material acquisition evidence is unavailable")
         original_receipt_dict = original_step.evidence["materialResult"].get("receipt")
         if not isinstance(original_receipt_dict, dict):
-            raise GuaranteeUnavailableError("original material acquisition receipt is unavailable")
+            raise UnitGuaranteeUnavailable("original material acquisition receipt is unavailable")
         try:
             receipt = MaterialReceipt.from_dict(original_receipt_dict)
         except (TypeError, ValueError, KeyError, AttributeError, RecursionError):
-            raise GuaranteeUnavailableError("original material acquisition receipt is invalid") from None
+            raise UnitGuaranteeUnavailable("original material acquisition receipt is invalid") from None
 
         if (material_request.resource_ref != receipt.resource_ref
                 or material_request.provider_pin != receipt.provider_pin
@@ -734,7 +723,7 @@ class MaterialConsumption:
             original_envelope = _plain(intent.context_ref["materialRequests"][original_step_id])
             descriptor = ResourceMaterialDescriptor.from_dict(_plain(original_envelope["descriptor"]))
         except (KeyError, TypeError, ValueError, AttributeError, RecursionError):
-            raise GuaranteeUnavailableError("original material descriptor is unavailable") from None
+            raise UnitGuaranteeUnavailable("original material descriptor is unavailable") from None
         return (step, material_request, consumer_pin, receipt, binding, descriptor,
                 read_step_ref, original_step_id)
 
@@ -760,7 +749,7 @@ class MaterialConsumption:
         try:
             self._consumer_pin_gate(evidence.consumer_pin, self._admitted_consumer,
                                     material_request)
-        except (AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError):
+        except (UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch):
             return False
         read_request = RequestKey(read_step_ref["environmentNamespace"],
                                   read_step_ref["principalScope"], read_step_ref["requestId"])
@@ -805,9 +794,9 @@ class MaterialConsumption:
             current = store.read_operation_step(operation.request, step.step_id)
             if current is not None:
                 return current
-            raise GuaranteeUnavailableError("material release result could not be durably associated") from None
+            raise UnitGuaranteeUnavailable("material release result could not be durably associated") from None
         except Exception:
-            raise GuaranteeUnavailableError("material release result could not be durably recorded") from None
+            raise UnitGuaranteeUnavailable("material release result could not be durably recorded") from None
 
     @staticmethod
     def _release_usage_mutations(store, request, operation, material_request, original_step_id):
@@ -818,14 +807,14 @@ class MaterialConsumption:
         """
         reader = getattr(store, "read_usages", None)
         if not callable(reader):
-            raise GuaranteeUnavailableError("same-Store material Usage reads are unavailable")
+            raise UnitGuaranteeUnavailable("same-Store material Usage reads are unavailable")
         holder = operation_holder(request, operation.intent.operation_ref)
         prefix = (f"{operation.intent.operation_ref}.material."
                   f"{original_step_id}")
         try:
             rows = reader(request.environment_namespace, holder)
         except Exception:
-            raise GuaranteeUnavailableError("material Usage facts are unavailable") from None
+            raise UnitGuaranteeUnavailable("material Usage facts are unavailable") from None
         by_id = {row.get("usageId"): row for row in rows if isinstance(row, Mapping)}
         expected = {
             prefix + ".provider": material_provider_ref(material_request.provider_pin),
@@ -839,11 +828,11 @@ class MaterialConsumption:
         for usage_id, target in expected.items():
             row = by_id.get(usage_id)
             if row is None:
-                raise GuaranteeUnavailableError("required material Usage hold is missing")
+                raise UnitGuaranteeUnavailable("required material Usage hold is missing")
             if (row.get("holderRef") != dict(holder) or row.get("targetRef") != target
                     or row.get("rights") != ["use"] or row.get("state") != "active"
                     or type(row.get("revision")) is not int or row["revision"] < 1):
-                raise GuaranteeUnavailableError("material Usage hold identity or state is unavailable")
+                raise UnitGuaranteeUnavailable("material Usage hold identity or state is unavailable")
             mutations.append(UsageMutation(
                 usage_id, row["revision"], holder, holder, row["targetRef"],
                 ("use",), "released", row["payload"],
@@ -868,7 +857,7 @@ class MaterialConsumption:
             self._consumer_pin_gate(consumer_pin, self._admitted_consumer, material_request)
             current = store.read_operation_step(request, step_id)
             if current is None:
-                raise GuaranteeUnavailableError("material release claim disappeared")
+                raise UnitGuaranteeUnavailable("material release claim disappeared")
             released = current.outcome == "concluded"
             return MaterialReleaseGateDecision(
                 released=released,
@@ -907,7 +896,7 @@ class MaterialConsumption:
                                material_request, descriptor)
         current_metadata, current_provider = self._provider(material_request)
         if current_provider is not provider or current_metadata != metadata:
-            raise AdmissionRefusedError("material provider pin changed before dispatch")
+            raise UnitAdmissionRefused("material provider pin changed before dispatch")
 
         try:
             lease = receipt.lease_ref
@@ -916,12 +905,12 @@ class MaterialConsumption:
                 _release_correlation(operation.intent.operation_ref, step.step_id,
                                      step.recovery_correlation, step.input_digest))
             if step.input_digest != release_request.input_digest:
-                raise IdentityMismatchError("release step digest differs from the lease-bound release request")
+                raise UnitIdentityMismatch("release step digest differs from the lease-bound release request")
         except (TypeError, ValueError, KeyError, AttributeError, RecursionError,
                 MaterialContractError) as exc:
-            if isinstance(exc, IdentityMismatchError):
+            if isinstance(exc, UnitIdentityMismatch):
                 raise
-            raise IdentityMismatchError("release request differs from its lease binding") from None
+            raise UnitIdentityMismatch("release request differs from its lease binding") from None
 
         claim = None
         try:
@@ -930,8 +919,8 @@ class MaterialConsumption:
                 binding["targetRef"], delegation_ref=None, cleanup=True)
             claim = store.read_operation_step(request, step.step_id)
             if claim is None:
-                raise GuaranteeUnavailableError("material release dispatch claim is missing")
-        except UnknownResultError:
+                raise UnitGuaranteeUnavailable("material release dispatch claim is missing")
+        except UnitOperationUnknown:
             current = store.read_operation_step(request, step_id)
             if current is not None and claim is None:
                 self._consumer_pin_gate(consumer_pin, self._admitted_consumer, material_request)
@@ -954,16 +943,16 @@ class MaterialConsumption:
         try:
             current_metadata, current_provider = self._provider(material_request)
             if current_provider is not provider or current_metadata != metadata:
-                raise AdmissionRefusedError("material provider pin changed before dispatch")
+                raise UnitAdmissionRefused("material provider pin changed before dispatch")
             releaser = getattr(provider, "release_material", None)
             if not callable(releaser):
-                raise GuaranteeUnavailableError("material provider cannot release material")
+                raise UnitGuaranteeUnavailable("material provider cannot release material")
             result_value = releaser(_release_request_snapshot(release_request), context)
             current_metadata, current_provider = self._provider(material_request)
             if current_provider is not provider or current_metadata != metadata:
-                raise AdmissionRefusedError("material provider pin changed after dispatch")
+                raise UnitAdmissionRefused("material provider pin changed after dispatch")
             if not self._issuer.verified_consumption(context):
-                raise GuaranteeUnavailableError("provider did not verify the original material release invocation")
+                raise UnitGuaranteeUnavailable("provider did not verify the original material release invocation")
             result = _release_result_snapshot(result_value)
             self._check_release_result(result, release_request)
         except Exception:

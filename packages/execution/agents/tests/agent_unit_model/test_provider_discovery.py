@@ -3,7 +3,7 @@ from dataclasses import replace
 
 import pytest
 
-from ordessa_execution_api.environment import AdmissionRefusedError, IdentityMismatchError
+from ordessa_execution_agents.harness.providers.registry.errors import CatalogAdmissionRefused, CatalogIdentityConflict
 from ordessa_units.admission.material_admission import material_registration_snapshot
 from ordessa_units.public import unit_services, AGENT_MANAGEMENT_CONTRACT_VERSION
 from ordessa_execution_agents.harness.providers.registry.definition_admission import (
@@ -64,7 +64,7 @@ def test_drain_excluded_and_retire_then_reactivate_uses_new_generation(discovery
     old = catalog.list()[0]["providerRef"]
     env.drain(receipt.activation)
     assert catalog.list() == ()
-    with pytest.raises(AdmissionRefusedError): catalog.describe(provider.descriptor.definition_ref)
+    with pytest.raises(CatalogAdmissionRefused): catalog.describe(provider.descriptor.definition_ref)
     env.retire(receipt.activation)
     assert env._store.unresolved_provider_usages(
         env.environment_id, receipt.activation.plugin_id, receipt.activation.generation) == ()
@@ -84,7 +84,7 @@ def make_declaration():
 def test_permission_checked_even_when_registry_empty(discovery):
     _, policy, _, _, catalog = discovery
     policy.allowed = False
-    with pytest.raises(AdmissionRefusedError): catalog.list()
+    with pytest.raises(CatalogAdmissionRefused): catalog.list()
 
 
 @pytest.mark.parametrize("mutation", ["descriptor", "method", "owner"])
@@ -98,7 +98,7 @@ def test_active_mutation_refused_without_native_invocation(discovery, mutation):
         object.__setattr__(provider, "prepare", None)
     else:
         object.__setattr__(provider, "owner", "forged")
-    with pytest.raises(AdmissionRefusedError): catalog.list()
+    with pytest.raises(CatalogAdmissionRefused): catalog.list()
 
 
 def test_detached_views_cannot_change_registry(discovery):
@@ -114,13 +114,13 @@ def test_detached_views_cannot_change_registry(discovery):
 
 @pytest.mark.parametrize("reference", [None, {}, {"environmentNamespace": "runtime-test", "definitionId": "fixture", "revision": "1", "owner": "fake"}])
 def test_incomplete_or_author_identity_reference_refused(discovery, reference):
-    with pytest.raises(IdentityMismatchError): discovery[4].describe(reference)
+    with pytest.raises(CatalogIdentityConflict): discovery[4].describe(reference)
 
 
 def test_cross_environment_refused(discovery):
     ref = dict(discovery[2].descriptor.definition_ref)
     ref["environmentNamespace"] = "other"
-    with pytest.raises(IdentityMismatchError): discovery[4].describe(ref)
+    with pytest.raises(CatalogIdentityConflict): discovery[4].describe(ref)
 
 
 def methods(env, version=AGENT_MANAGEMENT_CONTRACT_VERSION):

@@ -27,6 +27,15 @@ elif op=='read':
  if len(content)>1048576: raise ValueError('too large')
  result=content.decode('utf-8')
 elif op=='write': target.write_text(v['content'],encoding='utf-8'); result=None
+elif op=='write_atomic':
+ target.parent.mkdir(parents=True,exist_ok=True)
+ temporary=target.with_name(target.name+'.tmp-'+os.urandom(8).hex())
+ try:
+  temporary.write_text(v['content'],encoding='utf-8')
+  os.replace(temporary,target)
+ finally:
+  temporary.unlink(missing_ok=True)
+ result=None
 elif op=='list':
  result=[]
  for directory,dirs,files in os.walk(root,followlinks=False):
@@ -117,6 +126,14 @@ class OpenShellFileArea:
 
     def write_text(self, relative, content):
         self._call('write',relative,content)
+
+    def write_text_atomic(self, relative, content):
+        """Write through a sandbox-local temp file and replace the target.
+
+        The export/capability layer requires an atomic write for a file area: a
+        reader either sees the old bytes or the new ones, never a partial file.
+        """
+        self._call('write_atomic',relative,content)
 
     def list(self):
         result = self._call('list')

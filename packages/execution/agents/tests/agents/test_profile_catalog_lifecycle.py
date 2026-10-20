@@ -12,7 +12,7 @@ from ordessa_units.public import (
     wire_contract,
     wire_schema_digest,
 )
-from ordessa_execution_api.environment import AdmissionRefusedError, GuaranteeUnavailableError
+from ordessa_execution_agents.profiles import ProfileAccessRefused, ProfileStoreUnavailable
 from pacthold.adapters.sqlite.environment.store import KeyConflictError, SqliteStorePort
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 
@@ -216,7 +216,7 @@ def test_profile_catalog_permission_denial_leaves_catalog_unchanged(catalog_env,
     else:
         policy.allow_object = False
 
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(ProfileAccessRefused):
         create(catalog, profile_id="denied", request_id=f"denied-{denial}")
     # Read back the owner store directly: in the object-denial variant the
     # policy also denies listing, so that API cannot serve as a no-write probe.
@@ -233,7 +233,7 @@ def test_profile_catalog_without_fingerprint_refuses_writes(catalog_env, tmp_pat
     try:
         catalog = unit_services(environment).profiles
         assert catalog.capabilities()["profileCatalog"] is False
-        with pytest.raises(GuaranteeUnavailableError, match="fingerprint"):
+        with pytest.raises(ProfileStoreUnavailable, match="fingerprint"):
             create(catalog, profile_id="no-key", request_id="no-key-create")
         assert catalog.list() == ()
     finally:

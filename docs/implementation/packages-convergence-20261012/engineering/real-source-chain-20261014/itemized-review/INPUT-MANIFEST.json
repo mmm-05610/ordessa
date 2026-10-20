@@ -1,0 +1,79 @@
+{
+  "scope": {
+    "realm_id": "local-source-chain-test",
+    "project_id": "caller-authored-project"
+  },
+  "materials": {
+    "materials/spec.md": {
+      "sha256": "4dc72692eea11fd00a5ffbf39dcc0622e9242d6d8dcde07c79d92a340086287e",
+      "byte_length": 488
+    },
+    "materials/tasks.md": {
+      "sha256": "e26e7d1fc7686c47471480a2a38bfba6bc9ee8f9283c1ca8b738df9a7e36abdd",
+      "byte_length": 642
+    },
+    "materials/plan.md": {
+      "sha256": "0e8bdb2eaae3394ec393f66c592796a62eedaa8e2cb464a637c0e6654682cb97",
+      "byte_length": 538
+    },
+    "materials/trial-baseline.md": {
+      "sha256": "bd9b64e28aed0c256b3abb7c3fadaded1c6df7446c2adb6050e81720022bf2cc",
+      "byte_length": 2632
+    },
+    "materials/trial-candidate.md": {
+      "sha256": "9b535f9703b4ff7e75dd165b26e3ea68c62821998c3a6855371fd06af196c058",
+      "byte_length": 7848
+    },
+    "materials/caller-review-input.json": {
+      "sha256": "1edb22e0394cd304bae67a84b6847c2ed74dada073452297f1ca009fb9c36864",
+      "byte_length": 51937
+    }
+  },
+  "workspace_captures": {
+    "packages/engineering/src/ordessa_engineering/adapters/filesystem/project_sources.py": {
+      "sha256": "b4d039843f035e9ab90c6daf8a5d8c2ac50bae2231c7ccb89d8f63377257bfdf",
+      "byte_length": 8961,
+      "logical_document": "adapter-capture",
+      "upstream_version": "itemized-capture-v1",
+      "local_path": "adapter-capture.md"
+    },
+    "packages/engineering/src/ordessa_engineering/application/usecases/material_closure.py": {
+      "sha256": "ab6fadf3e332e2fa7278c2d34a4d0a5de92c9591d1439957386a28f9a8227dd4",
+      "byte_length": 9945,
+      "logical_document": "closure-capture",
+      "upstream_version": "itemized-capture-v1",
+      "local_path": "closure-capture.md"
+    },
+    "packages/engineering/tests/application/test_real_source_chain.py": {
+      "sha256": "4024a39865cddd55419766d860170170154c15b1bd0345d3da60e8df4159c2b9",
+      "byte_length": 19636,
+      "logical_document": "service-fixture-capture",
+      "upstream_version": "itemized-capture-v1",
+      "local_path": "service-fixture-capture.md"
+    },
+    "packages/engineering/tests/adapters/test_project_sources.py": {
+      "sha256": "04a8108517c7c848a0f36b88c44fe34ec2b123b9e52ddc9e2f86fbd3003319bb",
+      "byte_length": 9276,
+      "logical_document": "source-test-capture",
+      "upstream_version": "itemized-capture-v1",
+      "local_path": "source-test-capture.md"
+    }
+  },
+  "scope_qualification": "explicit caller-owned trial inputs and finite source captures; not Product or source custody",
+  "workspace_capture_order": [
+    "packages/engineering/src/ordessa_engineering/adapters/filesystem/project_sources.py",
+    "packages/engineering/src/ordessa_engineering/application/usecases/material_closure.py",
+    "packages/engineering/tests/application/test_real_source_chain.py",
+    "packages/engineering/tests/adapters/test_project_sources.py"
+  ],
+  "required_check_ids": [
+    "source-version-preservation",
+    "scoped-read-boundary",
+    "evidence-support",
+    "unique-record-authority",
+    "public-call-chain",
+    "changed-source-refusal",
+    "acceptance-coverage",
+    "declared-limitations"
+  ]
+}

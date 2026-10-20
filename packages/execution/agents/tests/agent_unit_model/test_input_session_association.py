@@ -16,7 +16,8 @@ from agent_tools_fixtures import configuration_records as shared
 from agent_tools_fixtures.native_evidence import AssociationEvidence, UnitEvidence, source
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_infrastructure.database.records import DomainWrite
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, safe_json
+from ordessa_units.definitions.operations import OperationIntent, StepIntent
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.records.operation_journal import OperationJournal
 from ordessa_units.records.unit_records import (
     UnitRecords, UnitRecordsRefused, INPUT_SESSION_ASSOCIATION_VERSION,

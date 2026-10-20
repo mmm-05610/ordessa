@@ -10,27 +10,18 @@ Cold recovery is registered NOT_RUN: no rehydrate seam is claimed and no
 Store/issuer is privately swapped; the same-generation refusal control is the
 compensating guarantee.
 """
-from dataclasses import dataclass
-from typing import ClassVar
 import hashlib
+from threading import RLock
 
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
-    UnknownResultError,
-)
-from ordessa_execution_api.environment.operations import (
-    OperationIntent,
-    StepIntent,
-    operation_holder,
-    safe_json,
-)
-from ordessa_execution_api.environment.identity import ActivationRef, ParticipantInstanceRef
-from pacthold.adapters.sqlite.environment.store import SqliteStorePort
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown
+from ordessa_units.definitions.operations import OperationIntent, StepIntent, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
+from ordessa_units.definitions.admission_identity import MaterialProviderActivationRef
+from ordessa_units.definitions.admission_identity import AgentNodeRef
+from ordessa_units.persistence.sqlite.store import SqliteUnitStore
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import (
     InvocationAuthorityRefused,
@@ -75,18 +66,12 @@ from ordessa_units.bindings.materials import (
     ResourceMaterialDescriptor,
     ResourceRef,
 )
-from pacthold.public import (
-    CoreContributionSet,
-    Environment,
-    InstallationRecord,
-    ReconcileSupport,
-    ResourceProviderDescriptor,
-)
-
-
-
-
-from ordessa_units.admission.material_admission import material_registration_snapshot as _test_resource_snapshot
+from ordessa_units.admission.context import UnitAdmissionContext
+from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
+from ordessa_units.admission.material_admission import MaterialAdmission
+from ordessa_units.admission.material_registration import MaterialCatalog
+from ordessa_units.definitions.materials import ReconcileSupport, ResourceProviderDescriptor
+from ordessa_execution_agents.harness.providers.registry import HarnessCatalog
 
 _ENV = "env"
 _PRINCIPAL = "principal"
@@ -100,11 +85,6 @@ _OPERATION_KIND = "material-consumption-fixture"
 _CANARY = "CANARY-MATERIAL-BODY-9f3a7e21"
 _CONSUMER_ID = "consumer.host"
 _CONSUMER_VERSION = "1.0"
-
-
-@dataclass(frozen=True)
-class AlphaContract:
-    contract_id: ClassVar[str] = _CONTRACT_ID
 
 
 class ReadPolicy:
@@ -330,31 +310,46 @@ def _setup(tmp_path, *, provider_lifetimes=("copyComplete",),
     if descriptor_lifetime is None:
         descriptor_lifetime = MaterialLifetime(provider_lifetimes[0])
     db_path = tmp_path / f"{request_id}.sqlite"
-    store = SqliteStorePort(db_path)
+    store = SqliteUnitStore(db_path)
     policy = ReadPolicy()
-    environment = Environment(
-        _ENV, store=store, policy=policy, principal_scope=_PRINCIPAL
-    , resource_extension_snapshot=_test_resource_snapshot)
-    environment.install(InstallationRecord("contracts.owner", "a" * 64))
-    environment.enable("contracts.owner")
-    environment.activate("contracts.owner", CoreContributionSet(contracts=(AlphaContract,)))
+    admission_lock = RLock()
+    harness_catalog = HarnessCatalog(
+        _ENV, policy=policy, principal_scope=_PRINCIPAL,
+        admission_lock=admission_lock,
+    )
+    context_ref = {}
+    material_catalog = MaterialCatalog(
+        _ENV,
+        admission_lock=admission_lock,
+        retirement_guard=lambda owner, generation: context_ref[
+            "context"
+        ].provider_retirement_guard(owner, generation),
+    )
+    unit_context = UnitAdmissionContext(
+        _ENV,
+        store=store,
+        policy=policy,
+        fingerprint_port=ProtectedFingerprintHmac(
+            {"test": b"material-consumption-fixture"}, active_key_id="test"
+        ),
+        harness_catalog=harness_catalog,
+        material_catalog=material_catalog,
+        principal_scope=_PRINCIPAL,
+        admission_lock=admission_lock,
+    )
+    context_ref["context"] = unit_context
 
     capability = MaterialCapability(
         AGENT_MATERIAL_CONTRACT_VERSION, tuple(provider_lifetimes), True, "both")
     provider = ControlledMaterialProvider("provider.material", capability)
     owner_id = "owner.material"
-    environment.install(InstallationRecord(owner_id, "b" * 64))
-    environment.enable(owner_id)
-    activation = environment.activate(
-        owner_id, CoreContributionSet(resource_providers=(provider,))
-    ).activation
+    activation = MaterialProviderActivationRef(_ENV, owner_id, 1)
+    material_catalog.stage(
+        owner_id, activation.generation, (provider,), (_CONTRACT_ID,)
+    ).commit()
 
     consumer_id = "owner.consumer"
-    environment.install(InstallationRecord(consumer_id, "c" * 64))
-    environment.enable(consumer_id)
-    consumer_activation = environment.activate(
-        consumer_id, CoreContributionSet()
-    ).activation
+    consumer_activation = MaterialProviderActivationRef(_ENV, consumer_id, 1)
     consumer_pin = MaterialConsumerPin(_CONSUMER_ID, _CONSUMER_VERSION, consumer_activation)
     admitted_consumer = AdmittedConsumerFixture(consumer_pin)
 
@@ -363,7 +358,7 @@ def _setup(tmp_path, *, provider_lifetimes=("copyComplete",),
     resource_ref = ResourceRef(_ENV, provider.provider_id, _CONTRACT_ID, "resource-fixture", "r1")
     pin = MaterialProviderPin(provider.provider_id, provider.version, activation)
     target = MaterialUseTarget(
-        ParticipantInstanceRef(_ENV, "planned-node", 1), directory, 4, "profile-material")
+        AgentNodeRef(_ENV, "planned-node", 1), directory, 4, "profile-material")
     fixed_descriptor = _descriptor(resource_ref, descriptor_lifetime)
 
     op_ref = f"operation-{request_id}"
@@ -443,19 +438,25 @@ def _setup(tmp_path, *, provider_lifetimes=("copyComplete",),
                                   "evidenceId": "fixture-acquisition"},
     )
     issuer = InvocationIssuer(store, authority, current, clock=lambda: 50)
-    operations = MaterialOperations(environment, invocation_issuer=issuer)
+    operations = MaterialOperations(unit_context, invocation_issuer=issuer)
     consumption = MaterialConsumption(
-        environment, invocation_issuer=issuer, admitted_consumer=admitted_consumer)
+        unit_context, invocation_issuer=issuer, admitted_consumer=admitted_consumer)
 
     provider.descriptor = fixed_descriptor
     provider.material_provider = material_provider_ref(pin)
     provider.material_target = material_invocation_target(acquire_request)
     provider.verifier = issuer.verifier()
+    admission = MaterialAdmission(unit_context)
+    admitted = admission.material_provider_contribution(provider.provider_id)
+    assert admitted.resource_provider.owner_activation == activation
 
     return {
         "db_path": db_path,
         "store": store,
-        "environment": environment,
+        "context": unit_context,
+        "material_catalog": material_catalog,
+        "harness_catalog": harness_catalog,
+        "admission": admission,
         "policy": policy,
         "provider": provider,
         "activation": activation,
@@ -565,7 +566,6 @@ def _assert_holds_released(parts, revision=3):
 
 def _close(parts):
     parts["issuer"].close()
-    parts["environment"].close()
     parts["store"].close()
 
 
@@ -651,7 +651,7 @@ def test_read_refusals_pre_claim(tmp_path, tamper):
         read_key = _reserve_read(parts, tamper=overrides)
 
         if tamper == "wrong-issuer":
-            other_store = SqliteStorePort(tmp_path / "other.sqlite")
+            other_store = SqliteUnitStore(tmp_path / "other.sqlite")
             try:
                 other_authority = Authority()
                 other_current = CurrentState(
@@ -662,15 +662,15 @@ def test_read_refusals_pre_claim(tmp_path, tamper):
                 other_issuer = InvocationIssuer(other_store, other_authority, other_current,
                                                 clock=lambda: 50)
                 wrong = MaterialConsumption(
-                    parts["environment"], invocation_issuer=other_issuer,
+                    parts["context"], invocation_issuer=other_issuer,
                     admitted_consumer=parts["admitted_consumer"])
-                with pytest.raises((InvocationAuthorityRefused, GuaranteeUnavailableError)):
+                with pytest.raises((InvocationAuthorityRefused, UnitGuaranteeUnavailable)):
                     wrong.read(read_key, _READ_DIGEST, _READ_STEP)
             finally:
                 other_store.close()
         else:
-            with pytest.raises((AdmissionRefusedError, IdentityMismatchError,
-                                GuaranteeUnavailableError)):
+            with pytest.raises((UnitAdmissionRefused, UnitIdentityMismatch,
+                                UnitGuaranteeUnavailable)):
                 parts["consumption"].read(read_key, _READ_DIGEST, _READ_STEP)
 
         assert parts["store"].read_operation_step(read_key, _READ_STEP) is None
@@ -697,12 +697,12 @@ def test_consumer_pin_refusals(tmp_path, case):
                                       consumer_pin.owner_activation)
         elif case == "cross-env":
             bad = MaterialConsumerPin(consumer_pin.consumer_id, consumer_pin.consumer_version,
-                                      ActivationRef("other-env", "consumer.host", 3))
+                                      MaterialProviderActivationRef("other-env", "consumer.host", 3))
         else:
             bad = MaterialConsumerPin(consumer_pin.consumer_id, consumer_pin.consumer_version,
-                                      ActivationRef(_ENV, "consumer.host", 99))
+                                      MaterialProviderActivationRef(_ENV, "consumer.host", 99))
         read_key = _reserve_read(parts, tamper={"consumer_pin": bad})
-        with pytest.raises((AdmissionRefusedError, IdentityMismatchError)):
+        with pytest.raises((UnitAdmissionRefused, UnitIdentityMismatch)):
             parts["consumption"].read(read_key, _READ_DIGEST, _READ_STEP)
         assert parts["store"].read_operation_step(read_key, _READ_STEP) is None
         assert parts["provider"].read_calls == 0
@@ -895,9 +895,9 @@ def test_cold_recovery_gap_registered_not_run(tmp_path):
         foreign = MaterialConsumerPin(
             parts["consumer_pin"].consumer_id,
             parts["consumer_pin"].consumer_version,
-            ActivationRef(_ENV, "consumer.host", 99),
+            MaterialProviderActivationRef(_ENV, "consumer.host", 99),
         )
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(UnitAdmissionRefused):
             MaterialConsumption._consumer_pin_gate(
                 foreign, parts["admitted_consumer"], parts["acquire_request"])
     finally:

@@ -1,0 +1,7 @@
+# Explicit change review criteria
+
+Review the exact baseline and candidate source identities and immutable captures supplied for this invocation. Bind both sources to this invocation's declared scope and their full `SourceRef`/`VersionCapture` identities: source id, locator/provider, upstream version, content digest, capture time, capturing actor, media type, byte length, and applicable original URL. Assess claims only against those captured bytes and that scope. Missing or mismatched identity, unavailable capture, or scope inconsistency is insufficient evidence; never substitute an example, another request, or model-provided identity. These are external references, not snapshots or git commits; a digest identifies captured bytes but does not establish access to or recovery of them.
+
+Use the method's JEV review operation to assess the supplied candidate against the captured baseline and scope. Identify claims and evidence, distinguish supported changes from gaps, and return a completed review result with an explicit passed/not-passed/unknown conclusion. The method's later registration gate consumes that exact recorded result and only allows passed reviews. No additional manual-review step is inserted. Never infer that a digest recovers historical content. This text is guidance, not a machine predicate.
+
+The action does not collect discussion, infer or create a DID, or register a change automatically. Registration is a separate explicit operation after a review decision.

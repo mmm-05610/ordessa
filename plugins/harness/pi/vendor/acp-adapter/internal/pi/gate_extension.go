@@ -45,6 +45,19 @@ function payloadForTool(event: { toolCallId: string; toolName: string; input: Re
 		};
 	}
 
+	if (event.toolName === "read") {
+		const path = String(event.input.path ?? "");
+		return {
+			gate: "acp-adapter",
+			version: 1,
+			toolCallId: event.toolCallId,
+			toolName: event.toolName,
+			approval: "file",
+			files: path ? [path] : [],
+			message: path ? "read " + path : "read file",
+		};
+	}
+
 	if (event.toolName === "write") {
 		const path = String(event.input.path ?? "");
 		const content = String(event.input.content ?? "");
@@ -77,9 +90,34 @@ function payloadForTool(event: { toolCallId: string; toolName: string; input: Re
 }
 
 export default function (pi: ExtensionAPI) {
-	pi.on("tool_call", async (event, ctx) => {
-		if (event.toolName !== "bash" && event.toolName !== "write" && event.toolName !== "edit") {
+	const hasApprovedCheckCommand = process.env.ORDESSA_APPROVED_CHECK_COMMAND !== undefined;
+	const approvedCheckCommand = process.env.ORDESSA_APPROVED_CHECK_COMMAND ?? "";
+	const approvedCheckCommandValid = approvedCheckCommand.length > 0 &&
+		Buffer.byteLength(approvedCheckCommand, "utf8") <= 4096 &&
+		approvedCheckCommand.trim() === approvedCheckCommand &&
+		!/[\x00-\x1f\x7f\u2028\u2029]/.test(approvedCheckCommand);
+
+	pi.on("before_agent_start", async (event) => {
+		if (!hasApprovedCheckCommand) {
 			return undefined;
+		}
+		const instruction = approvedCheckCommandValid
+			? "For the approved repository check, use this exact bash command and no other bash command: " + JSON.stringify(approvedCheckCommand)
+			: "A restricted check-command mode is enabled, but its command is invalid. Do not use bash.";
+		return { systemPrompt: event.systemPrompt + "\n\n" + instruction };
+	});
+
+	pi.on("tool_call", async (event, ctx) => {
+		if (event.toolName !== "bash" && event.toolName !== "read" &&
+			event.toolName !== "write" && event.toolName !== "edit") {
+			return undefined;
+		}
+
+		if (event.toolName === "bash" && hasApprovedCheckCommand) {
+			const command = typeof event.input.command === "string" ? event.input.command : "";
+			if (!approvedCheckCommandValid || command !== approvedCheckCommand) {
+				return { block: true, reason: "Blocked by acp-adapter approved check command gate" };
+			}
 		}
 
 		const payload = payloadForTool(event);

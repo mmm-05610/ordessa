@@ -1,0 +1,153 @@
+{
+  "scope": "restore HTTP launch beside one-shot CLI, over current explicit Product/Agent owner and registry; no UnitRuntimeOwner/default grants",
+  "originalTransportHelpers": {
+    "PortAllocationFailed": "original AST unchanged",
+    "business_flags": "original AST unchanged",
+    "parser": "original AST unchanged",
+    "bind_loopback_socket": "original AST unchanged",
+    "resolved_data_root": "original AST unchanged",
+    "serving_origin": "original AST unchanged"
+  },
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/ordessa_server/__main__.py",
+      "sha256": "068944479705d580e3aef4209a861434fcbc0d49b09642f485b69c84be38e112"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/entrypoints/__init__.py",
+      "sha256": "664f5e8e318760f8a94e77a727c51ab95a17a78d7694c2120e8da9e2e815ee0b"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/entrypoints/http.py",
+      "sha256": "46c7213330df947b0cfe50f76d92572cf115c13576cf50aa7df73a423d7e4a8a"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/entrypoints/cli.py",
+      "sha256": "594b09702b92c0dd4843974d8ec921d129612b5982e0d7169b08c625cff5180d"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/entrypoints/foreground.py",
+      "sha256": "7af4577f5958c099654fcdaf7e0e962e02eb5a8e8a7e82a230e26acc14d90223"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/http_bindings.py",
+      "sha256": "f878cd8f91bbcf3b3de5a04134622906656a64aae7faa8ff6b6f3b70a10acfce"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/registry_runtime.py",
+      "sha256": "f02f90064d868844f3fc7a06eac0bc631fc00d3fbf72376c1341b8a0173f6839"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/product_selection.py",
+      "sha256": "7ad0792c8e083cd389120c59a2cff50c10ff527235564177d3212db7d30a2043"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/packages_convergence.py",
+      "sha256": "b5f11391f2b44c7f58f52cacc8ee68b78feeab096b16c356d4fc2bc967ccd802"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/decision_bindings/authorization.py",
+      "sha256": "b6110ef9826b33617245a7c09b9dc3465d5bd29da04f4a28e62fd84e8f8e70fc"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_owner.py",
+      "sha256": "0aaf057dca3b1d6f16e007a123958b82dc036012a03def97220f879dffa7aa9b"
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_bindings/profile_access.py",
+      "sha256": "6ac2e6f87bdc53d69235c76c33910c88d9b0c444e7f0193488fac0492fdab373"
+    },
+    {
+      "path": "apps/server/pyproject.toml",
+      "sha256": "1bedb321670f99e6852003495e4091ad4555f4c72e10c57243d5a11d705e37a7"
+    },
+    {
+      "path": "apps/server/deployment/default-product/pyproject.toml",
+      "sha256": "c760dd0a9b9b9682109f3f12ff98d8d355c52b568b819f708a0e911d595e100e"
+    },
+    {
+      "path": "apps/server/deployment/default-product/src/ordessa_server_product/composition.py",
+      "sha256": "38ecb27df768c845926213d859d3a6e844a97e9995720a6192387f64d42aba64"
+    },
+    {
+      "path": "apps/server/deployment/default-product/src/ordessa_server_product/__init__.py",
+      "sha256": "97b4744ac4975b4f45422be4dfd0ff0a841726320bdeddf59fdf5eba1d84a204"
+    },
+    {
+      "path": "packages/interfaces/transport/server/src/ordessa_interfaces/http/registry.py",
+      "sha256": "fce022495b41f5a9bfc200c013f0fcfb34f87c6cc03293e05eb8dca65b046dd0"
+    },
+    {
+      "path": "packages/interfaces/transport/server/src/ordessa_interfaces/http/loopback.py",
+      "sha256": "2d480b57bc8a7dc7dbd19b0a42defc90a0b9007a7a245423690c4b2914feb05e"
+    },
+    {
+      "path": "packages/interfaces/transport/server/src/ordessa_interfaces/http/runtime.py",
+      "sha256": "2472fe91017b3d0ef4153e7c00c0b2145fb789cbd994930b740ea5ba9b62a3a7"
+    },
+    {
+      "path": "apps/cli/tests/integration/profile_test_owner.py",
+      "sha256": "21809038a5ef15b32b1feb8e4fed270792140b13c70583320629fe81b3bf35dd"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_agent_guarded_bootstrap.py",
+      "sha256": "cb80aaab9bd0c6191e2f4cb1ec721584a0cdd07962137c3e3bfe6ef52636e6a2"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_server_http_entrypoint.py",
+      "sha256": "9f3a19163eaddfeea15f6a35d0ac1cdfaf63fbb55982ed20d003b405461d0518"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_product_registry_root_cut.py",
+      "sha256": "e9bc6627e87b29d5d986448e0a9b222d0ed6f7cfd6fc761927b9dcdb27e9e8b8"
+    },
+    {
+      "path": "tests/integration/packages_convergence/test_product_foreground_cli.py",
+      "sha256": "4468dd029bac0509c8717b62e3e40fa3e43555d90a415f804ea6357ddca7f18e"
+    }
+  ],
+  "tests": [
+    {
+      "label": "http-entry-final-wheel",
+      "passed": 9,
+      "skip": 0,
+      "files": [
+        "test_server_http_entrypoint.py",
+        "test_product_registry_root_cut.py",
+        "test_product_foreground_cli.py"
+      ]
+    },
+    {
+      "label": "original-launch-handoff-after",
+      "passed": 9,
+      "skip": 0,
+      "file": "apps/server/tests/test_launch_handoff_c02.py"
+    }
+  ],
+  "httpCoverage": [
+    "real test-owned child with explicit original Product/Profile/catalog/authority owner bindings",
+    "flag and ORDESSA_DATA_ROOT selection; system-assigned loopback port; one listening handshake",
+    "/live and foreign Host refusal",
+    "missing/wrong bearer refusal before calls; original server identity",
+    "Profile list through current capability; absent write grant refused",
+    "no core.sqlite or Unit runtime; actual root held during serve and released at stop",
+    "SIGTERM lifespan closes original owner before Uvicorn replays signal; child and listener cleaned",
+    "unconfigured installed default product selected and refuses before root writes (AGENT_OWNER_UNAVAILABLE)"
+  ],
+  "qualification": "Controlled trusted-owner HTTP host validation, not usable unconfigured default deployment or all old REST/WebSocket surfaces. Application runtime dependencies are locally rebuilt wheels but full installed dependency closure remains blocked.",
+  "remainingDefaultChoice": {
+    "missing": [
+      "production ProfileService owner and HarnessCatalog allowlist",
+      "external endpoint/preparation resolver and lifecycle/interaction authority",
+      "existing InstanceAccessAuthority plus exact context/ACL mapping",
+      "stable original server_id"
+    ],
+    "availableSeam": "trusted product create_composition(agent_owner_inputs=...,http_bindings=HttpOwnerBindings(...)) and prepare_http_runtime; neither CLI args nor loopback issue grants",
+    "rejectedCandidates": [
+      "empty registry/default grant workaround would remove product behavior",
+      "old agent_tools.OwnerPorts restores Unit authority and is incompatible"
+    ],
+    "notImplemented": "new ambient config loader/credential reader/entrypoint discovery or permissive defaults"
+  },
+  "remainingEngineering": "Only local rules adapter approved/validated (98 pass); native evidence/Profile/Unit and distribution pins still pending."
+}

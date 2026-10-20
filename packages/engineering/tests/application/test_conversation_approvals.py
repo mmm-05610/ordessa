@@ -7,6 +7,7 @@ import asyncio
 from contextlib import contextmanager
 from dataclasses import asdict, replace
 import hashlib
+import json
 import sqlite3
 from pathlib import Path
 
@@ -23,6 +24,8 @@ from ordessa_engineering.domain.approvals.consent import (
     ConsentPolicyRef, ConversationSource, ConversationNotice, AuthorizationIntent, ConversationEvidence,
 )
 from ordessa_engineering.domain.approvals.ref_codec import decode_approval_ref
+from ordessa_engineering.domain.approvals.consent_codec import encode_record
+from ordessa_engineering.domain.reviews.codec import encode_plan
 from ordessa_engineering.domain.common.models.values import Digest
 from ordessa_engineering.domain.common.outcomes.diagnostics import ReferenceError
 from test_review_usecases import SyntheticAccess, SyntheticAdmission, _scope, _context, _create_source, _plan, RAW_RESPONSE
@@ -40,7 +43,7 @@ def env(tmp_path):
     scope = _scope()
     target = _create_source(factory, scope)
     plan = _plan(scope, target)
-    review_admission = SyntheticAdmission(lib, SQLiteBlobStore(lib))
+    review_admission = SyntheticAdmission(lib, SQLiteBlobStore(lib), factory=factory)
     reviews = ReviewUseCases(factory, access, review_admission, blobs=review_admission.blobs)
     raw = POLICY_PATH.read_bytes()
     policy = ConsentPolicyRef('ordessa.product.v1.chat-attested-confirmation', 1,
@@ -87,14 +90,14 @@ def call(env, operation, parameters, request_id, **context_changes):
 
 
 def ready(env, *, record_review=True):
-    request = call(env, 'engineering.reviews.request', {'plan': asdict(env['plan'])}, 'review-request')
+    request = call(env, 'engineering.reviews.request', {'plan': json.loads(encode_plan(env['plan']))}, 'review-request')
     assert request.status == 'completed' and request.result['request']['state'] == 'requested'
     if record_review:
         env['reviews'].record_response(env['plan'].review_id, RAW_RESPONSE,
             _context(env['scope'], 'review-record'), expected_request_version=0, fence=1)
-    notice = call(env, 'engineering.notices.publish', {'notice': asdict(env['notice'])}, 'notice')
+    notice = call(env, 'engineering.notices.publish', {'notice': json.loads(encode_record(env['notice']))}, 'notice')
     assert notice.result['notice_ref'] == asdict(env['notice'].ref)
-    call(env, 'engineering.approvals.prepare_intent', {'intent': asdict(env['intent'])}, 'intent')
+    call(env, 'engineering.approvals.prepare_intent', {'intent': json.loads(encode_record(env['intent']))}, 'intent')
     return call(env, 'engineering.approvals.request', {'intent_id': env['intent'].intent_id,
         'intent_digest': asdict(env['intent'].digest)}, 'challenge')
 
@@ -107,7 +110,7 @@ def evidence(env, disposition='confirm', identity='answer-1'):
 
 def reply(env, challenge, ev, request_id='answer', **changes):
     args = {'challenge_id': challenge.result['challenge']['challenge_id'],
-        'expected_version': 0, 'nonce': challenge.result['nonce'], 'evidence': asdict(ev)}
+        'expected_version': 0, 'nonce': challenge.result['nonce'], 'evidence': json.loads(encode_record(ev))}
     args.update(changes)
     return call(env, 'engineering.approvals.record_conversation', args, request_id)
 
@@ -154,7 +157,7 @@ def test_pending_page_rejects_unbounded_or_noninteger_limits(env, limit):
 def test_pending_page_is_stable_and_original_access_can_refuse(env):
     first = ready(env)
     second_intent = replace(env['intent'], intent_id='intent-2')
-    call(env, 'engineering.approvals.prepare_intent', {'intent': asdict(second_intent)}, 'intent-second')
+    call(env, 'engineering.approvals.prepare_intent', {'intent': json.loads(encode_record(second_intent))}, 'intent-second')
     second = call(env, 'engineering.approvals.request', {'intent_id': second_intent.intent_id,
         'intent_digest': asdict(second_intent.digest)}, 'challenge-second')
     page = read(env, 'engineering.approvals.list_pending', {'limit': 1, 'after_challenge_id': None})
@@ -237,7 +240,7 @@ def test_empty_requirements_self_verified_and_questionless_evidence_reject(env):
     with pytest.raises(ReferenceError):
         replace(env['intent'], required_review_requirements=())
     challenge = ready(env)
-    body = asdict(evidence(env))
+    body = json.loads(encode_record(evidence(env)))
     body['approved'] = True
     with pytest.raises(ApplicationError, match='INVALID_INPUT'):
         reply(env, challenge, evidence(env), evidence=body)
@@ -315,7 +318,7 @@ def test_pending_challenge_is_unique_and_binding_is_immutable(env):
 def test_expired_challenge_and_review_set_race_do_not_consume_nonce(env):
     challenge = ready(env)
     args = {'challenge_id': challenge.result['challenge']['challenge_id'], 'expected_version': 0,
-        'nonce': challenge.result['nonce'], 'evidence': asdict(evidence(env))}
+        'nonce': challenge.result['nonce'], 'evidence': json.loads(encode_record(evidence(env)))}
     with pytest.raises(ApplicationError, match='CONSENT_EXPIRED'):
         call(env, 'engineering.approvals.record_conversation', args, 'expired-answer',
              received_at='2026-10-11T12:00:00.000000Z')

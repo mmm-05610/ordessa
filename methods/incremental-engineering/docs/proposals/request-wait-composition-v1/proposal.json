@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "status": "proposal_only",
+  "proposed_method_id": "ordessa.incremental-engineering",
+  "proposed_release_version": "2.5.0",
+  "base_release_version": "2.4.0",
+  "base_snapshot": "fa51512abd24167856217ee58b4ba26903247a4f6e319ed9d80d20dc4c8c800c",
+  "compiled": false,
+  "sealed": false,
+  "published": false,
+  "executed": false,
+  "request_terminal_semantics": {
+    "engineering.reviews.request": "requested_not_review_pass",
+    "engineering.approvals.request": "pending_challenge_not_grant"
+  },
+  "generation_strategy": "main_agent_frozen_templates_and_skill_then_original_artifact_and_package_freeze",
+  "new_atomic_write_candidate": [
+    "acceptance.adopt"
+  ],
+  "candidate_api_frozen": false,
+  "model_calls": 0
+}

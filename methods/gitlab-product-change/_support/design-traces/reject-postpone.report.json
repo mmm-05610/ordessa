@@ -1,0 +1,320 @@
+{
+  "report_version": 1,
+  "identity": {
+    "project_path": "group/project",
+    "issue_url": "https://gitlab.example/group/project/-/issues/125",
+    "issue_title": "Synthetic reject-postpone scenario",
+    "work_type": "feature",
+    "product_area": "synthetic-area",
+    "primary_dri": "pm-dri",
+    "issue_state_model": "issue_status",
+    "issue_state_value": "Validation backlog",
+    "state_observed_at": "2026-10-12T12:00:00Z",
+    "tracking_item_refs": [
+      "https://gitlab.example/group/project/-/issues/125"
+    ]
+  },
+  "roles": [
+    {
+      "phase_or_decision": "validation",
+      "role_name": "Product Manager",
+      "person_or_group": "pm-dri",
+      "authority_basis": "Synthetic scenario assignment only; not an Ordessa grant.",
+      "approval_ref": null
+    },
+    {
+      "phase_or_decision": "design",
+      "role_name": "Product Designer",
+      "person_or_group": "design-dri",
+      "authority_basis": "Synthetic scenario assignment only; not an Ordessa grant.",
+      "approval_ref": null
+    },
+    {
+      "phase_or_decision": "build",
+      "role_name": "Engineering DRI",
+      "person_or_group": "eng-dri",
+      "authority_basis": "Synthetic scenario assignment only; not an Ordessa grant.",
+      "approval_ref": null
+    },
+    {
+      "phase_or_decision": "review",
+      "role_name": "Maintainer / reviewer",
+      "person_or_group": "maintainer-dri",
+      "authority_basis": "Synthetic scenario assignment only; not an Ordessa grant.",
+      "approval_ref": null
+    },
+    {
+      "phase_or_decision": "deployment",
+      "role_name": "Release owner",
+      "person_or_group": "release-dri",
+      "authority_basis": "Synthetic scenario assignment only; not an Ordessa grant.",
+      "approval_ref": null
+    },
+    {
+      "phase_or_decision": "outcome",
+      "role_name": "Product owner",
+      "person_or_group": "pm-dri",
+      "authority_basis": "Synthetic scenario assignment only; not an Ordessa grant.",
+      "approval_ref": null
+    }
+  ],
+  "validation_track": {
+    "applicability": "applicable",
+    "applicability_rationale": "Validation depth is chosen for this synthetic feature scenario.",
+    "problem_validation": {
+      "status": "rejected",
+      "entered_at": "2026-10-01T09:00:00Z",
+      "exited_at": null,
+      "owner": "pm-dri",
+      "outcome_or_skip_rationale": "Solution decision deferred pending new evidence.",
+      "evidence_refs": [
+        "https://gitlab.example/group/project/-/issues/123"
+      ],
+      "decision": {
+        "result": "reject_or_continue_validation",
+        "rationale": "Solution decision deferred pending new evidence.",
+        "decided_by": "pm-dri",
+        "decided_at": "2026-10-12T12:00:00Z",
+        "approval_or_record_ref": null
+      }
+    },
+    "design": {
+      "status": "skipped",
+      "entered_at": "2026-10-01T09:00:00Z",
+      "exited_at": null,
+      "owner": "pm-dri",
+      "outcome_or_skip_rationale": "Rejected problem framing means solution design did not start.",
+      "evidence_refs": [
+        "https://gitlab.example/group/project/-/issues/123"
+      ],
+      "decision": {
+        "result": "not_applicable",
+        "rationale": "Rejected problem framing means solution design did not start.",
+        "decided_by": "pm-dri",
+        "decided_at": "2026-10-12T12:00:00Z",
+        "approval_or_record_ref": null
+      }
+    },
+    "solution_validation": {
+      "status": "deferred",
+      "entered_at": "2026-10-01T09:00:00Z",
+      "exited_at": null,
+      "owner": "pm-dri",
+      "outcome_or_skip_rationale": "New customer evidence is required before a different solution can be considered.",
+      "evidence_refs": [
+        "https://gitlab.example/group/project/-/issues/123"
+      ],
+      "decision": {
+        "result": "reject_and_defer",
+        "rationale": "New customer evidence is required before a different solution can be considered.",
+        "decided_by": "pm-dri",
+        "decided_at": "2026-10-12T12:00:00Z",
+        "approval_or_record_ref": null
+      }
+    },
+    "success_hypotheses_and_metrics": [
+      "hypothesis: metric changes after target version is deployed"
+    ],
+    "validation_evidence_refs": [
+      "https://gitlab.example/group/project/-/issues/125"
+    ]
+  },
+  "build_track": {
+    "applicability": "applicable",
+    "applicability_rationale": "Build applicability is a recorded decision for this synthetic scenario.",
+    "plan": {
+      "status": "not_started",
+      "entered_at": "2026-10-01T09:00:00Z",
+      "exited_at": null,
+      "owner": "pm-dri",
+      "outcome_or_skip_rationale": "Build is postponed pending renewed problem validation.",
+      "evidence_refs": [
+        "https://gitlab.example/group/project/-/issues/123"
+      ],
+      "decision": {
+        "result": "defer",
+        "rationale": "Build is postponed pending renewed problem validation.",
+        "decided_by": "pm-dri",
+        "decided_at": "2026-10-12T12:00:00Z",
+        "approval_or_record_ref": null
+      }
+    },
+    "development": {
+      "status": "not_started",
+      "entered_at": "2026-10-01T09:00:00Z",
+      "exited_at": null,
+      "owner": "eng-dri",
+      "outcome_or_skip_rationale": "No implementation was authorized in this scenario.",
+      "evidence_refs": [
+        "https://gitlab.example/group/project/-/issues/123"
+      ],
+      "decision": {
+        "result": "not_applicable",
+        "rationale": "No implementation was authorized in this scenario.",
+        "decided_by": "eng-dri",
+        "decided_at": "2026-10-12T12:00:00Z",
+        "approval_or_record_ref": null
+      }
+    },
+    "testing": {
+      "status": "not_started",
+      "entered_at": "2026-10-01T09:00:00Z",
+      "exited_at": null,
+      "owner": "test-dri",
+      "outcome_or_skip_rationale": "No implementation exists to test.",
+      "evidence_refs": [
+        "https://gitlab.example/group/project/-/issues/123"
+      ],
+      "decision": {
+        "result": "not_applicable",
+        "rationale": "No implementation exists to test.",
+        "decided_by": "test-dri",
+        "decided_at": "2026-10-12T12:00:00Z",
+        "approval_or_record_ref": null
+      }
+    },
+    "review": {
+      "status": "not_started",
+      "entered_at": "2026-10-01T09:00:00Z",
+      "exited_at": null,
+      "owner": "maintainer-dri",
+      "outcome_or_skip_rationale": "No merge request exists.",
+      "evidence_refs": [
+        "https://gitlab.example/group/project/-/issues/123"
+      ],
+      "decision": {
+        "result": "not_applicable",
+        "rationale": "No merge request exists.",
+        "decided_by": "maintainer-dri",
+        "decided_at": "2026-10-12T12:00:00Z",
+        "approval_or_record_ref": null
+      }
+    },
+    "verification": {
+      "status": "not_started",
+      "entered_at": "2026-10-01T09:00:00Z",
+      "exited_at": null,
+      "owner": "release-dri",
+      "outcome_or_skip_rationale": "No deployment was selected or performed.",
+      "evidence_refs": [
+        "https://gitlab.example/group/project/-/issues/123"
+      ],
+      "decision": {
+        "result": "not_applicable",
+        "rationale": "No deployment was selected or performed.",
+        "decided_by": "release-dri",
+        "decided_at": "2026-10-12T12:00:00Z",
+        "approval_or_record_ref": null
+      }
+    },
+    "planning_refs": [
+      "https://gitlab.example/group/project/-/issues/125"
+    ],
+    "test_and_review_refs": [
+      "https://gitlab.example/group/project/-/issues/125"
+    ]
+  },
+  "track_links": [
+    {
+      "relation": "feeds",
+      "validation_work_ref": "https://gitlab.example/group/project/-/issues/125#validation",
+      "build_work_ref": "https://gitlab.example/group/project/-/issues/125#build",
+      "recorded_at": "2026-10-02T09:00:00Z",
+      "recorded_by": "pm-dri",
+      "rationale_or_decision_ref": "Synthetic coordination decision."
+    }
+  ],
+  "blockers": [],
+  "rework": [],
+  "merge_requests": [
+    {
+      "url": "https://gitlab.example/group/project/-/merge_requests/125",
+      "state": "open",
+      "source_revision": "synthetic-sha-a1b2",
+      "merged_commit": null,
+      "merged_at": null,
+      "review_and_pipeline_refs": [
+        "https://gitlab.example/group/project/-/issues/125"
+      ],
+      "merge_is_deployment_evidence": false
+    }
+  ],
+  "deployment": {
+    "target_model": "not_yet_selected",
+    "target_rationale": "Synthetic target selection; actual projects must choose and confirm their target.",
+    "gitlab_com_path": {
+      "applicability": "not_selected",
+      "rationale": "Target decision is deferred.",
+      "release_or_package_binding": "synthetic release 1.2.3 / commit a",
+      "events": [],
+      "post_deployment_migration_refs": [],
+      "live_version_confirmed": false,
+      "confirmation_evidence_refs": [],
+      "upstream_release_state": "not_applicable",
+      "target_installation_state": "not_applicable",
+      "target_installation_evidence_refs": []
+    },
+    "self_managed_path": {
+      "applicability": "not_selected",
+      "rationale": "Target decision is deferred.",
+      "release_or_package_binding": "synthetic release 1.2.3 / commit a",
+      "events": [],
+      "post_deployment_migration_refs": [],
+      "live_version_confirmed": false,
+      "confirmation_evidence_refs": [],
+      "upstream_release_state": "not_applicable",
+      "target_installation_state": "not_applicable",
+      "target_installation_evidence_refs": []
+    },
+    "deployment_dri": "release-dri",
+    "verification_decision": {
+      "result": "deferred",
+      "rationale": "Deployment target decision is postponed with the issue.",
+      "decided_by": "release-dri",
+      "decided_at": "2026-10-12T12:00:00Z",
+      "approval_or_record_ref": null
+    }
+  },
+  "outcome_evaluation": {
+    "status": "not_started",
+    "evaluation_window": "2026-10-10 through 2026-10-12 (synthetic)",
+    "metrics": [
+      {
+        "name": "task success rate",
+        "definition": "Synthetic proportion of target user task completion",
+        "baseline": "0.70",
+        "target": "0.80",
+        "observed_value": null,
+        "measurement_window": "2026-10-10..2026-10-12",
+        "source_refs": [],
+        "owner": "analytics-dri"
+      }
+    ],
+    "customer_and_operational_feedback_refs": [],
+    "decision": "unknown",
+    "decision_rationale": "Synthetic report value; does not establish real product impact.",
+    "decision_owner": "pm-dri",
+    "decided_at": "2026-10-12T12:00:00Z",
+    "follow_up_refs": []
+  },
+  "closure": {
+    "decision": "deferred",
+    "reason": "Synthetic terminal or deferred decision; see all phase states.",
+    "closed_or_reviewed_by": "pm-dri",
+    "recorded_at": "2026-10-12T12:00:00Z",
+    "feedback_and_follow_up_refs": [
+      "https://gitlab.example/group/project/-/issues/125"
+    ],
+    "next_review_at": "2026-10-19T12:00:00Z"
+  },
+  "revision_history": [],
+  "source_snapshot": {
+    "source_index_path": "SOURCES.md",
+    "retrieved_at": "2026-10-12",
+    "source_policy_version_or_url": "https://handbook.gitlab.com/handbook/product-development/how-we-work/product-development-flow/",
+    "version_discrepancies_not_resolved": [
+      "Product flow page uses statuses; Application Lifecycle team page still displays workflow labels."
+    ],
+    "authored_report_is_claim_only": true
+  }
+}

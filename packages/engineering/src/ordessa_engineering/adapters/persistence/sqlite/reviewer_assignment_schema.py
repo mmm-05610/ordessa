@@ -1,4 +1,10 @@
-"""Explicit schema15 for reviewer-role assignment on the original library."""
+"""Original schema15 physical layout for tagged current and historical roles.
+
+Existing eng_unit_* table/column/index/trigger identifiers remain unchanged.
+Current canonical_bytes carries engineering-agent-reviewer-assignment/2 and
+Agent refs. Untagged Unit rows retain exact original bytes and are read-only
+history; repository admission never upgrades them into active Agent roles.
+"""
 
 REVIEWER_ASSIGNMENT_SCHEMA_VERSION = 15
 REVIEWER_ASSIGNMENT_TABLES = (

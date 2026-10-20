@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ordessa:method:incremental-engineering:confirmation-evidence:1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "document_type": {
+      "const": "confirmation-evidence"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "evidence_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policy_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policy_id": {
+          "const": "ordessa.product.v1.chat-attested-confirmation"
+        },
+        "revision": {
+          "const": 1
+        },
+        "sha256": {
+          "const": "102d4a74144348ac83ced83200a26ab2b5b99660984ebc3572e21e6f5910df2b"
+        }
+      },
+      "required": [
+        "policy_id",
+        "revision",
+        "sha256"
+      ]
+    },
+    "attestor_role": {
+      "const": "main_agent"
+    },
+    "attestor_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "object_id",
+        "revision",
+        "digest",
+        "locator"
+      ]
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1
+    },
+    "necessary_context": {
+      "type": "string",
+      "minLength": 1
+    },
+    "user_answer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "locator_limitations": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trust_level": {
+          "const": "agent-attested"
+        },
+        "independent_platform_verification": {
+          "const": false
+        }
+      },
+      "required": [
+        "locator",
+        "message_refs",
+        "locator_limitations",
+        "trust_level",
+        "independent_platform_verification"
+      ]
+    },
+    "object_versions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "object_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "revision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "locator": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "object_id",
+          "revision",
+          "digest",
+          "locator"
+        ]
+      }
+    },
+    "scope_by_action": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "interpretation": {
+      "enum": [
+        "confirmed",
+        "denied",
+        "ambiguous"
+      ]
+    }
+  },
+  "required": [
+    "document_type",
+    "schema_version",
+    "evidence_id",
+    "policy_ref",
+    "attestor_role",
+    "attestor_ref",
+    "question",
+    "necessary_context",
+    "user_answer",
+    "source",
+    "object_versions",
+    "scope_by_action",
+    "interpretation"
+  ]
+}

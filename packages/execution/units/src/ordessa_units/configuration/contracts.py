@@ -9,8 +9,8 @@ from dataclasses import dataclass
 import json
 from typing import Mapping
 
-from ordessa_execution_api.environment import IdentityMismatchError
-from ordessa_execution_api.environment.operations import safe_json, sealed_mapping
+from ordessa_units.errors import UnitIdentityMismatch
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_execution_agents.profiles.definitions.validation import canonical_content, _safe_tree
 
 CONFIGURATION_CONTRACT_VERSION = "agent-configuration/1"
@@ -25,7 +25,7 @@ class ConfigurationUnsupported(ConfigurationContractError):
     code = "CONFIGURATION_UNSUPPORTED"
 
 
-class ConfigurationRevisionConflict(IdentityMismatchError):
+class ConfigurationRevisionConflict(UnitIdentityMismatch):
     code = "CONFIGURATION_REVISION_CONFLICT"
 
 

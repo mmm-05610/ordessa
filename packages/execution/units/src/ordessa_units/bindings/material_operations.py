@@ -12,21 +12,11 @@ from collections.abc import Mapping
 from typing import Any
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError,
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
-    UnknownResultError,
-)
-from ordessa_execution_api.environment.identity import ActivationRef, ParticipantInstanceRef
-from ordessa_execution_api.environment.operations import (
-    OperationStorePort,
-    OperationRevisionConflict,
-    StepRecord,
-    UsageMutation,
-    operation_holder,
-    safe_json,
-)
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch, UnitOperationUnknown
+from ordessa_units.definitions.admission_identity import MaterialProviderActivationRef
+from ordessa_units.definitions.admission_identity import AgentNodeRef
+from ordessa_units.definitions.operations import OperationStorePort, OperationRevisionConflict, StepRecord, UsageMutation, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 
 from ordessa_units.admission.material_contracts import MaterialContractError
 from ordessa_units.bindings.contracts import DirectoryBindingRef
@@ -54,11 +44,11 @@ AGENT_MATERIAL_OPERATION_CONTRACT_VERSION = "agent-material-operation/1"
 
 
 def _fail(message: str = "material operation facts are invalid") -> None:
-    raise IdentityMismatchError(message)
+    raise UnitIdentityMismatch(message)
 
 
-def _activation_data(value: ActivationRef) -> dict[str, Any]:
-    if type(value) is not ActivationRef:
+def _activation_data(value: MaterialProviderActivationRef) -> dict[str, Any]:
+    if type(value) is not MaterialProviderActivationRef:
         _fail()
     return {"environmentNamespace": value.environment,
             "pluginId": value.plugin_id, "generation": value.generation}
@@ -88,7 +78,7 @@ def _directory_data(value: DirectoryBindingRef) -> dict[str, Any]:
 
 
 def _target_data(value: MaterialUseTarget) -> dict[str, Any]:
-    if type(value) is not MaterialUseTarget or type(value.node_ref) is not ParticipantInstanceRef:
+    if type(value) is not MaterialUseTarget or type(value.node_ref) is not AgentNodeRef:
         _fail()
     return {"nodeRef": {"environmentNamespace": value.node_ref.environment,
                         "instanceId": value.node_ref.instance_id,
@@ -262,13 +252,13 @@ def material_reservation_usages(request: RequestKey,
                                 material_request: MaterialRequest) -> tuple[UsageMutation, ...]:
     """Build the two original operation holds; this helper performs no write."""
     if type(request) is not RequestKey:
-        raise IdentityMismatchError("complete material operation request identity required")
+        raise UnitIdentityMismatch("complete material operation request identity required")
     material = _request_snapshot(material_request)
     correlation = material.correlation
     if request.environment_namespace != material.resource_ref.environment_namespace:
-        raise IdentityMismatchError("material hold crosses Environment identity")
+        raise UnitIdentityMismatch("material hold crosses Environment identity")
     if request.principal_scope == "":
-        raise IdentityMismatchError("material operation principal is unavailable")
+        raise UnitIdentityMismatch("material operation principal is unavailable")
     holder = operation_holder(request, correlation.operation_ref)
     provider_target = material_provider_ref(material.provider_pin)
     resource_target = _resource_ref_data(material.resource_ref)
@@ -293,38 +283,38 @@ class MaterialOperations:
     def _gate(self, request: RequestKey):
         env = self._environment
         if type(request) is not RequestKey:
-            raise IdentityMismatchError("complete material operation request identity required")
+            raise UnitIdentityMismatch("complete material operation request identity required")
         with env._admission_lock:
             env._check_open()
             env._check_environment(request.environment_namespace)
             if request.principal_scope != env._principal_scope:
-                raise AdmissionRefusedError("material operation principal differs from this Environment")
+                raise UnitAdmissionRefused("material operation principal differs from this Environment")
             self._material_admission._admit_resource_metadata_read()
         store = env._store
         if not isinstance(store, OperationStorePort):
-            raise GuaranteeUnavailableError("same-Environment operation Store is unavailable")
+            raise UnitGuaranteeUnavailable("same-Environment operation Store is unavailable")
         if not isinstance(self._issuer, InvocationIssuer) or self._issuer._store is not store:
             raise InvocationAuthorityRefused("same-Store InvocationIssuer is required")
         return store
 
     def _read_operation(self, store, request: RequestKey, operation_digest: str):
         if type(operation_digest) is not str or not operation_digest:
-            raise IdentityMismatchError("fixed material operation digest is required")
+            raise UnitIdentityMismatch("fixed material operation digest is required")
         operation = store.read_operation(request)
         if operation is None:
-            raise UnknownResultError("material operation is not reserved")
+            raise UnitOperationUnknown("material operation is not reserved")
         if operation.digest != operation_digest:
-            raise IdentityMismatchError("material operation digest differs from its reservation")
+            raise UnitIdentityMismatch("material operation digest differs from its reservation")
         return operation
 
     @staticmethod
     def _fixed_facts(operation, step_id: str, request: RequestKey):
         if type(step_id) is not str or not step_id:
-            raise IdentityMismatchError("fixed material step identity is required")
+            raise UnitIdentityMismatch("fixed material step identity is required")
         intent = operation.intent
         step = next((item for item in intent.steps if item.step_id == step_id), None)
         if step is None:
-            raise IdentityMismatchError("material step is outside the fixed operation recipe")
+            raise UnitIdentityMismatch("material step is outside the fixed operation recipe")
         context = intent.context_ref
         try:
             entries = context["materialRequests"]
@@ -362,17 +352,17 @@ class MaterialOperations:
                 raise ValueError()
             return step, material_request, descriptor, binding
         except (KeyError, TypeError, ValueError, AttributeError, RecursionError):
-            raise IdentityMismatchError("fixed material request differs from its original operation step") from None
+            raise UnitIdentityMismatch("fixed material request differs from its original operation step") from None
 
     def _usage_rows(self, store, operation, request, material_request, *, claimed: bool):
         reader = getattr(store, "read_usages", None)
         if not callable(reader):
-            raise GuaranteeUnavailableError("same-Store material Usage reads are unavailable")
+            raise UnitGuaranteeUnavailable("same-Store material Usage reads are unavailable")
         holder = operation_holder(request, operation.intent.operation_ref)
         try:
             rows = reader(request.environment_namespace, holder)
         except Exception:
-            raise GuaranteeUnavailableError("material Usage facts are unavailable") from None
+            raise UnitGuaranteeUnavailable("material Usage facts are unavailable") from None
         expected = {
             f"{operation.intent.operation_ref}.material.{material_request.correlation.step_id}.provider":
                 material_provider_ref(material_request.provider_pin),
@@ -384,14 +374,14 @@ class MaterialOperations:
         for usage_id, target in expected.items():
             row = by_id.get(usage_id)
             if row is None:
-                raise GuaranteeUnavailableError("required material Usage hold is missing")
+                raise UnitGuaranteeUnavailable("required material Usage hold is missing")
             state = row.get("state")
             allowed_states = {"active", "unknown"} if claimed else {"active"}
             if (row.get("holderRef") != holder or row.get("targetRef") != target
                     or row.get("rights") != ["use"] or state not in allowed_states
                     or type(row.get("revision")) is not int or row["revision"] < 1
                     or row.get("payload") != {}):
-                raise GuaranteeUnavailableError("material Usage hold identity or state is unavailable")
+                raise UnitGuaranteeUnavailable("material Usage hold identity or state is unavailable")
             result.append(row)
         return tuple(result)
 
@@ -444,21 +434,21 @@ class MaterialOperations:
                 pin.provider_version,
                 pin.owner_activation,
             )
-        except (AdmissionRefusedError, GuaranteeUnavailableError):
+        except (UnitAdmissionRefused, UnitGuaranteeUnavailable):
             raise
         except Exception:
-            raise GuaranteeUnavailableError("admitted material provider is unavailable") from None
+            raise UnitGuaranteeUnavailable("admitted material provider is unavailable") from None
         if (metadata.resource_provider.descriptor.id != material_request.resource_ref.provider_id
                 or metadata.resource_provider.descriptor.version != pin.provider_version
                 or metadata.resource_provider.owner_activation != pin.owner_activation
                 or material_request.resource_ref.contract_id not in metadata.resource_provider.supported_contract_ids):
-            raise AdmissionRefusedError("material provider pin or contract changed")
+            raise UnitAdmissionRefused("material provider pin or contract changed")
         return metadata, provider
 
     @staticmethod
     def _check_lifetime(metadata, descriptor):
         if descriptor.lifetime not in metadata.capability.lifetimes:
-            raise GuaranteeUnavailableError("material provider does not support the fixed resource lifetime")
+            raise UnitGuaranteeUnavailable("material provider does not support the fixed resource lifetime")
 
     @staticmethod
     def _check_descriptor(provider, principal: str, material_request, descriptor):
@@ -467,9 +457,9 @@ class MaterialOperations:
                 ResourceRef.from_dict(_resource_ref_data(material_request.resource_ref)), principal)
             snapshot = _descriptor_snapshot(described)
         except Exception:
-            raise GuaranteeUnavailableError("material provider description is unavailable") from None
+            raise UnitGuaranteeUnavailable("material provider description is unavailable") from None
         if safe_json(_descriptor_data(snapshot)) != safe_json(_descriptor_data(descriptor)):
-            raise AdmissionRefusedError("material provider descriptor differs from its fixed facts")
+            raise UnitAdmissionRefused("material provider descriptor differs from its fixed facts")
 
     @staticmethod
     def _check_result(result: MaterialResult, material_request, descriptor):
@@ -512,9 +502,9 @@ class MaterialOperations:
             current = store.read_operation_step(operation.request, step.step_id)
             if current is not None:
                 return current
-            raise GuaranteeUnavailableError("material result could not be durably associated") from None
+            raise UnitGuaranteeUnavailable("material result could not be durably associated") from None
         except Exception:
-            raise GuaranteeUnavailableError("material result could not be durably recorded") from None
+            raise UnitGuaranteeUnavailable("material result could not be durably recorded") from None
 
     def acquire(self, request: RequestKey, operation_digest: str, step_id: str) -> StepRecord:
         store = self._gate(request)
@@ -528,18 +518,18 @@ class MaterialOperations:
             self._usage_rows(store, operation, request, material_request, claimed=True)
             current = store.read_operation_step(request, step_id)
             if current is None:
-                raise GuaranteeUnavailableError("material step claim disappeared during authorized read")
+                raise UnitGuaranteeUnavailable("material step claim disappeared during authorized read")
             return current
 
         rows = self._usage_rows(store, operation, request, material_request, claimed=False)
         metadata, provider = self._provider(material_request)
         self._check_lifetime(metadata, descriptor)
         if not metadata.capability.query_acquire:
-            raise GuaranteeUnavailableError("material provider cannot query a lost acquisition receipt")
+            raise UnitGuaranteeUnavailable("material provider cannot query a lost acquisition receipt")
         self._check_descriptor(provider, env_principal(self._environment), material_request, descriptor)
         current_metadata, current_provider = self._provider(material_request)
         if current_provider is not provider or current_metadata != metadata:
-            raise AdmissionRefusedError("material provider pin changed before dispatch")
+            raise UnitAdmissionRefused("material provider pin changed before dispatch")
 
         claim = None
         try:
@@ -549,8 +539,8 @@ class MaterialOperations:
             )
             claim = store.read_operation_step(request, step.step_id)
             if claim is None:
-                raise GuaranteeUnavailableError("material dispatch claim is missing")
-        except UnknownResultError:
+                raise UnitGuaranteeUnavailable("material dispatch claim is missing")
+        except UnitOperationUnknown:
             current = store.read_operation_step(request, step_id)
             if current is not None and claim is None:
                 metadata, _ = self._provider(material_request)
@@ -576,13 +566,13 @@ class MaterialOperations:
         try:
             current_metadata, current_provider = self._provider(material_request)
             if current_provider is not provider or current_metadata != metadata:
-                raise AdmissionRefusedError("material provider pin changed before dispatch")
+                raise UnitAdmissionRefused("material provider pin changed before dispatch")
             result_value = provider.resolve_material(_request_snapshot(material_request), context)
             current_metadata, current_provider = self._provider(material_request)
             if current_provider is not provider or current_metadata != metadata:
-                raise AdmissionRefusedError("material provider pin changed after dispatch")
+                raise UnitAdmissionRefused("material provider pin changed after dispatch")
             if not self._issuer.verified_consumption(context):
-                raise GuaranteeUnavailableError("provider did not verify the original material invocation")
+                raise UnitGuaranteeUnavailable("provider did not verify the original material invocation")
             result = _result_snapshot(result_value)
             self._check_result(result, material_request, descriptor)
         except Exception:
@@ -605,7 +595,7 @@ class MaterialOperations:
             self._usage_rows(store, operation, request, material_request, claimed=True)
             current = store.read_operation_step(request, step_id)
             if current is None:
-                raise GuaranteeUnavailableError("material step claim disappeared during authorized read")
+                raise UnitGuaranteeUnavailable("material step claim disappeared during authorized read")
             return current
 
         claimed_step = existing
@@ -618,27 +608,27 @@ class MaterialOperations:
         self._check_descriptor(provider, env_principal(self._environment), material_request, descriptor)
         current_metadata, current_provider = self._provider(material_request)
         if current_provider is not provider or current_metadata != metadata:
-            raise AdmissionRefusedError("material provider pin changed before query")
+            raise UnitAdmissionRefused("material provider pin changed before query")
 
         query = self._issuer.issue_query(request, operation.digest, step.step_id)
         current_metadata, current_provider = self._provider(material_request)
         if current_provider is not provider or current_metadata != metadata:
-            raise AdmissionRefusedError("material provider pin changed before query")
+            raise UnitAdmissionRefused("material provider pin changed before query")
         try:
             result_value = provider.query_material(_request_snapshot(material_request), query)
             current_metadata, current_provider = self._provider(material_request)
             if current_provider is not provider or current_metadata != metadata:
-                raise AdmissionRefusedError("material provider pin changed after query")
+                raise UnitAdmissionRefused("material provider pin changed after query")
             # The provider must verify the original claim under this query
             # ticket; a generic read observation cannot stand in for it.
             if not self._issuer.verified_observation(query):
-                raise GuaranteeUnavailableError("provider did not verify the original material query")
+                raise UnitGuaranteeUnavailable("provider did not verify the original material query")
             verifier = self._issuer.verifier()
             verifier.verify_claimed_query(query, step.pinned_provider_ref,
                                           binding["targetRef"], step.input_digest,
                                           operation_kind=operation.intent.kind)
             if not self._issuer.verified_observation(query):
-                raise GuaranteeUnavailableError("provider did not verify the original material query")
+                raise UnitGuaranteeUnavailable("provider did not verify the original material query")
             result = _result_snapshot(result_value)
             self._check_result(result, material_request, descriptor)
         except Exception:

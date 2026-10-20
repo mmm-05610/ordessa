@@ -11,3 +11,6 @@ dependencies = ["ordessa-execution-agents==0.1.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[project.entry-points."ordessa.harness_providers"]
+vibe = "ordessa_harness_vibe:factory"

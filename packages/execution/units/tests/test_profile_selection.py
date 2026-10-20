@@ -5,7 +5,7 @@ from threading import RLock
 
 import pytest
 
-from ordessa_execution_api.environment import AdmissionRefusedError, GuaranteeUnavailableError
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable
 from ordessa_execution_agents.harness.providers.registry import (
     HarnessCatalog,
     HarnessDefinitionDeclaration,
@@ -22,10 +22,11 @@ from ordessa_execution_agents.profiles import (
 )
 from ordessa_units.assembly.profile_selection import resolve_unit_profile
 from ordessa_units.admission.context import UnitAdmissionContext
+from ordessa_units.bindings.profile_admission import UnitProfileAdmission
 from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
 from ordessa_units.admission.material_registration import MaterialCatalog
 from ordessa_units.persistence.sqlite.store import SqliteUnitStore
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 
 
 class Policy:
@@ -47,7 +48,7 @@ def profile_owner(tmp_path, *, namespace="unit-resolution"):
         policy=policy,
         principal_scope="synthetic",
         admission_lock=lock,
-        retirement_guard=lambda owner_id, generation: owner["context"].provider_retirement_guard(
+        retirement_guard=lambda owner_id, generation: owner["context"].harness_provider_retirement_guard(
             owner_id, generation
         ),
     )
@@ -77,7 +78,7 @@ def profile_owner(tmp_path, *, namespace="unit-resolution"):
         "fixture-owner", 1, "fixture-installation", "b" * 64, (declaration,)
     ).commit()
     try:
-        yield ProfileService(context), harness_catalog, store, descriptor
+        yield ProfileService(UnitProfileAdmission(context)), harness_catalog, store, descriptor
     finally:
         harness_catalog.drain("fixture-owner", 1)
         harness_catalog.retire("fixture-owner", 1)
@@ -137,7 +138,7 @@ def test_refuses_archived_or_missing_current_profile(tmp_path):
         service.archive(
             "profile", expected_version=1, request=service.request_key("archive")
         )
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(UnitAdmissionRefused):
             resolve_unit_profile(service, created.current_revision, catalog)
         with pytest.raises(ProfileNotFound):
             resolve_unit_profile(
@@ -193,7 +194,7 @@ def test_requires_real_harness_catalog_admission_for_profile_definition(tmp_path
             content=missing,
             request=service.request_key("create"),
         )
-        with pytest.raises(AdmissionRefusedError):
+        with pytest.raises(UnitAdmissionRefused):
             resolve_unit_profile(service, created.current_revision, catalog)
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             resolve_unit_profile(service, created.current_revision, object())

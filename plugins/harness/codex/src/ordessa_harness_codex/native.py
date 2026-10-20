@@ -9,8 +9,8 @@ from __future__ import annotations
 #: native field + dialect value per canonical protocol; first-hand source:
 #:   deployment/config.toml [model_providers.deepseek] wire_api="responses";
 #:   wire/handlers.py accepts wireApi {chat_completions, responses}.
-from ordessa_harness_codex.acp_model_facts import DIALECT as DIALECTS
-from ordessa_harness_codex.acp_model_facts import NATIVE_TARGET as _TARGETS
+from .acp_model_facts import DIALECT as DIALECTS
+from .acp_model_facts import NATIVE_TARGET as _TARGETS
 
 #: First-hand-pinned native config target path (relative to the guest home).
 NATIVE_TARGET = _TARGETS["codex"]

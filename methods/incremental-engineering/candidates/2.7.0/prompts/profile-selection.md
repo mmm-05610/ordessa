@@ -1,0 +1,1 @@
+Ask the caller to supply one exact reference to an existing profile usable for the requested operation. Do not invent, copy, mutate, or publish a profile; do not select by an unverified display name. If no profile reference is supplied, leave routing unbound and mark the operation unavailable.

@@ -28,6 +28,33 @@ class SourceReviewBindingsPort(Protocol):
         ...
 
 
+class DeclaredSubmissionReviewBindingsPort(Protocol):
+    """Selected original-library owner for a declared report's exact plan.
+
+    This optional capability does not reinterpret a historical compiled plan.
+    The owner must derive the complete checks from the pinned method resources;
+    echoing a supplied plan does not constitute production admission.
+    """
+    factory: object
+
+    def resolve_declared_submission_plan(self, context, plan: ReviewPlan,
+                                        definition: MethodDefinition) -> SourceReviewBinding: ...
+
+
+class DeclaredImplementationReviewPlanFactory(Protocol):
+    """Optional capability of the composition-selected review plan producer.
+
+    The returned schema-2 plan targets the exact persisted report. Native
+    reviewer selection, assignment, execution and trust remain with their
+    original owners; producing this value supplies none of those authorities.
+    """
+    factory: object
+
+    def implementation_plan(self, context, work, *, review_id, submission,
+                            package, reviewer_profile_ref, requirement_id,
+                            resources) -> ReviewPlan: ...
+
+
 @dataclass(frozen=True)
 class CriterionAnswer:
     check_key: CheckKey

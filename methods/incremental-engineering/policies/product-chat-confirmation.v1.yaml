@@ -1,0 +1,43 @@
+schema_version: 1
+policy_id: ordessa.product.v1.chat-attested-confirmation
+revision: 1
+status: user_decided_product_policy
+selection_authority: product_composition_and_configured_engineering_admission
+method_may_select_arbitrary_policy: false
+authorized_attestor_role: registered_main_agent
+accepted_source_trust_level: agent-attested
+source_of_authorization:
+  source_thread_id: 01a118bc-dd26-7553-b5b6-cf5137c070d6
+  locator: delegated transcript_evidence and product-design instruction received in
+    methods task
+  quote: 主agent可以记录呀，不用设置的这么死，主agent可以通过问答，来把用户明确的对话聊天记录作为依据记录
+  original_message_ref: null
+  limitations: original user platform message reference not supplied; do not invent
+    platform verification
+required_evidence:
+- question
+- necessary_context
+- user_answer
+- available_source_locator_and_message_refs
+- source_locator_limitations
+- attestor_and_capture_provenance
+- exact_object_versions
+- exact_scope_by_action
+- policy_revision_and_digest
+- stable_evidence_id_for_deduplication
+clear_explicit_answer: admissible_confirmation_basis_under_selected_product_policy
+ambiguous_or_out_of_scope: pending_and_clarify
+later_substantive_revision: does_not_inherit_prior_confirmation
+user_silence: not_confirmation
+model_review: opinion_not_permission
+agent_assertion_without_question_answer_provenance: reject
+repeat_floating_window_confirmation: not_required
+stronger_provider: optional
+allows_automatic_method_trust_elevation: false
+mechanism_obligations:
+- verify selected product policy and authorized attestor
+- persist exact evidence and receipt
+- deduplicate receipts and reject changed payload under same identity
+- verify scope versions controls and revocation before effect
+- do not assert independently authenticated human when only agent-attested
+implementation_status: policy_asset_only; runtime_admission_and_persistence_require_engineering_owner

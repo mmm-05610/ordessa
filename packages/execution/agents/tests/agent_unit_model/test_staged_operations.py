@@ -14,27 +14,14 @@ import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_infrastructure.database.records import DomainWrite
-from ordessa_execution_api.environment.errors import (
-    GuaranteeUnavailableError,
-    IdentityMismatchError,
-    UnknownResultError,
+from ordessa_units.errors import (
+    UnitGuaranteeUnavailable,
+    UnitIdentityMismatch,
+    UnitOperationUnknown,
 )
-from ordessa_execution_api.environment.operations import (
-    OperationIntent,
-    OperationRevisionConflict,
-    OperationStorePort,
-    StepIntent,
-    UsageMutation,
-    node_holder,
-    operation_holder,
-    safe_json,
-)
-from ordessa_execution_api.environment.staged_operations import (
-    STAGED_OPERATION_STORE_VERSION,
-    OperationRecipePhase,
-    StagedOperationRecord,
-    StagedOperationStorePort,
-)
+from ordessa_units.definitions.operations import OperationIntent, OperationRevisionConflict, OperationStorePort, StepIntent, UsageMutation, node_holder, operation_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
+from ordessa_units.definitions.staged_operations import STAGED_OPERATION_STORE_VERSION, OperationRecipePhase, StagedOperationRecord, StagedOperationStorePort
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import (
@@ -258,7 +245,7 @@ def test_phase_rejects_references_without_complete_same_environment_scope(tmp_pa
             value = _phase().to_dict()
             value["invocationBindings"]["configure"][field] = changed
             phase = OperationRecipePhase.from_dict(value)
-            with pytest.raises(IdentityMismatchError):
+            with pytest.raises(UnitIdentityMismatch):
                 _append(store, request, before, phase)
             assert store.read_staged_operation(request) == before
 
@@ -266,7 +253,7 @@ def test_phase_rejects_references_without_complete_same_environment_scope(tmp_pa
         conflict = _phase(context_facts={
             "rootFact": {"environmentNamespace": "env", "value": "changed"}
         })
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             _append(store, request, before, conflict)
         assert store.read_staged_operation(request) == before
     finally:
@@ -295,7 +282,7 @@ def test_merged_phase_rejects_duplicate_correlation_future_prerequisite_and_epoc
             "phase-one", steps, bindings,
             {"materialReceiptRef": {"environmentNamespace": "env", "receiptId": "receipt-1"}},
         )
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             _append(store, request, before, phase)
         assert store.read_staged_operation(request) == before
         assert store._conn.execute("SELECT COUNT(*) FROM env_request_steps").fetchone()[0] == 1
@@ -321,9 +308,9 @@ def test_optional_port_is_additive_and_root_reservation_replays_cold(tmp_path):
             created.root_intent_json.encode("utf-8")).hexdigest()
         assert first.read_operation(request) == created.operation
         assert first.reserve_staged_operation(request, "request-digest", root) == created
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             first.reserve_staged_operation(request, "request-digest", _root(operation_ref="other"))
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             first.reserve_staged_operation(request, "different-input", root)
     finally:
         first.close()
@@ -349,9 +336,9 @@ def test_legacy_reserve_semantics_stay_strict_and_cannot_mix_with_staged_rows(tm
     try:
         stored = store.reserve_operation(ordinary_request, "request-digest", ordinary)
         assert store.reserve_operation(ordinary_request, "request-digest", ordinary) == stored
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.read_staged_operation(ordinary_request)
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             store.reserve_operation(
                 ordinary_request,
                 "request-digest",
@@ -361,7 +348,7 @@ def test_legacy_reserve_semantics_stay_strict_and_cannot_mix_with_staged_rows(tm
         _, _, staged = _reserve(store, request, root=root)
         expanded = OperationIntent.from_dict(json.loads(staged.operation.intent_json))
         for candidate in (root, expanded):
-            with pytest.raises(IdentityMismatchError):
+            with pytest.raises(UnitIdentityMismatch):
                 store.reserve_operation(request, "request-digest", candidate)
         assert store.read_staged_operation(request) == staged
         assert store.read_operation(request) == staged.operation
@@ -399,7 +386,7 @@ def test_append_requires_every_root_step_concluded_and_nonterminal(tmp_path, unf
             )
         before = store.read_staged_operation(request)
         before_step = store.read_operation_step(request, step.step_id)
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             _append(store, request, before)
         assert store.read_staged_operation(request) == before
         assert store.read_operation_step(request, step.step_id) == before_step
@@ -413,7 +400,7 @@ def test_append_is_one_shot_seal_and_preserves_root_recipe_facts(tmp_path):
     store = SqliteStorePort(tmp_path / "state.sqlite")
     request, root, reserved = _reserve(store)
     try:
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             store.claim_operation_step(request, "request-digest", _phase().steps[0])
         root_step_record = _conclude(store, request, root, root.steps[0])
         current = store.read_staged_operation(request)
@@ -448,20 +435,20 @@ def test_append_is_one_shot_seal_and_preserves_root_recipe_facts(tmp_path):
         changed_same_id = _phase(context_facts={
             "materialReceiptRef": {"environmentNamespace": "env", "receiptId": "different"}
         })
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             _append(store, request, sealed, changed_same_id)
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             _append(store, request, sealed, _phase(phase_id="phase-two", step_id="later"))
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             store.append_staged_operation_phase(
                 request, "different-input", sealed.operation.revision,
                 _intent_digest(sealed), phase,
             )
         assert store.read_staged_operation(request) == sealed
         expanded = sealed.operation.intent
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             store.reserve_operation(request, "request-digest", root)
-        with pytest.raises(IdentityMismatchError):
+        with pytest.raises(UnitIdentityMismatch):
             store.reserve_operation(request, "request-digest", expanded)
         with pytest.raises(ValueError):
             store.append_staged_operation_phase(
@@ -535,7 +522,7 @@ def test_same_phase_concurrent_append_has_one_persisted_seal(tmp_path):
         # has committed release; an absent marker must still refuse a second
         # purported release rather than manufacture successful ownership.
         try:
-            with pytest.raises(GuaranteeUnavailableError, match="writer lock is absent"):
+            with pytest.raises(UnitGuaranteeUnavailable, match="writer lock is absent"):
                 right.close()
             assert not right._writer_release_confirmed
             assert not right._connection_closed
@@ -646,9 +633,9 @@ def test_sealed_reads_revalidate_concluded_root_step_evidence(tmp_path, corrupti
                      request.principal_scope, request.request_id, root.steps[0].step_id),
                 )
         for read in (store.read_operation, store.read_staged_operation):
-            with pytest.raises(GuaranteeUnavailableError):
+            with pytest.raises(UnitGuaranteeUnavailable):
                 read(request)
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.append_staged_operation_phase(
                 request, "request-digest", before.operation.revision,
                 _intent_digest(before), _phase(),
@@ -677,9 +664,9 @@ def test_reads_and_claim_refuse_when_running_current_step_row_is_missing(tmp_pat
                  request.request_id, tail.step_id),
             )
         for read in (store.read_operation, store.read_staged_operation):
-            with pytest.raises(GuaranteeUnavailableError):
+            with pytest.raises(UnitGuaranteeUnavailable):
                 read(request)
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.claim_operation_step(request, "request-digest", tail)
         assert store._conn.execute("SELECT COUNT(*) FROM env_request_steps").fetchone()[0] == (
             0 if current_step == "root" else 1
@@ -747,9 +734,9 @@ def test_both_operation_reads_fail_closed_on_staged_metadata_corruption(tmp_path
                 "UPDATE env_requests SET staged_operation_json=? WHERE request_id=?",
                 (corrupt, request.request_id),
             )
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.read_operation(request)
-        with pytest.raises(GuaranteeUnavailableError):
+        with pytest.raises(UnitGuaranteeUnavailable):
             store.read_staged_operation(request)
         assert store._conn.execute("SELECT COUNT(*) FROM env_request_steps").fetchone()[0] == 0
     finally:
@@ -839,7 +826,7 @@ def test_unsealed_publish_is_rejected_and_sealed_recipe_uses_original_publish_ru
         _conclude(store, request, root, root.steps[0])
         current = store.read_staged_operation(request)
         before_usage = tuple(store._conn.execute("SELECT * FROM env_usages").fetchone())
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             store.publish_operation(
                 request,
                 "request-digest",
@@ -868,7 +855,7 @@ def test_unsealed_publish_is_rejected_and_sealed_recipe_uses_original_publish_ru
         )
         assert published.status == "published"
         assert store.read_staged_operation(request).sealed is True
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             _append(store, request, store.read_staged_operation(request), _phase(phase_id="later", step_id="later"))
     finally:
         store.close()

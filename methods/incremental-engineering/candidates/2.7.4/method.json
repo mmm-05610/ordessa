@@ -1,0 +1,276 @@
+{
+  "schema_version": 2,
+  "contract": "ordessa.methods/actions-v1",
+  "method_id": "ordessa.incremental-engineering",
+  "release_version": "2.7.4",
+  "actions": [
+    "action-review-change",
+    "action-prepare-packages",
+    "action-implement-package"
+  ],
+  "criteria": [
+    "change-review-criteria",
+    "source-review-binding",
+    "package-preparation-criteria",
+    "implementation-review-criteria"
+  ],
+  "prompts": [
+    "change-review-prompt",
+    "package-preparation-prompt",
+    "profile-selection-prompt",
+    "implementation-prompt",
+    "independent-review-prompt",
+    "rework-prompt"
+  ],
+  "templates": [
+    "spec-kit-README",
+    "spec-kit-acceptance",
+    "spec-kit-baseline",
+    "spec-kit-change-map",
+    "spec-kit-plan",
+    "spec-kit-spec",
+    "spec-kit-tasks"
+  ],
+  "schemas": [
+    "implementation-report-schema",
+    "method-ref-schema",
+    "package-result-schema",
+    "review-result-schema",
+    "scope-schema",
+    "source-ref-schema",
+    "spec-kit-package-schema",
+    "caller-review-input-schema",
+    "agent-dispatch-contract",
+    "agent-report-contract",
+    "agent-report-review-contract"
+  ],
+  "routing": [
+    "routing-candidate"
+  ],
+  "resources": [
+    {
+      "id": "action-review-change",
+      "kind": "action",
+      "path": "actions/review-change.json",
+      "media_type": "application/json",
+      "sha256": "6c582e2997ea2e0bbc50501b3915eda787c7033dc7461f32e1774dd6b2ac9e87"
+    },
+    {
+      "id": "action-prepare-packages",
+      "kind": "action",
+      "path": "actions/prepare-packages.json",
+      "media_type": "application/json",
+      "sha256": "1ab4ca0ae0416fdab825e3e4cebefb914f1b589d9b3d78883547fdfcb51dc278"
+    },
+    {
+      "id": "action-implement-package",
+      "kind": "action",
+      "path": "actions/implement-package.json",
+      "media_type": "application/json",
+      "sha256": "e4c6d452ea61d7c619c8dd133c5a212305de050d04f1b4699768821757b05c67"
+    },
+    {
+      "id": "change-review-criteria",
+      "kind": "criteria",
+      "path": "criteria/change-review.md",
+      "media_type": "text/markdown",
+      "sha256": "cf140aa4c72a8dc7c024dd06b02ef24b01c8e90e15a819dae9b40b14f881ff6c"
+    },
+    {
+      "id": "source-review-binding",
+      "kind": "criteria",
+      "path": "criteria/source-review.json",
+      "media_type": "application/json",
+      "sha256": "b2b6488f2421f080318a81e982947f72c1a87150f7da5b4058735c9ecf57264e"
+    },
+    {
+      "id": "package-preparation-criteria",
+      "kind": "criteria",
+      "path": "criteria/package-preparation.md",
+      "media_type": "text/markdown",
+      "sha256": "49a3b490ff28b6928349717a574d9081ab09cea3416292f13fb396b0b61b1c55"
+    },
+    {
+      "id": "implementation-review-criteria",
+      "kind": "criteria",
+      "path": "criteria/implementation-review.md",
+      "media_type": "text/markdown",
+      "sha256": "3296b18bc381a8e90dbe04fdb84f60555c74f023db915063661bf123662266bc"
+    },
+    {
+      "id": "change-review-prompt",
+      "kind": "prompt",
+      "path": "prompts/change-review.md",
+      "media_type": "text/markdown",
+      "sha256": "131574dcdf42073d91acb36ec38be210911f02c13dcda7eafff978729af8f204"
+    },
+    {
+      "id": "package-preparation-prompt",
+      "kind": "prompt",
+      "path": "prompts/package-preparation.md",
+      "media_type": "text/markdown",
+      "sha256": "4be2676e93ed2fc0803a82e2581b8c95fc6d0df473eb4f5ee2b73203638343db"
+    },
+    {
+      "id": "profile-selection-prompt",
+      "kind": "prompt",
+      "path": "prompts/profile-selection.md",
+      "media_type": "text/markdown",
+      "sha256": "0ba75a12a6899ab9440f06d209bb38b7debdb16442c4dcdeec66b426720ad8a6"
+    },
+    {
+      "id": "implementation-prompt",
+      "kind": "prompt",
+      "path": "prompts/implementation.md",
+      "media_type": "text/markdown",
+      "sha256": "5daf68f2ddcef436d9b3514f4b14b70677986801ea95edb2bbc3476721141c0a"
+    },
+    {
+      "id": "independent-review-prompt",
+      "kind": "prompt",
+      "path": "prompts/independent-review.md",
+      "media_type": "text/markdown",
+      "sha256": "a113b33600736ffecb5c67ee83b76958ae01d95ee3c5e0b8f74cac4c604ede20"
+    },
+    {
+      "id": "rework-prompt",
+      "kind": "prompt",
+      "path": "prompts/rework.md",
+      "media_type": "text/markdown",
+      "sha256": "fdf588ef9cfade41b77e972a21c5f8f722e6a4b2c59ea5cd69a1e6240a768c7f"
+    },
+    {
+      "id": "implementation-report-schema",
+      "kind": "schema",
+      "path": "schemas/implementation-report.schema.json",
+      "media_type": "application/json",
+      "sha256": "cc6d3971e14e1181f2f20630cf4f0608427aee2267b7eda99a4960edd1906224"
+    },
+    {
+      "id": "method-ref-schema",
+      "kind": "schema",
+      "path": "schemas/method-ref.schema.json",
+      "media_type": "application/json",
+      "sha256": "5c5442d9751f4611311107addc2acb305b51572a5aa5b550a73c9126da97083a"
+    },
+    {
+      "id": "package-result-schema",
+      "kind": "schema",
+      "path": "schemas/package-result.schema.json",
+      "media_type": "application/json",
+      "sha256": "cd4b42dfbf730b1fef7c0bc660e814dcaf97788beff156e8ad05fb32ff448299"
+    },
+    {
+      "id": "review-result-schema",
+      "kind": "schema",
+      "path": "schemas/review-result.schema.json",
+      "media_type": "application/json",
+      "sha256": "2c0b2768f69f6fd49259dd6c8e6c4a2382cb63ebedbe50cfbf8d37befae3009e"
+    },
+    {
+      "id": "scope-schema",
+      "kind": "schema",
+      "path": "schemas/scope.schema.json",
+      "media_type": "application/json",
+      "sha256": "97e7f2b7af2b8cb8b8dce5b58c9faaf030b6fc82d467b05472e8eeca8e72a495"
+    },
+    {
+      "id": "source-ref-schema",
+      "kind": "schema",
+      "path": "schemas/source-ref.schema.json",
+      "media_type": "application/json",
+      "sha256": "07d60e337f2a8a35fad5f27b739483576bcc3b25d09f775e1d69de99b1b4fbf9"
+    },
+    {
+      "id": "spec-kit-package-schema",
+      "kind": "schema",
+      "path": "schemas/spec-kit-package.schema.json",
+      "media_type": "application/json",
+      "sha256": "3f60726fbe25e793bec476b17bd907427ecadb283ad7b20e6d9c75db3d1fa7ae"
+    },
+    {
+      "id": "routing-candidate",
+      "kind": "routing",
+      "path": "routing.json",
+      "media_type": "application/json",
+      "sha256": "1aef746d6370bbb34b3395de41900fb077732d0240df6a81c355e4a9a22efe71"
+    },
+    {
+      "id": "spec-kit-README",
+      "kind": "template",
+      "path": "templates/spec-kit/README.md",
+      "media_type": "text/markdown",
+      "sha256": "4b7e8c2f817e4f2e1a5d39142575e403ac672a5abd1a7a6ed29f16237e1540be"
+    },
+    {
+      "id": "spec-kit-acceptance",
+      "kind": "template",
+      "path": "templates/spec-kit/acceptance.md",
+      "media_type": "text/markdown",
+      "sha256": "18df46c08465b2c19a99bdbff5adeeb649955ba668958de6aac62cddf3117194"
+    },
+    {
+      "id": "spec-kit-baseline",
+      "kind": "template",
+      "path": "templates/spec-kit/baseline.md",
+      "media_type": "text/markdown",
+      "sha256": "49c3f5c1045346e7234499de4b98d57a7475fe58d0452d2cd3e20933d3d1eea7"
+    },
+    {
+      "id": "spec-kit-change-map",
+      "kind": "template",
+      "path": "templates/spec-kit/change-map.md",
+      "media_type": "text/markdown",
+      "sha256": "da43c327ff71c3e4e4f9672fcc7b00028cc34e65d65c26e9a6de0c7cb0a20042"
+    },
+    {
+      "id": "spec-kit-plan",
+      "kind": "template",
+      "path": "templates/spec-kit/plan.md",
+      "media_type": "text/markdown",
+      "sha256": "3ddb25b1f961c3fec62bf521a9daff4cb1b92f305d46514ba192c9c9ad78f306"
+    },
+    {
+      "id": "spec-kit-spec",
+      "kind": "template",
+      "path": "templates/spec-kit/spec.md",
+      "media_type": "text/markdown",
+      "sha256": "660ee849a1bb9931e191e294b9427a06d334f81c7ed9d31fe3b7d155968dbc51"
+    },
+    {
+      "id": "spec-kit-tasks",
+      "kind": "template",
+      "path": "templates/spec-kit/tasks.md",
+      "media_type": "text/markdown",
+      "sha256": "cbb11ca678c46685b07e1367aa3f3a909c1b9fab7c9edcb104f6a0d2c341187b"
+    },
+    {
+      "id": "caller-review-input-schema",
+      "kind": "schema",
+      "path": "schemas/caller-review-input.schema.json",
+      "media_type": "application/json",
+      "sha256": "786f899ff46897b7153eb77e5200aad7c888169c8a09851c36a6c6e4cf9837c5"
+    },
+    {
+      "id": "agent-dispatch-contract",
+      "kind": "schema",
+      "path": "schemas/agent-dispatch-contract.json",
+      "media_type": "application/schema+json",
+      "sha256": "03dad972d4805a8784619cfa843744e1aaa08f97e1e7c02b2ea68846969e9070"
+    },
+    {
+      "id": "agent-report-contract",
+      "kind": "schema",
+      "path": "schemas/agent-report-contract.json",
+      "media_type": "application/schema+json",
+      "sha256": "cb3a2f4da97a66f1e91f12278f46c0f1c763355d44ff45e9535b2db267032e9a"
+    },
+    {
+      "id": "agent-report-review-contract",
+      "kind": "schema",
+      "path": "schemas/agent-report-review-contract.json",
+      "media_type": "application/json",
+      "sha256": "7706239d563c04a60f0a9c64e864f459bea5e8ac1cb64abcee058fefc07b6b85"
+    }
+  ]
+}

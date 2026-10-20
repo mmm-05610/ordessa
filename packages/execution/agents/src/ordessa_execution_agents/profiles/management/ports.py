@@ -1,15 +1,39 @@
-"""Profile reads and atomic change contract on the original Environment owner.
+"""Profile reads and atomic change contract on the original Profile owner.
 
 commit_change atomically compares expected_version (0 = absent), writes an optional
 new immutable revision, updates the current Profile and records the request result.
 All writes must share the original store/connection/request ledger or roll back.
-Snapshot staging returns data only; the consuming Unit reservation commits it.
+Snapshot staging returns data only; the consuming Agent reservation commits it.
 """
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_infrastructure.database.records import DomainWrite
 from ..definitions.models import Profile, ProfileRevision, ProfileRevisionRef
+
+
+@runtime_checkable
+class ProfileAdmissionPort(Protocol):
+    """Existing authenticated profile namespace/policy, never an Environment handle."""
+    @property
+    def namespace(self) -> str: ...
+    @property
+    def principal_scope(self) -> str: ...
+    @property
+    def admission_lock(self) -> Any: ...
+    @property
+    def policy(self) -> Any: ...
+    @property
+    def fingerprint_port(self) -> Any: ...
+    def check_open(self) -> None: ...
+    def check_namespace(self, namespace: str) -> None: ...
+
+
+@runtime_checkable
+class ProfileValidatorPort(Protocol):
+    def validate_profile(self, content) -> None:
+        """Resolve the exact harness and validate pure immutable content; no effects."""
+        ...
 
 
 @runtime_checkable

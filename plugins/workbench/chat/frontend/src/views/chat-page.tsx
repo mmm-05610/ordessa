@@ -1,0 +1,435 @@
+// Chat page: pane identity, draft store, send controller with stale guards,
+// shared +/slash input panel, fixed bottom composer, approval surface and the
+// project dialog entry.
+//
+// Pane discipline (ported from ordessa.agent-conversation view.tsx, the
+// FC-0052/FC-0060 line): the draft is a fixed pane marker no session id can
+// produce; the remount key, composer buffer and session identity all derive
+// from ONE predicate; a draft never routes to the previously selected session
+// (the facade owns that gate).
+//
+// Product Agent submission remains unavailable until a managed-input port is
+// wired. The refusal is at this page boundary, before Chat guards or gateways;
+// it preserves the user's draft and prepared resources.
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import type { UiScope } from '@ordessa/ui-components/api'
+import type { AgentSessions } from '@extensions/ordessa.agent-contracts/contract.js'
+import type {
+  ChatContributionsService, ChatInputEntry, ChatInputQuery, ChatLocation, ChatPrepareResult,
+} from '@extensions/ordessa.chat-api/contract.js'
+import { DraftStore, attachmentBlockReason } from '../state/draft'
+import { useViewState } from '../state/expansion'
+import {
+  attachmentCapabilityOf, interactionsForSession, paneRunState, projectConversation,
+} from '../adapters/agent'
+import type { ChatTheme } from '../components/messages/markdown-body'
+import { ThreadBody } from './thread'
+import { ChatTextInput } from '../components/composer/text-input'
+import { InputPanel } from '../components/composer/input-panel'
+import { AttachmentStrip } from '../components/composer/attachments'
+import { ApprovalPanel } from '../components/interactions/approval-panel'
+import { ProjectDialog } from './project-dialog'
+import { ToolbarContribution } from './toolbar-contribution'
+import { chatStyles } from '../styles'
+import { usePreferredTheme } from '../theme'
+import { reconcileSlashSnapshot, slashReplacementRange, type SlashTokenSnapshot } from '../components/composer/trigger'
+
+const draftPaneOf = 'draft'
+const sessionPane = (sessionId: string) => `session:${sessionId}`
+
+const agentSubmitUnavailable = '当前 Chat Agent 提交不可用：managed-input 端口尚未接通。草稿和附件已保留；未运行提交守卫、未发送或创建提交记录。'
+
+const draftBlockCopy: Record<string, string> = {
+  unsupported: '当前连接不支持在项目中创建会话。',
+  'no-project': '还没有选择项目，先在弹窗中选择一个项目。',
+  'project-invalid': '所选项目在该服务上已失效，请重新选择。',
+}
+
+type PanelState = { readonly mode: 'plus'; readonly caret: number } | { readonly mode: 'slash'; readonly token: SlashTokenSnapshot } | null
+type PrepareAction = (location: ChatLocation, idempotencyKey: string) => Promise<ChatPrepareResult>
+
+export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiComponents }: {
+  service: AgentSessions
+  chat: ChatContributionsService
+  /** Explicit theme from the host; defaults to the OS preference. */
+  theme?: ChatTheme
+  /** Workbench overlay opener for the global dialog (absent → in-page render). */
+  openViaOverlay?: () => void
+  /** Consumer scope supplied by the host; bare views can omit it. */
+  uiComponents?: UiScope
+}) {
+  const theme = themeProp ?? usePreferredTheme()
+  const state = useSyncExternalStore(service.subscribe, service.getSnapshot, service.getSnapshot)
+  const agent = state.agent
+  const connectionId = state.selectedConnectionId
+  const drafting = state.draft?.active === true
+  const sessionId = agent?.selectedSessionId
+  const pane = drafting ? draftPaneOf : sessionPane(sessionId ?? '')
+  // contextRevision bumps on every facade notification: contributions and
+  // actions capture it and refuse to act on stale locations (contracts.md §3).
+  const [revision, setRevision] = useState(0)
+  useEffect(() => service.subscribe(() => setRevision(value => value + 1)), [service])
+  const store = useMemo(() => new DraftStore(), [])
+  const expansion = useViewState()
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [panel, setPanel] = useState<PanelState>(null)
+  const dismissedSlashRef = useRef<{ pane: string; text: string; caret: number } | undefined>(undefined)
+  const [sendError, setSendError] = useState('')
+  const [plusQuery, setPlusQuery] = useState('')
+  const composerInputRef = useRef<HTMLTextAreaElement>(null)
+  const menuFocusOwnerRef = useRef<{ open: boolean; pane: string; connectionId: string | undefined }>({ open: false, pane, connectionId })
+  // Restore only after React has removed the menu/search input. Focusing in
+  // its close callback races the menu's autofocus/unmount; scheduling a frame
+  // can race a pane switch. This layout effect has a live DOM ref and fences
+  // focus restoration to the pane/connection that originally opened the menu.
+  useLayoutEffect(() => {
+    const previous = menuFocusOwnerRef.current
+    if (panel && !previous.open) {
+      menuFocusOwnerRef.current = { open: true, pane, connectionId }
+    } else if (!panel && previous.open) {
+      menuFocusOwnerRef.current = { ...previous, open: false }
+      if (previous.pane === pane && previous.connectionId === connectionId) {
+        composerInputRef.current?.focus({ preventScroll: true })
+      }
+    }
+  }, [panel, pane, connectionId])
+  const panelKeyRef = useRef<((event: { key: string; preventDefault(): void }) => boolean) | undefined>(undefined)
+  // add-content retry identity: item id → the preparing action that produced it,
+  // so a retry re-runs the SAME preparation with the SAME idempotency key (A05).
+  const prepareActionsRef = useRef(new Map<string, PrepareAction>())
+  const caretRef = useRef<number | null>(null)
+  const paneRef = useRef(pane)
+  paneRef.current = pane
+  useEffect(() => () => { store.dispose() }, [store])
+
+  // A discarded draft loses its buffered text (FC-0030 port); an opened
+  // session keeps it so the user can step back to the draft. Discard also
+  // releases every prepared attachment the store still owns — handed-off
+  // content belongs to the sent record and is never released here (A05).
+  const endedBy = state.draft?.endedBy
+  useEffect(() => {
+    if (!connectionId || !endedBy) return
+    if (endedBy === 'discarded') {
+      for (const item of store.releaseCandidates(draftPaneOf)) {
+        if (item.phase.state === 'ready') {
+          void service.attachments.release(item.phase.reference, 'draft-cancelled').catch(() => undefined)
+        }
+      }
+      store.disposePane(draftPaneOf)
+    }
+  }, [connectionId, endedBy, store, service])
+
+    // Live subscription: the composer is a controlled input whose value comes
+  // from the store through useSyncExternalStore, so a text mutation re-renders.
+  const composition = useSyncExternalStore(store.subscribe, () => store.read(pane), () => store.read(pane))
+  const workspaceId = state.draft?.workspaceId
+  const projectName = agent?.workspaces?.items.find(item => item.id === workspaceId)?.normalizedPath
+  const run = agent && !drafting && sessionId ? paneRunState(agent, sessionId) : undefined
+  const running = run?.status === 'starting' || run?.status === 'running' || run?.status === 'stop-requested'
+  const canSend = !running && (!drafting || state.draft?.canSend === true)
+  const blockReason = drafting ? state.draft?.blockReason : undefined
+  const attachmentBlocked = attachmentBlockReason(composition.items)
+  const sendDisabled = !composition.text.trim() || !canSend || attachmentBlocked !== null
+
+  const location = useMemo(() => (drafting
+    ? { kind: 'draft' as const, draftId: pane, connectionId: connectionId ?? undefined,
+        serverInstanceId: agent?.connection.serverInstanceId, harnessId: agent?.connection.harnessId, projectId: workspaceId, contextRevision: revision,
+        ...(state.runtimeGeneration !== undefined ? { runtimeGeneration: state.runtimeGeneration } : {}) }
+    : { kind: 'session' as const, connectionId: connectionId ?? '', sessionId: sessionId ?? '',
+        serverInstanceId: agent?.connection.serverInstanceId, harnessId: agent?.connection.harnessId, contextRevision: revision,
+        ...(state.runtimeGeneration !== undefined ? { runtimeGeneration: state.runtimeGeneration } : {}) }),
+  [drafting, pane, connectionId, agent?.connection.serverInstanceId, agent?.connection.harnessId, workspaceId, revision, sessionId, state.runtimeGeneration])
+  // PC-3: the attach entry and its note are driven by the facade's REAL
+  // capability for this location — a missing production prepare owner, a
+  // partial client surface or a draft without a native session all render
+  // their own honest reason (S-05), never a fake activation.
+  const attachmentCapability = useMemo(() => attachmentCapabilityOf(service, location), [service, location])
+
+  // Slash token reconciliation: any text/caret change re-derives or closes the
+  // panel; the + panel and the slash panel are mutually exclusive.
+  const syncSlashToken = useCallback((text: string, caret: number) => {
+    const dismissed = dismissedSlashRef.current
+    if (dismissed && dismissed.pane === paneRef.current && dismissed.text === text && dismissed.caret === caret) return
+    dismissedSlashRef.current = undefined
+    setPanel(current => {
+      if (current?.mode === 'plus') return current
+      const next = reconcileSlashSnapshot(current?.mode === 'slash' ? current.token : null, text, caret)
+      return next ? { mode: 'slash', token: next } : null
+    })
+  }, [])
+  const closeInputPanel = () => {
+    if (panel?.mode === 'slash') {
+      dismissedSlashRef.current = { pane: paneRef.current, text: store.read(paneRef.current).text,
+        caret: composerInputRef.current?.selectionStart ?? caretRef.current ?? 0 }
+    }
+    setPanel(null)
+  }
+
+  // T010-07: this view is the pane's single editor; the lease is claimed per
+  // pane and released on switch/unmount.
+  const editorId = useRef(`chat-editor-${globalThis.crypto.randomUUID()}`).current
+  useEffect(() => {
+    let lease
+    try { lease = store.claimEditor(pane, editorId) } catch { return } // another view owns it
+    return () => { lease.release() }
+  }, [store, pane, editorId])
+
+  const submit = useCallback(() => {
+    if (!canSend || !store.read(paneRef.current).text.trim()) return
+    setSendError(agentSubmitUnavailable)
+  }, [canSend, store])
+
+  const stop = useCallback(() => {
+    if (!run?.runId) return
+    setSendError('')
+    void service.stop(run.runId).catch(cause => setSendError(cause instanceof Error ? cause.message : String(cause)))
+  }, [run?.runId, service])
+
+  // Add-content preparation runner (PC-3): the item enters the draft in
+  // `preparing`, then lands in exactly one of the four phases — ready with the
+  // service-owned reference, failed with the refusal reason (kept, removable),
+  // unknown (kept, send-blocking, retry with the SAME idempotency key), or
+  // removed on `unavailable`. The item id IS the idempotency key (input-spec
+  // A05): a retry re-uses it, so the port dedupes instead of double-preparing.
+  const runPrepare = useCallback((targetPane: string, itemId: string, action: PrepareAction) => {
+    const capturedLocation = { ...location }
+    void action(capturedLocation, itemId).then(result => {
+      if (result.status === 'accepted' && result.reference) {
+        store.updateItem(targetPane, itemId, { phase: { state: 'ready', reference: result.reference } }, editorId)
+      } else if (result.status === 'refused') {
+        // US3-3: a refused preparation stays visible in the draft with its reason.
+        store.updateItem(targetPane, itemId, { phase: { state: 'failed', reason: result.message } }, editorId)
+      } else if (result.status === 'unknown') {
+        store.updateItem(targetPane, itemId, { phase: { state: 'unknown' } }, editorId)
+      } else {
+        store.removeItem(targetPane, itemId, editorId)
+        setSendError('该来源暂时无法提供此内容。')
+      }
+      setPanel(null)
+    })
+  }, [location, store])
+
+  const pickEntry = useCallback((entry: ChatInputEntry) => {
+    const current = store.read(paneRef.current)
+    if (entry.availability.kind !== 'ready') return
+    if (entry.action.kind === 'insert-command') {
+      const text = current.text
+      const caret = caretRef.current ?? text.length
+      if (panel?.mode === 'slash') {
+        const range = slashReplacementRange(panel.token, text, caret)
+        if (!range) {
+          // Stale token: the caret moved away — refuse the old insert.
+          setSendError('命令插入位置已变化，未插入。')
+          setPanel(null)
+          return
+        }
+        store.write(paneRef.current, {
+          ...current,
+          text: text.slice(0, range.start) + entry.action.text + text.slice(range.end),
+          revision: current.revision + 1,
+        })
+      } else {
+        // plus: insert at the caret the panel captured when it opened.
+        const at = Math.min(panel?.caret ?? caret, text.length)
+        const inserted = text.slice(0, at) + entry.action.text + (at === 0 ? ' ' : '') + text.slice(at)
+        store.write(paneRef.current, { ...current, text: inserted, revision: current.revision + 1 })
+      }
+      setPanel(null)
+      return
+    }
+    if (entry.action.kind === 'invoke') {
+      setPanel(null)
+      void entry.action.execute({ ...location }).then(result => {
+        if (result.status === 'refused') setSendError(result.message)
+      })
+      return
+    }
+    // add-content: the entry's availability already proved the capability is
+    // real (a disabled entry never reaches here); the reference is never
+    // faked into the draft.
+    const itemId = globalThis.crypto.randomUUID()
+    const prepare = entry.action.prepare
+    store.addItem(paneRef.current, {
+      id: itemId, sourceId: entry.id, kind: 'file', displayName: '附件', phase: { state: 'preparing' },
+    }, editorId)
+    prepareActionsRef.current.set(itemId, prepare)
+    runPrepare(paneRef.current, itemId, prepare)
+  }, [location, panel, runPrepare, store])
+
+  const sourcesView = useMemo(() => {
+    if (!panel) return undefined
+    const request: ChatInputQuery = panel.mode === 'slash'
+      ? { location: { ...location }, query: panel.token.query, surface: 'slash', signal: new AbortController().signal }
+      : { location: { ...location }, query: plusQuery, surface: 'plus', signal: new AbortController().signal }
+    // The query re-issues when the panel opens, the slash token changes or the
+    // plus search string changes; per-source states live in the service.
+    return chat.queryInputSources(request)
+  }, [panel, location, chat, plusQuery])
+
+  const panelConsumeKey = panel
+    ? (event: { key: string; preventDefault(): void }) => {
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          closeInputPanel()
+          return true
+        }
+        if (panel.mode === 'slash' && ['Enter', 'Tab', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+          return panelKeyRef.current?.(event) ?? false
+        }
+        if (panel.mode === 'plus' && (event.key === 'Enter' || event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+          return panelKeyRef.current?.(event) ?? false
+        }
+        return false
+      }
+    : undefined
+
+  // All hooks run unconditionally, BEFORE any early return (rules of hooks):
+  // the placeholder branches must not change the hook count between renders.
+  const toolbarSlot = useMemo(() => chat.contributionsBySlot('composer.toolbar'), [chat])
+  const toolbarViews = useSyncExternalStore(toolbarSlot.subscribe, toolbarSlot.getSnapshot, toolbarSlot.getSnapshot)
+
+  if (!connectionId) {
+    return <div className="chat-page chat-placeholder" data-chat-theme={theme}><style>{chatStyles}</style>
+      <h2>选择 Harness，开始对话</h2><p>选择后再选项目。当前可以编辑草稿，但 Agent managed-input 尚未接通，不能创建会话或发送。</p>
+      <div className="chat-connection-choices" role="group" aria-label="可用 Harness">
+        {state.available.map(connection => <button key={connection.id} type="button"
+          className="chat-connector-choice" data-chat-connector={connection.id} disabled={!!state.connectingId}
+          onClick={() => { setSendError(''); void service.selectConnection(connection.id).catch(error => setSendError(String(error instanceof Error ? error.message : error))) }}>
+          {connection.title}
+        </button>)}
+      </div>
+      {state.available.length === 0 && <p role="status">暂无可用连接，请检查 Server 与已启用的 Harness。</p>}
+      {(sendError || state.error) && <p role="alert">{sendError || state.error}</p>}
+    </div>
+  }
+  if (!agent) {
+    return <div className="chat-page chat-placeholder"><h2>连接中</h2><p>{state.error ?? '正在等待代理连接。'}</p></div>
+  }
+  if (!drafting && !sessionId) {
+    return <div className="chat-page chat-placeholder" data-chat-theme={theme}><style>{chatStyles}</style><h2>开始新会话</h2>
+      <p><button type="button" className="chat-primary-action" data-testid="chat-new-session-empty"
+        onClick={() => (openViaOverlay ? openViaOverlay() : setDialogOpen(true))}>选择项目</button></p>
+      {dialogOpen && !openViaOverlay && <ProjectDialog service={service} snapshot={state}
+        close={() => setDialogOpen(false)} onProjectSelected={() => { setDialogOpen(false); service.startDraft?.() }} />}
+    </div>
+  }
+
+  const conversation = drafting ? { conversationKey: `${connectionId}:draft`, parts: [] } : projectConversation(agent, sessionId ?? '')
+  const interactions = drafting ? [] : interactionsForSession(agent, sessionId ?? '')
+
+  return (
+    <section className="chat-page" data-pane={pane} data-testid="chat-page" data-chat-theme={theme}>
+      <style>{chatStyles}</style>
+      <header className="chat-page-head">
+        <div>
+          <h2>{drafting
+            ? (projectName ? projectName.split('/').filter(Boolean).at(-1) : '新会话')
+            : agent.sessions.find(item => item.id === sessionId)?.title ?? sessionId}</h2>
+        </div>
+        <div className="chat-page-head-actions">
+          <button type="button" className="chat-primary-action" data-testid="chat-new-session"
+            onClick={() => (openViaOverlay ? openViaOverlay() : setDialogOpen(true))}>新会话</button>
+          <span className="chat-run-state" data-status={run?.status ?? 'idle'}>{run?.status ?? 'idle'}</span>
+        </div>
+      </header>
+      {agent.connection.status !== 'connected' && (
+        <p role="alert" className="chat-error">连接已断开。正在运行的任务结果未知，请在连接面板重连。</p>
+      )}
+      {run?.status === 'stop-requested' && <p role="status" className="chat-note">已请求停止，等待代理确认。</p>}
+      {run?.status === 'unknown' && <p role="status" className="chat-note">断连后任务结果未知。</p>}
+      {agent.diagnostic && <p role="status" className="chat-note">{agent.diagnostic}</p>}
+      {!drafting && conversation.parts.length === 0 && (
+        <p className="chat-note" data-testid="chat-thread-empty">这个会话还没有消息。</p>
+      )}
+      <div className="chat-thread-stage">
+        {drafting && <div className="chat-draft-welcome" data-testid="chat-draft-welcome">
+          <span className="chat-welcome-mark" aria-hidden="true">✳</span>
+          <h1>{projectName ? `你想在 ${projectName.split('/').filter(Boolean).at(-1)} 中做什么？` : '从一个想法开始'}</h1>
+          {!projectName && <button type="button" className="chat-ghost-action"
+            onClick={() => (openViaOverlay ? openViaOverlay() : setDialogOpen(true))}>选择项目</button>}
+        </div>}
+        <ThreadBody display={conversation} expansion={expansion} theme={theme} />
+      </div>
+      <div className="chat-compose" data-testid="chat-compose">
+        <ApprovalPanel interactions={interactions} interactionsCapability={agent.connection.capabilities.interactions}
+          respond={(id, answer) => service.respond(id, answer)} />
+        {drafting && !canSend && blockReason && (
+          <p role="status" className="chat-compose-block" data-testid="chat-compose-block">
+            {draftBlockCopy[blockReason] ?? '发送被项目门禁阻止。'}
+          </p>
+        )}
+        <AttachmentStrip items={composition.items}
+          onRemove={itemId => {
+            const item = store.read(pane).items.find(candidate => candidate.id === itemId)
+            if (item?.phase.state === 'ready') {
+              void service.attachments.release(item.phase.reference, 'draft-removed')
+                .catch(cause => setSendError(`附件清理失败：${cause instanceof Error ? cause.message : String(cause)}`))
+            }
+            prepareActionsRef.current.delete(itemId)
+            store.removeItem(pane, itemId, editorId)
+          }}
+          onRetry={itemId => {
+            const action = prepareActionsRef.current.get(itemId)
+            store.updateItem(pane, itemId, { phase: { state: 'preparing' } }, editorId)
+            if (action) runPrepare(pane, itemId, action)
+          }} />
+        {attachmentBlocked && <p role="status" className="chat-compose-block" data-testid="chat-attachment-block">{attachmentBlocked}</p>}
+        {panel && sourcesView && (
+          <InputPanel mode={panel.mode} sources={sourcesView} initialPlusQuery={plusQuery}
+            keyForwardRef={panelKeyRef}
+            onPick={pickEntry}
+            onComplete={entry => pickEntry(entry)}
+            onRetry={() => setPlusQuery(query => `${query}`)}
+            onClose={closeInputPanel} />
+        )}
+        <div className="chat-composer-card">
+          <div className="chat-input-row">
+          <ChatTextInput
+            inputRef={composerInputRef}
+            value={composition.text}
+            editable
+            placeholder={drafting ? '编辑新会话草稿（当前不能发送）' : '编辑 Agent 消息草稿（当前不能发送）'}
+            submitDisabled={sendDisabled}
+            onTextChange={value => store.setText(pane, value, editorId)}
+            onCaretChange={caret => { caretRef.current = caret; syncSlashToken(composition.text, caret) }}
+            panelConsumeKey={panelConsumeKey}
+            onSubmit={() => void submit()}
+            testid="chat-input"
+          />
+          </div>
+          <div className="chat-composer-bottom">
+            <button type="button" className="chat-icon-action" aria-label="打开添加与操作面板" data-testid="chat-plus-button"
+              aria-expanded={panel?.mode === 'plus' ? 'true' : 'false'}
+              onClick={() => {
+                caretRef.current = null
+                setPanel(current => (current?.mode === 'plus' ? null : { mode: 'plus', caret: caretRef.current ?? composition.text.length }))
+              }}>＋</button>
+            <div className="chat-compose-toolbar" data-testid="chat-compose-toolbar">
+              {toolbarViews.map(view => <div className="chat-toolbar-item" key={view.id}><ToolbarContribution view={view} ui={uiComponents} context={{
+                  slot: 'composer.toolbar', location: { ...location },
+                  connection: { status: agent.connection.status, runStatus: run?.status },
+                }} /></div>)}
+            </div>
+          {running
+            ? <button type="button" className="chat-primary-action chat-send-action" data-testid="chat-stop" aria-label="请求停止"
+                disabled={run?.status === 'stop-requested' || run?.status === 'starting'} onClick={stop}>
+                {run?.status === 'stop-requested' ? '停止中…' : '请求停止'}
+              </button>
+            : <button type="button" className="chat-primary-action chat-send-action" data-testid="chat-send" aria-label="尝试发送（当前不可用）"
+                disabled={sendDisabled} onClick={() => void submit()}><span className="chat-sr-only">发送</span></button>}
+          </div>
+        </div>
+        {sendError && <p role="alert" className="chat-error" data-testid="chat-send-error">{sendError}</p>}
+        <p className="chat-compose-meta">
+          <span data-testid="chat-capability-note" title={attachmentCapability.reason}>{attachmentCapability.supported
+            ? 'Agent 提交暂不可用 · Enter 查看原因 · Shift + Enter 换行'
+            : 'Agent 提交暂不可用；附件暂不可用 · Enter 查看原因 · Shift + Enter 换行'}</span>
+        </p>
+      </div>
+      {dialogOpen && !openViaOverlay && (
+        <ProjectDialog service={service} snapshot={state} close={() => setDialogOpen(false)}
+          onProjectSelected={() => { setDialogOpen(false); service.startDraft?.() }} />
+      )}
+    </section>
+  )
+}

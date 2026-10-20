@@ -124,12 +124,12 @@ resources:
   kind: question_set
   path: decisions/output-scope.yaml
   media_type: application/yaml
-  sha256: 1817552afbcddf119839a8990b73c6b78f0d69e4979a4300b88716c3c6540efc
+  sha256: b898c4a24a1abbe2502b555eae72e75da3f5aac12281abd5040b6128a3d00f07
 - id: decision.test_evidence
   kind: question_set
   path: decisions/test-evidence.yaml
   media_type: application/yaml
-  sha256: 61ba82234e87b44bf1059724021b163aa612e73c2d6f3a672830f9b72e635484
+  sha256: 10c1a8deb4539b57cbca41993a51e8d3a0c4a8782491b31cc935d18a6e48c9b9
 - id: decision.source_support
   kind: question_set
   path: decisions/source-support.yaml
@@ -165,6 +165,11 @@ resources:
   path: documents/submission/template.md
   media_type: text/markdown
   sha256: 207bdd6a1336880ced9535b2b4be2a996533be389cd7edbaf353672e666acc78
+- id: template.implementation_task
+  kind: document_template
+  path: templates/implementation-task.md
+  media_type: text/markdown
+  sha256: 7f75f0a5ff48e5c8ab5faed5a33f59bd2ddb622d04f649ed03e85771161dd280
 - id: skill.executor
   kind: skill
   path: skills/executor/SKILL.md
@@ -179,7 +184,7 @@ resources:
   kind: standard
   path: standards/acceptance.yaml
   media_type: application/yaml
-  sha256: e703bda2c2fa4e26a00d1814be83eae96cffee5b893ec214b4b16b872e329e8d
+  sha256: 1a772b9f01dbc6e51f87919b30cfa85faf43701a7e63f81ab51560dae15165be
 - id: standard.quality_review
   kind: standard
   path: standards/quality-review.yaml
@@ -194,7 +199,7 @@ resources:
   kind: workflow
   path: workflows/change-cycle.yaml
   media_type: application/yaml
-  sha256: f9210a449b28c225700f9cfb31088771b6af9dd56350b734d4dc8680f5582310
+  sha256: 5bc4ad60d4fe3305c53602fbd6ca3d0d009643a2d47401e2551b81ad9af23a44
 - id: document.decision_context.schema
   kind: document_schema
   path: documents/decision-context/schema.json
@@ -389,7 +394,7 @@ resources:
   kind: document_schema
   path: documents/correction-plan/schema.json
   media_type: application/schema+json
-  sha256: 77b199595fa8f906d7b85c137182cc3d4d15722b516d686c60b99b0d9c44f3db
+  sha256: fa9f7375104ceac889520b9c1f51dd11cd597f26df4bccfae369f6fee9feb90f
 - id: document.correction_plan.template
   kind: document_template
   path: documents/correction-plan/template.md
@@ -399,7 +404,7 @@ resources:
   kind: document_schema
   path: documents/work-inputs/schema.json
   media_type: application/schema+json
-  sha256: 6615d057301395d2254ec138706f274cac8b3958d0d6ea4ae43b679ab73ead87
+  sha256: 30fdc928eb5476747a36965cc84f2da902a8fced38651b7772270fe88a3cab68
 - id: document.work_inputs.template
   kind: document_template
   path: documents/work-inputs/template.md
@@ -453,11 +458,11 @@ requires:
 - capability_id: engineering.packages.freeze
   kind: operation
   interface_version: '1'
-  contract_digest: 4b4b09d58c55facfb770a6974590bea8a1212d21e3419ce471d712f3ff222d9b
+  contract_digest: 80a7fd36f627f2be3af4a020374f785fe13e3b11abef764362a9680a09067b7b
 - capability_id: engineering.executions.dispatch
   kind: operation
   interface_version: '1'
-  contract_digest: ddf76600cd07aaab2051d180b441405438abf8d78a6aa2c650fdc5a3c1ed92d7
+  contract_digest: 90a59907fb68a88cac7d402b2158b4b771fc314930a82fb38ec1b380b4f9d172
 - capability_id: engineering.submissions.record_report
   kind: operation
   interface_version: '1'
@@ -482,7 +487,22 @@ requires:
   kind: check
   interface_version: 1.0.0
   contract_digest: 73034144196330fe4dcc0f28359b0a2d64b90c58d0f36160cb132a8991eb71bf
+- capability_id: engineering.runs.cancel
+  kind: operation
+  interface_version: '1'
+  contract_digest: b30906ce31743d4a299538dc33846a8a519039bd4014bcb49996b8720a39b81c
 metadata:
+  agent_profile_selection:
+    schema_version: 1
+    question_id: incremental-engineering.executor-profile
+    question_text: >-
+      Choose the explicitly method-bound, readable immutable Agent Profile most
+      suitable for the fixed task, constraints and acceptance criteria. Compare
+      the exact offered Profile contents. Decline when none is suitable. A
+      choice establishes neither execution permission nor engineering acceptance.
+    candidate_limit: 8
+    decline_option_id: no-suitable-profile
+    decline_option_text: No offered Profile is suitable for this task.
   status: unsupported-owner-binding-candidate
   production_activation: forbidden_until_all_pending_owner_contracts_bound_and_qualified
   templates_are_advisory: true
@@ -507,9 +527,10 @@ metadata:
     trusted_human: configured_product_confirmation_policy_with_authorized_main_agent_chat_attestation; optional_stronger_provider
     submission_reviewer:
       logical_role: independent_review_unit
-      original_unit_identity_distinct_from_author: true
+      authorship_policy: ordessa.review.authorship-policy/1
+      authorship_policy_scope: phase_specific_source_rules
       availability: unsupported_pending_host_role_and_source_binding
-      independence_scope: this_method_only_host_generic_identity_constraints
+      independence_scope: this_method_only_source_rules_and_original_role_assignment
   product_confirmation_policy:
     policy_id: ordessa.product.v1.chat-attested-confirmation
     revision: 1
@@ -527,418 +548,710 @@ metadata:
     input_document_slot: work_inputs
     input_document_type: work-inputs
     waits:
-      await_proposal:
-        family: object_exists
-        refs:
-        - proposal_ref
-        event_slots:
-          proposal_ref:
-            source: work_input
-            field: proposal_ref
-          summary_ref:
-            source: work_input
-            field: summary_ref
-          baseline_ref:
-            source: work_input
-            field: baseline_ref
-          source_review_plan:
-            source: work_input
-            field: source_review_plan
-          method_ref:
-            source: work_input
-            field: method_ref
-          decisions_ref:
-            source: work_input
-            field: decisions_ref
-          standard_profile_ref:
-            source: work_input
-            field: standard_profile_ref
-      await_source_gate:
-        family: review_gate
-        plan_slot: source_review_plan
-        phase_key: source_review
-        event_slots:
-          plan:
-            source: slot
-            slot: source_review_plan
-          proposal:
-            source: slot
-            slot: proposal_ref
-          method:
-            source: slot
-            slot: method_ref
-          quality_review_plan:
-            source: work_input
-            field: quality_review_plan
-      await_quality_gate:
-        family: review_gate
-        plan_slot: quality_review_plan
-        phase_key: quality_review
-        event_slots:
-          plan:
-            source: slot
-            slot: quality_review_plan
-          proposal:
-            source: slot
-            slot: proposal_ref
-          summary:
-            source: slot
-            slot: summary_ref
-          method:
-            source: slot
-            slot: method_ref
-          notice:
-            source: work_input
-            field: notice
-      await_acceptance_intent:
-        family: object_exists
-        refs:
-        - proposal_ref
-        event_slots:
-          acceptance_intent:
-            source: work_input
-            field: acceptance_intent
-      await_intent_ref:
-        family: object_exists
-        refs:
-        - proposal_ref
-        intent_result_slots:
-          id: intent_id
-          digest: intent_digest
-        event_slots:
-          intent_id:
-            source: work_input
-            field: intent_id
-          intent_digest:
-            source: work_input
-            field: intent_digest
-      await_document_acceptance:
-        family: action_authorization
-        intent_slot: intent_id
-        approval_slot: document_approval_ref
-        action: apply_change
-        event_slots:
-          intent_id:
-            source: slot
-            slot: intent_id
-          intent_digest:
-            source: slot
-            slot: intent_digest
-          proposal:
-            source: slot
-            slot: proposal_ref
-          baseline:
-            source: slot
-            slot: baseline_ref
-          method:
-            source: slot
-            slot: method_ref
-          document_approval_ref:
-            source: work_input
-            field: document_approval_ref
-      await_applied_did:
-        family: object_exists
-        refs:
-        - applied_did_ref
-        event_slots:
-          approval:
-            source: slot
-            slot: document_approval_ref
-          proposal:
-            source: slot
-            slot: proposal_ref
-          baseline:
-            source: slot
-            slot: baseline_ref
-          method:
-            source: slot
-            slot: method_ref
-          applied_did_ref:
-            source: work_input
-            field: applied_did_ref
-          apply_receipt_ref:
-            source: work_input
-            field: apply_receipt_ref
-      await_package_draft:
-        family: object_exists
-        refs:
-        - package_draft_ref
-        event_slots:
-          did:
-            source: slot
-            slot: applied_did_ref
-          receipt:
-            source: slot
-            slot: apply_receipt_ref
-          method:
-            source: slot
-            slot: method_ref
-          package_draft_ref:
-            source: work_input
-            field: package_draft_ref
-      await_generate_package_permission:
-        family: action_authorization
-        intent_slot: package_intent_id
-        approval_slot: package_approval_ref
-        action: generate_package
-        event_slots:
-          draft:
-            source: slot
-            slot: package_draft_ref
-          method:
-            source: slot
-            slot: method_ref
-          package_record:
-            source: work_input
-            field: package_record
-          package_intent_id:
-            source: work_input
-            field: package_intent_id
-          package_approval_ref:
-            source: work_input
-            field: package_approval_ref
-      await_frozen_package:
-        family: object_exists
-        refs:
-        - package_ref
-        event_slots:
-          package_ref:
-            source: work_input
-            field: package_ref
-          package_review_plan:
-            source: work_input
-            field: package_review_plan
-      await_package_gate:
-        family: review_gate
-        plan_slot: package_review_plan
-        phase_key: package_review
-        event_slots:
-          plan:
-            source: slot
-            slot: package_review_plan
-          package:
-            source: slot
-            slot: package_ref
-          method:
-            source: slot
-            slot: method_ref
-      await_implementation_permission:
-        family: object_exists
-        refs:
-        - package_ref
-        event_slots:
-          package:
-            source: slot
-            slot: package_ref
-          method:
-            source: slot
-            slot: method_ref
-          dispatch_input:
-            source: work_input
-            field: dispatch_input
-      await_execution_capture:
-        family: object_exists
-        refs:
-        - package_ref
-        native_report_slot: submission_record
-        event_slots:
-          package:
-            source: slot
-            slot: package_ref
-          method:
-            source: slot
-            slot: method_ref
-          submission_record:
-            source: work_input
-            field: submission_record
-      await_submission:
-        family: result_exists
-        refs:
-        - submission_ref
-        event_slots:
-          submission_ref:
-            source: work_input
-            field: submission_ref
-          acceptance_review_plan:
-            source: work_input
-            field: acceptance_review_plan
-      await_acceptance_response:
-        family: object_exists
-        refs:
-        - submission_ref
-        event_slots:
-          plan:
-            source: slot
-            slot: acceptance_review_plan
-          submission:
-            source: slot
-            slot: submission_ref
-          method:
-            source: slot
-            slot: method_ref
-          review_id:
-            source: work_input
-            field: review_id
-          request_version:
-            source: work_input
-            field: request_version
-          fence:
-            source: work_input
-            field: fence
-          raw_response_utf8:
-            source: blob_utf8
-            field: raw_response_ref
-      await_acceptance_gate:
-        family: review_gate
-        plan_slot: acceptance_review_plan
-        phase_key: acceptance_review
-        event_slots:
-          plan:
-            source: slot
-            slot: acceptance_review_plan
-          submission:
-            source: slot
-            slot: submission_ref
-          method:
-            source: slot
-            slot: method_ref
-      await_rework_review_plan:
-        family: review_gate
-        plan_slot: rework_review_plan
-        phase_key: rework_review
-        event_slots:
-          submission:
-            source: slot
-            slot: submission_ref
-          acceptance_request_id:
-            source: slot
-            slot: acceptance_review_id
-          acceptance_review:
-            source: slot
-            slot: acceptance_review_ref
-          acceptance_plan_digest:
-            source: slot
-            slot: acceptance_record_plan_digest
-          acceptance_request_version:
-            source: slot
-            slot: acceptance_record_request_version
-          acceptance_fence:
-            source: slot
-            slot: acceptance_record_fence
-          correction_plan:
-            source: slot
-            slot: correction_plan_ref
-          did:
-            source: slot
-            slot: applied_did_ref
-          package:
-            source: slot
-            slot: package_ref
-          method:
-            source: slot
-            slot: method_ref
-          review_ref:
-            source: work_input
-            field: review_ref
-          plan_digest:
-            source: work_input
-            field: plan_digest
-          request_version:
-            source: work_input
-            field: request_version
-          fence:
-            source: work_input
-            field: fence
-          correction_plan_ref:
-            source: work_input
-            field: correction_plan_ref
-          correction_plan_content:
-            source: work_input
-            field: correction_plan_content
-          review_plan:
-            source: work_input
-            field: review_plan
-      await_rework_review_response:
-        family: review_gate
-        plan_slot: rework_review_plan
-        phase_key: rework_review
-        event_slots:
-          plan:
-            source: slot
-            slot: rework_review_plan
-          correction_plan:
-            source: slot
-            slot: correction_plan_ref
-          submission:
-            source: slot
-            slot: submission_ref
-          acceptance_review:
-            source: slot
-            slot: acceptance_review_ref
-          method:
-            source: slot
-            slot: method_ref
-          review_id:
-            source: work_input
-            field: review_id
-          request_version:
-            source: work_input
-            field: request_version
-          fence:
-            source: work_input
-            field: fence
-          raw_response_utf8:
-            source: blob_utf8
-            field: raw_response_ref
-      await_adoption_permission:
-        family: action_authorization
-        intent_slot: adoption_intent_id
-        approval_slot: adoption_approval_ref
-        action: accept_artifact
-        event_slots:
-          submission:
-            source: slot
-            slot: submission_ref
-          method:
-            source: slot
-            slot: method_ref
-          approval_ref:
-            source: work_input
-            field: approval_ref
-          expected_control_version:
-            source: work_input
-            field: expected_control_version
-          intent_id:
-            source: work_input
-            field: intent_id
-          targets:
-            source: work_input
-            field: targets
-      await_adoption_receipt:
-        family: result_exists
-        refs:
-        - adoption_ref
-        event_slots:
-          submission:
-            source: slot
-            slot: submission_ref
-          method:
-            source: slot
-            slot: method_ref
-          acceptance_receipt_ref:
-            source: work_input
-            field: acceptance_receipt_ref
-      await_feedback:
-        family: object_exists
-        refs:
-        - adoption_ref
-        event_slots:
-          adoption:
-            source: slot
-            slot: adoption_ref
-          submission:
-            source: slot
-            slot: submission_ref
-          feedback_ref:
-            source: work_input
-            field: feedback_ref
+        await_proposal:
+          family: review_plan_ready
+          event_map: events
+          plan_slot: source_review_plan
+          phase_key: source_review
+          subject_slot: proposal_ref
+          event_slots:
+            proposal_ref:
+              source: work_input
+              field: proposal_ref
+            summary_ref:
+              source: work_input
+              field: summary_ref
+            baseline_ref:
+              source: work_input
+              field: baseline_ref
+            source_review_plan:
+              source: work_input
+              field: source_review_plan
+            method_ref:
+              source: work_input
+              field: method_ref
+            decisions_ref:
+              source: work_input
+              field: decisions_ref
+            standard_profile_ref:
+              source: work_input
+              field: standard_profile_ref
+        await_source_gate:
+          family: review_gate
+          event_map: events
+          plan_slot: source_review_plan
+          phase_key: source_review
+          event_slots:
+            plan:
+              source: slot
+              slot: source_review_plan
+            proposal:
+              source: slot
+              slot: proposal_ref
+            method:
+              source: slot
+              slot: method_ref
+        await_quality_plan:
+          family: review_plan_ready
+          event_map: events
+          plan_slot: quality_review_plan
+          phase_key: quality_review
+          subject_slot: proposal_ref
+          event_slots:
+            proposal:
+              source: slot
+              slot: proposal_ref
+            method:
+              source: slot
+              slot: method_ref
+            review_plan:
+              source: work_input
+              field: review_plan
+        await_quality_response:
+          family: review_response_ready
+          event_map: events
+          plan_slot: quality_review_plan
+          phase_key: quality_review
+          subject_slot: proposal_ref
+          review_id_slot: quality_review_id
+          request_version_slot: quality_request_version
+          fence_slot: quality_review_fence
+          response_event: raw_response_utf8
+          event_slots:
+            plan:
+              source: slot
+              slot: quality_review_plan
+            method:
+              source: slot
+              slot: method_ref
+            review_id:
+              source: work_input
+              field: review_id
+            request_version:
+              source: work_input
+              field: request_version
+            fence:
+              source: work_input
+              field: fence
+            raw_response_utf8:
+              source: blob_utf8
+              field: raw_response_ref
+            proposal:
+              source: slot
+              slot: proposal_ref
+        await_quality_content_plan:
+          family: review_plan_ready
+          event_map: events
+          plan_slot: quality_content_review_plan
+          phase_key: quality_content_review
+          subject_slot: proposal_ref
+          event_slots:
+            proposal:
+              source: slot
+              slot: proposal_ref
+            method:
+              source: slot
+              slot: method_ref
+            review_plan:
+              source: work_input
+              field: review_plan
+        await_quality_content_response:
+          family: review_response_ready
+          event_map: events
+          plan_slot: quality_content_review_plan
+          phase_key: quality_content_review
+          subject_slot: proposal_ref
+          review_id_slot: content_review_id
+          request_version_slot: content_request_version
+          fence_slot: content_review_fence
+          response_event: raw_response_utf8
+          event_slots:
+            plan:
+              source: slot
+              slot: quality_content_review_plan
+            method:
+              source: slot
+              slot: method_ref
+            review_id:
+              source: work_input
+              field: review_id
+            request_version:
+              source: work_input
+              field: request_version
+            fence:
+              source: work_input
+              field: fence
+            raw_response_utf8:
+              source: blob_utf8
+              field: raw_response_ref
+            proposal:
+              source: slot
+              slot: proposal_ref
+        await_summary_plan:
+          family: review_plan_ready
+          event_map: events
+          plan_slot: summary_review_plan
+          phase_key: summary_review
+          subject_slot: proposal_ref
+          event_slots:
+            proposal:
+              source: slot
+              slot: proposal_ref
+            method:
+              source: slot
+              slot: method_ref
+            review_plan:
+              source: work_input
+              field: review_plan
+        await_summary_response:
+          family: review_response_ready
+          event_map: events
+          plan_slot: summary_review_plan
+          phase_key: summary_review
+          subject_slot: proposal_ref
+          review_id_slot: summary_review_id
+          request_version_slot: summary_request_version
+          fence_slot: summary_review_fence
+          response_event: raw_response_utf8
+          event_slots:
+            plan:
+              source: slot
+              slot: summary_review_plan
+            method:
+              source: slot
+              slot: method_ref
+            review_id:
+              source: work_input
+              field: review_id
+            request_version:
+              source: work_input
+              field: request_version
+            fence:
+              source: work_input
+              field: fence
+            raw_response_utf8:
+              source: blob_utf8
+              field: raw_response_ref
+            proposal:
+              source: slot
+              slot: proposal_ref
+        await_quality_gate:
+          family: review_gate
+          event_map: events
+          plan_slot: summary_review_plan
+          phase_key: summary_review
+          event_slots:
+            plan:
+              source: slot
+              slot: summary_review_plan
+            proposal:
+              source: slot
+              slot: proposal_ref
+            summary:
+              source: slot
+              slot: summary_ref
+            method:
+              source: slot
+              slot: method_ref
+            notice:
+              source: work_input
+              field: notice
+        await_acceptance_intent:
+          family: object_exists
+          event_map: events
+          refs:
+          - proposal_ref
+          event_slots:
+            acceptance_intent:
+              source: work_input
+              field: acceptance_intent
+        await_intent_ref:
+          family: object_exists
+          event_map: events
+          refs:
+          - proposal_ref
+          intent_result_slots:
+            id: intent_id
+            digest: intent_digest
+          event_slots:
+            intent_id:
+              source: work_input
+              field: intent_id
+            intent_digest:
+              source: work_input
+              field: intent_digest
+        await_document_acceptance:
+          family: action_authorization
+          event_map: events
+          intent_slot: intent_id
+          approval_slot: document_approval_ref
+          action: apply_change
+          event_slots:
+            intent_id:
+              source: slot
+              slot: intent_id
+            intent_digest:
+              source: slot
+              slot: intent_digest
+            proposal:
+              source: slot
+              slot: proposal_ref
+            baseline:
+              source: slot
+              slot: baseline_ref
+            method:
+              source: slot
+              slot: method_ref
+            document_approval_ref:
+              source: work_input
+              field: document_approval_ref
+        await_applied_did:
+          family: object_exists
+          event_map: events
+          refs:
+          - applied_did_ref
+          event_slots:
+            approval:
+              source: slot
+              slot: document_approval_ref
+            proposal:
+              source: slot
+              slot: proposal_ref
+            baseline:
+              source: slot
+              slot: baseline_ref
+            method:
+              source: slot
+              slot: method_ref
+            applied_did_ref:
+              source: work_input
+              field: applied_did_ref
+            apply_receipt_ref:
+              source: work_input
+              field: apply_receipt_ref
+        await_package_draft:
+          family: object_exists
+          event_map: events
+          refs:
+          - package_draft_ref
+          event_slots:
+            did:
+              source: slot
+              slot: applied_did_ref
+            receipt:
+              source: slot
+              slot: apply_receipt_ref
+            method:
+              source: slot
+              slot: method_ref
+            package_draft_ref:
+              source: work_input
+              field: package_draft_ref
+        await_generate_package_permission:
+          family: action_authorization
+          event_map: events
+          intent_slot: package_intent_id
+          approval_slot: package_approval_ref
+          action: generate_package
+          event_slots:
+            draft:
+              source: slot
+              slot: package_draft_ref
+            method:
+              source: slot
+              slot: method_ref
+            package_record:
+              source: work_input
+              field: package_record
+            package_intent_id:
+              source: work_input
+              field: package_intent_id
+            package_approval_ref:
+              source: work_input
+              field: package_approval_ref
+        await_frozen_package:
+          family: review_plan_ready
+          event_map: events
+          plan_slot: package_review_plan
+          phase_key: package_review
+          subject_slot: package_ref
+          event_slots:
+            method:
+              source: slot
+              slot: method_ref
+            package_ref:
+              source: work_input
+              field: package_ref
+            review_plan:
+              source: work_input
+              field: review_plan
+        await_package_review_response:
+          family: review_response_ready
+          event_map: events
+          plan_slot: package_review_plan
+          phase_key: package_review
+          subject_slot: package_ref
+          review_id_slot: package_quality_review_id
+          request_version_slot: package_quality_request_version
+          fence_slot: package_quality_review_fence
+          response_event: raw_response_utf8
+          event_slots:
+            plan:
+              source: slot
+              slot: package_review_plan
+            method:
+              source: slot
+              slot: method_ref
+            review_id:
+              source: work_input
+              field: review_id
+            request_version:
+              source: work_input
+              field: request_version
+            fence:
+              source: work_input
+              field: fence
+            raw_response_utf8:
+              source: blob_utf8
+              field: raw_response_ref
+            package:
+              source: slot
+              slot: package_ref
+        await_package_content_plan:
+          family: review_plan_ready
+          event_map: events
+          plan_slot: package_content_review_plan
+          phase_key: package_content_review
+          subject_slot: package_ref
+          event_slots:
+            package:
+              source: slot
+              slot: package_ref
+            method:
+              source: slot
+              slot: method_ref
+            review_plan:
+              source: work_input
+              field: review_plan
+        await_package_content_response:
+          family: review_response_ready
+          event_map: events
+          plan_slot: package_content_review_plan
+          phase_key: package_content_review
+          subject_slot: package_ref
+          review_id_slot: package_content_review_id
+          request_version_slot: package_content_request_version
+          fence_slot: package_content_review_fence
+          response_event: raw_response_utf8
+          event_slots:
+            plan:
+              source: slot
+              slot: package_content_review_plan
+            method:
+              source: slot
+              slot: method_ref
+            review_id:
+              source: work_input
+              field: review_id
+            request_version:
+              source: work_input
+              field: request_version
+            fence:
+              source: work_input
+              field: fence
+            raw_response_utf8:
+              source: blob_utf8
+              field: raw_response_ref
+            package:
+              source: slot
+              slot: package_ref
+        await_package_gate:
+          family: review_gate
+          event_map: events
+          plan_slot: package_content_review_plan
+          phase_key: package_content_review
+          event_slots:
+            plan:
+              source: slot
+              slot: package_content_review_plan
+            package:
+              source: slot
+              slot: package_ref
+            method:
+              source: slot
+              slot: method_ref
+        await_implementation_permission:
+          family: object_exists
+          event_map: events_by_round
+          refs:
+          - package_ref
+          event_slots:
+            package:
+              source: slot
+              slot: package_ref
+            method:
+              source: slot
+              slot: method_ref
+            dispatch_input:
+              source: work_input
+              field: dispatch_input
+        await_execution_capture:
+          family: object_exists
+          event_map: events_by_round
+          refs:
+          - package_ref
+          native_report_slot: submission_record
+          event_slots:
+            package:
+              source: slot
+              slot: package_ref
+            method:
+              source: slot
+              slot: method_ref
+            submission_record:
+              source: work_input
+              field: submission_record
+        await_submission:
+          family: result_exists
+          event_map: events_by_round
+          refs:
+          - submission_ref
+          event_slots:
+            submission_ref:
+              source: work_input
+              field: submission_ref
+        await_acceptance_plan:
+          family: review_plan_ready
+          event_map: events_by_round
+          plan_slot: acceptance_review_plan
+          phase_key: acceptance_review
+          subject_slot: submission_ref
+          event_slots:
+            submission:
+              source: slot
+              slot: submission_ref
+            method:
+              source: slot
+              slot: method_ref
+            review_plan:
+              source: work_input
+              field: review_plan
+        await_acceptance_response:
+          family: review_response_ready
+          event_map: events_by_round
+          plan_slot: acceptance_review_plan
+          phase_key: acceptance_review
+          subject_slot: submission_ref
+          review_id_slot: acceptance_review_id
+          request_version_slot: acceptance_request_version
+          fence_slot: acceptance_review_fence
+          response_event: raw_response_utf8
+          event_slots:
+            plan:
+              source: slot
+              slot: acceptance_review_plan
+            submission:
+              source: slot
+              slot: submission_ref
+            method:
+              source: slot
+              slot: method_ref
+            review_id:
+              source: work_input
+              field: review_id
+            request_version:
+              source: work_input
+              field: request_version
+            fence:
+              source: work_input
+              field: fence
+            raw_response_utf8:
+              source: blob_utf8
+              field: raw_response_ref
+        await_acceptance_gate:
+          family: review_gate
+          event_map: events_by_round
+          plan_slot: acceptance_review_plan
+          phase_key: acceptance_review
+          event_slots:
+            plan:
+              source: slot
+              slot: acceptance_review_plan
+            submission:
+              source: slot
+              slot: submission_ref
+            method:
+              source: slot
+              slot: method_ref
+        await_rework_review_plan:
+          family: review_plan_ready
+          event_map: events_by_round
+          plan_slot: rework_review_plan
+          phase_key: rework_review
+          subject_slot: correction_plan_ref
+          event_slots:
+            submission:
+              source: slot
+              slot: submission_ref
+            acceptance_request_id:
+              source: slot
+              slot: acceptance_review_id
+            did:
+              source: slot
+              slot: applied_did_ref
+            package:
+              source: slot
+              slot: package_ref
+            method:
+              source: slot
+              slot: method_ref
+            review_ref:
+              source: work_input
+              field: review_ref
+            plan_digest:
+              source: work_input
+              field: plan_digest
+            request_version:
+              source: work_input
+              field: request_version
+            fence:
+              source: work_input
+              field: fence
+            correction_plan_ref:
+              source: work_input
+              field: correction_plan_ref
+            correction_plan_content:
+              source: work_input
+              field: correction_plan_content
+            review_plan:
+              source: work_input
+              field: review_plan
+        await_rework_review_response:
+          family: review_response_ready
+          event_map: events_by_round
+          plan_slot: rework_review_plan
+          phase_key: rework_review
+          subject_slot: correction_plan_ref
+          review_id_slot: rework_review_id
+          request_version_slot: rework_request_version
+          fence_slot: rework_review_fence
+          response_event: raw_response_utf8
+          event_slots:
+            plan:
+              source: slot
+              slot: rework_review_plan
+            correction_plan:
+              source: slot
+              slot: correction_plan_ref
+            submission:
+              source: slot
+              slot: submission_ref
+            acceptance_review:
+              source: slot
+              slot: acceptance_review_ref
+            method:
+              source: slot
+              slot: method_ref
+            review_id:
+              source: work_input
+              field: review_id
+            request_version:
+              source: work_input
+              field: request_version
+            fence:
+              source: work_input
+              field: fence
+            raw_response_utf8:
+              source: blob_utf8
+              field: raw_response_ref
+        await_adoption_permission:
+          family: action_authorization
+          event_map: events
+          intent_slot: adoption_intent_id
+          approval_slot: adoption_approval_ref
+          action: accept_artifact
+          event_slots:
+            submission:
+              source: slot
+              slot: submission_ref
+            method:
+              source: slot
+              slot: method_ref
+            approval_ref:
+              source: work_input
+              field: approval_ref
+            expected_control_version:
+              source: work_input
+              field: expected_control_version
+            intent_id:
+              source: work_input
+              field: intent_id
+            targets:
+              source: work_input
+              field: targets
+        await_adoption_receipt:
+          family: result_exists
+          event_map: events
+          refs:
+          - adoption_ref
+          event_slots:
+            submission:
+              source: slot
+              slot: submission_ref
+            method:
+              source: slot
+              slot: method_ref
+            acceptance_receipt_ref:
+              source: work_input
+              field: acceptance_receipt_ref
+        await_feedback:
+          family: object_exists
+          event_map: events
+          refs:
+          - adoption_ref
+          event_slots:
+            adoption:
+              source: slot
+              slot: adoption_ref
+            submission:
+              source: slot
+              slot: submission_ref
+            feedback_ref:
+              source: work_input
+              field: feedback_ref
+        await_source_response:
+          family: review_response_ready
+          event_map: events
+          plan_slot: source_review_plan
+          phase_key: source_review
+          subject_slot: proposal_ref
+          review_id_slot: source_review_id
+          request_version_slot: source_request_version
+          fence_slot: source_review_fence
+          response_event: raw_response_utf8
+          event_slots:
+            plan:
+              source: slot
+              slot: source_review_plan
+            proposal:
+              source: slot
+              slot: proposal_ref
+            method:
+              source: slot
+              slot: method_ref
+            review_id:
+              source: work_input
+              field: review_id
+            request_version:
+              source: work_input
+              field: request_version
+            fence:
+              source: work_input
+              field: fence
+            raw_response_utf8:
+              source: blob_utf8
+              field: raw_response_ref
+    input_revision_policy:
+      contract: ordessa.append-only-work-inputs/2
+      event_values: immutable_once_present
+      round_events: events_by_round

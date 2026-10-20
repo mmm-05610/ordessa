@@ -6,17 +6,21 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
+/.venv-cleanup/
+token
+.env
 
 # --- environment exceptions (switch table docs/migration/source-destination.md §1) ---
 # In-place workspace containers and run data that remain inside the root after
 # the switch. They are NOT source and must never enter git; see
 # docs/known-issues.md §services and docs/reference-index.md.
-worktrees/
+worktree/
 .c1-001-runtime/
 .c1-001-secrets/
 .mimocode/
 .qoder/
-runtime/
+# Only root live run data; nested runtime directories contain active source.
+/runtime/
 verify-logs/
 
 # --- python editable-install build artifacts (never source) ---
@@ -35,3 +39,48 @@ packaging/.staging/
 packaging/.out/
 packaging/.icon-stage/
 packaging/.keys/
+
+# 031 decision isolated local verification
+/.venv-decision/
+/.decision-tmp/
+!/packages/backend/decision/src/ordessa_decision/runtime/
+!/packages/backend/decision/src/ordessa_decision/runtime/*.py
+!/packages/backend/decision/tests/runtime/
+!/packages/backend/decision/tests/runtime/*.py
+
+# Dedicated same-source nightly verification environment
+/.venv-nightly/
+/.nightly-cache/
+
+# Pinned build toolchain and locally built bridge artifact (AGENTS.md rule 4:
+# no binaries in git). Rebuilt via
+# plugins/harness/pi/tooling/build-acp-adapter-round-h.sh; the pinned digest
+# lives in docs/reference/baseline.md.
+/.toolchains/
+
+# W08 sole neutral runtime and its inherited regression sources.
+!/packages/execution/decision/src/decision_runtime/runtime/
+!/packages/execution/decision/src/decision_runtime/runtime/*.py
+!/packages/execution/decision/tests/runtime/
+!/packages/execution/decision/tests/runtime/*.py
+
+# Exact platform DI Token sources; the general credential token rule stays.
+!/packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/product/token/
+!/packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/product/token/CommandSourceToken.ts
+!/packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/product/token/DiagnosticsContributionToken.ts
+!/packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/product/token/F5InteractionToken.ts
+!/packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/product/token/HarnessAvailabilityToken.ts
+!/packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/product/token/KeybindingServiceToken.ts
+!/packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/product/token/LoggerToken.ts
+!/packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/product/token/SettingsContributionToken.ts
+!/packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/product/token/ThemeServiceToken.ts
+!/packages/interfaces/channels/workbench/extension-api/contracts/foundation/src/product/token/WirePortToken.ts
+
+# Desktop-owned generated packaging outputs and private signing keys
+apps/desktop/packaging/.cache/
+apps/desktop/packaging/.staging/
+apps/desktop/packaging/.out/
+apps/desktop/packaging/.icon-stage/
+apps/desktop/packaging/.keys/
+apps/desktop/packaging/.test-extract/
+apps/desktop/packaging/.test-update/

@@ -3,7 +3,7 @@ from collections.abc import Mapping
 from threading import RLock
 import hashlib
 import json
-from ordessa_execution_api.environment.operations import safe_json, sealed_mapping
+from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.lifecycle.unit_lifecycle import same_reference
 from .instance import UnitInstance

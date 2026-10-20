@@ -1,0 +1,511 @@
+{
+  "schema": "ordessa.js.aggregate-suite-inventory.v1",
+  "count": 53,
+  "source": "docs/verification/overnight-upper-structure-20261009/current-test-discovery-list-first.stdout",
+  "suites": [
+    {
+      "name": "typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ]
+    },
+    {
+      "name": "build:examples",
+      "command": [
+        "npm",
+        "run",
+        "build:examples"
+      ]
+    },
+    {
+      "name": "build:foundations",
+      "command": [
+        "npm",
+        "run",
+        "build:foundations"
+      ]
+    },
+    {
+      "name": "build:app",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ]
+    },
+    {
+      "name": "workspace:apps/desktop",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "apps/desktop",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:apps/desktop/electron/native-bridge",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "apps/desktop/electron/native-bridge",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:apps/desktop/electron/server-bridge",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "apps/desktop/electron/server-bridge",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:apps/desktop/packaging/product",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "apps/desktop/packaging/product",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:packages/interfaces/channels/workbench/extension-api/connections",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "packages/interfaces/channels/workbench/extension-api/connections",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:packages/interfaces/channels/workbench/extension-runtime/runtime",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "packages/interfaces/channels/workbench/extension-runtime/runtime",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:packages/interfaces/channels/workbench/ui",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "packages/interfaces/channels/workbench/ui",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:packages/interfaces/channels/workbench/extension-runtime/ui-components",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "packages/interfaces/channels/workbench/extension-runtime/ui-components",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:packages/interfaces/channels/workbench/shell/workbench",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "packages/interfaces/channels/workbench/shell/workbench",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:packages/interfaces/channels/workbench/shell/workbench/interactions",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "packages/interfaces/channels/workbench/shell/workbench/interactions",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/connectors/acp",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/connectors/acp",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/connectors/ordessa",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/connectors/ordessa",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/permissions/frontend",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/permissions/frontend",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/profiles/ui/api",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/profiles/ui/api",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/profiles/ui/frontend",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/profiles/ui/frontend",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/resources/mcp/frontend",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/resources/mcp/frontend",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/resources/model-provider/chat-contribution",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/resources/model-provider/chat-contribution",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/resources/model-provider/desktop",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/resources/model-provider/desktop",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/resources/sandbox/frontend",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/resources/sandbox/frontend",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/resources/skills/desktop",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/resources/skills/desktop",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/subagents/settings",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/subagents/settings",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/subagents/ui",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/subagents/ui",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/ui/connections",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/ui/connections",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/ui/contracts",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/ui/contracts",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/agents/ui/sessions",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/agents/ui/sessions",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/workbench/chat/api",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/workbench/chat/api",
+        "test"
+      ]
+    },
+    {
+      "name": "workspace:plugins/workbench/chat/frontend",
+      "command": [
+        "npm",
+        "run",
+        "--workspace",
+        "plugins/workbench/chat/frontend",
+        "test"
+      ]
+    },
+    {
+      "name": "vitest:integration/agents/connectors",
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "--root",
+        "tests/integration/agents/connectors"
+      ]
+    },
+    {
+      "name": "node-test:tooling",
+      "command": [
+        "node",
+        "--test",
+        "tooling/tests/**/*.test.mjs"
+      ]
+    },
+    {
+      "name": "node-test:apps/desktop/packaging/product",
+      "command": [
+        "node",
+        "--test",
+        "apps/desktop/tests/product/"
+      ]
+    },
+    {
+      "name": "node-test:plugins/harness/packaging",
+      "command": [
+        "npm",
+        "run",
+        "test:harness-packaging"
+      ]
+    },
+    {
+      "name": "node-test:claude-code/acp",
+      "command": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "plugins/harness/claude-code/tests/acp/claude-auth.test.mjs",
+        "plugins/harness/claude-code/tests/acp/claude-provider-model.test.mjs"
+      ]
+    },
+    {
+      "name": "node-test:codex/acp",
+      "command": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "plugins/harness/codex/tests/acp/codex-model-catalog.test.mjs",
+        "plugins/harness/codex/tests/acp/codex-process.test.mjs"
+      ]
+    },
+    {
+      "name": "node-test:pi/acp",
+      "command": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "plugins/harness/pi/tests/acp/configuration-operation.test.mjs",
+        "plugins/harness/pi/tests/acp/configuration-query.test.mjs",
+        "plugins/harness/pi/tests/acp/creation.test.mjs",
+        "plugins/harness/pi/tests/acp/entry.test.mjs",
+        "plugins/harness/pi/tests/acp/provider-registration.test.mjs"
+      ]
+    },
+    {
+      "name": "node-test:opencode/transport",
+      "command": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "plugins/harness/opencode/tests/opencode_abort_outcome_halfb.test.mjs",
+        "plugins/harness/opencode/tests/opencode_control_leg_audit.test.mjs",
+        "plugins/harness/opencode/tests/opencode_driver_tail.test.mjs",
+        "plugins/harness/opencode/tests/opencode_pump_attribution_x20.test.mjs",
+        "plugins/harness/opencode/tests/opencode_stream_framing.test.mjs",
+        "plugins/harness/opencode/tests/opencode_subscriber_attribution.test.mjs"
+      ]
+    },
+    {
+      "name": "node-test:agents/harness-transport",
+      "command": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/execution/agents/tests/agents/harness_transport/frame_buffer_lifecycle.test.mjs"
+      ]
+    },
+    {
+      "name": "node-test:apps/server/harness",
+      "command": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "apps/server/tests/integration/harness/access_entry_staging.test.mjs",
+        "apps/server/tests/integration/harness/capability_claims.test.mjs",
+        "apps/server/tests/integration/harness/launch_descriptors.test.mjs",
+        "apps/server/tests/support/controlled_peer_allowlist.test.mjs"
+      ]
+    },
+    {
+      "name": "node-test:tests/integration/harness/access",
+      "command": [
+        "node",
+        "--test",
+        "tests/integration/harness/access/**/*.test.mjs"
+      ]
+    },
+    {
+      "name": "node-test:packages/interfaces/channels/workbench/extension-api/contracts",
+      "command": [
+        "node",
+        "--test",
+        "packages/interfaces/channels/workbench/extension-api/contracts/**/*.test.mjs"
+      ]
+    },
+    {
+      "name": "node-test:examples/f5-counter",
+      "command": [
+        "node",
+        "--test",
+        "examples/plugins/external-samples/f5-counter/tests/test.mjs"
+      ]
+    },
+    {
+      "name": "vitest:examples/f5-react-panel",
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "--root",
+        "examples/plugins/external-samples/f5-react-panel"
+      ]
+    },
+    {
+      "name": "rig:tests/integration/acp-connector",
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "--root",
+        "tests/integration/acp-connector"
+      ]
+    },
+    {
+      "name": "electron:test:electron",
+      "command": [
+        "npm",
+        "run",
+        "test:electron"
+      ]
+    },
+    {
+      "name": "electron:test:extensions",
+      "command": [
+        "npm",
+        "run",
+        "test:extensions"
+      ]
+    },
+    {
+      "name": "electron:test:agent-ui",
+      "command": [
+        "npm",
+        "run",
+        "test:agent-ui"
+      ]
+    },
+    {
+      "name": "electron:test:agent-shell",
+      "command": [
+        "npm",
+        "run",
+        "test:agent-shell"
+      ]
+    },
+    {
+      "name": "electron:test:ui-service",
+      "command": [
+        "npm",
+        "run",
+        "test:ui-service"
+      ]
+    },
+    {
+      "name": "electron:test:ui-foundations",
+      "command": [
+        "npm",
+        "run",
+        "test:ui-foundations"
+      ]
+    },
+    {
+      "name": "electron:test:ui-preview",
+      "command": [
+        "npm",
+        "run",
+        "test:ui-preview"
+      ]
+    }
+  ]
+}

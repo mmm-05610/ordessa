@@ -27,3 +27,6 @@ __all__ = [
     "CLASSIFICATION_UNKNOWN", "NativeKey", "QODER_CLI_ROOT", "QODER_NATIVE_HOME",
     "QODER_NATIVE_KEYS", "QODER_SEC_ROOT", "registered_keys", "unregistered_keys",
 ]
+
+from .provider import QoderHarnessProvider, factory
+__all__ += ['QoderHarnessProvider', 'factory']

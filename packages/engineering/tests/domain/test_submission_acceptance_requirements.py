@@ -4,6 +4,7 @@ The SubmissionRef and output revisions below are synthetic pure values. They
 exercise closed projection only and do not authenticate a Submission or review.
 """
 from pathlib import Path
+import hashlib
 import tempfile
 import json
 from dataclasses import replace
@@ -30,6 +31,7 @@ from ordessa_engineering.application.orchestration.method_bridge import MethodBr
 
 
 INTENT = 'implementation-intent-test'
+HISTORICAL_25_OWNER_CONTRACTS_SHA256 = '962ad44bff87717514e95478b8bf1ae9610ad2e94f24be6b753bbc922fafcf90'
 
 
 def _template(*, phase='quality-phase'):
@@ -115,21 +117,55 @@ def test_acceptance_bindings_cannot_relabel_quality_standard_from_actual_2_5():
         finally:
             lib.close()
 
-    # 2.5 has an acceptance standard declaration in raw candidate bytes, but
-    # the registered validation evidence marks the candidate compiler-unknown;
-    # this is not treated as a published MethodSnapshot or green implementation.
+    # 2.5 has an acceptance standard declaration in raw candidate bytes. It is
+    # an incomplete historical candidate, not publication or runtime authority.
     candidate_25 = ROOT / 'candidates/2.5.0'
     raw_standard = yaml.safe_load((candidate_25 / 'standards/acceptance.yaml').read_bytes())
     from ordessa_engineering.adapters.filesystem.resource_reader import FileResourceReader
     from ordessa_engineering.methods.loading.loader import load_method
     from ordessa_engineering.methods.definitions.models import MethodSource
     from ordessa_engineering.methods import compile_method
-    from ordessa_engineering.application.orchestration.method_bridge import command_capabilities
     assert raw_standard['purpose'] == 'acceptance'
-    # Historical validation JSON layout is not a runtime capability authority.
-    # Keep the original unsupported assertion, using actual current loader/compiler.
+    candidate_index = json.loads((candidate_25 / 'candidate-index.json').read_bytes())
+    assert candidate_index['purpose'] == 'incomplete_candidate_bytes_only_not_snapshot_or_publication'
+    contracts_path = candidate_25 / 'contracts/implemented-owner-contracts.json'
+    contract_pins = [item['sha256'] for item in candidate_index['files']
+                     if item['path'] == 'contracts/implemented-owner-contracts.json']
+    assert contract_pins == [HISTORICAL_25_OWNER_CONTRACTS_SHA256]
+    assert hashlib.sha256(contracts_path.read_bytes()).hexdigest() == contract_pins[0]
+    candidate_validation = json.loads((candidate_25 / 'validation.json').read_bytes())
+    assert candidate_validation['status'] == 'asset_validation_only_unsupported_candidate'
+    assert candidate_validation['publication_attempted'] is False
     loaded = load_method(MethodSource(candidate_25), FileResourceReader())
     assert loaded.ok, loaded.error
-    compiled = compile_method(loaded.value, command_capabilities(), 'engineering-test/current-host')
+    assert loaded.value.identity.schema_version == 1
+    assert loaded.value.manifest['compiler_contract'] == 'ordessa.methods/v1'
+    from ordessa_engineering.application.orchestration.check_capabilities import (
+        invariant_review_check_capabilities, mechanical_review_check_capabilities,
+    )
+    from ordessa_engineering.application.orchestration.decision_checks import (
+        generic_decision_check_capability,
+    )
+    from ordessa_engineering.application.orchestration.method_bridge import command_capabilities
+    from ordessa_engineering.methods.definitions.models import CompilationCapabilities
+    current = command_capabilities()
+    unchanged_checks = (*mechanical_review_check_capabilities().capabilities,
+                        *invariant_review_check_capabilities().capabilities,
+                        generic_decision_check_capability())
+    current_capabilities = CompilationCapabilities(
+        (*current.capabilities, *unchanged_checks), current.registry_snapshot_ref, current.trust_class)
+    current_by_id = {item.capability_id: item for item in current_capabilities.capabilities}
+    requirements = loaded.value.manifest['requires']
+    for capability_id in ('engineering.proposals.create', 'engineering.packages.freeze'):
+        required = next(item for item in requirements if item['capability_id'] == capability_id)
+        actual = current_by_id[capability_id]
+        assert required['interface_version'] == '1'
+        assert actual.interface_version == '2'
+        assert required['contract_digest'] != actual.contract_digest
+    compiled = compile_method(loaded.value, current_capabilities,
+                              'engineering-test/current-v2-interprets-historical-schema1')
     assert not compiled.ok
-    assert compiled.error.code == 'UNKNOWN_CAPABILITY'
+    assert compiled.error.code == 'CAPABILITY_REQUIREMENT_MISMATCH'
+    assert compiled.error.path == 'method.yaml'
+    assert compiled.error.pointer == '/requires/2/interface_version'
+    assert 'required capability interface_version differs from the injected host descriptor' in compiled.error.message

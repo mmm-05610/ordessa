@@ -1,8 +1,10 @@
 """Pure Harness domain contracts, independent of retired Work Core."""
 from .native_refs import NativeProfileRef, NativeContinuationRef, NativeCredentialRef, NativeRefInvalid
+from .credentials import CredentialRefV1
 from .providers import ProviderDescriptor
+from .activation import HarnessActivationRef, validate_namespace
 
-__all__ = ["NativeProfileRef", "NativeContinuationRef", "NativeCredentialRef", "NativeRefInvalid", "ProviderDescriptor"]
+__all__ = ["NativeProfileRef", "NativeContinuationRef", "NativeCredentialRef", "NativeRefInvalid", "CredentialRefV1", "ProviderDescriptor", "HarnessActivationRef", "validate_namespace"]
 
 """Standalone, typed public contract for Harness v2."""
 

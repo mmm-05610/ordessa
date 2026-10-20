@@ -9,8 +9,8 @@ import pytest
 
 from test_manager_node_joint import joint
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import GuaranteeUnavailableError
-from ordessa_execution_api.environment.operations import node_holder
+from ordessa_units.errors import UnitGuaranteeUnavailable
+from ordessa_units.definitions.operations import node_holder
 from ordessa_units.management import UnitManager
 from ordessa_units.management.manager import ManagerReleaseReceipt, UnitManagementRefused
 
@@ -101,7 +101,7 @@ def test_usage_revision_change_blocks_original_live_reconciliation(joint):
         'UPDATE env_usages SET revision=revision+1 WHERE usage_id=?', (usage_id,))
     j.store._conn.commit()
 
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         j.services.lifecycle.reconcile_release(request)
     assert j.store.read_operation_step(request, 'release').outcome == 'possibly-dispatched'
     assert j.manager.find(unit_ref) is unit
@@ -261,7 +261,7 @@ def test_finalize_committed_release_refuses_wrong_request_and_uncommitted_step(j
     before = list(j.events)
     holder = node_holder('env', node_ref.instance_id, node_ref.generation)
     usages = j.store.read_usages('env', holder)
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         j.services.lifecycle.finalize_release(
             RequestKey('env', 'principal', 'different-committed-release'))
     with pytest.raises(UnitManagementRefused):
@@ -289,14 +289,14 @@ def test_unknown_release_claim_cannot_be_promoted_by_reconciliation(joint):
     request = RequestKey('env', 'principal', 'unknown-release-claim')
 
     def unavailable_observation(*_args, **_kwargs):
-        raise GuaranteeUnavailableError('controlled missing owner observation')
+        raise UnitGuaranteeUnavailable('controlled missing owner observation')
 
     j.services.lifecycle._observation_port.observe = unavailable_observation
     result = j.services.lifecycle.release(request, node_ref, {})
     assert result['status'] == 'unknown'
     assert j.store.read_operation_step(request, 'release').outcome == 'unknown'
     before = list(j.events)
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         j.services.lifecycle.reconcile_release(request)
     assert j.store.read_operation_step(request, 'release').outcome == 'unknown'
     assert j.manager.find(unit_ref) is unit

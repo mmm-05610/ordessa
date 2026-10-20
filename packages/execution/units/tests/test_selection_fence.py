@@ -104,10 +104,10 @@ def test_local_owner_selection_guards_commit_spans_and_sdk_thread_write(live_own
 
     # The actual SDK effect guard acquires permission/source on its loop
     # thread for the bounded write. No caller-thread permission guard remains
-    # held while prompt_recorded waits for the peer response.
+    # held while prompt waits for the peer response.
     cwd = Path(instance.prepared_agent.harness.launch_spec.cwd)
     with ThreadPoolExecutor(max_workers=1) as pool:
-        pending = pool.submit(instance.prompt_recorded, unit.identity,
+        pending = pool.submit(instance.prompt, unit.identity,
             instance.lease_port.grant(unit.identity), operation_ref='selection-turn',
             timeout=5, prompt=prompt)
         assert holder['write_event'].wait(2)

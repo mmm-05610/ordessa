@@ -8,7 +8,9 @@ import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
-from ..definitions.contracts import Capabilities
+from ordessa_infrastructure.database import SQLiteOptions, create_connection
+
+from ..definitions.capabilities import CapabilityReport, CapabilityStatus
 from ..definitions.errors import EnvironmentRefused
 from ..definitions.models import BackendObservation, EnvironmentSnapshot
 
@@ -18,20 +20,42 @@ def encode_observation(observation):
         raise EnvironmentRefused('provider did not return a BackendObservation')
     if not observation.backend_id or not observation.observed_at:
         raise EnvironmentRefused('provider observation lacks identity or capture time')
+    report = observation.capabilities
+    if not isinstance(report, CapabilityReport):
+        raise EnvironmentRefused('provider observation lacks a capability report')
+    # ``isolation``/``provides``/``detail`` stay as the backward-readable keys an
+    # existing schema1 row carries; ``values`` adds the explicit statuses.
     return json.dumps({'backend_id': observation.backend_id, 'state': observation.state,
-        'observed_at': observation.observed_at, 'isolation': observation.capabilities.isolation,
-        'provides': sorted(observation.capabilities.provides),
-        'runtime_identity':observation.runtime_identity,
-        'detail': dict(observation.capabilities.detail)}, allow_nan=False, sort_keys=True)
+        'observed_at': observation.observed_at, 'isolation': report.isolation,
+        'provides': sorted(report.provides),
+        'assurance': report.assurance, 'affinity': report.affinity,
+        'values': {key: status.value for key, status in sorted(report.values.items())},
+        'detail': dict(report.details),
+        'endpoint_kind': observation.endpoint_kind, 'health': observation.health,
+        'runtime_identity':observation.runtime_identity}, allow_nan=False, sort_keys=True)
 
 
 def decode_observation(raw):
     if raw is None:
         return None
     value = json.loads(raw)
-    return BackendObservation(value['backend_id'], value['state'],
-        Capabilities(value['isolation'], frozenset(value['provides']), value['detail']),
-        value['observed_at'], value.get('runtime_identity'))
+    if 'values' in value:
+        values = {key: CapabilityStatus(status) for key, status in value['values'].items()}
+        details = value.get('detail', {})
+    else:
+        # A pre-existing schema1 row has no statuses: every listed key was a
+        # proven capability. Read it without migrating the database. Legacy
+        # detail values were free-form JSON scalars; the report's fact strings
+        # are their canonical JSON spelling.
+        values = {key: CapabilityStatus.SUPPORTED for key in value.get('provides', ())}
+        details = {key: detail if isinstance(detail, str) else json.dumps(detail, sort_keys=True)
+                   for key, detail in value.get('detail', {}).items()}
+    report = CapabilityReport(values, value['isolation'],
+        value.get('assurance', 'provider_self_report'), value.get('affinity', ''),
+        details)
+    return BackendObservation(value['backend_id'], value['state'], report,
+        value['observed_at'], value.get('runtime_identity'),
+        value.get('endpoint_kind', 'local'), value.get('health', 'unknown'))
 
 
 class SQLiteEnvironmentStore:
@@ -72,9 +96,9 @@ class SQLiteEnvironmentStore:
 
     @contextmanager
     def transaction(self):
-        connection = sqlite3.connect(self.path, timeout=10, isolation_level=None)
-        connection.row_factory = sqlite3.Row
-        connection.execute('PRAGMA foreign_keys=ON')
+        connection = create_connection(SQLiteOptions(
+            self.path, timeout=10, isolation_level=None,
+            row_factory=sqlite3.Row, foreign_keys=True))
         try:
             connection.execute('BEGIN IMMEDIATE')
             yield connection

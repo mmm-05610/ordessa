@@ -224,12 +224,6 @@ class ProcessChannel:
         )
         return cls(process, name=name, managed=managed)
 
-    @classmethod
-    def attach(cls, process_handle, *, name: str, managed=False) -> "ProcessChannel":
-        """Attach the frozen async ProcessHandle; never require host descriptors."""
-        from .environment_channel import EnvironmentProcessChannel
-        return EnvironmentProcessChannel(process_handle, name=name, managed=managed)
-
     def _process_running(self):
         return self._process.poll() is None
 
@@ -608,12 +602,14 @@ class LeaseBoundChannel:
         self._check()
         return await self._channel.send_payload_async(payload, self._lease)
 
-    async def send_frame_async(self, frame_bytes, *, before_write, effect_write_guard=None):
+    async def send_frame_async(self, frame_bytes, *, before_write, effect_write_guard=None,
+                               on_write_boundary=None):
         self._check()
-        if effect_write_guard is None:
+        if effect_write_guard is None and on_write_boundary is None:
             return await self._channel.send_frame_async(frame_bytes, self._lease, before_write=before_write)
         return await self._channel.send_frame_async(frame_bytes, self._lease,
-            before_write=before_write, effect_write_guard=effect_write_guard)
+            before_write=before_write, effect_write_guard=effect_write_guard,
+            on_write_boundary=on_write_boundary)
 
     async def next_message_async(self, *, timeout=10.0):
         self._check()

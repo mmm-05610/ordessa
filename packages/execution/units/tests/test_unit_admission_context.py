@@ -3,9 +3,9 @@ import hashlib
 from types import SimpleNamespace
 import pytest
 
-from ordessa_execution_api.environment import GuaranteeUnavailableError
+from ordessa_units.errors import UnitGuaranteeUnavailable
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent
+from ordessa_units.definitions.operations import OperationIntent, StepIntent
 from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessCatalog
 from ordessa_units.admission.context import UnitAdmissionContext
 from ordessa_units.admission.material_registration import MaterialCatalog
@@ -74,7 +74,7 @@ def test_pending_operation_refuses_context_close_and_keeps_original_writer(tmp_p
         (StepIntent('spawn', {'environmentNamespace': 'env'}, 'fixed-input', 'original-spawn'),))
     store.reserve_operation(request, 'fixed-input', intent)
     assert owner.pending()['operationRefs'] == ('original-start',)
-    with pytest.raises(GuaranteeUnavailableError, match='pending'):
+    with pytest.raises(UnitGuaranteeUnavailable, match='pending'):
         owner.close()
     assert owner.draining is True
     owner.check_open()
@@ -110,7 +110,7 @@ def test_unknown_original_usage_blocks_close_without_releasing_it(tmp_path):
     with store.transaction() as connection:
         connection.execute("INSERT INTO env_usages(usage_id,environment,state,rights) VALUES('original-use','env','unknown','[]')")
     assert owner.pending()['usageIds'] == ('original-use',)
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         owner.close()
     assert owner.pending()['usageIds'] == ('original-use',)
     store.close()
@@ -131,7 +131,7 @@ def test_reserved_read_authorization_does_not_invent_terminal_or_block_close(tmp
     # Any actual claim disables this exclusion: a kind string is no proof.
     assert store.claim_operation_step(request, 'query-digest', step).claimed
     assert owner.pending()['operationRefs'] == ('cold-read',)
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         owner.close()
     store.close()
 
@@ -142,7 +142,7 @@ def test_unclassified_historical_request_is_not_silently_dropped(tmp_path):
     store.reserve_request(RequestKey('env', 'local', 'old-spent'), 'original-digest')
     assert owner.pending()['unclassifiedRequests'] == ({
         'environmentNamespace': 'env', 'principalScope': 'local', 'requestId': 'old-spent'},)
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         owner.close()
     assert store.read_request(RequestKey('env', 'local', 'old-spent'))['digest'] == 'original-digest'
     store.close()
@@ -165,7 +165,7 @@ def test_unknown_factory_attempt_remains_pending_and_drain_never_replays(tmp_pat
     with pytest.raises(RuntimeError, match='factory failure'):
         manager.create({'fixed': 'plan'}, invocation)
     assert owner.pending()['creationHolds'] is True
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         owner.close()
     with pytest.raises(UnitManagementRefused, match='draining'):
         manager.create({'fixed': 'plan'}, invocation)

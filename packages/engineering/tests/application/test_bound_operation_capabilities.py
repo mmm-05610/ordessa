@@ -1,8 +1,10 @@
 """Selected-owner descriptor projection; descriptors never confer permission."""
 from types import SimpleNamespace
 from pathlib import Path
+import pytest
 
 from ordessa_engineering.application.api import EngineeringService
+from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.application.orchestration.method_bridge import command_capabilities
 from ordessa_engineering.application.orchestration.owner_capabilities import owner_capabilities
 from ordessa_engineering.application.orchestration.method_runs import MethodRunBindings
@@ -38,11 +40,11 @@ def _ids(service):
     return {item.capability_id for item in service.bound_operation_capabilities().capabilities}
 
 
-def _review(factory, *, response_source=None):
+def _review(factory, *, response_source=None, **source_ports):
     method_control = SQLiteMethodControl(factory, SQLiteSnapshotStore(factory.library))
     bindings = SQLiteReviewBindings(factory, method_control,
         scope=Scope("bound-ops", "project"), proposal_ref=None, phases=None)
-    return EngineeringReviewAdmission(factory, method_control, bindings, response_source)
+    return EngineeringReviewAdmission(factory, method_control, bindings, response_source, **source_ports)
 
 
 def _full_service(factory, access):
@@ -51,7 +53,13 @@ def _full_service(factory, access):
     # or evidence that the full method has production reviewer sources.
     response_source = _port(factory,
         verify_response=lambda *_: None, guard_trust=lambda *_: None)
-    review = _review(factory, response_source=response_source)
+    source_materials = _port(factory, read=lambda *_: None)
+    method_guard = _port(factory, guard=lambda *_: None,
+        read_resource=lambda *_: None, preparation_roles=lambda *_: ("design",))
+    source_review_bindings = _port(resolve_source_plan=lambda *_: None)
+    review = _review(factory, response_source=response_source,
+        source_materials=source_materials, method_guard=method_guard,
+        source_review_bindings=source_review_bindings)
     conversation = _port(guard_intent=lambda *_: None, guard_evidence=lambda *_: None)
     proposal_control = _port(guard_control=lambda *_args, **_kwargs: None)
     acceptance = _port(factory, guard_intent=lambda *_: None)
@@ -74,6 +82,8 @@ def _full_service(factory, access):
     dispatch = _port(factory, access, execute=lambda *_: None)
     return _service(factory, access,
         proposal_control_admission=proposal_control,
+        source_materials=source_materials, method_guard=method_guard,
+        source_review_bindings=source_review_bindings,
         review_admission=review, blobs=blobs,
         conversation_admission=conversation,
         acceptance_admission=acceptance, submission_source=submission_source,
@@ -89,11 +99,24 @@ def test_bound_operation_descriptors_require_selected_original_routes(tmp_path):
     access = _port(require=lambda *_: None)
     try:
         service = _full_service(factory, access)
+        # A callable dispatch shape alone cannot advertise the declared Work
+        # route. This projection-only peer must explicitly report readiness;
+        # the real owner's property verifies its original selection/scope ports.
+        assert "engineering.executions.dispatch" not in _ids(service)
+        service._execution_dispatch.declared_implementation_ready = True
         expected = {item.capability_id for item in command_capabilities().capabilities}
         # This explicit schema14 composition has no reviewer-assignment owner.
         assignment_ops = {"engineering.reviews.assign_reviewer", "engineering.reviews.revoke_reviewer"}
         expected -= assignment_ops
         expected.add("engineering.executions.dispatch")
+        # Withdrawn compiled create/advance routes are never advertised, and the
+        # declarative Work route needs a method guard that can read a released
+        # declaration - which this composition does not provide.
+        expected -= {"engineering.work.start", "engineering.work.invoke",
+                     "engineering.work.bind_inputs",
+                     "engineering.work.record_command_step",
+                     "engineering.work.record_dispatch_step",
+                     "engineering.runs.resume", "engineering.runs.cancel"}
         actual = service.bound_operation_capabilities()
         actual_ids = tuple(item.capability_id for item in actual.capabilities)
         assert set(actual_ids) == expected
@@ -120,15 +143,16 @@ def test_missing_and_wrong_nonnull_sources_do_not_promote_descriptors(tmp_path):
         assert _ids(bare) == {
             "engineering.artifacts.create",
             "engineering.artifacts.append_revision",
-            "engineering.proposals.create",
         }
+        assert not {"engineering.proposals.create", "engineering.proposals.associate_review",
+                    "engineering.packages.freeze"} & _ids(bare)
         assert _ids(_service(factory, None)) == set()
         assert _ids(_service(factory, object())) == set()
 
-        malformed_review = _service(factory, access,
-            review_admission=object(), blobs=object())
-        assert not ({"engineering.reviews.request", "engineering.reviews.record"}
-                    & _ids(malformed_review))
+        # The source-change owner now refuses a foreign/malformed review
+        # authority during assembly, before it can expose any descriptors.
+        with pytest.raises(ApplicationError, match="REVIEW_SOURCE_AUTHORITY_MISMATCH"):
+            _service(factory, access, review_admission=object(), blobs=object())
 
         malformed_ports = _service(factory, access,
             proposal_control_admission=_port(other_factory, access,
@@ -214,8 +238,12 @@ def test_fixed_method_still_refuses_when_only_request_owner_is_initialized(tmp_p
             service.bound_operation_capabilities(), "bootstrap-test/1")
         assert not compiled.ok
         assert compiled.error.code == "UNKNOWN_CAPABILITY"
-        assert compiled.error.pointer == "/requires/4"
-        assert "engineering.reviews.record" in compiled.error.message
+        # The historical schema-1 candidate's first missing route is now the
+        # retired fresh-v1 Proposal writer; missing response authority remains
+        # independently visible rather than being hidden by that earlier gap.
+        assert compiled.error.pointer == "/requires/2"
+        assert "engineering.proposals.create" in compiled.error.message
+        assert "engineering.reviews.record" not in _ids(service)
     finally:
         library.close()
 
@@ -240,8 +268,13 @@ def test_original_work_owner_can_be_composed_before_subject_selection(tmp_path):
         assert source.review_bindings is review.bindings
         assert bindings.registry_loader is load_registry
         assert review.bindings.proposal_ref is None
-        assert {"engineering.reviews.request", "engineering.work.start",
-                "engineering.runs.resume"} <= _ids(service)
+        assert "engineering.reviews.request" in _ids(service)
+        # Declarative Work is advertised only when a declaration-reading method
+        # guard is composed; this composition has none, so it stays unavailable.
+        assert "engineering.work.start" not in _ids(service)
+        assert not {"engineering.work.bind_inputs", "engineering.work.record_command_step",
+                    "engineering.work.record_dispatch_step", "engineering.runs.resume",
+                    "engineering.runs.cancel"} & _ids(service)
         # Source association never supplies missing native dispatch or results.
         assert "engineering.executions.dispatch" not in _ids(service)
         assert "engineering.reviews.record" not in _ids(service)

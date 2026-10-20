@@ -4,12 +4,14 @@ import { createRoot } from 'react-dom/client'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
 import { runtime } from '@ordessa/extension-host'
+import { createCommandSource } from '@ordessa/extension-host/platform'
 import type { Commands, Workbench, Region } from '@extensions/ordessa.contracts/contract.js'
 import { CommandsToken, WorkbenchToken } from '@extensions/ordessa.contracts/contract.js'
-import commandsPlugin, { createCommands } from '../../../plugins/commands/src/entry'
-import workbenchPlugin from '../../../packages/workbench/src/entry'
-import { createWorkbench } from '../../../packages/workbench/src/model'
-import { WorkbenchShell } from '../../../packages/workbench/src/shell'
+import commandsPlugin from '../../../plugins/workbench/commands/src/entry'
+import { createCommands } from '@ordessa/extension-runtime/commands'
+import workbenchPlugin from '../../../packages/interfaces/channels/workbench/shell/workbench/src/entry'
+import { createWorkbench } from '../../../packages/interfaces/channels/workbench/shell/workbench/src/model'
+import { WorkbenchShell } from '../../../packages/interfaces/channels/workbench/shell/workbench/src/shell'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 const cleanup: (() => void | Promise<void>)[] = []
@@ -63,6 +65,7 @@ describe('foundation service boundaries', () => {
   })
   it('rolls back a consumer across foundation registries on activation failure', async () => {
     let commands!: Commands, wb!: Workbench
+    const lifetime = new OwnedResources()
     const app = runtime([commandsPlugin(), workbenchPlugin(), {
       id: 'bad', requires: [CommandsToken, WorkbenchToken],
       activate(ctx, c: Commands, w: Workbench) {
@@ -71,12 +74,20 @@ describe('foundation service boundaries', () => {
         w.forScope(ctx.resources).addView({ id: 'bad', title: 'bad', presentation: 'full-page', component: () => null })
         throw Error('broken consumer')
       },
-    }])
+    }], { commands: createCommandSource({}) })
     await expect(app.activate('bad')).rejects.toThrow('broken consumer')
     expect(await commands.execute('bad')).toMatchObject({ ok: false })
     expect(() => wb.open('bad')).toThrow('unavailable')
     await app.deactivate('ordessa.workbench')
     expect(app.host.roots.getSnapshot()).toEqual([])
+    lifetime.dispose()
+  })
+
+  it('refuses a plugin whose required C07 CommandSource has no provider', async () => {
+    // Counter-example: the host provides no CommandSource -> explicit refusal,
+    // distinct from a consumer's own activation error (never silently undefined).
+    const app = runtime([commandsPlugin()])
+    await expect(app.activate('ordessa.commands')).rejects.toThrow('No provider for: ordessa.commandSource.v1')
   })
 })
 

@@ -1,0 +1,356 @@
+{
+  "schema": "ordessa-integration-blocker-diagnosis/1",
+  "snapshot": "verified-nightly-restructure-v3 working-files archive; not merely nightly HEAD",
+  "incomingRef": "a23cadf5724a494bac08037ffdddffed6914adef",
+  "lowerAdoptionCommit": "f6d7262af43e6b0e5c75a142af0ee4ca1677e761",
+  "readOnly": true,
+  "sourceOrigins": [
+    {
+      "path": "packages/engineering/pyproject.toml",
+      "currentSha256": "ae0f9cb160efd7acf8c26143de7252fd617ca9129c6fa21c0245a0084597bec0",
+      "nightlySha256": "ae0f9cb160efd7acf8c26143de7252fd617ca9129c6fa21c0245a0084597bec0",
+      "sameAsNightly": true,
+      "incomingSha256": "eb5dae17d9a0eb044e6afbc04bf761183f962596fbcb4ee7621cef329c87d50b",
+      "incomingPresent": true
+    },
+    {
+      "path": "packages/interfaces/pyproject.toml",
+      "currentSha256": "bd70f5dd668f342db268e9954ea79a127d0408ae53e66792c2cd0af921906a76",
+      "nightlySha256": "afe624de0987b86c3853596040a5f705f6f054dc231150ac337af4ea5ccd11a6",
+      "sameAsNightly": false,
+      "incomingSha256": "3fd22ddb585139dabfebfaafd1f0c494aa0aaa40fa530b6abc76e3355b23b672",
+      "incomingPresent": true
+    },
+    {
+      "path": "packages/execution/decision/pyproject.toml",
+      "currentSha256": "c6d4b28b92797448419883c4533a1b27c8b426a3a65f9a7f783711a71a418242",
+      "nightlySha256": "187d9d09df2f52cd798e13371bb9669723c8193872fad0dfc09e0e1b3e014d90",
+      "sameAsNightly": false,
+      "incomingSha256": "c6d4b28b92797448419883c4533a1b27c8b426a3a65f9a7f783711a71a418242",
+      "incomingPresent": true
+    },
+    {
+      "path": "apps/server/pyproject.toml",
+      "currentSha256": "1bedb321670f99e6852003495e4091ad4555f4c72e10c57243d5a11d705e37a7",
+      "nightlySha256": "636aac17e34c9065b1500dfab56e31d95630684558320c64090ccce2ee01f1b7",
+      "sameAsNightly": false,
+      "incomingSha256": "131804e9bbb5802d287a7a3c023c27ff02f1d143beab885dd1c56c0b05dbffb7",
+      "incomingPresent": true
+    },
+    {
+      "path": "apps/server/src/ordessa_server/__main__.py",
+      "currentSha256": "aa24f23b2a7b74d650387dc25b1e9186dcf6f716fe9e7bfe06972c41b53bd30d",
+      "nightlySha256": "b3e27f30bffca7a906fd687d8dc91949a9807d83984b10d78801c636164feb51",
+      "sameAsNightly": false,
+      "incomingSha256": "aa24f23b2a7b74d650387dc25b1e9186dcf6f716fe9e7bfe06972c41b53bd30d",
+      "incomingPresent": true
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/decision/client.py",
+      "currentSha256": "342ea679f5889004658cdbd93c52acea34c833a174866903177a31d48986decd",
+      "nightlySha256": "342ea679f5889004658cdbd93c52acea34c833a174866903177a31d48986decd",
+      "sameAsNightly": true,
+      "incomingSha256": "cea5e6566a3507a5dece4c01a2ca98e8879d0048de6a733ab539d494561e703b",
+      "incomingPresent": true
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/decision/source_reviewer.py",
+      "currentSha256": "79379938cfc39d8cc5440503bbf77544e7a57d0d0b72741ed9b5aae401e209d4",
+      "nightlySha256": "79379938cfc39d8cc5440503bbf77544e7a57d0d0b72741ed9b5aae401e209d4",
+      "sameAsNightly": true,
+      "incomingSha256": null,
+      "incomingPresent": false
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/profile_flow.py",
+      "currentSha256": "7510ba36bfa2e0715d3c404f3e72da4b39c96ab90b746934c71497cea36fe8e9",
+      "nightlySha256": "7510ba36bfa2e0715d3c404f3e72da4b39c96ab90b746934c71497cea36fe8e9",
+      "sameAsNightly": true,
+      "incomingSha256": null,
+      "incomingPresent": false
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/execution_profiles.py",
+      "currentSha256": "fc10e36ef38dfc053789311f3866c3a32e3c8399ee692489b8148776eb446626",
+      "nightlySha256": "fc10e36ef38dfc053789311f3866c3a32e3c8399ee692489b8148776eb446626",
+      "sameAsNightly": true,
+      "incomingSha256": null,
+      "incomingPresent": false
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/registry/source_integrity.py",
+      "currentSha256": "aa2b5708e847492e3efb534d423b355ce8fb3c3665fbfb03789f2a762850546c",
+      "nightlySha256": "aa2b5708e847492e3efb534d423b355ce8fb3c3665fbfb03789f2a762850546c",
+      "sameAsNightly": true,
+      "incomingSha256": "5ffeab10432e08c41767f779bb562422bd973dfa9ed8c8137ab896a2f66a63e1",
+      "incomingPresent": true
+    }
+  ],
+  "dependencies": {
+    "packages/engineering/pyproject.toml": {
+      "nightly": [
+        "decision-runtime==0.1.0",
+        "ordessa-infrastructure==0.1.0",
+        "pydantic-graph==2.54.0",
+        "PyYAML==6.0.3",
+        "jsonschema==4.19.2",
+        "referencing==0.36.2"
+      ],
+      "current": [
+        "decision-runtime==0.1.0",
+        "ordessa-infrastructure==0.1.0",
+        "pydantic-graph==2.54.0",
+        "PyYAML==6.0.3",
+        "jsonschema==4.19.2",
+        "referencing==0.36.2"
+      ]
+    },
+    "packages/interfaces/pyproject.toml": {
+      "nightly": [
+        "jsonschema==4.19.2",
+        "referencing==0.36.2",
+        "ordessa-infrastructure==0.1.0",
+        "ordessa-server-plugin-api>=0.1.0,<1",
+        "fastapi>=0.115,<1"
+      ],
+      "current": [
+        "ordessa-interfaces-contracts==0.1.0",
+        "jsonschema>=4.20,<5",
+        "referencing==0.36.2",
+        "ordessa-infrastructure==0.1.0",
+        "ordessa-server-plugin-api>=0.1.0,<1",
+        "fastapi>=0.115,<1"
+      ]
+    },
+    "packages/execution/decision/pyproject.toml": {
+      "nightly": [
+        "pydantic-graph==2.54.0"
+      ],
+      "current": [
+        "ordessa-interfaces-contracts==0.1.0"
+      ]
+    },
+    "apps/server/pyproject.toml": {
+      "nightly": [
+        "ordessa-infrastructure==0.1.0",
+        "ordessa-execution-agents==0.1.0",
+        "ordessa-units==0.1.0",
+        "ordessa-environments==0.1.0",
+        "ordessa-server-plugin-api>=0.1.0,<1",
+        "ordessa-interfaces==0.1.0",
+        "ordessa-system-access-bindings==0.1.0",
+        "ordessa-engineering==0.1.0",
+        "decision-runtime==0.1.0",
+        "ordessa-harness-pi==0.1.0a1",
+        "SecretStorage==3.5.0; sys_platform == 'linux'",
+        "fastapi>=0.115,<1",
+        "uvicorn>=0.30,<1",
+        "wsproto>=1.2,<2",
+        "pydantic>=2,<3"
+      ],
+      "current": [
+        "ordessa-infrastructure==0.1.0",
+        "ordessa-execution-agents==0.1.0",
+        "ordessa-units==0.1.0",
+        "ordessa-environments==0.1.0",
+        "ordessa-server-plugin-api>=0.1.0,<1",
+        "ordessa-interfaces==0.1.0",
+        "ordessa-interfaces-contracts==0.1.0",
+        "ordessa-environments-local==0.1.0",
+        "ordessa-system-access-bindings==0.1.0",
+        "ordessa-engineering==0.1.0",
+        "decision-runtime==0.2.0",
+        "ordessa-harness-pi==0.1.0a1",
+        "SecretStorage==3.5.0; sys_platform == 'linux'",
+        "fastapi>=0.115,<1",
+        "uvicorn>=0.30,<1",
+        "wsproto>=1.2,<2",
+        "pydantic>=2,<3"
+      ]
+    }
+  },
+  "engineeringImports": [
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/execution_profiles.py",
+      "line": 14,
+      "module": "decision_runtime",
+      "names": [
+        "DecisionAnswer",
+        "DecisionQuestion",
+        "PolicyRef",
+        "TaskBrief"
+      ],
+      "missingCurrentExports": [
+        "TaskBrief"
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/profile_flow.py",
+      "line": 9,
+      "module": "decision_runtime",
+      "names": [
+        "BusinessOutcome",
+        "DecisionRequest",
+        "DecisionServices",
+        "FlowRef",
+        "RunContext",
+        "RunLimits",
+        "TrustedFlow",
+        "flow_digest",
+        "reviewed_code_digest",
+        "run_decision"
+      ],
+      "missingCurrentExports": [
+        "BusinessOutcome",
+        "DecisionRequest",
+        "DecisionServices",
+        "FlowRef",
+        "RunContext",
+        "RunLimits",
+        "TrustedFlow",
+        "flow_digest",
+        "reviewed_code_digest",
+        "run_decision"
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/profile_flow.py",
+      "line": 13,
+      "module": "pydantic_graph",
+      "names": [
+        "GraphBuilder"
+      ],
+      "missingCurrentExports": null
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/profile_method.py",
+      "line": 7,
+      "module": "decision_runtime",
+      "names": [
+        "PolicyRef"
+      ],
+      "missingCurrentExports": []
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/registry/source_integrity.py",
+      "line": 38,
+      "module": "decision_runtime",
+      "names": [
+        "DecisionRequest"
+      ],
+      "missingCurrentExports": [
+        "DecisionRequest"
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/decision/client.py",
+      "line": 7,
+      "module": "decision_runtime",
+      "names": [
+        "BusinessOutcome",
+        "DecisionAnswer",
+        "DecisionQuestion",
+        "DecisionRequest",
+        "DecisionServices",
+        "FlowRef",
+        "MemoryEvidenceSink",
+        "PolicyRef",
+        "ReadContext",
+        "RunContext",
+        "RunLimits",
+        "TaskBrief",
+        "TrustedFlow",
+        "flow_digest",
+        "reviewed_code_digest",
+        "run_decision"
+      ],
+      "missingCurrentExports": [
+        "BusinessOutcome",
+        "DecisionRequest",
+        "DecisionServices",
+        "FlowRef",
+        "MemoryEvidenceSink",
+        "ReadContext",
+        "RunContext",
+        "RunLimits",
+        "TaskBrief",
+        "TrustedFlow",
+        "flow_digest",
+        "reviewed_code_digest",
+        "run_decision"
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/decision/client.py",
+      "line": 32,
+      "module": "pydantic_graph",
+      "names": [
+        "GraphBuilder"
+      ],
+      "missingCurrentExports": null
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/decision/source_reviewer.py",
+      "line": 21,
+      "module": "decision_runtime",
+      "names": [
+        "BusinessOutcome",
+        "DecisionAnswer",
+        "DecisionQuestion",
+        "DecisionRequest",
+        "DecisionResult",
+        "DecisionServices",
+        "FlowRef",
+        "PolicyRef",
+        "RunContext",
+        "RunLimits",
+        "RunManifest",
+        "TaskBrief",
+        "TrustedFlow",
+        "flow_digest",
+        "reviewed_code_digest",
+        "run_decision"
+      ],
+      "missingCurrentExports": [
+        "BusinessOutcome",
+        "DecisionRequest",
+        "DecisionResult",
+        "DecisionServices",
+        "FlowRef",
+        "RunContext",
+        "RunLimits",
+        "RunManifest",
+        "TaskBrief",
+        "TrustedFlow",
+        "flow_digest",
+        "reviewed_code_digest",
+        "run_decision"
+      ]
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/decision/source_reviewer.py",
+      "line": 203,
+      "module": "pydantic_graph",
+      "names": [
+        "GraphBuilder"
+      ],
+      "missingCurrentExports": null
+    }
+  ],
+  "businessSourceComparison": {
+    "application": {
+      "files": 118,
+      "differentFromVerifiedNightly": []
+    },
+    "domain": {
+      "files": 72,
+      "differentFromVerifiedNightly": []
+    }
+  },
+  "sourceReviewerIncomingHistory": {
+    "d7979bd34f9a84ad337545c9c0d09cb09c85f631": false,
+    "a23cadf5724a494bac08037ffdddffed6914adef": false
+  },
+  "engineeringConclusion": "New lower API 0.2 integration collides with faithfully retained later nightly 0.1 adapters. Nightly dependency constraints were internally aligned. a23 adapts local client and pins but lacks the later source reviewer in both d797 and a23; absence is an older-baseline omission, not proof of an a23 deletion. Pin changes alone cannot restore imports/evidence semantics.",
+  "serverConclusion": "The uncommitted a23 __main__ replacement removes the preserved nightly HTTP launch protocol. Keeping HTTP launch and separate one-shot ordessa CLI is possible; the original HTTP main cannot be restored verbatim because its composition calls UnitRuntimeOwner and the old product plan/build_runtime seam. Current RegistryRuntime has no lifecycle, /live, token/bootstrap or listening announcement. Needs host-only composition/lifecycle adaptation over current capabilities, not rollback to Unit."
+}

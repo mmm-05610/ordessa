@@ -1,0 +1,520 @@
+{
+  "schema": {
+    "contractVersion": "agent-assembly/3",
+    "transport": "wire/1",
+    "requestKeyScope": [
+      "environmentNamespace",
+      "principalScope",
+      "requestId"
+    ],
+    "profileRef": {
+      "required": [
+        "environmentNamespace",
+        "profileId",
+        "manifestRevision",
+        "contentDigest"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "environmentNamespace": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]{0,63}$"
+        },
+        "profileId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]{0,63}$"
+        },
+        "manifestRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "contentDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "results": {
+      "catalogEntry": {
+        "required": [
+          "profileId",
+          "catalogRevision",
+          "displayName",
+          "archivedAt",
+          "currentManifestRef"
+        ]
+      },
+      "manifest": {
+        "required": [
+          "ref",
+          "content"
+        ]
+      },
+      "list": {
+        "required": [
+          "entries"
+        ]
+      },
+      "preview": {
+        "required": [
+          "profileRef",
+          "status",
+          "referenceCoverage",
+          "ready",
+          "error"
+        ]
+      },
+      "preparationOperation": {
+        "required": [
+          "operationRef",
+          "revision",
+          "status",
+          "node"
+        ],
+        "additionalProperties": false,
+        "statuses": [
+          "reserved",
+          "running",
+          "unknown",
+          "published",
+          "refused",
+          "cancelled"
+        ]
+      },
+      "preparationQuery": {
+        "required": [
+          "operation"
+        ],
+        "additionalProperties": false,
+        "missing": null
+      },
+      "nodesList": {
+        "required": [
+          "nodes"
+        ],
+        "additionalProperties": false
+      },
+      "nodeRead": {
+        "required": [
+          "node"
+        ],
+        "additionalProperties": false,
+        "missing": null
+      },
+      "nodeRecord": {
+        "required": [
+          "nodeRef",
+          "binding",
+          "lineage",
+          "publicationRevision",
+          "resourceUsageRefs",
+          "managementSurfaceRefs",
+          "accessSurfaceRefs"
+        ],
+        "additionalProperties": false
+      },
+      "nodeBinding": {
+        "required": [
+          "nodeRef",
+          "harnessProviderRef",
+          "harnessDefinitionRef",
+          "harnessUnitRef",
+          "profileSnapshotRef",
+          "preparationContextRef",
+          "configurationTargetRef",
+          "nativeSessionRefs",
+          "operationRef"
+        ],
+        "additionalProperties": false
+      },
+      "lifecycleOperation": {
+        "required": [
+          "operationRef",
+          "revision",
+          "status",
+          "action"
+        ],
+        "additionalProperties": false,
+        "statuses": [
+          "reserved",
+          "running",
+          "unknown",
+          "published",
+          "refused",
+          "cancelled"
+        ]
+      },
+      "operationMetadata": {
+        "required": [
+          "operationRef",
+          "kind",
+          "revision",
+          "status",
+          "nodeRef",
+          "hasResult"
+        ],
+        "additionalProperties": false,
+        "statuses": [
+          "reserved",
+          "running",
+          "unknown",
+          "published",
+          "refused",
+          "cancelled"
+        ]
+      }
+    },
+    "methods": {
+      "agents.profiles.list": {
+        "action": "list",
+        "required": [],
+        "optional": [
+          "includeArchived"
+        ],
+        "effectful": false
+      },
+      "agents.profiles.read": {
+        "action": "read",
+        "required": [
+          "profileRef"
+        ],
+        "optional": [],
+        "effectful": false
+      },
+      "agents.profiles.readEntry": {
+        "action": "readEntry",
+        "required": [
+          "profileId"
+        ],
+        "optional": [],
+        "effectful": false
+      },
+      "agents.profiles.create": {
+        "action": "create",
+        "required": [
+          "profileId",
+          "displayName",
+          "manifest",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true
+      },
+      "agents.profiles.edit": {
+        "action": "edit",
+        "required": [
+          "profileId",
+          "manifest",
+          "expectedCatalogRevision",
+          "baseManifestRef",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true
+      },
+      "agents.profiles.clone": {
+        "action": "clone",
+        "required": [
+          "profileRef",
+          "profileId",
+          "displayName",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true
+      },
+      "agents.profiles.rename": {
+        "action": "rename",
+        "required": [
+          "profileId",
+          "displayName",
+          "expectedCatalogRevision",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true
+      },
+      "agents.profiles.archive": {
+        "action": "archive",
+        "required": [
+          "profileId",
+          "expectedCatalogRevision",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true
+      },
+      "agents.profiles.restore": {
+        "action": "restore",
+        "required": [
+          "profileId",
+          "expectedCatalogRevision",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true
+      },
+      "agents.profiles.preview": {
+        "action": "preview",
+        "required": [
+          "profileRef"
+        ],
+        "optional": [],
+        "effectful": false
+      },
+      "agents.capabilities": {
+        "action": "capabilities",
+        "required": [],
+        "optional": [],
+        "effectful": false
+      },
+      "agents.nodes.prepare": {
+        "action": "prepare",
+        "required": [
+          "context",
+          "options",
+          "requestId"
+        ],
+        "optional": [
+          "profileRef",
+          "profileManifest"
+        ],
+        "effectful": true,
+        "additionalProperties": false
+      },
+      "agents.nodes.queryPreparation": {
+        "action": "queryPreparation",
+        "required": [
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true,
+        "additionalProperties": false
+      },
+      "agents.nodes.list": {
+        "action": "nodesList",
+        "required": [],
+        "optional": [],
+        "effectful": false,
+        "additionalProperties": false
+      },
+      "agents.nodes.read": {
+        "action": "nodeRead",
+        "required": [
+          "nodeRef"
+        ],
+        "optional": [],
+        "effectful": false,
+        "additionalProperties": false
+      },
+      "agents.nodes.configuration.describe": {
+        "action": "describeConfiguration",
+        "required": [
+          "nodeRef"
+        ],
+        "optional": [],
+        "effectful": false,
+        "additionalProperties": false
+      },
+      "agents.nodes.configuration.inspect": {
+        "action": "inspectConfiguration",
+        "required": [
+          "nodeRef"
+        ],
+        "optional": [],
+        "effectful": false,
+        "additionalProperties": false
+      },
+      "agents.nodes.configuration.apply": {
+        "action": "applyConfiguration",
+        "required": [
+          "nodeRef",
+          "change"
+        ],
+        "optional": [],
+        "effectful": true,
+        "additionalProperties": false
+      },
+      "agents.nodes.configuration.query": {
+        "action": "queryChange",
+        "required": [
+          "nodeRef",
+          "operationRef"
+        ],
+        "optional": [],
+        "effectful": false,
+        "additionalProperties": false
+      },
+      "agents.nodes.applyProfile": {
+        "action": "applyProfile",
+        "required": [
+          "nodeRef",
+          "baseProfileRef",
+          "expectedConfigurationRevision",
+          "applicationPolicy",
+          "requestId"
+        ],
+        "optional": [
+          "profileRef",
+          "profileManifest"
+        ],
+        "effectful": true,
+        "additionalProperties": false
+      },
+      "agents.nodes.recover": {
+        "action": "recover",
+        "required": [
+          "nodeRef",
+          "preconditions",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true,
+        "additionalProperties": false
+      },
+      "agents.nodes.stop": {
+        "action": "stop",
+        "required": [
+          "nodeRef",
+          "preconditions",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true,
+        "additionalProperties": false
+      },
+      "agents.nodes.release": {
+        "action": "release",
+        "required": [
+          "nodeRef",
+          "preconditions",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true,
+        "additionalProperties": false
+      },
+      "agents.operations.read": {
+        "action": "operationRead",
+        "required": [
+          "operationRef"
+        ],
+        "optional": [],
+        "effectful": false,
+        "additionalProperties": false
+      },
+      "agents.nodes.acquireAccess": {
+        "action": "acquireAccess",
+        "required": [
+          "nodeRef",
+          "purpose",
+          "protocol",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true,
+        "additionalProperties": false
+      },
+      "agents.providers.list": {
+        "action": "providersList",
+        "required": [],
+        "optional": [],
+        "effectful": false,
+        "additionalProperties": false
+      },
+      "agents.providers.describe": {
+        "action": "providersDescribe",
+        "required": [
+          "definitionRef"
+        ],
+        "optional": [],
+        "effectful": false,
+        "additionalProperties": false
+      }
+    },
+    "configurationChange": {
+      "contractVersion": "agent-configuration/1",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "expectedConfigurationRevision",
+        "declarations",
+        "applicationPolicy"
+      ],
+      "applicationPolicy": {
+        "allowDeferred": false,
+        "allowRestart": false
+      },
+      "itemOutcomes": [
+        "applied",
+        "deferred",
+        "restartRequired",
+        "rejected",
+        "conflict",
+        "unknown"
+      ],
+      "overallOutcomes": [
+        "applied",
+        "deferred",
+        "restartRequired",
+        "rejected",
+        "conflict",
+        "unknown",
+        "partial"
+      ],
+      "appliedRequires": [
+        "operationRef",
+        "unitRef",
+        "scopeRef",
+        "requestDigest",
+        "evidenceRef"
+      ],
+      "providerContractVersion": "agent-runtime/2"
+    },
+    "nodeRef": {
+      "required": [
+        "environmentNamespace",
+        "instanceId",
+        "generation"
+      ],
+      "additionalProperties": false
+    },
+    "configurationSnapshot": {
+      "required": [
+        "unitRef",
+        "scopeRef",
+        "sourceRevision",
+        "observedAt",
+        "configuration",
+        "unknownItems",
+        "confirmationEvidence",
+        "comparisonGuarantee"
+      ]
+    },
+    "profileSource": {
+      "exactlyOneOf": [
+        "profileRef",
+        "profileManifest"
+      ],
+      "manifest": {
+        "required": [
+          "harnessDefinitionRef",
+          "schemaVersion",
+          "declarations"
+        ],
+        "optional": [
+          "metadata"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "omissionError": {
+      "code": "CONFIGURATION_DECLARATIONS_OMITTED",
+      "details": [
+        "omittedDeclarationIds"
+      ],
+      "requiresResubmit": "explicit reset or disabled declarations"
+    }
+  },
+  "schemaDigest": "sha256:d076ae3ed88ea3bedbcaa3c99ce4ae3e64c84b3315a90ad687586d397c4aa719"
+}

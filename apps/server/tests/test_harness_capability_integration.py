@@ -20,27 +20,21 @@ import subprocess
 
 import pytest
 
-from pacthold_runtime_compat.resource_contracts import harness_capabilities as caps
-from ordessa_harness.registry.loader import load_builtin_registry
+from ordessa_execution_agents.harness.definitions import harness_capabilities as caps
+from ordessa_server.composition.selected_harness_catalog import capture_selected_harness_catalog
 
 
 REPO = Path(__file__).resolve().parents[3]
 PLUGIN = REPO / "plugins"  / "harness"
-DEFINITIONS = PLUGIN / "src" / "ordessa_harness" / "harnesses.toml"
 JS_PROJECTION = PLUGIN / "runtime" / "capability_declarations.json"
 #: Files on the capability path of the Server: none of them may name a Harness.
-#: T022b re-point (lane A relocation, specs/010): the canonical capability
-#: module moved from `pacthold/resource_contracts` into the compat assembly
-#: at `pacthold_runtime_compat/resource_contracts` — the SAME file content
-#: at its new location, and this gate still asserts the same property (it
-#: exists and names no Harness brand) there.
+#: 032 §5-exec: the four server-compat capability-path modules are deleted
+#: with the package; the live capability path is the kernel contract plus the
+#: host bootstrap. The gate keeps asserting the same property (the files exist
+#: and name no Harness brand) on the surviving surface.
 NEUTRAL_FILES = (
-    "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/harness_capabilities.py",
-    "plugins/server-compat/src/ordessa_server_compat/execution/__init__.py",
-    "plugins/server-compat/src/ordessa_server_compat/execution/sidecar.py",
-    "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py",
-    "apps/server/src/ordessa_server/bootstrap/runtime.py",
-    "plugins/server-compat/src/ordessa_server_compat/profiles/service.py",
+    "packages/execution/agents/src/ordessa_execution_agents/harness/definitions/harness_capabilities.py",
+    "apps/server/src/ordessa_server/composition/runtime.py",
 )
 BRAND_TOKEN = re.compile(r"\b(?:codex|claude|hermes|opencode|pi-acp|deepseek|omp)\b", re.I)
 
@@ -60,7 +54,7 @@ def test_the_canonical_vocabulary_is_the_locked_one():
 
 def test_registry_and_the_checked_in_projection_agree_item_for_item():
     """The TOML is the static source; the JSON is its validated projection."""
-    registry = load_builtin_registry()
+    registry = capture_selected_harness_catalog().registry
     projection = json.loads(JS_PROJECTION.read_text(encoding="utf-8"))
     assert projection["schemaVersion"] == caps.CAPABILITY_SCHEMA_VERSION
     declared = {
@@ -73,46 +67,38 @@ def test_registry_and_the_checked_in_projection_agree_item_for_item():
         assert set(abilities) <= set(caps.CANONICAL_CAPABILITY_IDS), harness_type
 
 
-def test_a_deployment_may_only_declare_canonical_boolean_abilities(tmp_path, monkeypatch):
-    """The deployment seat is validated by the same contract, not a free dict."""
-    from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
+def test_a_deployment_may_only_declare_canonical_boolean_abilities():
+    """The deployment seat is validated by the same contract, not a free dict.
 
-    import ordessa_workspace.connectors as runtime_module
-
-    monkeypatch.setattr(runtime_module, "_builtin_connector", lambda _instance_id: object())
-
-    def build(claims):
-        deployment = tmp_path / "deployment.json"
-        deployment.write_text(json.dumps({
-            "schemaVersion": 1,
-            "harnesses": [{
-                "id": "fixture", "capabilityClaims": claims,
-                "adapter": {"command": "/usr/bin/node", "args": []},
-            }],
-        }), encoding="utf-8")
-        runtime = build_runtime_from_sidecar_deployment(
-            tmp_path / "server", deployment, plugin_root=PLUGIN)
-        runtime.stop()
+    The sidecar deployment assembly retired with server-compat (032 §5-exec);
+    the live validation surface is `pacthold.harness_contracts.validate_claims`
+    (consumed by the registry schema `definition_from_dict`), so this seam now
+    asserts the contract directly: canonical spelling accepted, drift aliases
+    and non-boolean values typed-refused.
+    """
+    from ordessa_execution_agents.harness.definitions.harness_capabilities import validate_claims
 
     # The canonical spelling is accepted, including an explicit false.
-    build({"start": True, "stream": False, "native_continuation": True})
+    assert validate_claims(
+        {"start": True, "stream": False, "native_continuation": True}
+    ) == {"start": True, "stream": False, "native_continuation": True}
     for drifted in ({"streaming": True}, {"approvals": False}, {"attachments": True},
                     {"sessions": True}):
-        with pytest.raises(RuntimeError) as refused:
-            build(drifted)
-        assert "CAPABILITY" in str(refused.value), (drifted, refused.value)
+        with pytest.raises(Exception) as refused:
+            validate_claims(drifted)
+        assert "CAPABILITY" in type(refused.value).__name__.upper(), (drifted, refused.value)
     for malformed in ({"stream": "yes"}, {"stream": 1}, {"stream": None}, {"stream": []}):
-        with pytest.raises(RuntimeError) as refused:
-            build(malformed)
-        assert "CAPABILITY" in str(refused.value), (malformed, refused.value)
-    with pytest.raises(RuntimeError) as unknown:
-        build({"teleport": True})
-    assert "CAPABILITY" in str(unknown.value)
+        with pytest.raises(Exception) as refused:
+            validate_claims(malformed)
+        assert "CAPABILITY" in type(refused.value).__name__.upper(), (malformed, refused.value)
+    with pytest.raises(Exception) as unknown:
+        validate_claims({"teleport": True})
+    assert "CAPABILITY" in type(unknown.value).__name__.upper()
 
 
 def test_the_wire_hello_never_carries_harness_capabilities():
     """hello.capabilities is the wire-method namespace and stays that way."""
-    handler_source = (REPO / "apps" / "server" / "src" / "ordessa_server" / "wire" / "handlers.py").read_text(
+    handler_source = (REPO / "packages/interfaces/system-access/src/ordessa_interfaces/system_access/services/invocation.py").read_text(
         encoding="utf-8")
     ids = re.findall(r'"([a-z][A-Za-z]*\.[A-Za-z]+)"', handler_source)
     assert ids, "no wire capability ids found"
@@ -131,7 +117,7 @@ def test_the_capability_path_of_the_server_names_no_harness():
 
 def test_a_harness_definition_produces_the_canonical_declaration_view():
     """The static side of the view is derived, never hand-written twice."""
-    registry = load_builtin_registry()
+    registry = capture_selected_harness_catalog().registry
     for definition in registry.all():
         claims = caps.canonical_capabilities(dict.fromkeys(definition.capabilities, True))
         declarations = caps.merge_capabilities(claims, {})

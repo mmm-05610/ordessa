@@ -1,3 +1,0 @@
-# Build environment used by --no-isolation; Python 3.12.14
-setuptools==76.1.0 --hash=sha256:34750dcb17d046929f545dec9b8349fe42bf4ba13ddffee78428aec422dbfb73
-wheel==0.45.1 --hash=sha256:708e7481cc80179af0e556bbf0cc00b8444c7321e2700b8d8580231d13017248

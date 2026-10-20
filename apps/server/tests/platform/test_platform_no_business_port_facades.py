@@ -1,9 +1,9 @@
 """T014-S1b guard: the composition root carries no business port facades.
 
 FR-006 forbids the host from being a bag of domain objects
-(`specs/010-platform-core/spec.md`: 「宿主不承载业务门面」). Slice S1b deleted
+(`docs/implementation/specifications/010-platform-core/spec.md`: 「宿主不承载业务门面」). Slice S1b deleted
 `_RUNTIME_PORT_FACADES` and `_bind_runtime_facades()` from
-`ordessa_server.bootstrap.runtime`, so what the active plugins provide is now
+`ordessa_server.composition.runtime`, so what the active plugins provide is now
 read only through the host wall — `plugin_host.provided_port("<port-name>")`.
 
 A deletion alone is not a guard: nothing failed when this file was written to
@@ -20,7 +20,7 @@ import re
 
 import pytest
 
-from ordessa_server.bootstrap import build_runtime
+from ordessa_server.composition.runtime import build_runtime
 
 #: The 21 fields the deleted `_RUNTIME_PORT_FACADES` table bound on
 #: `ServerRuntime` (recovered verbatim from
@@ -86,11 +86,11 @@ def test_the_composed_runtime_binds_none_of_the_former_facade_attributes(tmp_pat
 def test_the_bootstrap_module_grew_no_replacement_binding_table():
     """`_RUNTIME_PORT_FACADES` may not come back under a new name.
 
-    No module-level Mapping in `ordessa_server.bootstrap.runtime` may have
+    No module-level Mapping in `ordessa_server.composition.runtime` may have
     values that are all dotted port names — the shape of the deleted table
     that fed the `setattr(runtime, field, provided_port(name))` loop.
     """
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server.composition.runtime as runtime_module
 
     assert _facade_tables(runtime_module) == []
 
@@ -102,28 +102,29 @@ def test_a_started_default_runtime_answers_facade_reads_with_attributeerror_whil
     """The pair, per real port: the old read fails, the sanctioned read works.
 
     `runtime.service` is no longer a thing the host carries; the very same
-    object is one `provided_port("product.service")` call away. Same for
-    `compat_handlers`/`compat.handlers` (the order-098/101/147 injection
-    point). This is the live behaviour the deletion was for, not just the
-    source shape.
+    object is one `provided_port("workspace.service")` call away (032: the
+    compat-owned `product.service`/`compat.handlers` ports retired with
+    `ordessa.server-compat`, so the pair is re-anchored on the surviving
+    workspace domain). Same for `records`/`workspace.records`. This is the
+    live behaviour the deletion was for, not just the source shape.
     """
     runtime = build_runtime(tmp_path / "data")
     try:
         runtime.start()
         with pytest.raises(AttributeError):
             _ = runtime.service
-        service = runtime.plugin_host.provided_port("product.service")
+        service = runtime.plugin_host.provided_port("workspace.service")
         assert service is not None
-        assert hasattr(service, "list_credentials"), (
+        assert hasattr(service, "list"), (
             "the wall must answer the real port object, not a stand-in")
-        assert runtime.plugin_host.provided_port("product.service") is service, (
+        assert runtime.plugin_host.provided_port("workspace.service") is service, (
             "the wall must answer the same live port object twice")
 
         with pytest.raises(AttributeError):
-            _ = runtime.compat_handlers
-        handlers = runtime.plugin_host.provided_port("compat.handlers")
-        assert handlers is not None
-        assert runtime.plugin_host.provided_port("compat.handlers") is handlers
+            _ = runtime.repository
+        records = runtime.plugin_host.provided_port("workspace.records")
+        assert records is not None
+        assert runtime.plugin_host.provided_port("workspace.records") is records
     finally:
         runtime.stop()
 
@@ -142,7 +143,9 @@ def test_reintroducing_a_facade_is_caught_by_the_instance_guard_and_clears_once_
     runtime = build_runtime(tmp_path / "data")
     try:
         assert _bound_facades(runtime) == ()
-        runtime.service = runtime.plugin_host.provided_port("product.service")
+        # 032: the compat-owned `product.service` port retired; re-anchor the
+        # self-check on the surviving `workspace.service` port object.
+        runtime.service = runtime.plugin_host.provided_port("workspace.service")
         assert runtime.service is not None  # the facade is genuinely bound
         assert _bound_facades(runtime) == ("service",)
         del runtime.service
@@ -158,7 +161,7 @@ def test_reintroducing_a_facade_table_is_caught_by_the_module_guard_and_clears_o
     dotted port names as values — must be flagged on the live module, and the
     flag must disappear when the attribute is removed.
     """
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server.composition.runtime as runtime_module
 
     assert _facade_tables(runtime_module) == []
     runtime_module._REGENERATED_FACADES = {

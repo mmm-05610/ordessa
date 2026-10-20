@@ -16,6 +16,7 @@ from openshell.sandbox import SandboxClient
 from ordessa_environments import (
     EnvironmentManager, SQLiteEnvironmentStore, EnvironmentRefused,
     EnvironmentOperationUnknown, ProcessRequest, BackendNotFound, FILE_AREA_CAPABILITY,
+    PROCESS_CAPABILITY, TERMINAL_CAPABILITY, CapabilityReport, CapabilityStatus,
 )
 from ordessa_environments_openshell import OpenShellConfiguration, OpenShellEnvironmentProvider
 from ordessa_environments_openshell.configuration import create_spec
@@ -91,6 +92,7 @@ class Peer(services.OpenShellServicer):
         self.request_ids.add(request.request_id)
         if op == 'probe':result=True
         elif op == 'write':self.files[args['relative']]=args['content'];result=None
+        elif op == 'write_atomic':self.files[args['relative']]=args['content'];result=None
         elif op == 'read':result=self.files[args['relative']]
         elif op == 'exists':result=args['relative'] in self.files
         elif op == 'list':result=sorted(self.files)
@@ -147,9 +149,19 @@ async def test_two_uses_two_nonpty_channels_release_a_preserves_b_and_resource(b
     instance=manager.create('openshell',REFERENCE)
     assert peer.main_commands == [('sleep','infinity')]
     a=instance.acquire('unit-a',sharing=True);b=instance.acquire('unit-b',sharing=True)
-    assert FILE_AREA_CAPABILITY in a.capabilities.provides
+    assert isinstance(a.capabilities, CapabilityReport)
+    assert a.capabilities.values[FILE_AREA_CAPABILITY] is CapabilityStatus.SUPPORTED
+    assert a.capabilities.values[PROCESS_CAPABILITY] is CapabilityStatus.SUPPORTED
+    assert a.capabilities.values[TERMINAL_CAPABILITY] is CapabilityStatus.UNSUPPORTED
     pa=a.execution.start(request());pb_=b.execution.start(request())
-    await pa.write_stdin(b'a-one');await pb_.write_stdin(b'b-one')
+    from contextlib import contextmanager
+    cuts=[]
+    @contextmanager
+    def guard():
+        cuts.append(1);yield
+    assert pa.guarded_write_supported is True
+    await pa.write_stdin_guarded(b'a-one',write_guard=guard);await pb_.write_stdin(b'b-one')
+    assert len(cuts)==1
     assert await pa.read_stdout(100,timeout=2)==b'a-one'
     assert await pb_.read_stdout(100,timeout=2)==b'b-one'
     assert await pa.read_stderr(100,timeout=2)==b'separate-stderr'
@@ -157,6 +169,7 @@ async def test_two_uses_two_nonpty_channels_release_a_preserves_b_and_resource(b
     assert len(peer.starts)==2 and peer.starts[0].request_id != peer.starts[1].request_id
     with pytest.raises(EnvironmentRefused):a.release()
     a.files.write_text('config','materialized');assert b.files.read_text('config')=='materialized'
+    a.files.write_text_atomic('atomic-config','materialized-atomically');assert b.files.read_text('atomic-config')=='materialized-atomically'
     await pa.write_stdin(b'exit');assert (await pa.wait_exit(timeout=2)).exit_code==0;pa.release()
     cached=a.files;a.release()
     with pytest.raises(EnvironmentRefused):cached.read_text('config')
@@ -174,13 +187,17 @@ async def test_cancel_is_unknown_and_never_stops_whole_shared_sandbox(backend):
     a=instance.acquire('unit-a',sharing=True);b=instance.acquire('unit-b',sharing=True)
     pa=a.execution.start(request());pb_=b.execution.start(request())
     await pa.write_stdin(b'connected');assert await pa.read_stdout(100,timeout=2)==b'connected'
-    assert (await pa.cancel(force=True)).outcome=='unsupported'
-    assert (await pa.cancel()).outcome=='unknown'
-    assert (await pa.wait_exit(timeout=2)).state=='unknown'
-    assert pa.observe().state=='unknown'
-    facts=pa.release();assert facts['processState']=='unknown' and 'exitCode' not in facts
+    # Termination is a sandbox-local kill plus a stdin half-close so the
+    # supervisor finalizes the exec session; the controlled peer then confirms
+    # the exit receipt, while the whole shared sandbox is never stopped.
+    cancellation=await pa.cancel(force=True)
+    assert cancellation.outcome=='requested' and cancellation.observation.state=='exited'
+    assert (await pa.wait_exit(timeout=2)).state=='exited'
+    facts=pa.release();assert facts['processState']=='exited' and facts['exitCode']=='0'
     assert pa.release()==facts
-    with pytest.raises(EnvironmentRefused):a.release()
+    # A confirmed exit lets the Use be released; the shared sandbox and the
+    # sibling Use remain intact because cancellation never stops the sandbox.
+    a.release()
     with pytest.raises(EnvironmentRefused):instance.delete()
     await pb_.write_stdin(b'survives');assert await pb_.read_stdout(100,timeout=2)==b'survives'
     assert instance.inspect().observation.state=='running' and not peer.deleted
@@ -225,6 +242,7 @@ def test_missing_file_helper_is_explicit_no_files_capability(backend):
     peer,provider,manager=backend;instance=manager.create('openshell',REFERENCE)
     provider.configuration=OpenShellConfiguration('workspace-test','/workspace','controlled-gateway',timeout_seconds=2)
     use=instance.acquire('unit',sharing=False)
+    assert use.capabilities.values[FILE_AREA_CAPABILITY] is CapabilityStatus.CONDITIONAL
     assert FILE_AREA_CAPABILITY not in use.capabilities.provides
     with pytest.raises(EnvironmentRefused):use.files.exists('config')
     use.release()
@@ -243,8 +261,9 @@ async def test_unsupported_process_signal_is_not_sandbox_lifecycle(backend):
     peer,provider,manager=backend;instance=manager.create('openshell',REFERENCE)
     use=instance.acquire('unit',sharing=False);process=use.execution.start(request())
     assert not hasattr(process,'terminate') and not hasattr(process,'send_signal')
-    assert (await process.cancel(force=True)).outcome=='unsupported'
-    await process.close_stdin();(await process.wait_exit(timeout=2)).exit_code;process.release();use.release()
+    cancellation=await process.cancel(force=True)
+    assert cancellation.outcome=='requested' and cancellation.observation.state=='exited'
+    process.release()
     assert not peer.deleted
 
 

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import hashlib
 import json
 
-from ordessa_execution_api.environment import GuaranteeUnavailableError, IdentityMismatchError
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitIdentityMismatch
 
 from ordessa_execution_agents.profiles import (
     ProfileService, Profile, ProfileRevision, ProfileRevisionRef, ProfileContent,
@@ -21,6 +21,7 @@ from ordessa_units.admission.wire import admission_wire_sections
 from ordessa_units.channels.wire import channels_wire_sections
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.bindings.publication import NodePublication, encode_node_ref, decode_node_ref
+from ordessa_units.bindings.profile_admission import UnitProfileAdmission
 from ordessa_units.admission.operations import AgentOperations, AgentUnresolvedSnapshot, OperationNotFound
 from ordessa_units.configuration.service import AgentConfiguration
 from ordessa_execution_agents.harness.providers.registry.catalog import AgentProviders
@@ -150,8 +151,7 @@ def unit_services(environment, *, invocation_issuer=None, node_evidence_port=Non
                    preparation_context_port=None, preparation_observation_port=None,
                    lifecycle_observation_port=None, input_capture_port=None,
                    native_input_state_port=None, first_input_observation_port=None,
-                   owner_ports: AgentOwnerPorts | None = None,
-                   configuration_offer_compiler=None) -> UnitServices:
+                   owner_ports: AgentOwnerPorts | None = None) -> UnitServices:
     """Bootstrap the sole execution-owned catalog on the existing Environment.
 
     No plugin activation, native process or second Environment is created.
@@ -198,11 +198,10 @@ def unit_services(environment, *, invocation_issuer=None, node_evidence_port=Non
         services = getattr(environment, "_agent_services", None)
         if services is None:
             nodes = NodePublication(environment, evidence_port=node_evidence_port)
-            profiles = ProfileService(environment)
+            profiles = ProfileService(UnitProfileAdmission(environment))
             services = UnitServices(profiles, nodes,
                 AgentConfiguration(environment, nodes, invocation_issuer=invocation_issuer),
-                AgentProviders(environment), AgentConfigurationOffers(environment,
-                    compiler_binding=configuration_offer_compiler),
+                AgentProviders(environment), AgentConfigurationOffers(environment),
                 AgentAssembly(environment, profiles, nodes,
                     invocation_issuer=invocation_issuer, context_port=preparation_context_port,
                     observation_port=preparation_observation_port, unit_manager=unit_manager),
@@ -238,9 +237,6 @@ def unit_services(environment, *, invocation_issuer=None, node_evidence_port=Non
                 or (invocation_issuer is not None
                     and services.material_operations._issuer is not invocation_issuer)):
             raise ValueError("Agent service authorities must be composed once before use")
-        if (configuration_offer_compiler is not None
-                and services.configuration_offers._compiler_binding is not configuration_offer_compiler):
-            raise ValueError('configuration compiler must be selected once before service publication')
         return services
 
 
@@ -254,12 +250,13 @@ def composed_profile_service(environment) -> ProfileService:
         environment._check_open()
         services = getattr(environment, "_agent_services", None)
         if type(services) is not UnitServices or type(services.profiles) is not ProfileService:
-            raise GuaranteeUnavailableError("original Agent Profile service is not composed")
+            raise UnitGuaranteeUnavailable("original Agent Profile service is not composed")
         profiles = services.profiles
-        if profiles._environment is not environment:
-            raise GuaranteeUnavailableError("original Agent Profile service is not composed")
+        if (not isinstance(profiles._environment, UnitProfileAdmission)
+                or profiles._environment.unit_context is not environment):
+            raise UnitGuaranteeUnavailable("original Agent Profile service is not composed")
         if profiles.environment_namespace != environment.environment_id:
-            raise IdentityMismatchError("Profile view owner differs from Environment")
+            raise UnitIdentityMismatch("Profile view owner differs from Environment")
         return profiles
 
 
@@ -332,8 +329,8 @@ __all__ += ["AGENT_MATERIAL_OPERATION_CONTRACT_VERSION", "MaterialOperations",
             "material_provider_ref", "material_invocation_target",
             "material_operation_facts", "material_reservation_usages"]
 
-from ordessa_units.configuration.offers import (PURE_READ_VERSION, OwnerReadContext, OwnerProposalInput, OwnerConfigurationOfferBatch, OwnerProposalAssessment, bind_configuration_offer_compiler)
-__all__ += ["PURE_READ_VERSION", "OwnerReadContext", "OwnerProposalInput", "OwnerConfigurationOfferBatch", "OwnerProposalAssessment", "bind_configuration_offer_compiler"]
+from ordessa_units.configuration.offers import (PURE_READ_VERSION, OwnerReadContext, OwnerProposalInput, OwnerConfigurationOfferBatch, OwnerProposalAssessment)
+__all__ += ["PURE_READ_VERSION", "OwnerReadContext", "OwnerProposalInput", "OwnerConfigurationOfferBatch", "OwnerProposalAssessment"]
 
 from ordessa_units.admission.owner_selection import (
     AgentOwnerInputs, AgentOwnerUnavailable, FreshUnitFactory, bind_unit_manager, validate_agent_owner_inputs,
@@ -353,14 +350,3 @@ from .admission.context import UnitAdmissionContext
 from .admission.fingerprint import ProtectedFingerprintHmac
 from .persistence.sqlite import SqliteUnitStore
 __all__ += ["UnitAdmissionContext", "SqliteUnitStore", "ProtectedFingerprintHmac"]
-
-from ordessa_units.channels.captured_contracts import (
-    UNIT_TEXT_CAPTURE_VERSION, UNIT_INPUT_VERSION, UnitTextCapture,
-    UnitCaptureContentPort, UnitWorkspaceExecutionEvidence, UnitWorkspaceExecutionPort,
-    UnitCapturedInputRefused, UnitCapturedInputPending,
-)
-from ordessa_units.channels.captured_input import ManagedUnitInputs
-__all__ += ["UNIT_TEXT_CAPTURE_VERSION", "UNIT_INPUT_VERSION", "UnitTextCapture",
-            "UnitCaptureContentPort", "UnitWorkspaceExecutionEvidence",
-            "UnitWorkspaceExecutionPort", "ManagedUnitInputs",
-            "UnitCapturedInputRefused", "UnitCapturedInputPending"]

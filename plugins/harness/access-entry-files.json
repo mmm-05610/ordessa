@@ -1,9 +1,0 @@
-{
-  "schema_version": 1,
-  "required": [
-    "runtime",
-    "harnesses",
-    "third_party/harness_remote",
-    "src/ordessa_harness/launch-descriptors.json"
-  ]
-}

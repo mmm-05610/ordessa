@@ -121,14 +121,14 @@ def compile_config(materials: Mapping[str, Any]) -> dict:
 
 def capability_matrix() -> dict[str, dict]:
     return {
-        "prompt": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "cancel": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "resume": {"declared": "unknown", "implemented": "yes", "observed": "no"},
-        "approvalCallback": {"declared": "yes", "implemented": "reply", "observed": "no"},
+        "prompt": {"declared": "yes", "implemented": "original-owner-only(unverified-brand)", "observed": "no"},
+        "cancel": {"declared": "yes", "implemented": "unsupported", "observed": "no"},
+        "resume": {"declared": "unknown", "implemented": "unsupported", "observed": "no"},
+        "approvalCallback": {"declared": "yes", "implemented": "unsupported(no-reverse-reply)", "observed": "no"},
         "skillsMcpLoading": {"declared": "yes", "implemented": "plan-only", "observed": "no"},
-        "acpExtensions": {"declared": "unknown", "implemented": "passthrough", "observed": "no"},
+        "acpExtensions": {"declared": "unknown", "implemented": "original-owner-only(unverified-brand)", "observed": "no"},
         "ideContext": {"declared": "unknown", "implemented": "no", "observed": "no"},
-        "unknownExtensions": {"declared": "yes", "implemented": "yes", "observed": "no"},
+        "unknownExtensions": {"declared": "yes", "implemented": "original-owner-only(unverified-brand)", "observed": "no"},
         "transportFence": {"declared": "no", "implemented": "no", "observed": "no"},
-        "requestReconciliation": {"declared": "yes", "implemented": "yes", "observed": "no"},
+        "requestReconciliation": {"declared": "yes", "implemented": "unsupported", "observed": "no"},
     }

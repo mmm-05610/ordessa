@@ -37,7 +37,7 @@ def _data(value):
 
 
 class ImplementationDispatch:
-    def __init__(self,factory,access=None,*,approval_usecases=None,execution=None,selection=None,blobs=None,registry_loader=None,source_snapshots=None,history_sources=None,method_runs=None):
+    def __init__(self,factory,access=None,*,approval_usecases=None,execution=None,selection=None,blobs=None,registry_loader=None,source_snapshots=None,history_sources=None,method_runs=None,method_guard=None,source_materials=None):
         if approval_usecases is not None and getattr(approval_usecases,'factory',None) is not factory:
             raise ApplicationError('AUTHORIZATION_AUTHORITY_MISMATCH')
         if blobs is not None and getattr(blobs,'authority_id',None)!=factory.authority_id:
@@ -49,6 +49,7 @@ class ImplementationDispatch:
         if method_runs is not None and getattr(method_runs,'factory',None) is not factory:
             raise ApplicationError('DISPATCH_WORK_BINDING_AUTHORITY_UNAVAILABLE')
         self.method_runs=method_runs
+        self.method_guard, self.source_materials = method_guard, source_materials
 
     def _access(self,context,operation):
         if type(context) is not CommandContext or self.access is None:raise ApplicationError('ACCESS_AUTHORITY_UNAVAILABLE')
@@ -136,19 +137,8 @@ class ImplementationDispatch:
 
     def dispatch_declared_work(self, identity, work_id, action_id, step_id, attempt,
                                unit_ref, params, actions, context, *, timeout=60):
-        """Dispatch one declared Work step, refusing by the real missing item.
-
-        The subject comes from the Work, never from a run row: a generation step
-        acts on the already reviewed change, an implementation step on the frozen
-        admitted package. Each precondition is checked in order against real
-        state and refuses by name, so no run row, package or grant is ever stood
-        in for a declared step.
-        """
+        """Dispatch the Work's exact frozen package under its original Grant."""
         self._access(context, _SEND)
-        if self.execution is None or self.blobs is None:
-            raise ApplicationError('DISPATCH_EXECUTION_AUTHORITY_UNAVAILABLE')
-        if not callable(getattr(self.selection, 'guard_selection', None)):
-            raise ApplicationError('DISPATCH_SELECTION_AUTHORITY_UNAVAILABLE')
         if (type(actions) is not tuple or not actions
                 or len(set(actions)) != len(actions)
                 or type(attempt) is not int or not 1 <= attempt <= 4096):
@@ -160,33 +150,9 @@ class ImplementationDispatch:
         # work. A declared generation step therefore has no dispatch here.
         if set(actions) & {'generate_package', 'apply_change', 'accept_artifact'}:
             raise ApplicationError('ACTION_NOT_AUTHORIZED')
-        # An implementation step of a declared Work needs a frozen admitted
-        # package to act on; the Work's own associations are the only source.
-        with self.factory.begin(context.scope, 'read') as uow:
-            binding = self._declared_work_subject(uow, work_id, action_id, step_id)
-        if binding is None:
-            raise ApplicationError('DISPATCH_DECLARED_WORK_SUBJECT_MATERIAL_UNAVAILABLE')
-        raise ApplicationError('DISPATCH_DECLARED_WORK_GRANT_UNAVAILABLE')
-
-    def _declared_work_subject(self, uow, work_id, action_id, step_id):
-        """The declared step's subject, taken from this Work's own records.
-
-        Returns a schema-2 binding when the Work already carries a subject this
-        step may act on (a frozen package for implementation), otherwise None.
-        Nothing is inferred from a run row or from a caller-supplied reference.
-        """
-        from ordessa_engineering.application.contracts.work_context import (
-            WORK_CONTEXT_KIND, WORK_STABLE_ID_PREFIX, decode_work_binding)
-        stable = f'{WORK_STABLE_ID_PREFIX}{work_id}'
-        head = uow.workflow.head_ref(WORK_CONTEXT_KIND, stable)
-        if head is None:
-            return None
-        work_binding = decode_work_binding(uow.workflow.read(head))
-        packages = [association for association in work_binding.associations
-                    if association.kind == 'package']
-        if len(packages) != 1:
-            return None
-        return packages[0].ref
+        from .declared_implementation_dispatch import dispatch
+        return dispatch(self, identity, work_id, action_id, step_id, attempt,
+                        unit_ref, params, actions, context, timeout=timeout)
 
     def dispatch(self,run_id,step_id,attempt,unit_ref,params,actions,context,*,timeout=60):
         self._access(context,_SEND)
@@ -307,6 +273,13 @@ class ImplementationDispatch:
         loop=asyncio.get_running_loop()
         if type(deadline) not in (int,float) or not loop.time()<deadline<=loop.time()+10:
             raise ApplicationError('DISPATCH_EFFECT_DEADLINE_INVALID')
+        if binding.binding_version == 2:
+            if binding.subject.get('subject_kind') != 'frozen_package':
+                raise ApplicationError('DISPATCH_EFFECT_BINDING_MISMATCH')
+            from .declared_implementation_dispatch import acquire_effect_cut
+            async with acquire_effect_cut(self, context, binding, identity, deadline):
+                yield
+            return
         with self.factory.begin(context.scope,'read') as read:
             package=self._work_package(read,binding.run_id,step_id=binding.step_id,
                 live=True,attempt=binding.attempt,binding=binding)
@@ -397,11 +370,155 @@ class ImplementationDispatch:
         return self._view(row)
 
 
+    @staticmethod
+    def _agent_view(row, binding):
+        return {'run_id': row['run_id'], 'step_id': row['step_id'], 'attempt': row['attempt'],
+            'phase': row['dispatch_phase'], 'version': row['dispatch_version'],
+            'fence': row['dispatch_fence'], 'binding': binding.projection(),
+            'engineering_attempt_ref': binding.engineering_attempt_ref,
+            'result_blob_ref': None if row['result_blob_json'] is None else decode_json(row['result_blob_json']),
+            'accepted': False, 'engineering_completed': False}
+
+    def reconcile_agent(self, run_id, step_id, attempt, context):
+        """Read the original recorded Agent turn; never reserve, resolve or send.
+
+        This is historical MethodRun reconciliation. Current declared Work
+        dispatch remains on its original contract until an explicit Agent
+        recipe/subject version is bound; this method creates no such mapping.
+        """
+        self._access(context, _RECONCILE)
+        if self.execution is None or self.blobs is None:
+            raise ApplicationError('DISPATCH_EXECUTION_AUTHORITY_UNAVAILABLE')
+        from ....domain.changes.agent_dispatch_codec import decode_agent_dispatch
+        from ....domain.common.outcomes.diagnostics import ReferenceError
+        from ...contracts.dispatch_identity import is_work_key
+        if is_work_key(run_id):
+            raise ApplicationError('AGENT_WORK_DISPATCH_RECIPE_UNAVAILABLE')
+        with self.factory.begin(context.scope, 'read') as uow:
+            package = self._work_package(uow, run_id, step_id=step_id)
+            row = uow.dispatch.get(run_id, step_id, attempt, context.scope)
+            try:
+                binding = decode_agent_dispatch(row['binding_bytes'])
+                binding.require_turn_binding()
+            except ReferenceError as exc:
+                raise ApplicationError(exc.code) from exc
+            if (binding.scope != context.scope or binding.package_ref != package.ref
+                    or (binding.run_id, binding.step_id, binding.attempt) != (run_id, step_id, attempt)
+                    or binding.engineering_attempt_ref != row['execution_operation_ref']
+                    or binding.fence != row['dispatch_fence']):
+                raise ApplicationError('DISPATCH_RECEIPT_BINDING_MISMATCH')
+            if row['dispatch_phase'] in {'reserved', 'completed', 'failed'}:
+                return self._agent_view(row, binding)
+        if self.history_sources is None:
+            raise ApplicationError('DISPATCH_HISTORY_SOURCE_AUTHORITY_UNAVAILABLE')
+        agent = decode_json(binding.agent_ref_bytes)
+        with ExitStack() as source_stack:
+            # Preserve the original optional method-input guard and mandatory
+            # source guard. The request explicitly names Agent data; it never
+            # aliases an AgentInstanceRef into the retired unit_ref shape.
+            guard = getattr(self.history_sources, 'guard_dispatch_input', None)
+            if callable(guard):
+                with self.factory.begin(context.scope, 'read') as read:
+                    frozen_params = decode_json(read.implementation.read_blob(binding.prompt_ref))
+                source_stack.enter_context(guard(context, package, agent,
+                    {'run_id': binding.run_id, 'step_id': binding.step_id,
+                     'attempt': binding.attempt, 'agent_ref': agent, 'params': frozen_params,
+                     'actions': [action for action, _ in binding.action_instances], 'timeout': None}))
+            source_stack.enter_context(self.history_sources.guard_history_read(context, package, agent))
+            reference, capture = self.execution.capture(binding)
+            if (reference.agent_ref_bytes != binding.agent_ref_bytes
+                    or reference.turn_ref_bytes != binding.turn_ref_bytes
+                    or capture.agent_ref_bytes != binding.agent_ref_bytes
+                    or capture.turn_ref_bytes != binding.turn_ref_bytes
+                    or capture.engineering_attempt_ref != binding.engineering_attempt_ref
+                    or reference.engineering_attempt_ref != binding.engineering_attempt_ref
+                    or capture.operation_ref != reference.operation_ref
+                    or capture.expected_prompt_digest != 'sha256:' + binding.prompt_input_digest.hex
+                    or capture.query_digest != binding.expected_query_digest):
+                raise ApplicationError('DISPATCH_RECEIPT_BINDING_MISMATCH')
+            phase = capture.state if capture.state in {'completed', 'failed'} else 'unknown'
+            with self.factory.begin(context.scope) as uow:
+                current_package = self._work_package(uow, run_id, step_id=step_id)
+                if current_package.ref != package.ref:
+                    raise ApplicationError('DISPATCH_RUN_BINDING_MISMATCH')
+                uow.implementation.read_blob(capture.blob_ref)
+                current = uow.dispatch.get(run_id, step_id, attempt, context.scope)
+                if (current['dispatch_version'] != row['dispatch_version']
+                        or current['binding_bytes'] != row['binding_bytes']):
+                    raise ApplicationError('DISPATCH_CHANGED')
+                row = uow.dispatch.transition(run_id, step_id, attempt, context.scope,
+                    expected_version=current['dispatch_version'], fence=binding.fence,
+                    phase=phase, result_blob_ref=capture.blob_ref)
+                uow.commit()
+        return self._agent_view(row, binding)
+
+    async def dispatch_agent_work(self, identity, work_id, action_id, step_id, attempt,
+                                  agent_ref, params, actions, context, *, timeout=60):
+        """The explicit v2 declared Work writer; never a Unit recipe alias."""
+        self._access(context, _SEND)
+        if (type(actions) is not tuple or not actions or len(set(actions)) != len(actions)
+                or type(attempt) is not int or not 1 <= attempt <= 4096):
+            raise ApplicationError('INVALID_ARGUMENT')
+        for value in (work_id, action_id, step_id):
+            validate_id(value)
+        if set(actions) & {'generate_package', 'apply_change', 'accept_artifact'}:
+            raise ApplicationError('ACTION_NOT_AUTHORIZED')
+        from .declared_implementation_dispatch import dispatch_agent_work
+        return await dispatch_agent_work(self, identity, work_id, action_id, step_id, attempt,
+            agent_ref, params, actions, context, timeout=timeout)
+
+    @contextmanager
+    def acquire_agent_effect_write(self, context, binding, identity, deadline, *, handoff,
+                                   expected_provenance):
+        """Consume the actual access handoff at the synchronous physical cut."""
+        import time, math
+        from ....domain.changes.agent_dispatch import AgentWorkDispatchBinding
+        if (type(binding) is not AgentWorkDispatchBinding or binding.scope != context.scope
+                or handoff is None or not isinstance(identity, Mapping)
+                or set(identity) != {'agentRef', 'engineeringAttemptRef', 'inputDigest',
+                                     'queryDigest', 'frameDigest'}
+                or canonical_bytes(_data(identity['agentRef'])) != binding.agent_ref_bytes
+                or identity['engineeringAttemptRef'] != binding.engineering_attempt_ref
+                or identity['inputDigest'] != 'sha256:' + binding.prompt_input_digest.hex
+                or identity['queryDigest'] != binding.expected_query_digest
+                or type(identity['frameDigest']) is not str or len(identity['frameDigest']) != 71
+                or not identity['frameDigest'].startswith('sha256:')
+                or any(c not in '0123456789abcdef' for c in identity['frameDigest'][7:])
+                or type(expected_provenance) is not bytes
+                or type(deadline) not in (int,float) or not math.isfinite(deadline)
+                or not time.monotonic() < deadline <= time.monotonic() + 10):
+            raise ApplicationError('DISPATCH_EFFECT_BINDING_MISMATCH')
+        consume = getattr(self.access, 'consume_effect_write', None)
+        if not callable(consume):
+            raise ApplicationError('DISPATCH_EFFECT_HANDOFF_UNAVAILABLE')
+        with consume(handoff, context, invocation_key=bytes.fromhex(binding.digest.hex),
+                     action_instances=binding.action_instances):
+            self._access(context, _SEND)
+            from .declared_implementation_dispatch import acquire_agent_work_effect_cut
+            with acquire_agent_work_effect_cut(self, context, binding, deadline):
+                yield
+
+    def reconcile_agent_work(self, identity, step_id, attempt, context):
+        self._access(context, _RECONCILE)
+        from ....domain.changes.agent_dispatch import AgentWorkDispatchBinding
+        from ....domain.changes.agent_dispatch_codec import decode_agent_dispatch
+        with self.factory.begin(context.scope, 'read') as uow:
+            row = uow.work_dispatch.get(identity, step_id, attempt, context.scope)
+            binding = decode_agent_dispatch(row['binding_bytes'])
+            if type(binding) is not AgentWorkDispatchBinding:
+                raise ApplicationError('AGENT_WORK_DISPATCH_BINDING_REQUIRED')
+        from .declared_implementation_dispatch import reconcile_agent_work
+        return reconcile_agent_work(self, binding, context)
+
+
 def resolve_dispatch_submission_binding(uow, submission, *, method_runs=None):
     """Same original write-UoW correlation, not file/test provenance or acceptance.
 
     Schema12 remains readable; new normal dispatch-bound Submission needs13.
     """
+    if submission.schema_version == 2:
+        from ...usecases.changes.declared_report import resolve_declared_report_binding
+        return resolve_declared_report_binding(uow, submission)
     try:
         row=uow.dispatch.by_operation(submission.execution_ref.operation_ref,uow.scope)
     except ApplicationError as exc:

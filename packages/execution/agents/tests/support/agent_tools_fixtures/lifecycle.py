@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_execution_api.environment import GuaranteeUnavailableError, IdentityMismatchError
-from ordessa_execution_api.environment.identity import ParticipantInstanceRef
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitIdentityMismatch
+from ordessa_units.definitions.admission_identity import AgentNodeRef
 from ordessa_infrastructure.identifiers import RequestKey
 
 from agent_tools_fixtures.assembly import (

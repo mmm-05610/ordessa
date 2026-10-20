@@ -34,7 +34,12 @@ from typing import Any, Mapping, Sequence
 
 # P-QWEN-001 (approvals/P-QWEN-001-release.md): the family package imports the
 # brand-neutral core directly (direction: family -> core, the target shape).
-from ordessa_execution_agents.harness.definitions.harness_capabilities import CANONICAL_CAPABILITY_IDS
+# Historical deployment-document vocabulary, not a live capability registry.
+# New SDK provider readiness never derives from these offline template fields.
+DEPLOYMENT_CAPABILITY_KEYS = (
+    'start', 'observe', 'finish', 'attach', 'steer', 'stream', 'permissions',
+    'native_continuation',
+)
 
 QWEN_PROVIDER = "openai"
 #: The product/ProviderModel model id the user confirmed. It must never change
@@ -110,11 +115,11 @@ def capability_claims(*, capabilities_for) -> dict[str, bool]:
     """
     if not callable(capabilities_for):
         raise QwenProductionTemplateError("QWEN_CAPABILITY_SOURCE_REQUIRED")
-    claims = capabilities_for("dsh")
-    if (not isinstance(claims, Mapping) or set(claims) != set(CANONICAL_CAPABILITY_IDS)
-            or any(type(claims[key]) is not bool for key in CANONICAL_CAPABILITY_IDS)):
+    claims = capabilities_for("qwen")
+    if (not isinstance(claims, Mapping) or set(claims) != set(DEPLOYMENT_CAPABILITY_KEYS)
+            or any(type(claims[key]) is not bool for key in DEPLOYMENT_CAPABILITY_KEYS)):
         raise QwenProductionTemplateError("QWEN_CAPABILITY_CLAIMS_INVALID")
-    return {key: claims[key] for key in CANONICAL_CAPABILITY_IDS}
+    return {key: claims[key] for key in DEPLOYMENT_CAPABILITY_KEYS}
 
 
 def loopback_environment(base_url: str) -> dict[str, str]:

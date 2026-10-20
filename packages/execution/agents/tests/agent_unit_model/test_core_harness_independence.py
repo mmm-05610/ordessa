@@ -17,10 +17,11 @@ from agent_tools_fixtures.invocation_authority import Authority
 from agent_tools_fixtures.node_publication import Policy
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import (
-    AdmissionRefusedError, GuaranteeUnavailableError,
+from ordessa_units.errors import (
+    UnitAdmissionRefused, UnitGuaranteeUnavailable,
 )
-from ordessa_execution_api.environment.operations import UsageMutation, operation_holder, node_holder, safe_json
+from ordessa_units.definitions.operations import UsageMutation, operation_holder, node_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from ordessa_units.bindings.assembly import PreparationContext, PreparationObservation
@@ -404,9 +405,9 @@ def test_draining_and_retiring_one_provider_leaves_other_provider_usable(core_pa
     # runtime view remains the source for that assertion; it has no Harness
     # declaration binding and must not appear as Harness metadata.
     assert [item.descriptor.provider_id for item in env.agent_runtime_contributions()] == [providers[1].provider_id]
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         services.providers.list()
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         services.configuration.inspect(node_a)
     assert services.configuration.inspect(node_b).to_dict()["configuration"][providers[1].configuration_kind] == ["b"]
     state, blockers = env.retire(activation)
@@ -429,12 +430,12 @@ def test_wrong_owner_and_version_drift_fail_closed(core_pair):
     original_inspect = provider.inspect_unit
     provider.inspect_unit = lambda unit_ref: replace(original_inspect(unit_ref),
         provider_ref=providers[1].provider_ref)
-    with pytest.raises(GuaranteeUnavailableError):
+    with pytest.raises(UnitGuaranteeUnavailable):
         services.configuration.inspect(node_ref)
     provider.inspect_unit = original_inspect
 
     provider.descriptor = replace(provider.descriptor, implementation_digest="sha256:" + "f" * 64)
-    with pytest.raises(AdmissionRefusedError):
+    with pytest.raises(UnitAdmissionRefused):
         services.configuration.inspect(node_ref)
 
     assert before.source_revision == "native-rev-1"

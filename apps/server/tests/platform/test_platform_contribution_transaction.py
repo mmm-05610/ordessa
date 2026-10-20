@@ -23,7 +23,7 @@ from server_plugin_api import (
 
 from contribution_fakes import ContribPlugin, RecordingHandler, contribution, new_host
 
-from ordessa_server.plugin_host import ResolvedContribution
+from ordessa_server.composition.plugin_host import ResolvedContribution
 
 POINT = "test.echo"
 

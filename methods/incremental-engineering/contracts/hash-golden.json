@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "description": "Actual byte 0A follows v1. No literal backslash+n bytes.",
+  "prefix_utf8_hex": "6f7264657373612f6d6574686f642d736e617073686f742f76310a",
+  "canonical_payload": {
+    "schema_version": 1,
+    "value": "fixture"
+  },
+  "canonical_utf8_hex": "7b22736368656d615f76657273696f6e223a312c2276616c7565223a2266697874757265227d",
+  "complete_input_hex": "6f7264657373612f6d6574686f642d736e617073686f742f76310a7b22736368656d615f76657273696f6e223a312c2276616c7565223a2266697874757265227d",
+  "expected_sha256": "3417e2471e6ec9d5c658a05ffcc76e5ba2ef61978f57a367126bfb188b9ddbd9"
+}

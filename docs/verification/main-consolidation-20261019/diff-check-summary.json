@@ -1,0 +1,727 @@
+{
+  "command": "git diff --cached --check",
+  "exitCode": 2,
+  "diagnostics": [
+    {
+      "path": "apps/desktop/electron/native-bridge/src/index.ts",
+      "line": 82,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "apps/server/src/ordessa_server/bootstrap/migrations/legacy_reader.py",
+      "line": 75,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "apps/server/src/ordessa_server/composition/agent_owner.py",
+      "line": 281,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "apps/server/tests/agent_tools/test_owner_wiring.py",
+      "line": 653,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "apps/server/tests/integration/default_product/test_agent_owner_composition.py",
+      "line": 176,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/integration/default_product/test_agent_owner_composition.py",
+      "line": 187,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/integration/default_product/test_agent_owner_composition.py",
+      "line": 206,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/integration/default_product/test_agent_owner_composition.py",
+      "line": 230,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/integration/default_product/test_agent_owner_composition.py",
+      "line": 246,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/integration/default_product/test_agent_owner_composition.py",
+      "line": 281,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/integration/default_product/test_agent_owner_composition.py",
+      "line": 311,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/integration/default_product/test_agent_owner_composition.py",
+      "line": 342,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/integration/default_product/test_agent_owner_composition.py",
+      "line": 377,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/integration/default_product/test_sealed_legacy_migration_registration.py",
+      "line": 148,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "apps/server/tests/integration/harness/test_native_config_capabilities_honesty.py",
+      "line": 307,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/integration/harness/test_server_acp_controlled_entry.py",
+      "line": 41,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/integration/harness/test_server_acp_native_observation.py",
+      "line": 56,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/integration/harness/test_unknown_event_passthrough.py",
+      "line": 159,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "apps/server/tests/support/legacy_schema.py",
+      "line": 20,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "apps/server/tests/test_local_library_successor_presentation.py",
+      "line": 244,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "docs/standards/engineering-standard.md",
+      "line": 3,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "docs/standards/engineering-standard.md",
+      "line": 4,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "docs/standards/engineering-standard.md",
+      "line": 5,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "docs/standards/progress-and-delivery-standard.md",
+      "line": 3,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "docs/standards/progress-and-delivery-standard.md",
+      "line": 4,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "methods/incremental-engineering/candidates/2.5.0/documents/correction-plan/template.md",
+      "line": 28,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "methods/incremental-engineering/candidates/2.6.0/documents/correction-plan/template.md",
+      "line": 28,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "methods/incremental-engineering/tests/test_candidate76_policy.py",
+      "line": 141,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/decision/source_bindings.py",
+      "line": 409,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/persistence/sqlite/historical_method_program.py",
+      "line": 121,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/adapters/persistence/sqlite/snapshot_store.py",
+      "line": 434,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/usecases/changes/declared_acceptance.py",
+      "line": 190,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/usecases/changes/submissions.py",
+      "line": 185,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/usecases/owner_operations.py",
+      "line": 455,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/usecases/packages/implementation.py",
+      "line": 298,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/usecases/queries/works.py",
+      "line": 393,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/application/usecases/reviews/mechanical.py",
+      "line": 195,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/domain/approvals/refs.py",
+      "line": 47,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/domain/common/mechanisms/hashing.py",
+      "line": 15,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/methods/compilation/decisions.py",
+      "line": 60,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/methods/compilation/standards.py",
+      "line": 11,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/methods/compilation/workflow.py",
+      "line": 51,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/methods/definitions/contracts/sources.py",
+      "line": 7,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/methods/definitions/contracts/validation.py",
+      "line": 16,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/methods/definitions/defaults.py",
+      "line": 9,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/methods/definitions/errors/diagnostics.py",
+      "line": 26,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/methods/definitions/errors/failures.py",
+      "line": 8,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/src/ordessa_engineering/methods/definitions/errors/results.py",
+      "line": 28,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/application/test_canonical_dispatch_admission.py",
+      "line": 152,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/application/test_declared_implementation_results.py",
+      "line": 540,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/application/test_human_review_admission.py",
+      "line": 382,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/application/test_manual_review_capture.py",
+      "line": 172,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/application/test_persisted_review_readiness89.py",
+      "line": 323,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/application/test_phase3_rework_recovery.py",
+      "line": 891,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/application/test_real_source_chain.py",
+      "line": 364,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/application/test_review_authorship.py",
+      "line": 233,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/application/test_work_input_binding.py",
+      "line": 33,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/domain/test_dispatch_continuation.py",
+      "line": 110,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "packages/engineering/tests/domain/test_submission_binding.py",
+      "line": 192,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/methods/test_candidate80_authorship_policy.py",
+      "line": 154,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/methods/test_workflow_graph.py",
+      "line": 207,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/engineering/tests/persistence/test_work_dispatch_repository.py",
+      "line": 358,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/configuration/compilation/native_digest.py",
+      "line": 46,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/definitions/ACP.md",
+      "line": 27,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/definitions/command_projection.py",
+      "line": 77,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/definitions/native_channels.py",
+      "line": 48,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/providers/resolution/source_declaration.py",
+      "line": 19,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/transport/executable_lookup.mjs",
+      "line": 32,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/harness/transport/launch_descriptor.mjs",
+      "line": 53,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/src/ordessa_execution_agents/profiles/definitions/json_values.py",
+      "line": 53,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/tests/agent_unit_model/test_staged_operations.py",
+      "line": 720,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/assembly.py",
+      "line": 125,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/configuration_records.py",
+      "line": 95,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/invocation_authority.py",
+      "line": 108,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/lifecycle.py",
+      "line": 141,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/management.py",
+      "line": 110,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/node_publication.py",
+      "line": 164,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/runtime_admission.py",
+      "line": 54,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/agents/tests/support/agent_tools_fixtures/unit_records.py",
+      "line": 129,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/environments/tests/test_runtime_ports.py",
+      "line": 58,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/context.py",
+      "line": 156,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/admission/local_state.py",
+      "line": 629,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/definitions/runtime_composition.py",
+      "line": 137,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/units/src/ordessa_units/records/native_evidence.py",
+      "line": 91,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/execution/units/tests/runtime/test_runtime_assembly.py",
+      "line": 39,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/infrastructure/src/ordessa_infrastructure/encoding/canonical_json.mjs",
+      "line": 33,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/interfaces/channels/cli/src/ordessa_cli_runtime/mechanism.py",
+      "line": 167,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/interfaces/system-access/bindings/tests/test_work_step_admission.py",
+      "line": 386,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/interfaces/system-access/src/ordessa_interfaces/system_access/subscriptions/cursors.py",
+      "line": 69,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/interfaces/transport/client/typescript/src/wire-port.ts",
+      "line": 218,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "packages/interfaces/transport/server/plugin-api/src/server_plugin_api/runtime_carrier.py",
+      "line": 97,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/agents/permissions/adapters/tests/test_c4_fragment_identity_gap.py",
+      "line": 72,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/agents/resources/mcp/tests/harness_wiring/test_controlled_chain.py",
+      "line": 161,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/agents/resources/mcp/tests/integration/integration_helpers.py",
+      "line": 621,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/agents/resources/model-provider/server/tests/_controlled_harness.py",
+      "line": 381,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/agents/resources/sandbox/adapters/src/ordessa_sandbox_adapters/claude_code.py",
+      "line": 115,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/agents/resources/sandbox/adapters/src/ordessa_sandbox_adapters/codex.py",
+      "line": 98,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/agents/resources/sandbox/adapters/src/ordessa_sandbox_adapters/pi.py",
+      "line": 112,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/agents/resources/sandbox/adapters/tests/test_controlled_c4_l2.py",
+      "line": 330,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/agents/resources/sandbox/adapters/tests/test_joint_facet_version_binding.py",
+      "line": 198,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/agents/resources/sandbox/adapters/tests/test_joint_facet_version_binding.py",
+      "line": 349,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/agents/runtime-preferences/tests/test_c4_end_to_end.py",
+      "line": 160,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/claude-code/src/ordessa_harness_claude_code/acp_model_facts.py",
+      "line": 25,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/harness/claude-code/tooling/profile_enhancement.mjs",
+      "line": 25,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/_registration_declarations/harness.toml",
+      "line": 78,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/acp/profile/codex-generic-prompt.md",
+      "line": 151,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/codex/src/ordessa_harness_codex/acp/profile/strategy.mjs",
+      "line": 64,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/codex/tests/runtime-process-evidence.md",
+      "line": 106,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/harness/codex/tooling/profile_enhancement.mjs",
+      "line": 152,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/dsh/src/ordessa_harness_dsh/_registration_declarations/harness.toml",
+      "line": 44,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/harness/hermes/src/ordessa_harness_hermes/_registration_declarations/harness.toml",
+      "line": 53,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/harness/kilo/src/ordessa_harness_kilo/_registration_declarations/harness.toml",
+      "line": 42,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/harness/opencode/src/ordessa_harness_opencode/_registration_declarations/harness.toml",
+      "line": 53,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/harness/pi/src/ordessa_harness_pi/_registration_declarations/harness.toml",
+      "line": 55,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/harness/pi/src/ordessa_harness_pi/launch_validation.py",
+      "line": 59,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/harness/pi/tests/test_preparation_ownership.py",
+      "line": 156,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 9,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 13,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 17,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 21,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 25,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 30,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 34,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 39,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 43,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 48,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 52,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 56,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 60,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 64,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 69,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 73,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 78,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 90,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 95,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 107,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 111,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 116,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 120,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 124,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 128,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 132,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "plugins/harness/pi/vendor/acp-adapter/docs/ACCEPTANCE.md",
+      "line": 144,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tests/integration/harness/support/native_evidence_fixture.py",
+      "line": 106,
+      "message": "new blank line at EOF."
+    }
+  ],
+  "scope": "inherited source whitespace; not silently normalized, including frozen Engineering and attributed upstream code"
+}

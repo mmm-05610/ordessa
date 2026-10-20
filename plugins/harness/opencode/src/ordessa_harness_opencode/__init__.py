@@ -1,7 +1,4 @@
-from dataclasses import dataclass
-@dataclass(frozen=True)
-class OpenCodeContinuationV1:
-    contract_id = "agent-box.opencode-continuation@1"
-    session_id: str
-
-__all__ = ["OpenCodeContinuationV1"]
+"""OpenCode SDK provider; native HTTP session support is explicitly unavailable."""
+from .client import OpenCodeHarnessProvider,factory
+from .historical import OpenCodeContinuationV1
+__all__=['OpenCodeHarnessProvider','factory','OpenCodeContinuationV1']

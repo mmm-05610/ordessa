@@ -1,0 +1,16 @@
+{
+  "initial_directory_state": "absent at coordinator preflight",
+  "writers": {
+    "coordinator": "verification evidence and final review integration",
+    "luna": "nova-feature-delivery"
+  },
+  "authorized_write_root": "methods/nova-feature-delivery",
+  "other_repo_changes": "preexisting/concurrent; not edited by this task",
+  "operation_dispatch": false,
+  "publication": false,
+  "commit_push_main_merge": false,
+  "real_database_migration": false,
+  "services_restarted": false,
+  "luna_task": "nova_method_luna",
+  "luna_model": "gpt-6-luna"
+}

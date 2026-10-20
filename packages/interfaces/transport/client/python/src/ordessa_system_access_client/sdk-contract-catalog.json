@@ -1,0 +1,1933 @@
+{
+  "schema": {
+    "schemaVersion": "agent-sdk-contract-catalog/1",
+    "profileFormat": {
+      "schemaVersion": "profile-json/1",
+      "profileRef": {
+        "required": [
+          "environmentNamespace",
+          "profileId",
+          "manifestRevision",
+          "contentDigest"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "environmentNamespace": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9._-]{0,63}$"
+          },
+          "profileId": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9._-]{0,63}$"
+          },
+          "manifestRevision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "contentDigest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      },
+      "results": {
+        "catalogEntry": {
+          "required": [
+            "profileId",
+            "catalogRevision",
+            "displayName",
+            "archivedAt",
+            "currentManifestRef"
+          ]
+        },
+        "manifest": {
+          "required": [
+            "ref",
+            "content"
+          ]
+        },
+        "list": {
+          "required": [
+            "entries"
+          ]
+        },
+        "preview": {
+          "required": [
+            "profileRef",
+            "status",
+            "referenceCoverage",
+            "ready",
+            "error"
+          ]
+        }
+      }
+    },
+    "native": {
+      "FrozenNativeRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "urn:ordessa:agent-native-contracts:1",
+        "$ref": "#/$defs/FrozenNativeRequest",
+        "$defs": {
+          "Instance": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-instance/1"
+              },
+              "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "instanceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "bindingDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "namespace",
+              "instanceId",
+              "bindingDigest"
+            ],
+            "additionalProperties": false
+          },
+          "Endpoint": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-endpoint/1"
+              },
+              "issuer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "endpointId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "descriptorDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "issuer",
+              "endpointId",
+              "revision",
+              "descriptorDigest"
+            ],
+            "additionalProperties": false
+          },
+          "Manifest": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "object",
+                "properties": {
+                  "server_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "channel_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "runtime_generation": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "server_id",
+                  "session_id",
+                  "channel_id",
+                  "runtime_generation"
+                ],
+                "additionalProperties": false
+              },
+              "scope": {
+                "const": "session"
+              },
+              "actions": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "publicationOwner": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096
+                    },
+                    "publicationToken": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096
+                    },
+                    "source": {
+                      "type": "object",
+                      "properties": {
+                        "facet_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "item_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "contribution_version": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        }
+                      },
+                      "required": [
+                        "facet_id",
+                        "item_id",
+                        "contribution_version"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "actionId": {
+                      "const": "acp.session.set-config-option"
+                    },
+                    "schemaVersion": {
+                      "const": "1"
+                    },
+                    "input": {
+                      "type": "object",
+                      "properties": {
+                        "configId": {
+                          "enum": [
+                            "model",
+                            "thinkingLevel"
+                          ]
+                        },
+                        "value": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        }
+                      },
+                      "required": [
+                        "configId",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "expectedObservation": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096
+                    }
+                  },
+                  "required": [
+                    "publicationOwner",
+                    "publicationToken",
+                    "source",
+                    "actionId",
+                    "schemaVersion",
+                    "input",
+                    "expectedObservation"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "target",
+              "scope",
+              "actions"
+            ],
+            "additionalProperties": false
+          },
+          "FrozenNativeRequest": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-frozen-native-request/1"
+              },
+              "instanceRef": {
+                "$ref": "#/$defs/Instance"
+              },
+              "endpointRef": {
+                "$ref": "#/$defs/Endpoint"
+              },
+              "sessionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "sourceRevision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "protocolId": {
+                "const": "acp"
+              },
+              "purpose": {
+                "enum": [
+                  "apply",
+                  "query"
+                ]
+              },
+              "method": {
+                "enum": [
+                  "_ordessa/session/configuration/apply",
+                  "_ordessa/session/configuration/operation"
+                ]
+              },
+              "paramsBytes": {
+                "type": "object"
+              },
+              "inputDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "instanceRef",
+              "endpointRef",
+              "sessionId",
+              "sourceRevision",
+              "protocolId",
+              "purpose",
+              "method",
+              "paramsBytes",
+              "inputDigest"
+            ],
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "purpose": {
+                      "const": "apply"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "method": {
+                      "const": "_ordessa/session/configuration/apply"
+                    },
+                    "paramsBytes": {
+                      "type": "object",
+                      "properties": {
+                        "sessionId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "operationId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "expectedGeneration": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "expectedConfigDigest": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{64}$"
+                        },
+                        "configId": {
+                          "enum": [
+                            "model",
+                            "thinkingLevel"
+                          ]
+                        },
+                        "value": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "actionManifest": {
+                          "$ref": "#/$defs/Manifest"
+                        }
+                      },
+                      "required": [
+                        "sessionId",
+                        "operationId",
+                        "expectedGeneration",
+                        "expectedConfigDigest",
+                        "configId",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "method": {
+                      "const": "_ordessa/session/configuration/operation"
+                    },
+                    "paramsBytes": {
+                      "type": "object",
+                      "properties": {
+                        "sessionId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "operationId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        }
+                      },
+                      "required": [
+                        "sessionId",
+                        "operationId"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "NativeOperationRef": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-native-operation-ref/1"
+              },
+              "instanceRef": {
+                "$ref": "#/$defs/Instance"
+              },
+              "requestKey": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "agentOperationRef": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "instanceRef",
+              "requestKey",
+              "agentOperationRef"
+            ],
+            "additionalProperties": false
+          },
+          "NativeWriteBinding": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-native-write-binding/1"
+              },
+              "operationRef": {
+                "$ref": "#/$defs/NativeOperationRef"
+              },
+              "request": {
+                "$ref": "#/$defs/FrozenNativeRequest"
+              },
+              "frameDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "endpointRequestId": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "operationRef",
+              "request",
+              "frameDigest",
+              "endpointRequestId"
+            ],
+            "additionalProperties": false
+          },
+          "NativeOperationReceipt": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-native-operation-receipt/1"
+              },
+              "binding": {
+                "$ref": "#/$defs/NativeWriteBinding"
+              },
+              "state": {
+                "enum": [
+                  "reserved",
+                  "possibly-written",
+                  "completed",
+                  "failed",
+                  "unknown"
+                ]
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "endpointOperationRef": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observationBytes": {
+                "type": "object"
+              },
+              "observationDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "binding",
+              "state",
+              "revision",
+              "endpointOperationRef",
+              "observationBytes",
+              "observationDigest"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "NativeOperationRef": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "urn:ordessa:agent-native-contracts:1",
+        "$ref": "#/$defs/NativeOperationRef",
+        "$defs": {
+          "Instance": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-instance/1"
+              },
+              "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "instanceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "bindingDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "namespace",
+              "instanceId",
+              "bindingDigest"
+            ],
+            "additionalProperties": false
+          },
+          "Endpoint": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-endpoint/1"
+              },
+              "issuer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "endpointId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "descriptorDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "issuer",
+              "endpointId",
+              "revision",
+              "descriptorDigest"
+            ],
+            "additionalProperties": false
+          },
+          "Manifest": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "object",
+                "properties": {
+                  "server_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "channel_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "runtime_generation": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "server_id",
+                  "session_id",
+                  "channel_id",
+                  "runtime_generation"
+                ],
+                "additionalProperties": false
+              },
+              "scope": {
+                "const": "session"
+              },
+              "actions": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "publicationOwner": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096
+                    },
+                    "publicationToken": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096
+                    },
+                    "source": {
+                      "type": "object",
+                      "properties": {
+                        "facet_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "item_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "contribution_version": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        }
+                      },
+                      "required": [
+                        "facet_id",
+                        "item_id",
+                        "contribution_version"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "actionId": {
+                      "const": "acp.session.set-config-option"
+                    },
+                    "schemaVersion": {
+                      "const": "1"
+                    },
+                    "input": {
+                      "type": "object",
+                      "properties": {
+                        "configId": {
+                          "enum": [
+                            "model",
+                            "thinkingLevel"
+                          ]
+                        },
+                        "value": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        }
+                      },
+                      "required": [
+                        "configId",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "expectedObservation": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096
+                    }
+                  },
+                  "required": [
+                    "publicationOwner",
+                    "publicationToken",
+                    "source",
+                    "actionId",
+                    "schemaVersion",
+                    "input",
+                    "expectedObservation"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "target",
+              "scope",
+              "actions"
+            ],
+            "additionalProperties": false
+          },
+          "FrozenNativeRequest": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-frozen-native-request/1"
+              },
+              "instanceRef": {
+                "$ref": "#/$defs/Instance"
+              },
+              "endpointRef": {
+                "$ref": "#/$defs/Endpoint"
+              },
+              "sessionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "sourceRevision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "protocolId": {
+                "const": "acp"
+              },
+              "purpose": {
+                "enum": [
+                  "apply",
+                  "query"
+                ]
+              },
+              "method": {
+                "enum": [
+                  "_ordessa/session/configuration/apply",
+                  "_ordessa/session/configuration/operation"
+                ]
+              },
+              "paramsBytes": {
+                "type": "object"
+              },
+              "inputDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "instanceRef",
+              "endpointRef",
+              "sessionId",
+              "sourceRevision",
+              "protocolId",
+              "purpose",
+              "method",
+              "paramsBytes",
+              "inputDigest"
+            ],
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "purpose": {
+                      "const": "apply"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "method": {
+                      "const": "_ordessa/session/configuration/apply"
+                    },
+                    "paramsBytes": {
+                      "type": "object",
+                      "properties": {
+                        "sessionId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "operationId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "expectedGeneration": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "expectedConfigDigest": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{64}$"
+                        },
+                        "configId": {
+                          "enum": [
+                            "model",
+                            "thinkingLevel"
+                          ]
+                        },
+                        "value": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "actionManifest": {
+                          "$ref": "#/$defs/Manifest"
+                        }
+                      },
+                      "required": [
+                        "sessionId",
+                        "operationId",
+                        "expectedGeneration",
+                        "expectedConfigDigest",
+                        "configId",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "method": {
+                      "const": "_ordessa/session/configuration/operation"
+                    },
+                    "paramsBytes": {
+                      "type": "object",
+                      "properties": {
+                        "sessionId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "operationId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        }
+                      },
+                      "required": [
+                        "sessionId",
+                        "operationId"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "NativeOperationRef": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-native-operation-ref/1"
+              },
+              "instanceRef": {
+                "$ref": "#/$defs/Instance"
+              },
+              "requestKey": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "agentOperationRef": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "instanceRef",
+              "requestKey",
+              "agentOperationRef"
+            ],
+            "additionalProperties": false
+          },
+          "NativeWriteBinding": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-native-write-binding/1"
+              },
+              "operationRef": {
+                "$ref": "#/$defs/NativeOperationRef"
+              },
+              "request": {
+                "$ref": "#/$defs/FrozenNativeRequest"
+              },
+              "frameDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "endpointRequestId": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "operationRef",
+              "request",
+              "frameDigest",
+              "endpointRequestId"
+            ],
+            "additionalProperties": false
+          },
+          "NativeOperationReceipt": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-native-operation-receipt/1"
+              },
+              "binding": {
+                "$ref": "#/$defs/NativeWriteBinding"
+              },
+              "state": {
+                "enum": [
+                  "reserved",
+                  "possibly-written",
+                  "completed",
+                  "failed",
+                  "unknown"
+                ]
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "endpointOperationRef": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observationBytes": {
+                "type": "object"
+              },
+              "observationDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "binding",
+              "state",
+              "revision",
+              "endpointOperationRef",
+              "observationBytes",
+              "observationDigest"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "NativeWriteBinding": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "urn:ordessa:agent-native-contracts:1",
+        "$ref": "#/$defs/NativeWriteBinding",
+        "$defs": {
+          "Instance": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-instance/1"
+              },
+              "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "instanceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "bindingDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "namespace",
+              "instanceId",
+              "bindingDigest"
+            ],
+            "additionalProperties": false
+          },
+          "Endpoint": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-endpoint/1"
+              },
+              "issuer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "endpointId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "descriptorDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "issuer",
+              "endpointId",
+              "revision",
+              "descriptorDigest"
+            ],
+            "additionalProperties": false
+          },
+          "Manifest": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "object",
+                "properties": {
+                  "server_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "channel_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "runtime_generation": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "server_id",
+                  "session_id",
+                  "channel_id",
+                  "runtime_generation"
+                ],
+                "additionalProperties": false
+              },
+              "scope": {
+                "const": "session"
+              },
+              "actions": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "publicationOwner": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096
+                    },
+                    "publicationToken": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096
+                    },
+                    "source": {
+                      "type": "object",
+                      "properties": {
+                        "facet_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "item_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "contribution_version": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        }
+                      },
+                      "required": [
+                        "facet_id",
+                        "item_id",
+                        "contribution_version"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "actionId": {
+                      "const": "acp.session.set-config-option"
+                    },
+                    "schemaVersion": {
+                      "const": "1"
+                    },
+                    "input": {
+                      "type": "object",
+                      "properties": {
+                        "configId": {
+                          "enum": [
+                            "model",
+                            "thinkingLevel"
+                          ]
+                        },
+                        "value": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        }
+                      },
+                      "required": [
+                        "configId",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "expectedObservation": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096
+                    }
+                  },
+                  "required": [
+                    "publicationOwner",
+                    "publicationToken",
+                    "source",
+                    "actionId",
+                    "schemaVersion",
+                    "input",
+                    "expectedObservation"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "target",
+              "scope",
+              "actions"
+            ],
+            "additionalProperties": false
+          },
+          "FrozenNativeRequest": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-frozen-native-request/1"
+              },
+              "instanceRef": {
+                "$ref": "#/$defs/Instance"
+              },
+              "endpointRef": {
+                "$ref": "#/$defs/Endpoint"
+              },
+              "sessionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "sourceRevision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "protocolId": {
+                "const": "acp"
+              },
+              "purpose": {
+                "enum": [
+                  "apply",
+                  "query"
+                ]
+              },
+              "method": {
+                "enum": [
+                  "_ordessa/session/configuration/apply",
+                  "_ordessa/session/configuration/operation"
+                ]
+              },
+              "paramsBytes": {
+                "type": "object"
+              },
+              "inputDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "instanceRef",
+              "endpointRef",
+              "sessionId",
+              "sourceRevision",
+              "protocolId",
+              "purpose",
+              "method",
+              "paramsBytes",
+              "inputDigest"
+            ],
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "purpose": {
+                      "const": "apply"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "method": {
+                      "const": "_ordessa/session/configuration/apply"
+                    },
+                    "paramsBytes": {
+                      "type": "object",
+                      "properties": {
+                        "sessionId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "operationId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "expectedGeneration": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "expectedConfigDigest": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{64}$"
+                        },
+                        "configId": {
+                          "enum": [
+                            "model",
+                            "thinkingLevel"
+                          ]
+                        },
+                        "value": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "actionManifest": {
+                          "$ref": "#/$defs/Manifest"
+                        }
+                      },
+                      "required": [
+                        "sessionId",
+                        "operationId",
+                        "expectedGeneration",
+                        "expectedConfigDigest",
+                        "configId",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "method": {
+                      "const": "_ordessa/session/configuration/operation"
+                    },
+                    "paramsBytes": {
+                      "type": "object",
+                      "properties": {
+                        "sessionId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "operationId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        }
+                      },
+                      "required": [
+                        "sessionId",
+                        "operationId"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "NativeOperationRef": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-native-operation-ref/1"
+              },
+              "instanceRef": {
+                "$ref": "#/$defs/Instance"
+              },
+              "requestKey": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "agentOperationRef": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "instanceRef",
+              "requestKey",
+              "agentOperationRef"
+            ],
+            "additionalProperties": false
+          },
+          "NativeWriteBinding": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-native-write-binding/1"
+              },
+              "operationRef": {
+                "$ref": "#/$defs/NativeOperationRef"
+              },
+              "request": {
+                "$ref": "#/$defs/FrozenNativeRequest"
+              },
+              "frameDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "endpointRequestId": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "operationRef",
+              "request",
+              "frameDigest",
+              "endpointRequestId"
+            ],
+            "additionalProperties": false
+          },
+          "NativeOperationReceipt": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-native-operation-receipt/1"
+              },
+              "binding": {
+                "$ref": "#/$defs/NativeWriteBinding"
+              },
+              "state": {
+                "enum": [
+                  "reserved",
+                  "possibly-written",
+                  "completed",
+                  "failed",
+                  "unknown"
+                ]
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "endpointOperationRef": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observationBytes": {
+                "type": "object"
+              },
+              "observationDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "binding",
+              "state",
+              "revision",
+              "endpointOperationRef",
+              "observationBytes",
+              "observationDigest"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "NativeOperationReceipt": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "urn:ordessa:agent-native-contracts:1",
+        "$ref": "#/$defs/NativeOperationReceipt",
+        "$defs": {
+          "Instance": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-instance/1"
+              },
+              "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "instanceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "bindingDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "namespace",
+              "instanceId",
+              "bindingDigest"
+            ],
+            "additionalProperties": false
+          },
+          "Endpoint": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-endpoint/1"
+              },
+              "issuer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "endpointId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "descriptorDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "issuer",
+              "endpointId",
+              "revision",
+              "descriptorDigest"
+            ],
+            "additionalProperties": false
+          },
+          "Manifest": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "object",
+                "properties": {
+                  "server_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "channel_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "runtime_generation": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "server_id",
+                  "session_id",
+                  "channel_id",
+                  "runtime_generation"
+                ],
+                "additionalProperties": false
+              },
+              "scope": {
+                "const": "session"
+              },
+              "actions": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "publicationOwner": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096
+                    },
+                    "publicationToken": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096
+                    },
+                    "source": {
+                      "type": "object",
+                      "properties": {
+                        "facet_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "item_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "contribution_version": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        }
+                      },
+                      "required": [
+                        "facet_id",
+                        "item_id",
+                        "contribution_version"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "actionId": {
+                      "const": "acp.session.set-config-option"
+                    },
+                    "schemaVersion": {
+                      "const": "1"
+                    },
+                    "input": {
+                      "type": "object",
+                      "properties": {
+                        "configId": {
+                          "enum": [
+                            "model",
+                            "thinkingLevel"
+                          ]
+                        },
+                        "value": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        }
+                      },
+                      "required": [
+                        "configId",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "expectedObservation": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096
+                    }
+                  },
+                  "required": [
+                    "publicationOwner",
+                    "publicationToken",
+                    "source",
+                    "actionId",
+                    "schemaVersion",
+                    "input",
+                    "expectedObservation"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "target",
+              "scope",
+              "actions"
+            ],
+            "additionalProperties": false
+          },
+          "FrozenNativeRequest": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-frozen-native-request/1"
+              },
+              "instanceRef": {
+                "$ref": "#/$defs/Instance"
+              },
+              "endpointRef": {
+                "$ref": "#/$defs/Endpoint"
+              },
+              "sessionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "sourceRevision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "protocolId": {
+                "const": "acp"
+              },
+              "purpose": {
+                "enum": [
+                  "apply",
+                  "query"
+                ]
+              },
+              "method": {
+                "enum": [
+                  "_ordessa/session/configuration/apply",
+                  "_ordessa/session/configuration/operation"
+                ]
+              },
+              "paramsBytes": {
+                "type": "object"
+              },
+              "inputDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "instanceRef",
+              "endpointRef",
+              "sessionId",
+              "sourceRevision",
+              "protocolId",
+              "purpose",
+              "method",
+              "paramsBytes",
+              "inputDigest"
+            ],
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "purpose": {
+                      "const": "apply"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "method": {
+                      "const": "_ordessa/session/configuration/apply"
+                    },
+                    "paramsBytes": {
+                      "type": "object",
+                      "properties": {
+                        "sessionId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "operationId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "expectedGeneration": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "expectedConfigDigest": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{64}$"
+                        },
+                        "configId": {
+                          "enum": [
+                            "model",
+                            "thinkingLevel"
+                          ]
+                        },
+                        "value": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "actionManifest": {
+                          "$ref": "#/$defs/Manifest"
+                        }
+                      },
+                      "required": [
+                        "sessionId",
+                        "operationId",
+                        "expectedGeneration",
+                        "expectedConfigDigest",
+                        "configId",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "method": {
+                      "const": "_ordessa/session/configuration/operation"
+                    },
+                    "paramsBytes": {
+                      "type": "object",
+                      "properties": {
+                        "sessionId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096
+                        },
+                        "operationId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        }
+                      },
+                      "required": [
+                        "sessionId",
+                        "operationId"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "NativeOperationRef": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-native-operation-ref/1"
+              },
+              "instanceRef": {
+                "$ref": "#/$defs/Instance"
+              },
+              "requestKey": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "agentOperationRef": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "instanceRef",
+              "requestKey",
+              "agentOperationRef"
+            ],
+            "additionalProperties": false
+          },
+          "NativeWriteBinding": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-native-write-binding/1"
+              },
+              "operationRef": {
+                "$ref": "#/$defs/NativeOperationRef"
+              },
+              "request": {
+                "$ref": "#/$defs/FrozenNativeRequest"
+              },
+              "frameDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "endpointRequestId": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "operationRef",
+              "request",
+              "frameDigest",
+              "endpointRequestId"
+            ],
+            "additionalProperties": false
+          },
+          "NativeOperationReceipt": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": "agent-native-operation-receipt/1"
+              },
+              "binding": {
+                "$ref": "#/$defs/NativeWriteBinding"
+              },
+              "state": {
+                "enum": [
+                  "reserved",
+                  "possibly-written",
+                  "completed",
+                  "failed",
+                  "unknown"
+                ]
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "endpointOperationRef": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observationBytes": {
+                "type": "object"
+              },
+              "observationDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "binding",
+              "state",
+              "revision",
+              "endpointOperationRef",
+              "observationBytes",
+              "observationDigest"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  },
+  "schemaDigest": "sha256:a6743903b6a5158d90be79b605e166126c0ea324ae2427c5800a83ca16f74884"
+}

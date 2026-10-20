@@ -15,7 +15,7 @@ from dataclasses import replace
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import UnknownResultError
+from ordessa_units.errors import UnitOperationUnknown
 from ordessa_units.public import (
     AGENT_CONTRACT_VERSION,
     AGENT_MANAGEMENT_CONTRACT_VERSION,
@@ -25,7 +25,7 @@ from ordessa_units.public import (
     encode_node_ref,
 )
 from ordessa_execution_agents.harness.providers.registry.contributions import RUNTIME_METHODS
-from ordessa_execution_api.environment.operations import safe_json
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from server_plugin_api import WireError
 
 from agent_tools_fixtures.assembly import assembly as assembly_fixture
@@ -285,7 +285,7 @@ def test_apply_profile_omission_names_missing_declaration_without_echoing_payloa
     assert secret not in json.dumps(error.details)
     assert parts[7]["calls"] == 0
     request = RequestKey("env", "principal", params["requestId"])
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         parts[0].read_operation(request)
 
     # Omission refusal is a data-only spent receipt in the existing request
@@ -315,7 +315,7 @@ def test_apply_profile_omission_names_missing_declaration_without_echoing_payloa
     assert replay.value.family == "INVALID_REQUEST"
     assert replay.value.details["internalCode"] == "CONFIGURATION_DECLARATIONS_OMITTED"
     assert replay.value.details["omittedDeclarationIds"] == ["model"]
-    with pytest.raises(UnknownResultError):
+    with pytest.raises(UnitOperationUnknown):
         parts[0].read_operation(request)
     assert parts[0].read_domain_result(request, request_digest) == receipt
     assert parts[7]["calls"] == 0

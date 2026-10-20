@@ -2,7 +2,7 @@
 import pytest
 from contextlib import contextmanager
 
-from ordessa_execution_api.environment import AdmissionRefusedError, GuaranteeUnavailableError
+from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable
 from ordessa_units.definitions.materials import ResourceProviderDescriptor
 from ordessa_units.definitions.materials import ReconcileSupport
 from ordessa_units.admission.material_contracts import (
@@ -85,7 +85,7 @@ def test_catalog_rechecks_descriptor_coverage_and_capability_before_commit():
     registration = catalog.stage("owner", 3, (provider,), (_CONTRACT,))
     provider.supported_contract_ids = ()
 
-    with pytest.raises(AdmissionRefusedError, match="metadata changed"):
+    with pytest.raises(UnitAdmissionRefused, match="metadata changed"):
         registration.commit()
     assert catalog.provider("owner.material") is None
     assert provider.effect_calls == 0
@@ -106,22 +106,22 @@ def test_retirement_requires_guard_drained_state_and_no_catalog_holds():
 
     catalog = MaterialCatalog("environment", admission_lock=lock, retirement_guard=guard)
     catalog.stage("owner", 3, (provider,), (_CONTRACT,)).commit()
-    with pytest.raises(AdmissionRefusedError, match="drained"):
+    with pytest.raises(UnitAdmissionRefused, match="drained"):
         catalog.retire("owner", 3)
 
     catalog.hold("owner", 3)
     catalog.drain("owner", 3)
     assert catalog.provider("owner.material") is None
-    with pytest.raises(AdmissionRefusedError, match="holds"):
+    with pytest.raises(UnitAdmissionRefused, match="holds"):
         catalog.retire("owner", 3)
     catalog.release_hold("owner", 3)
 
     retired = catalog.retire("owner", 3)
     assert retired[0].descriptor.id == "owner.material"
-    with pytest.raises(AdmissionRefusedError, match="unknown"):
+    with pytest.raises(UnitAdmissionRefused, match="unknown"):
         catalog.retire("owner", 3)
     assert guard_calls == [("owner", 3)] * 4
-    with pytest.raises(AdmissionRefusedError, match="unknown"):
+    with pytest.raises(UnitAdmissionRefused, match="unknown"):
         catalog.retire("owner", 3)
 
 
@@ -139,7 +139,7 @@ def test_retirement_rejects_boolean_or_mapping_guard_enter_value(invalid_permit)
     catalog.stage("owner", 3, (provider,), (_CONTRACT,)).commit()
     catalog.drain("owner", 3)
 
-    with pytest.raises(AdmissionRefusedError, match="invalid permit"):
+    with pytest.raises(UnitAdmissionRefused, match="invalid permit"):
         catalog.retire("owner", 3)
     assert catalog.provider("owner.material") is None
 
@@ -148,9 +148,9 @@ def test_catalog_refuses_missing_retirement_guard_and_close_with_pending_owner()
     provider = Provider()
     catalog = MaterialCatalog("environment")
     catalog.stage("owner", 3, (provider,), (_CONTRACT,))
-    with pytest.raises(AdmissionRefusedError, match="cannot close"):
+    with pytest.raises(UnitAdmissionRefused, match="cannot close"):
         catalog.close()
-    with pytest.raises(GuaranteeUnavailableError, match="guard is unavailable"):
+    with pytest.raises(UnitGuaranteeUnavailable, match="guard is unavailable"):
         catalog.retire("owner", 3)
 
 
@@ -191,5 +191,5 @@ def test_material_admission_uses_context_catalog_policy_and_same_exact_provider(
     assert not hasattr(admission, "_activations")
 
     denied = MaterialAdmission(Context(catalog, allowed=False))
-    with pytest.raises(AdmissionRefusedError, match="discovery refused"):
+    with pytest.raises(UnitAdmissionRefused, match="discovery refused"):
         denied.material_provider_contribution("owner.material")

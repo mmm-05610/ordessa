@@ -1,0 +1,13 @@
+{
+  "name": "@ordessa/plugin-model-provider-chat",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "ordessa": {
+    "id": "ordessa.model-provider-chat"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "vitest run --maxWorkers=1"
+  }
+}

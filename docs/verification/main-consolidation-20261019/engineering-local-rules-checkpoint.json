@@ -1,0 +1,28 @@
+{
+  "scope": "authorized local finite Decision review adapter only; no source-review/Profile/Unit compatibility claim",
+  "authorization": {
+    "relayedFromThread": "01a14ec9-e9b1-73dc-8af7-90dba808d007",
+    "assistantProposalUTC": "2026-10-19 08:06",
+    "userApprovalUTC": "2026-10-19 08:09",
+    "userResponse": "同意",
+    "scope": "minimal Decision/Profile/Unit adapters and dependency adaptation; preserve approval, original evidence/history, budgets and UNKNOWN; no Engineering business redesign"
+  },
+  "source": {
+    "incoming": "a23cadf5724a494bac08037ffdddffed6914adef:packages/engineering/src/ordessa_engineering/adapters/decision/client.py",
+    "sha256": "cea5e6566a3507a5dece4c01a2ca98e8879d0048de6a733ab539d494561e703b"
+  },
+  "tests": {
+    "command": "python -I -S /tmp/ordessa-run-isolated-pytests.py TARGET engineering-local-rules-adapter packages/engineering/tests/adapters/test_review_rules_adapter.py",
+    "passed": 98,
+    "skip": 0,
+    "coverage": "96 finite status/unavailable combinations, authored precedence override, invalid policy; genuine Job/input/result/answer digests; zero model calls; explicitly new receipt schemas"
+  },
+  "notChanged": [
+    "Engineering application/domain",
+    "historical stored receipt bytes or references",
+    "source reviewer implementation",
+    "active registry source closure",
+    "dependency declarations pending other adapter compatibility"
+  ],
+  "remainingGap": "Source reviewer authenticates original native request/flow/manifest/events/answer records. Current Decision core exports summary-only Job results, no original run-manifest/event reader. Summary is not equivalent. Source reviewer and Profile/Unit adapters remain incomplete; no full engineering or install acceptance."
+}

@@ -5750,10 +5750,36 @@ func permissionToolCallTitle(approval codex.ApprovalRequest) string {
 		}
 	case codex.ApprovalKindFile:
 		if len(approval.Files) == 1 {
+			switch approval.FileOperation {
+			case "read":
+				return "Read " + approval.Files[0]
+			case "write":
+				return "Write " + approval.Files[0]
+			case "edit":
+				return "Edit " + approval.Files[0]
+			}
 			return "Modify " + approval.Files[0]
 		}
 		if len(approval.Files) > 1 {
+			if approval.FileOperation == "read" {
+				return fmt.Sprintf("Read %d files", len(approval.Files))
+			}
+			if approval.FileOperation == "write" {
+				return fmt.Sprintf("Write %d files", len(approval.Files))
+			}
+			if approval.FileOperation == "edit" {
+				return fmt.Sprintf("Edit %d files", len(approval.Files))
+			}
 			return fmt.Sprintf("Modify %d files", len(approval.Files))
+		}
+		if approval.FileOperation == "read" {
+			return "Read files"
+		}
+		if approval.FileOperation == "write" {
+			return "Write files"
+		}
+		if approval.FileOperation == "edit" {
+			return "Edit files"
 		}
 		return "Modify files"
 	case codex.ApprovalKindMCP:
@@ -5772,7 +5798,14 @@ func permissionToolCallKind(approval codex.ApprovalRequest) string {
 	case codex.ApprovalKindCommand:
 		return "execute"
 	case codex.ApprovalKindFile:
-		return "edit"
+		switch approval.FileOperation {
+		case "", "write", "edit":
+			return "edit"
+		case "read":
+			return "read"
+		default:
+			return "other"
+		}
 	case codex.ApprovalKindNetwork:
 		return "fetch"
 	default:
@@ -5811,6 +5844,9 @@ func permissionToolCallRawInput(approval codex.ApprovalRequest) map[string]any {
 	}
 	if len(approval.Files) > 0 {
 		raw["files"] = approval.Files
+	}
+	if approval.Kind == codex.ApprovalKindFile && approval.FileOperation != "" {
+		raw["operation"] = approval.FileOperation
 	}
 	if approval.Host != "" {
 		raw["host"] = approval.Host

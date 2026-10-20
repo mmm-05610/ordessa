@@ -1,0 +1,44 @@
+{
+  "fixture_only": true,
+  "capabilities": [
+    {
+      "capability_id": "engineering.reviews.request",
+      "kind": "operation",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "RequestReview",
+        "output_type": "ReviewRequestRef",
+        "effects": "write",
+        "idempotency": "request_id_and_payload_digest",
+        "workflow_outcomes": [
+          "passed",
+          "blocked",
+          "manual",
+          "unknown"
+        ],
+        "trusted_ingress": "authenticated-system-access",
+        "workflow_outcome_source": "typed-application-completion"
+      },
+      "contract_digest": "4b4fac6228c274742241f9652dcdd6a01cfe223b2a4f087fe81290470dd27bd5"
+    },
+    {
+      "capability_id": "ordessa.schema.validate",
+      "kind": "check",
+      "interface_version": "1.0.0",
+      "contract": {
+        "input_type": "DocumentSchemaCheck",
+        "output_type": "StructuralCheckResult",
+        "effects": "read_only",
+        "idempotency": "input_and_target_digest",
+        "outcomes": [
+          "satisfied",
+          "violated",
+          "insufficient",
+          "unknown"
+        ],
+        "trusted_ingress": "registered-review-scheduler"
+      },
+      "contract_digest": "0f9c544a13bf8813f517079f1009357f80029efda921f2de22f0e4c98cbb3be1"
+    }
+  ]
+}

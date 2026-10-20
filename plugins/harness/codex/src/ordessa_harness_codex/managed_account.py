@@ -26,7 +26,7 @@ class CodexManagedAccount:
     def for_installation(cls, artifact_base, account_directory):
         """Resolve brand-internal binary only after full installed verification."""
         try:
-            from .configuration.service import verified_installation
+            from .model_policy import verified_installation
             verified_installation(artifact_base)
             root = Path(artifact_base)
             manifest = json.loads((root / 'codex-runtime.manifest.json').read_text())

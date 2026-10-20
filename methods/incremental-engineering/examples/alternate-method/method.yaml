@@ -1,0 +1,48 @@
+schema_version: 1
+method_id: ordessa.fixture.maintenance-note
+release_version: 1.0.0
+compiler_contract: ordessa.methods/v1
+entry:
+  resource: workflow.note
+documents:
+- document_type: maintenance-note
+  schema:
+    resource: document.note.schema
+  template:
+    resource: document.note.template
+  validation_target: method_content
+skills: {}
+resources:
+- id: document.note.schema
+  kind: document_schema
+  path: documents/note.schema.json
+  media_type: application/schema+json
+  sha256: e8a9e2d38f192437a20828cb3ffb2c64ff45446e6f63da506d2b37eed6d4c625
+- id: document.note.template
+  kind: document_template
+  path: documents/note.template.md
+  media_type: text/markdown
+  sha256: 68ec2d2c9d1f59ff5894bb5fafc6235ad2870db664364f0aa4e03d9f4c8d684c
+- id: standard.note
+  kind: standard
+  path: standards/note.yaml
+  media_type: application/yaml
+  sha256: b6282d981acff004e099d846f31b36276e4ef14f8f31a80d56994dffeaaea1bd
+- id: workflow.note
+  kind: workflow
+  path: workflows/note.yaml
+  media_type: application/yaml
+  sha256: 942176d97befcc9cc5edf576bb3f4502f22545d3383652f2341223bcdcadf637
+requires:
+- capability_id: engineering.reviews.request
+  kind: operation
+  interface_version: 1.0.0
+  contract_digest: 4b4fac6228c274742241f9652dcdd6a01cfe223b2a4f087fe81290470dd27bd5
+- capability_id: ordessa.schema.validate
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: 0f9c544a13bf8813f517079f1009357f80029efda921f2de22f0e4c98cbb3be1
+metadata:
+  status: test-only
+  production_activation: forbidden
+  runtime_execution: awaiting_engineering_owner

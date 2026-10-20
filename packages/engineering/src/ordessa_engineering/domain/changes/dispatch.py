@@ -3,7 +3,8 @@ from dataclasses import asdict, dataclass, field
 from ordessa_infrastructure.encoding import canonical_bytes, decode_json
 from ..common.models.identity import Scope
 from ..common.models.refs import BlobRef
-from ..common.models.values import Digest, validate_id, validate_items, validate_version
+from ..common.models.values import (Digest, MAX_VERSION, validate_id, validate_items,
+                                    validate_version)
 from ..common.mechanisms.hashing import record_digest
 from ..common.outcomes.diagnostics import ReferenceError
 from ..approvals.refs import ApprovalRef
@@ -181,3 +182,135 @@ class DispatchBinding:
                 value.pop(key, None)
         value['unit_ref_bytes']=decode_json(self.unit_ref_bytes)
         return value
+
+
+# The continuation contract is deliberately independent of the DispatchBinding
+# schema: a continuation record never changes how a v1/v2 binding is encoded,
+# and a binding never carries a continuation. Both digests below are kept apart
+# on purpose - the stored-bytes digest and the binding record digest are not
+# interchangeable, and no value here ever derives one from the other.
+CONTINUATION_CONTRACT = 'engineering.dispatch-continuation/1'
+CONTINUATION_RECORD = 'dispatch-continuation-v1'
+CONTINUATION_SCHEMA_VERSION = 1
+
+
+def _continuation_refused():
+    raise ReferenceError('INVALID_DISPATCH_CONTINUATION')
+
+
+def _positive_version(value):
+    """Strict positive int: a bool, a float or 0 is refused, never coerced."""
+    if type(value) is not int or not 1 <= value <= MAX_VERSION:
+        _continuation_refused()
+    return value
+
+
+@dataclass(frozen=True)
+class DispatchOriginRef:
+    """One earlier attempt of the same Work step, pinned by both its digests.
+
+    The owner fills every field from the original row and the native record; the
+    value only checks local shape and that both digests are typed digests. It
+    cannot prove that the digests name the same row - that cross-check belongs to
+    the owner (segment B) which reads the original records.
+    """
+
+    scope: Scope
+    dispatch_key: str
+    step_id: str
+    attempt: int
+    execution_operation_ref: str
+    binding_bytes_digest: Digest
+    binding_record_digest: Digest
+    expected_dispatch_version: int
+    expected_acp_revision: int
+
+    def __post_init__(self):
+        if type(self.scope) is not Scope:
+            _continuation_refused()
+        for value in (self.dispatch_key, self.step_id, self.execution_operation_ref):
+            validate_id(value)
+        _positive_version(self.attempt)
+        _positive_version(self.expected_dispatch_version)
+        _positive_version(self.expected_acp_revision)
+        if (type(self.binding_bytes_digest) is not Digest
+                or type(self.binding_record_digest) is not Digest):
+            _continuation_refused()
+
+    def projection(self):
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class DispatchContinuation:
+    """One affirmative pre-write continuation of a frozen-package Work attempt.
+
+    ``origin`` is the direct predecessor; ``reservation_origin`` is the attempt
+    whose consumption row the whole continuation chain still receives from (it
+    equals ``origin`` for the first link). The value carries no human
+    instruction, credential, raw prompt or authority snapshot: only references
+    the owner must verify against the original records.
+    """
+
+    origin: DispatchOriginRef
+    reservation_origin: DispatchOriginRef
+    causal_operation_id: str
+    failure_evidence_ref: BlobRef
+    acp_observation_ref: BlobRef
+    acp_revision: int
+    stop_proof_ref: str
+    release_proof_ref: str
+    semantic_prompt_digest: Digest
+    successor_binding_record_digest: Digest
+    schema_version: int = field(default=CONTINUATION_SCHEMA_VERSION, init=False)
+    digest: Digest = field(init=False, default=None)
+
+    def __post_init__(self):
+        if type(self.origin) is not DispatchOriginRef or type(self.reservation_origin) is not DispatchOriginRef:
+            _continuation_refused()
+        origin_scope = (self.origin.scope.realm_id, self.origin.scope.project_id)
+        if origin_scope != (self.reservation_origin.scope.realm_id,
+                            self.reservation_origin.scope.project_id):
+            # A continuation never crosses realms or projects.
+            _continuation_refused()
+        validate_id(self.causal_operation_id)
+        if (type(self.failure_evidence_ref) is not BlobRef
+                or type(self.acp_observation_ref) is not BlobRef):
+            _continuation_refused()
+        _positive_version(self.acp_revision)
+        for value in (self.stop_proof_ref, self.release_proof_ref):
+            # Local shape only; the owner verifies what these references name.
+            validate_id(value)
+        if (type(self.semantic_prompt_digest) is not Digest
+                or type(self.successor_binding_record_digest) is not Digest):
+            _continuation_refused()
+        payload = self.projection()
+        if len(canonical_bytes(payload)) > 65536:
+            _continuation_refused()
+        object.__setattr__(self, 'digest', record_digest(CONTINUATION_RECORD, payload))
+
+    def projection(self):
+        return {key: value for key, value in asdict(self).items() if key != 'digest'}
+
+
+def validate_dispatch_facts(binding, *, operation_ref):
+    """Shared unchanged business invariants; identity version is validated separately."""
+    if (type(binding.scope) is not Scope or type(binding.package_ref) is not ImplementationPackageRef
+            or type(binding.approval_ref) is not ApprovalRef or type(binding.prompt_ref) is not BlobRef
+            or type(binding.intent_digest) is not Digest or type(binding.prompt_input_digest) is not Digest):
+        raise ReferenceError('INVALID_DISPATCH_BINDING')
+    for value in (binding.run_id,binding.step_id,operation_ref,binding.expected_query_digest):validate_id(value)
+    for value in (binding.attempt,binding.fence,binding.control_version):validate_version(value)
+    if binding.attempt < 1 or binding.fence < 1:raise ReferenceError('INVALID_DISPATCH_BINDING')
+    if (binding.package_ref.realm_id,binding.package_ref.project_id)!=(binding.scope.realm_id,binding.scope.project_id) or (binding.approval_ref.realm_id,binding.approval_ref.project_id)!=(binding.scope.realm_id,binding.scope.project_id):
+        raise ReferenceError('INVALID_DISPATCH_BINDING')
+    if type(binding.action_instances) is not tuple or not binding.action_instances:raise ReferenceError('INVALID_DISPATCH_BINDING')
+    actions=[];instances=[]
+    for item in binding.action_instances:
+        if type(item) is not tuple or len(item)!=2 or item[0] not in ACTIONS or item[0] in {'accept_artifact','apply_change','generate_package'}:
+            raise ReferenceError('INVALID_DISPATCH_BINDING')
+        validate_id(item[1]);actions.append(item[0]);instances.append(item[1])
+    if len(set(actions))!=len(actions) or len(set(instances))!=len(instances):raise ReferenceError('INVALID_DISPATCH_BINDING')
+    validate_items(binding.required_results,str,nonempty=True)
+    for item in binding.required_results:validate_id(item)
+    if len(set(binding.required_results))!=len(binding.required_results):raise ReferenceError('INVALID_DISPATCH_BINDING')

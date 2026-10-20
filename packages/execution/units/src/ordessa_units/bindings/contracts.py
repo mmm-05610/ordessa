@@ -1,7 +1,7 @@
 """Opaque, complete directory binding identity; Workspace owns its facts."""
 from dataclasses import dataclass
 import re
-from ordessa_execution_api.environment import EnvironmentId
+from ordessa_units.definitions.admission_identity import AdmissionNamespace
 
 
 @dataclass(frozen=True)
@@ -12,7 +12,7 @@ class DirectoryBindingRef:
     content_digest: str
 
     def __post_init__(self):
-        EnvironmentId(self.environment_namespace)
+        AdmissionNamespace(self.environment_namespace)
         if not isinstance(self.binding_id, str) or not re.fullmatch(r"[a-z][a-z0-9._-]{0,63}", self.binding_id):
             raise ValueError("invalid directory binding id")
         if type(self.binding_revision) is not int or self.binding_revision < 1:

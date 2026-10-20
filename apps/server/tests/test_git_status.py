@@ -124,15 +124,14 @@ def test_the_query_writes_nothing(repo):
 def test_the_workspace_git_status_wire_returns_the_six_fields(tmp_path, repo):
     from fastapi.testclient import TestClient
 
-    from ordessa_server.bootstrap import build_runtime
-    from ordessa_server.transport.http import create_app
+    from ordessa_server.composition.runtime import build_runtime
+    from ordessa_interfaces.http import create_app
 
     runtime = build_runtime(tmp_path / "server")
     runtime.start()
-    # Local record aliases, the same discipline as test_profile_permissions:
-    # a stopped runtime's facades read None (the ports belong to the active
-    # round), but the round's records stay usable across client sessions.
-    workspaces_repo = runtime.plugin_host.provided_port('product.repository').workspaces
+    # The workspace domain serves its own records: `product.repository` retired
+    # with server-compat (032 §5-exec); the live port is `workspace.records`.
+    workspaces_repo = runtime.plugin_host.provided_port('workspace.records')
     workspace = workspaces_repo.create(
         key="w", request_digest="w", distribution="Ubuntu", remote_user="tester",
         remote_path=str(repo), connection_id="connection")[1]

@@ -1,0 +1,15 @@
+{
+  "exit_code": 0,
+  "resource_hashes_match_verified_baseline": true,
+  "synthetic_report_hashes_match_verified_baseline": true,
+  "no_root_full_flow_manifest": true,
+  "local_markdown_links_resolve": true,
+  "file_types": [
+    "markdown",
+    "json",
+    "yaml",
+    "python verification script"
+  ],
+  "full_flow_support": "unsupported",
+  "root_directories_initially_absent": true
+}

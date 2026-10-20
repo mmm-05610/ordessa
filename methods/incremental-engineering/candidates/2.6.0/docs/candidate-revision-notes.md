@@ -7,3 +7,9 @@
 只读git status确认根方法已有修改/删除、candidates/docs未跟踪；未reset/清理/覆盖历史。本轮仅2.5写入。旧validation边界需刷新，不能追认成运行验证。原临时venv已不存在，使用现存Python做纯资产检查；没有安装或构建。
 
 父后续明确纠正：撤回宿主提交前采集全部actual文件/test/effect与生产verified facts要求。2.5.0使用`engineering.submissions.record_report`，只提交MethodContent和固定ArtifactRevisionRef outputs；file/tree/test/effect事实字段为空，测试/实现主张以asserted报告交独立Unit核实；独立性是本方法策略，宿主仅通用身份机制。候选同时修正schema/验收required_inputs/policy/skills/宿主清单，不保留重型要求为隐含阻塞。
+
+2.6.0来源策略修订：执行派发前的source/quality/package review采用
+`ordessa.review.authorship-policy/1`。`native_unit`仍要求different original Unit；
+`authenticated_material_submitter`仅以原journal/key验证Principal及其已完成命令对精确固定
+ArtifactRevision的绑定，并要求另行分配审核角色。此证据不认证人类、不生成UnitRef；来源未知即拒绝。
+执行后的record_submission和acceptance_review继续使用旧strict Unit身份约束。历史候选和已冻结快照不变。

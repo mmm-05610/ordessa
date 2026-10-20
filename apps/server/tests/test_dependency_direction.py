@@ -30,11 +30,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 PRODUCT_PACKAGES = (
-    "ordessa_server", "ordessa_harness", "ordessa_workspace",
+    "ordessa_server", "ordessa_workspace",
     "ordessa_server_compat", "ordessa_server_product",
 )
 PLUGIN_PACKAGES = (
-    "ordessa_harness", "ordessa_workspace", "ordessa_server_compat",
+    "ordessa_workspace", "ordessa_server_compat",
     "ordessa_server_product",
 )
 HOST_NEUTRAL = ("errors", "records", "ids", "idempotency", "credentials",
@@ -296,9 +296,19 @@ def test_the_neutral_facilities_carry_no_business_imports():
 
 
 def test_the_kernel_declares_no_dependency_at_all():
-    """Pacthold's zero-dependency contract, on the distribution metadata."""
+    """Pacthold's dependency contract, on the distribution metadata.
+
+    The neutral Decision runtime is an optional independent distribution.
+    Pacthold's only base dependency is the frozen environment contract package;
+    importing Pacthold Agent/Core must not require the decision graph or Jev SDK.
+    """
     from importlib import metadata
 
     requires = metadata.requires("pacthold") or []
     runtime_deps = [r for r in requires if "extra ==" not in r]
-    assert runtime_deps == [], runtime_deps
+    assert sorted(runtime_deps) == [
+        "ordessa-execution-api",
+    ], runtime_deps
+    assert 'pydantic-graph==2.54.0' not in runtime_deps
+    assert 'typesafe-sdk==0.7.2' not in runtime_deps
+    assert any(r.startswith('decision-runtime==0.1.0; extra == "decision"') for r in requires)

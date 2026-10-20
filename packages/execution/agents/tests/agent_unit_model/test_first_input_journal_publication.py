@@ -16,8 +16,9 @@ from test_managed_input_reservations import Native
 from agent_tools_fixtures.native_evidence import UnitEvidence, AssociationEvidence
 from agent_tools_fixtures.unit_records import parts as journal_parts, ROOT
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import GuaranteeUnavailableError, UnknownResultError
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, UsageMutation, operation_holder, node_holder, safe_json
+from ordessa_units.errors import UnitGuaranteeUnavailable, UnitOperationUnknown
+from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, operation_holder, node_holder
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from ordessa_units.records.operation_journal import OperationJournal
 from ordessa_units.records.unit_records import UnitRecords
@@ -150,11 +151,11 @@ def test_one_known_fact_retains_core_unknown_and_allows_only_read_recovery(verti
     p, op, records, jp, unit, observation = vertical
     if missing == 'effect': observation.effect_known = False
     else: observation.associate = False
-    with pytest.raises(UnknownResultError): p[5].reconcile_first_input(op.request, p[8])
+    with pytest.raises(UnitOperationUnknown): p[5].reconcile_first_input(op.request, p[8])
     assert p[0].read_operation(op.request).status == 'unknown' and first_marker(p)['value']['state'] == 'held'
     with jp[1]._connect() as db:
         assert db.execute('SELECT state FROM harness_unit_sessions').fetchone()[0] == ('confirmed' if missing == 'effect' else 'notCreated')
-    with pytest.raises(UnknownResultError): reserve(p, key='blocked', draft='another')
+    with pytest.raises(UnitOperationUnknown): reserve(p, key='blocked', draft='another')
     observation.effect_known, observation.associate = True, True
     assert cold_owner(vertical).reconcile_first_input(op.request, p[8]).status == 'published'
     assert p[4].dispatch_calls == 0
@@ -177,9 +178,9 @@ def test_core_commit_failure_keeps_real_journal_association_then_recovers(vertic
 def test_owner_loss_after_journal_confirmation_cannot_publish_from_session_alone(vertical):
     p, op, records, jp, unit, observation = vertical
     observation.effect_known = False
-    with pytest.raises(UnknownResultError): p[5].reconcile_first_input(op.request, p[8])
+    with pytest.raises(UnitOperationUnknown): p[5].reconcile_first_input(op.request, p[8])
     observation.effect_known = True
     records.input_association_evidence.valid = False
-    with pytest.raises(GuaranteeUnavailableError): cold_owner(vertical).reconcile_first_input(op.request, p[8])
+    with pytest.raises(UnitGuaranteeUnavailable): cold_owner(vertical).reconcile_first_input(op.request, p[8])
     assert p[0].read_operation(op.request).status == 'unknown' and first_marker(p)['value']['state'] == 'held'
     assert p[4].dispatch_calls == 0

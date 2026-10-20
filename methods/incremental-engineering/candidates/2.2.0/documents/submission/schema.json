@@ -1,0 +1,84 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "document_type": {
+      "const": "submission"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "change_notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "evidence_index": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "patch",
+              "test_log",
+              "native_record"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "evidence_id",
+          "kind",
+          "summary"
+        ]
+      },
+      "minItems": 1
+    },
+    "remaining_issues": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "reported_outcome": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "partial",
+        "failed",
+        "cancelled",
+        "unknown"
+      ]
+    }
+  },
+  "required": [
+    "document_type",
+    "schema_version",
+    "summary",
+    "change_notes",
+    "evidence_index",
+    "remaining_issues",
+    "reported_outcome"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ordessa:method:incremental-engineering:submission:1"
+}

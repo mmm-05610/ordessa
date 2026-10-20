@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "logicalPluginId": "ordessa.extension-api",
+  "displayName": "Extension API",
+  "categories": [
+    "platform"
+  ],
+  "versionSource": "package.json",
+  "artifacts": [
+    {
+      "kind": "npm",
+      "path": ".",
+      "releaseIdentity": "ordessa.extension-api"
+    }
+  ],
+  "entries": []
+}

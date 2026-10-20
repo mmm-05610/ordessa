@@ -1,4 +1,11 @@
 """The environment contract surface (pure; no concrete execution mechanics)."""
+from .capabilities import (
+    CAPABILITY_KEYS,
+    OUTBOUND_NETWORK_CAPABILITY,
+    CapabilityReport,
+    CapabilityStatus,
+    require_capabilities,
+)
 from .contracts import (
     BYTE_CHANNEL_CAPABILITY,
     FILE_AREA_CAPABILITY,
@@ -6,14 +13,10 @@ from .contracts import (
     PROCESS_CAPABILITY,
     STREAMING_STDERR_CAPABILITY,
     TERMINAL_CAPABILITY,
-    Capabilities,
-    EnvironmentHandle,
-    EnvironmentProvider,
     ExecutionSpace,
     FileArea,
     ProcessHandle,
     ProcessRequest,
-    require_guarantees,
 )
 from .errors import (
     BackendNotFound,
@@ -25,21 +28,39 @@ from .errors import (
     ProcessHandleStale,
     ProcessStartFailed,
 )
-from .models import BackendObservation, EnvironmentSnapshot, EnvironmentOperationReceipt, ProviderDescriptor, ProcessObservation, ProcessCancellation
+from .models import BackendObservation, EnvironmentSnapshot, EnvironmentOperationReceipt, ProviderFacts, ProcessObservation, ProcessCancellation
 from .ports import BackendUse, EnvironmentResourceProvider
+from .composition_values import (
+    CONTRACT_ID,
+    CompositionAttemptRecord,
+    CompositionError,
+    CompositionErrorCode,
+    CompositionPreflightReceipt,
+    CompositionRejected,
+    MountPlan,
+    NativeCorrelationSet,
+    PreparedMountSource,
+    RuntimeBinding,
+    RuntimeBundle,
+    RuntimePreparationRejected,
+    StartAmbiguous,
+    attempt_key,
+)
 
 __all__ = [
+    "CAPABILITY_KEYS",
+    "OUTBOUND_NETWORK_CAPABILITY",
+    "CapabilityReport",
+    "CapabilityStatus",
+    "require_capabilities",
     "BYTE_CHANNEL_CAPABILITY",
     "FILE_AREA_CAPABILITY",
     "KNOWN_CAPABILITIES",
     "PROCESS_CAPABILITY",
     "STREAMING_STDERR_CAPABILITY",
     "TERMINAL_CAPABILITY",
-    "Capabilities",
     "EnvironmentFailure",
     "EnvironmentGuaranteeUnmet",
-    "EnvironmentHandle",
-    "EnvironmentProvider",
     "EnvironmentRefused",
     "ExecutionSpace",
     "FileArea",
@@ -47,9 +68,22 @@ __all__ = [
     "ProcessHandleStale",
     "ProcessRequest",
     "ProcessStartFailed",
-    "require_guarantees",
     "BackendNotFound", "EnvironmentOperationUnknown", "ProcessWaitTimeout",
     "ProcessObservation", "ProcessCancellation",
     "BackendObservation", "EnvironmentSnapshot", "EnvironmentOperationReceipt",
-    "ProviderDescriptor", "BackendUse", "EnvironmentResourceProvider",
+    "ProviderFacts", "BackendUse", "EnvironmentResourceProvider",
+    "CONTRACT_ID",
+    "CompositionAttemptRecord",
+    "CompositionError",
+    "CompositionErrorCode",
+    "CompositionPreflightReceipt",
+    "CompositionRejected",
+    "MountPlan",
+    "NativeCorrelationSet",
+    "PreparedMountSource",
+    "RuntimeBinding",
+    "RuntimeBundle",
+    "RuntimePreparationRejected",
+    "StartAmbiguous",
+    "attempt_key",
 ]

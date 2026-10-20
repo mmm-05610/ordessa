@@ -50,7 +50,43 @@ def _fixture_capabilities() -> CompilationCapabilities:
     )
 
 
-def test_candidate_26_loads_validates_and_compiles_with_fixture_warning_only():
+def _pin(row) -> tuple:
+    """The four pinned fields of one ``requires`` row."""
+    return (row["capability_id"], row["kind"], row["interface_version"], row["contract_digest"])
+
+
+def _descriptor_pin(descriptor) -> tuple:
+    """The same four fields as reported by one injected capability descriptor."""
+    return (descriptor.capability_id, descriptor.kind, descriptor.interface_version,
+            descriptor.contract_digest)
+
+
+def _requires_row(diagnostic, manifest):
+    """The ``requires`` row a ``/requires/<index>`` diagnostic points at."""
+    return manifest["requires"][int(diagnostic.pointer.split("/")[2])]
+
+
+def test_candidate_26_old_capability_pins_are_now_explicitly_rejected():
+    """The 2.6 candidate still loads, but its frozen pins no longer bind.
+
+    Each ``requires`` row pins a capability by ``(kind, interface_version,
+    contract_digest)``. Which pins are rejected is read from the engine's own
+    report and from the injected catalog, never from a hand-written set:
+
+    * a pin whose capability is still offered but whose pinned fields moved is
+      reported as ``CAPABILITY_REQUIREMENT_MISMATCH``, one diagnostic per stale
+      field — ``engineering.proposals.create`` and ``engineering.packages.freeze``
+      moved to interface 2 and ``engineering.executions.dispatch`` changed its
+      contract digest (the declared-Work dispatcher form);
+    * a pin whose capability the current surface no longer offers at all is a
+      separate explicit rejection, ``UNKNOWN_CAPABILITY``
+      (``engineering.runs.cancel``, a withdrawn legacy route).
+
+    Validation names each stale field and compilation refuses; the candidate's
+    policy and lineage assertions below are unaffected. The old "compatible
+    compile" expectation is retired here — a stale pin is rejected, never
+    tolerated.
+    """
     loaded_result = load_method(
         MethodSource(CANDIDATE), reader=FileResourceReader()
     )
@@ -59,23 +95,66 @@ def test_candidate_26_loads_validates_and_compiles_with_fixture_warning_only():
 
     capabilities = _fixture_capabilities()
     manifest = _yaml(CANDIDATE / "method.yaml")
-    expected = {
-        (row["capability_id"], row["kind"], row["interface_version"], row["contract_digest"])
-        for row in manifest["requires"]
-    }
-    assert {
-        (row.capability_id, row.kind, row.interface_version, row.contract_digest)
-        for row in capabilities.capabilities
-    } >= expected
+    catalog = {_descriptor_pin(row) for row in capabilities.capabilities}
+    pins = {_pin(row) for row in manifest["requires"]}
+    # Lineage: the pins are the candidate's own frozen ``requires`` rows and they
+    # are stale, not unrelated — some still bind exactly, some no longer do.
+    assert pins & catalog and pins - catalog
+
+    # What the injected catalog alone implies, by the engine's own rule: a pin
+    # whose capability is absent is unavailable; a pin whose capability is
+    # present but differs on a pinned field is a requirement mismatch.
+    offered = {row.capability_id: _descriptor_pin(row) for row in capabilities.capabilities}
+    stale_expected = {row["capability_id"] for row in manifest["requires"]
+                      if row["capability_id"] in offered
+                      and _pin(row) != offered[row["capability_id"]]}
+    unavailable_expected = {row["capability_id"] for row in manifest["requires"]
+                            if row["capability_id"] not in offered}
+
     report = validate_method(loaded, capabilities)
-    assert report.valid, report.diagnostics
+    assert not report.valid
+
+    mismatched_rows = {}
+    for diagnostic in report.diagnostics:
+        if diagnostic.code != "CAPABILITY_REQUIREMENT_MISMATCH":
+            continue
+        # Every mismatch names one pinned field of one ``requires`` row.
+        assert diagnostic.pointer.split("/")[3] in {
+            "kind", "interface_version", "contract_digest"
+        }, diagnostic.pointer
+        row = _requires_row(diagnostic, manifest)
+        assert _pin(row) != offered.get(row["capability_id"]), diagnostic.pointer
+        mismatched_rows[row["capability_id"]] = row
+    rejected = set(mismatched_rows)
+    assert rejected, "a stale pin must be reported by name"
+    # The engine's actual rejection set is exactly the catalog's own implication,
+    # and it names the concrete pins this source change moved. Verified against
+    # an actual engine run on this candidate, not written by hand.
+    assert rejected == stale_expected
+    assert rejected == {
+        "engineering.proposals.create",
+        "engineering.packages.freeze",
+        "engineering.executions.dispatch",
+    }
+    # The withdrawn pin is rejected too, under its own code rather than being
+    # folded into the mismatch set.
+    unavailable = {
+        _requires_row(diagnostic, manifest)["capability_id"]
+        for diagnostic in report.diagnostics
+        if diagnostic.code == "UNKNOWN_CAPABILITY"
+        and (diagnostic.pointer or "").startswith("/requires/")
+    }
+    assert unavailable == unavailable_expected == {"engineering.runs.cancel"}
+
     assert any(
         diagnostic.code == "FIXTURE_CAPABILITIES_ONLY"
         and diagnostic.severity == "warning"
         for diagnostic in report.diagnostics
     )
+
     compiled = compile_method(loaded, capabilities, "test.candidate-2.6/1")
-    assert compiled.ok and compiled.value is not None, compiled.error
+    assert not compiled.ok and compiled.value is None
+    assert compiled.error.code == "CAPABILITY_REQUIREMENT_MISMATCH"
 
     assert manifest["release_version"] == "2.6.0"
     assert manifest["metadata"]["candidate_binding_status"]["publication_allowed"] is False
@@ -183,7 +262,7 @@ def test_semantic_results_use_explicit_finite_choice_options():
         node for node in workflow["steps"]
         if node.get("kind") == "operation" and node.get("operation") == "engineering.reviews.request"
     ]
-    assert len(review_nodes) == 5
+    assert len(review_nodes) == 8
     for node in review_nodes:
         assert node["config"]["review_source"] == {
             "response_document_type": "unit-review-result",
@@ -255,7 +334,20 @@ def test_removed_evaluation_gate_preserves_required_inputs_and_negative_policy()
         new_doc = _yaml(CANDIDATE / rel)
         old = next(row for row in old_doc["criteria"] if row["criterion_id"] == criterion_id)
         new = next(row for row in new_doc["criteria"] if row["criterion_id"] == criterion_id)
-        assert new["required_inputs"] == old["required_inputs"], (rel, criterion_id)
+        expected_inputs = list(old["required_inputs"])
+        if rel == "standards/acceptance.yaml":
+            # The current independent review produces these observations.
+            # Requiring its own output before request would make the formal
+            # review impossible. All fixed delivery/report inputs remain.
+            expected_inputs.remove("independent_review_observations")
+            workflow = _yaml(CANDIDATE / "workflows/change-cycle.yaml")
+            review = next(node for node in workflow["steps"]
+                          if node["id"] == "acceptance_review")
+            strategy = review["config"]["unit_submission_review_strategy"]
+            assert strategy["roles"]["identity_constraint"] == (
+                "original_author_unit_identity_must_differ_from_original_reviewer_unit_identity")
+            assert strategy["roles"]["reviewer"] == "independent_review_unit"
+        assert new["required_inputs"] == expected_inputs, (rel, criterion_id)
         assert new["checks"][0]["capability_id"] == old["checks"][0]["capability_id"]
         old_bindings = dict(old["checks"][0]["bindings"])
         new_bindings = dict(new["checks"][0]["bindings"])
@@ -266,7 +358,7 @@ def test_removed_evaluation_gate_preserves_required_inputs_and_negative_policy()
         assert new["policy"]["unknown"] == old["policy"]["unknown"]
 
 
-def test_work_source_declares_all_21_waits_and_append_only_work_input_fields():
+def test_work_source_declares_all_32_waits_and_append_only_work_input_fields():
     manifest = _yaml(CANDIDATE / "method.yaml")
     workflow = _yaml(CANDIDATE / "workflows/change-cycle.yaml")
     policy = manifest["metadata"]["work_source"]
@@ -274,7 +366,7 @@ def test_work_source_declares_all_21_waits_and_append_only_work_input_fields():
     assert policy["contract_version"] == "ordessa.persisted-work-source/1"
     assert policy["input_document_slot"] == "work_inputs"
     assert policy["input_document_type"] == "work-inputs"
-    assert set(policy["waits"]) == set(waits) and len(waits) == 21
+    assert set(policy["waits"]) == set(waits) and len(waits) == 32
     assert policy["waits"]["await_intent_ref"]["intent_result_slots"] == {
         "id": "intent_id", "digest": "intent_digest"
     }
@@ -287,7 +379,13 @@ def test_work_source_declares_all_21_waits_and_append_only_work_input_fields():
         expected |= set((node.get("match") or {}))
         assert set(spec["event_slots"]) == expected, node_id
         doc_fields = {selector["field"] for selector in spec["event_slots"].values() if selector["source"] in {"work_input", "blob_utf8"}}
-        assert set(schema["properties"]["events"]["properties"][node_id]["properties"]) == doc_fields, node_id
+        event_map = spec["event_map"]
+        if event_map == "events_by_round":
+            event_schema = schema["properties"][event_map]["additionalProperties"]["properties"][node_id]
+        else:
+            assert event_map == "events"
+            event_schema = schema["properties"][event_map]["properties"][node_id]
+        assert set(event_schema["properties"]) == doc_fields, node_id
         assert not doc_fields & {"ready", "accepted", "permitted", "verified"}
     forbidden_truth_fields = schema["$defs"]["event_value"]["oneOf"][0]["propertyNames"]["not"]["enum"]
     assert {"ready", "accepted", "permitted", "verified", "approved", "authorized"} <= set(forbidden_truth_fields)
@@ -303,3 +401,25 @@ def test_work_source_declares_all_21_waits_and_append_only_work_input_fields():
         "submission_record"
     }
     assert "bind_inputs" in (CANDIDATE / "documents/work-inputs/template.md").read_text(encoding="utf-8")
+
+
+def test_current_candidate_uses_phase_specific_review_authorship_policy():
+    workflow = _yaml(CANDIDATE / "workflows/change-cycle.yaml")
+    nodes = {node["id"]: node for node in workflow["steps"]}
+    conditional = {
+        "contract": "ordessa.review.authorship-policy/1",
+        "source_rules": {
+            "native_unit": "different_original_unit",
+            "authenticated_material_submitter": "separately_assigned_reviewer_role",
+        },
+        "unknown_source": "refuse",
+    }
+    for node_id in ("source_review", "quality_review", "package_review"):
+        assert nodes[node_id]["config"]["unit_submission_review_strategy"][
+            "roles"
+        ]["identity_constraint"] == conditional
+    strict = "original_author_unit_identity_must_differ_from_original_reviewer_unit_identity"
+    for node_id in ("record_submission", "acceptance_review"):
+        assert nodes[node_id]["config"]["unit_submission_review_strategy"][
+            "roles"
+        ]["identity_constraint"] == strict

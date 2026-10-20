@@ -12,18 +12,21 @@ import { HarnessPeer, deferred } from '../fixtures/acp-peer'
  * against the pinned SDK's wire behavior.
  */
 
-it('R1 connects with no project-less channel; binding a project acquires one and initializes it exactly once', async () => {
+it('R1 selection and project binding open no channel; the explicit new-session operation initializes once', async () => {
   const { peer, spec, client, acquired } = await connectTarget({ capabilities: { promptCapabilities: {} } })
   // Selecting a Server/Harness must not open an ACP channel that no project owns.
   expect(peer.recorded('initialize')).toHaveLength(0)
   expect(acquired).toEqual([])
-  // The project-bound channel comes first, then exactly one `initialize` on it — and opening a
-  // project is not a session: no `session/new` may ride along.
+  // Project selection reads records only; explicit session creation then initializes its channel.
   await client.openWorkspace!('ws_app')
+  expect(acquired).toEqual([])
+  expect(peer.requests).toEqual([])
+  await client.newSession()
   expect(acquired).toEqual(['ws_app'])
   expect(peer.recorded('initialize')).toHaveLength(1)
   expect(peer.requests.find(r => r.method === 'initialize')?.params).toMatchObject({ protocolVersion: PROTOCOL_VERSION })
-  expect(peer.recorded('session/new')).toHaveLength(0)
+  expect(peer.recorded('session/new')).toHaveLength(1)
+  expect(peer.recorded('session/prompt')).toHaveLength(0)
   const state = client.getSnapshot()
   expect(state.connection.status).toBe('connected')
   // A peer that never advertised loadSession or session/list must read as unsupported history.
@@ -35,10 +38,12 @@ it('R1 connects with no project-less channel; binding a project acquires one and
 it('R2 a Harness that advertises history reads as supported, absent never falls back', async () => {
   const bare = await connectTarget({ capabilities: {} })
   await bare.client.openWorkspace!('ws_app') // capabilities exist only from a real initialize answer
+  await expect(bare.client.refreshSessions()).rejects.toThrow('does not list sessions')
   expect(bare.client.getSnapshot().connection.capabilities.history).toBe('unsupported')
   bare.peer.close()
   const loaded = await connectTarget({ capabilities: { loadSession: true, sessionCapabilities: { list: {} } } })
   await loaded.client.openWorkspace!('ws_app')
+  await loaded.client.refreshSessions()
   expect(loaded.client.getSnapshot().connection.capabilities.history).toBe('supported')
   loaded.peer.close()
 })
@@ -133,7 +138,7 @@ it('R7 an unconfirmed first send is never silently re-issued', async () => {
  */
 
 it('R33 a settled turn adopts the native session/list title; a late one arrives, an absent one is never invented', async () => {
-  const { peer, client } = await connectTarget({ capabilities: { sessionCapabilities: { list: {} } } })
+  const { peer, peerFor, client, closeAll } = await connectTarget({ capabilities: { sessionCapabilities: { list: {} } } })
   const titleOf = (id: string) => client.getSnapshot().sessions.find(s => s.id === id)?.title
   peer.listed = [{ sessionId: 'acp-session-1', cwd: '/repo/app', title: 'Reply with exactly: alpha' }]
   const { sessionId } = await client.createAndSend!('ws_app', 'Reply with exactly: alpha', 'req_1')
@@ -142,17 +147,18 @@ it('R33 a settled turn adopts the native session/list title; a late one arrives,
   await peer.waitFor('the native title projected', () => titleOf(sessionId) === 'Reply with exactly: alpha')
   expect(peer.recorded('session/list').length).toBeGreaterThanOrEqual(1)
   // A second session the list has no name for yet keeps its placeholder honestly...
-  const second = await client.newSession() // native id acp-session-2
+  const second = await client.newSession() // separate channel, native id acp-session-1 again
+  const secondPeer = peerFor('ws_app', 1)
   await client.send(second, 'beta')
   await peer.waitFor("the second turn to settle", () =>
     Object.values(client.getSnapshot().runs).some(r => r.sessionId === second && r.status === 'completed'))
-  await peer.waitFor('the second name pull', () => peer.recorded('session/list').length >= 2)
+  await secondPeer.waitFor('the second name pull', () => secondPeer.recorded('session/list').length === 1)
   expect(titleOf(second)).toBe('New session')
   // ...and the name arriving late is picked up by a later settled turn, still without any refresh.
-  peer.listed.push({ sessionId: 'acp-session-2', cwd: '/repo/app', title: 'Beta thread' })
+  secondPeer.listed.push({ sessionId: 'acp-session-1', cwd: '/repo/app', title: 'Beta thread' })
   await client.send(second, 'again')
   await peer.waitFor('the late native name projected', () => titleOf(second) === 'Beta thread')
-  peer.close()
+  await closeAll()
 })
 
 it('R34 a native name survives reload-listing and reopening: no path re-folds it back to a placeholder', async () => {
@@ -336,17 +342,16 @@ it('a failed initialize releases its channel and never pins the retry', async ()
   // Counterexample for the opening-map race: a failed opening promise left in the map would hand
   // every later attempt the same stale rejection, so the project could never recover.
   const { peers, client, acquired, released } = await reconnectable({ failFirstInitialize: true })
-  await expect(client.openWorkspace!('ws_r')).rejects.toBeInstanceOf(Error)
+  await expect(client.createAndSend!('ws_r', 'first try', 'req_failed')).rejects.toBeInstanceOf(Error)
   const first = await firstPeer(peers)
   // The half-open channel's handle is stood down...
   expect(released).toEqual(['chan_1'])
   expect(first.recorded('initialize')).toHaveLength(1)
-  // ...and a retry re-handshakes on a fresh channel instead of repeating the old failure.
-  await client.openWorkspace!('ws_r')
+  // ...and a distinct user request re-handshakes on a fresh channel rather than replaying an unknown send.
+  const { sessionId } = await client.createAndSend!('ws_r', 'go', 'req_1')
   expect(acquired).toEqual(['ws_r', 'ws_r'])
   expect(peers).toHaveLength(2)
   expect(peers[1].recorded('initialize')).toHaveLength(1)
-  const { sessionId } = await client.createAndSend!('ws_r', 'go', 'req_1')
   expect(peers[1].recorded('session/prompt')).toHaveLength(1)
   expect(client.getSnapshot().sessions.some(s => s.id === sessionId)).toBe(true)
   client.dispose()
@@ -358,7 +363,7 @@ it('dispose while initialize is still landing releases the late handle exactly o
   // Counterexample for the acquire/dispose race: the handle is not in `channels` yet when dispose
   // runs, so a dispose that only walks registered channels leaves this channel permanently live.
   const { peers, client, released, openIncoming } = await reconnectable({ holdInitializeAnswer: true })
-  const opening = client.openWorkspace!('ws_r')
+  const opening = client.createAndSend!('ws_r', 'go', 'req_dispose')
   const first = await firstPeer(peers)
   await first.waitFor('the initialize request on the wire', () => first.recorded('initialize').length === 1)
   client.dispose()

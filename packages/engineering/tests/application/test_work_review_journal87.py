@@ -13,7 +13,7 @@ import pytest
 from ordessa_engineering.adapters.persistence.sqlite.engineering_library import EngineeringLibrary
 from ordessa_engineering.adapters.persistence.sqlite.unit_of_work import SQLiteUoWFactory
 from ordessa_engineering.application.contracts.errors import ApplicationError
-from ordessa_engineering.application.contracts.method_work import WorkReviewSelector
+from ordessa_engineering.application.contracts.method_work import WORK_CONTRACT, WorkReviewSelector
 from ordessa_engineering.application.usecases.reviews.service import ReviewUseCases
 from ordessa_engineering.adapters.persistence.sqlite.work_review_bindings import SQLiteWorkReviewBindings
 
@@ -151,11 +151,20 @@ def test_same_uow_selector_refusal_leaves_no_plan_or_success_proof(review_work):
             plan_digest=env['plan'].plan_digest) is None
 
 
-def test_production_target_selection_remains_explicitly_unavailable(review_work):
-    bindings = object.__new__(SQLiteWorkReviewBindings)
-    with pytest.raises(ApplicationError, match='WORK_REVIEW_TARGET_POLICY_UNAVAILABLE'):
-        bindings.review_selection(None, run_id='controlled-run', review_id='review',
-                                  subject_ref=review_work['selector'].subject_ref)
+def test_review_selection_requires_an_actual_work_run(review_work):
+    from ordessa_engineering.adapters.persistence.sqlite.blob_store import SQLiteBlobStore
+    from ordessa_engineering.adapters.persistence.sqlite.method_control import SQLiteMethodControl
+    from ordessa_engineering.adapters.persistence.sqlite.snapshot_store import SQLiteSnapshotStore
+
+    env = review_work
+    snapshots = SQLiteSnapshotStore(env['library'])
+    controls = SQLiteMethodControl(env['factory'], snapshots)
+    bindings = SQLiteWorkReviewBindings(env['factory'], controls,
+        scope=env['scope'], blobs=SQLiteBlobStore(env['library']))
+    with pytest.raises(ApplicationError, match='WORK_BINDING_INVALID'):
+        bindings.review_selection(_context(env['scope'], 'missing-work-run'),
+            run_id='controlled-run', review_id='review',
+            subject_ref=env['selector'].subject_ref)
 
 
 @pytest.mark.parametrize('order', ('review-wait-stop', 'wait-stop-review'))
@@ -182,17 +191,38 @@ def test_current_review_and_exact_compiled_review_gate_successor_are_allowed_but
     snapshot = SimpleNamespace(program=SimpleNamespace(workflow=workflow))
     reader = object.__new__(SQLiteWorkReviewBindings)
     reader.scope = env['scope']
-    saved_row = {'cursor': nodes.index(review), 'inputs': {'slots': {
-        'work_inputs': asdict(selector.input_ref),
-        'subject': asdict(selector.subject_ref),
-    }}}
+    # This isolated routing fixture supplies the canonical Work binding marker
+    # consumed by the real current-method guard. Journal/run persistence remains
+    # controlled below; this does not claim a production Work admission flow.
+    saved_row = {'cursor': nodes.index(review), 'inputs': {
+        'work_contract': WORK_CONTRACT,
+        'scope': asdict(env['scope']),
+        'method_ref': asdict(selector.method_ref),
+        'compiled_plan_digest': 'fixture:compiled-plan',
+        'slots': {
+            'work_inputs': asdict(selector.input_ref),
+            'subject': asdict(selector.subject_ref),
+        },
+    }}
     current_row = dict(saved_row)
     monkeypatch.setattr(reader, '_historical_row', lambda context, plan: (selector, saved_row))
     monkeypatch.setattr(reader, '_run_row', lambda context, run_id: current_row)
     monkeypatch.setattr(reader, '_snapshot', lambda context, method_ref: nullcontext(snapshot))
     reader._policy = lambda snapshot: {'input_document_slot': 'work_inputs', 'waits': {
         wait.id: {'family': 'review_gate', 'phase_key': selector.phase_key}}}
-    request = SimpleNamespace(review_id=env['plan'].review_id)
+    request = SimpleNamespace(review_id=env['plan'].review_id,
+                               state='requested', version=1, fence=1)
+    class ReviewReadUow:
+        def __init__(self, selected_request):
+            self.reviews = SimpleNamespace(get_request=lambda _review_id: selected_request)
+    reader.factory = SimpleNamespace(
+        begin=lambda *_args, **_kwargs: nullcontext(ReviewReadUow(request)))
+    reader._work_values = lambda *_args, **_kwargs: None
+    progression_calls = []
+    monkeypatch.setattr(
+        'ordessa_engineering.adapters.method_work.SQLitePersistedMethodWorkSource._input_progression_in_uow',
+        staticmethod(lambda _uow, _snapshot, _policy, previous, current, *, run_id:
+            progression_calls.append((previous, current, run_id)) or None))
     context = _context(env['scope'], 'compiled-route-check')
 
     current_row['cursor'] = nodes.index(review)
@@ -202,3 +232,6 @@ def test_current_review_and_exact_compiled_review_gate_successor_are_allowed_but
     current_row['cursor'] = nodes.index(stop)
     with pytest.raises(ApplicationError, match='WORK_REVIEW_STALE'):
         reader.guard_current_request(context, env['plan'], request)
+    assert len(progression_calls) == 2
+    assert all(previous == current == selector.input_ref
+               for previous, current, _run_id in progression_calls)

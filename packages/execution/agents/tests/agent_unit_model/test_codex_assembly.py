@@ -227,9 +227,9 @@ def test_receipt_loss_keeps_original_unknown_without_second_native_launch(flow):
 
 
 def test_changed_request_after_publication_cannot_create_another_native_unit(flow):
-    from ordessa_execution_api.environment import IdentityMismatchError
+    from ordessa_units.errors import UnitIdentityMismatch
     flow.assembly.prepare(flow.request, flow.profile, {}, {})
-    with pytest.raises(IdentityMismatchError):
+    with pytest.raises(UnitIdentityMismatch):
         flow.assembly.prepare(flow.request, flow.profile, {}, {'changed': True})
     assert flow.opens == 1 and flow.client.calls == ['initialize', 'thread/start', 'thread/read']
 

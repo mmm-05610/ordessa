@@ -1,7 +1,7 @@
 """Historical request-input identity and cold spent/tombstone guarantees."""
 import pytest
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment import ComparisonUnavailableError
+from ordessa_units.errors import UnitComparisonUnavailable
 from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
 from ordessa_units.persistence.sqlite.store import SqliteUnitStore, KeyConflictError
 
@@ -32,7 +32,7 @@ def test_rotation_and_cold_tombstone_never_make_original_request_dispatchable(tm
     try:
         reader = ProtectedFingerprintHmac({'original': b'TEMPORARY_ORIGINAL_KEY',
             'rotated': b'TEMPORARY_ROTATED_KEY'}, active_key_id='rotated', tombstone_check=cold.has_key_tombstone)
-        with pytest.raises(ComparisonUnavailableError, match='retired'):
+        with pytest.raises(UnitComparisonUnavailable, match='retired'):
             reader.verify('original', digest, request, 'original-surface', 'fixed-content')
         new_digest = reader.fingerprint(request, 'original-surface', 'fixed-content')
         with pytest.raises(KeyConflictError):

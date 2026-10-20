@@ -9,8 +9,9 @@ from threading import Barrier
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_api.environment.errors import UnknownResultError
-from ordessa_execution_api.environment.operations import OperationIntent, StepIntent, safe_json
+from ordessa_units.errors import UnitOperationUnknown
+from ordessa_units.definitions.operations import OperationIntent, StepIntent
+from ordessa_infrastructure.encoding.immutable_json import safe_json
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import (
@@ -41,9 +42,9 @@ def test_real_claim_and_one_consumption_with_immutable_context(tmp_path):
             context.facts["targetRef"]["objectId"] = "other"
         facts = verify(parts, context)
         assert facts["request"]["principalScope"] == request.principal_scope
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             verify(parts, context)
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             issue(parts)
         assert store.read_operation_step(request, "work").revision == 1
     finally:
@@ -185,7 +186,7 @@ def test_post_claim_failure_remains_spent_and_restart_cannot_reissue(tmp_path):
         assert store.read_operation_step(request, "work").outcome == "possibly-dispatched"
         current.fail_on = None
         restarted = InvocationIssuer(store, authority, current, clock=lambda: clock[0])
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             issue((*parts[:6], restarted))
         assert store._conn.execute("SELECT COUNT(*) FROM env_request_steps").fetchone()[0] == 1
     finally:
@@ -270,7 +271,7 @@ def test_concurrent_consumption_has_exactly_one_winner(tmp_path):
             try:
                 verify(parts, context)
                 return "granted"
-            except UnknownResultError:
+            except UnitOperationUnknown:
                 return "spent"
         with ThreadPoolExecutor(max_workers=8) as pool:
             results = list(pool.map(compete, range(8)))
@@ -290,14 +291,14 @@ def test_trusted_port_callback_reentry_cannot_consume_twice(tmp_path, port):
         method = "inspect" if port == "state" else "revalidate"
         original = getattr(owner, method)
         def callback(*args):
-            with pytest.raises(UnknownResultError):
+            with pytest.raises(UnitOperationUnknown):
                 verify(parts, context)
             seen.append("reentry refused")
             return original(*args)
         setattr(owner, method, callback)
         assert verify(parts, context)["action"] == "apply"
         assert seen == ["reentry refused"] * (2 if port == "authority" else 1)
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             verify(parts, context)
         assert store.read_operation_step(request, "work").outcome == "possibly-dispatched"
     finally:
@@ -312,7 +313,7 @@ def test_failed_verification_does_not_restore_effect_ticket(tmp_path):
         with pytest.raises(InvocationAuthorityRefused):
             verify(parts, context)
         parts[4].failure = False
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             verify(parts, context)
         assert parts[0].read_operation_step(parts[1], "work").outcome == "possibly-dispatched"
     finally:
@@ -347,7 +348,7 @@ def test_bounded_ticket_cache_refuses_before_claim_and_reclaims_expired_reads(tm
         with pytest.raises(InvocationAuthorityRefused):
             verify(small_parts, effect)
         assert verify(small_parts, replacement_read, action="query")["query"]
-        with pytest.raises(UnknownResultError):
+        with pytest.raises(UnitOperationUnknown):
             # Clear the read ticket by expiry; an existing effect claim is still spent.
             clock[0], authority.expiry = 201, 300
             issue(small_parts)
@@ -391,7 +392,7 @@ def test_independent_issuers_compete_on_one_real_sqlite_claim(tmp_path):
             try:
                 issue((*parts[:6], issuer))
                 return "issued"
-            except UnknownResultError:
+            except UnitOperationUnknown:
                 return "spent"
         with ThreadPoolExecutor(max_workers=8) as pool:
             results = list(pool.map(compete, range(8)))

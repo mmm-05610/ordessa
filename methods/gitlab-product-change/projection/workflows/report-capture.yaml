@@ -1,0 +1,44 @@
+schema_version: 1
+workflow_id: gitlab-product-change-report-capture
+semantics: >-
+  One-command capture of a complete, externally authored product-development
+  report. This graph does not run or advance the external GitLab lifecycle,
+  authenticate assertions, review changes, execute Git or CI, deploy software,
+  or decide product acceptance.
+entry: capture_report
+context_slots:
+- artifact_kind
+- initial_payload
+- method_refs
+steps:
+- id: capture_report
+  kind: operation
+  operation: engineering.artifacts.create
+  inputs:
+    kind: artifact_kind
+    initial: initial_payload
+    method_refs: method_refs
+  outcomes:
+    completed:
+      next: stop_created
+    rejected:
+      next: stop_rejected
+- id: stop_created
+  kind: stop
+  outcome: report_artifact_created
+- id: stop_rejected
+  kind: stop
+  outcome: report_artifact_rejected
+stop_outcomes:
+- report_artifact_created
+- report_artifact_rejected
+wait_kinds: []
+cancellation: >-
+  This one-command projection has no wait or cancellation node. Cancel or
+  postpone the external GitLab issue according to PROCESS.md and capture the
+  resulting decision in a new complete report.
+revision_restart: >-
+  This graph has no loop. Rework and later reports are separate external
+  revisions/new report-capture requests; a new request must bind the exact
+  current method snapshot and must not imply that a prior report was accepted.
+automatic_side_effect_retry: forbidden_when_outcome_unknown

@@ -2,9 +2,8 @@
 
 No probe, plugin loading, credential access or runtime guarantee is performed.
 """
-from ordessa_execution_agents.harness.definitions.command_discovery import CommandCandidate
 
 
-def command_candidates() -> CommandCandidate:
+def command_candidates() -> tuple[str, tuple[str, ...]]:
     """Return this brand's historical command candidates, including Windows names."""
     return ('pi', ('pi', 'pi-acp'))

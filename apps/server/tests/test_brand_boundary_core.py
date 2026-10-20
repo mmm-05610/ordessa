@@ -39,10 +39,10 @@ BRAND_FRAGMENTS = ("dsh", "pi-cli")
 #: Host source that still carries a brand name today, with the task that owns
 #: the removal. Keyed by repo-relative path.
 REGISTERED_HOST_DEBT: "dict[str, str]" = {
-    "apps/desktop/electron/main.ts": "P-A PA-11 — smoke driver splits into apps/desktop/scripts",
-    "apps/desktop/scripts/test-agent-shell.mjs": "P-A PA-11 — headless smoke, not shipped",
-    "apps/desktop/scripts/test-native-two-turn.mjs": "P-A PA-11 — headless smoke, not shipped",
-    "apps/desktop/scripts/test-native-paired-no-send.mjs": "P-A PA-11 — headless smoke, not shipped",
+    "apps/desktop/electron/main.ts": "P-A PA-11 — smoke driver splits into apps/desktop/tests/smoke",
+    "apps/desktop/tests/smoke/test-agent-shell.mjs": "P-A PA-11 — headless smoke, not shipped",
+    "apps/desktop/tests/smoke/test-native-two-turn.mjs": "P-A PA-11 — headless smoke, not shipped",
+    "apps/desktop/tests/smoke/test-native-paired-no-send.mjs": "P-A PA-11 — headless smoke, not shipped",
 }
 
 #: The host trees. `scripts/**` and test files are excluded because they are

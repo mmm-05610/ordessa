@@ -71,9 +71,12 @@ from ordessa_engineering.application.api import EngineeringService
 from ordessa_engineering.application.assembly import EngineeringPorts, build_engineering_service
 assert EngineeringService.__module__ == "ordessa_engineering.application.api.service"
 capabilities=EngineeringService.operation_capabilities().capabilities
-assert len(capabilities) == 23
+assert len(capabilities) == 25
 assert {"engineering.packages.freeze", "engineering.work.bind_inputs",
-        "engineering.reviews.assign_reviewer", "engineering.reviews.revoke_reviewer"} <= {item.capability_id for item in capabilities}
+        "engineering.reviews.assign_reviewer", "engineering.reviews.revoke_reviewer",
+        "engineering.runs.cancel", "engineering.proposals.associate_review"} <= {item.capability_id for item in capabilities}
+assert {item.capability_id: item.interface_version for item in capabilities}["engineering.proposals.create"] == "2"
+assert {item.capability_id: item.interface_version for item in capabilities}["engineering.packages.freeze"] == "2"
 '''
     _root, environment = _selected_cold_environment()
     result = subprocess.run([sys.executable, "-c", code], text=True, capture_output=True,

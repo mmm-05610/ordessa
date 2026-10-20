@@ -14,3 +14,6 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 ordessa_harness_opencode = ["deployment/*", "_registration_declarations/*.toml", "_registration_declarations/*.json", "acp/launch_omp.json", "acp/launch_omp.mjs", "acp/native_host.mjs", "acp/opencode_native.mjs", "acp/profile_declarations.mjs", "acp/vendor/LICENSE", "acp/vendor/PATCHES.md", "acp/vendor/SOURCE.json", "acp/vendor/extension-actions.js", "acp/vendor/omp-extension-action-state.js", "acp/vendor/omp-session-history.js", "acp/vendor/opencode-host.js"]
+
+[project.entry-points."ordessa.harness_providers"]
+opencode = "ordessa_harness_opencode:factory"

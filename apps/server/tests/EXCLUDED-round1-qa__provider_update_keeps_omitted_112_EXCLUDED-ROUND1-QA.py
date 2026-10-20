@@ -30,7 +30,7 @@ from ordessa_server.bootstrap import build_runtime
 from ordessa_server.model_configs.repository import KEEP
 from ordessa_server.model_configs import repository as repository_module
 from ordessa_server.transport.http import create_app
-from ordessa_server.wire import handlers as handlers_module
+from ordessa_interfaces.http.serialization import handlers as handlers_module
 from test_wire_v1 import Wire, registry
 
 PROVENANCE = {

@@ -1,6 +1,7 @@
 """Immutable Submission content on the original active Engineering UoW."""
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.domain.changes.submission import Submission
+from ordessa_engineering.domain.changes.agent_submission_report import AgentSubmissionReport
 from ordessa_engineering.domain.changes.submission_codec import encode_submission, decode_submission
 from ordessa_engineering.domain.reviews.refs import SubmissionRef
 from ordessa_engineering.domain.common.outcomes.diagnostics import ReferenceError
@@ -25,8 +26,10 @@ class SQLiteSubmissionRepository:
     def create(self, record):
         self.access.require_write()
         prefix = self._prefix()
-        if type(record) is not Submission or record.scope != self.access.scope:
+        if type(record) not in (Submission, AgentSubmissionReport) or record.scope != self.access.scope:
             raise ApplicationError('SCOPE_MISMATCH')
+        if (type(record) is AgentSubmissionReport or record.schema_version == 2) and getattr(self.access._connection, '_ordessa_schema_version', None) != WORK_DISPATCH_SCHEMA_VERSION:
+            raise ApplicationError('WORK_DISPATCH_SCHEMA_REQUIRED')
         raw = encode_submission(record)
         if decode_submission(raw) != record:
             raise ApplicationError('RECORD_CORRUPT')
