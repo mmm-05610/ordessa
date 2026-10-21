@@ -110,7 +110,7 @@ def test_removing_a_family_from_the_registry_removes_it_from_hello(hello):
     after the registry forgot it.
     """
     runtime, api, _before = hello
-    api.call("profiles.create", {"requestId": "harn-profile-1", "displayName": "R",
+    api.call("agents.profiles.create", {"requestId": "harn-profile-1", "displayName": "R",
                                  "harness": "alpha"})
     del runtime.plugin_host.provided_port('harness.directory')._descriptors["mido"]  # noqa: SLF001 - the registry's own state is the subject
     after = api.hello()

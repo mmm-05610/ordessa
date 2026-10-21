@@ -17,7 +17,7 @@ from ordessa_server.entrypoints.http import main
 from ordessa_server.composition.http_bindings import HttpOwnerBindings
 from ordessa_server.composition.agent_owner import AgentOwnerInputs
 from ordessa_server.composition.agent_bindings.profile_access import OriginalProfileAccess
-from ordessa_execution_agents.capability.profiles import build_profile_capability
+from ordessa_agents.capability.profiles import build_profile_capability
 from ordessa_server_product.composition import ServerProductComposition
 from ordessa_interfaces.system_access import RequestContext
 from ordessa_interfaces.system_access.contracts.refs import Scope
@@ -32,7 +32,7 @@ def factory(root):
     scope = Scope('fixture-realm','fixture-project')
     authority = InstanceAccessAuthority(lambda:'controlled-http-launch-token',
         principal_id='existing-test-caller', legacy_principal=None,
-        grants=(AccessGrant(scope,('profiles.list',)),))
+        grants=(AccessGrant(scope,('agents.profiles.list',)),))
     selected = [None]
     access = OriginalProfileAccess(authority,
         caller_resolver=lambda invocation:selected[0] if invocation is case.fixture.invocation else None,
@@ -76,15 +76,23 @@ def child_script(tmp_path, body):
     return script
 
 
-def test_unconfigured_default_http_refuses_before_root_writes(tmp_path):
+def test_invalid_service_config_refuses_before_root_writes(tmp_path):
+    """The zero-configuration default is real; an explicit-but-broken file is not.
+
+    Absence of `--service-config` now means "derive the defaults", so the
+    no-side-effect property is proved on a configuration that fails validation.
+    """
     root=tmp_path/'not-created'
+    broken=tmp_path/'broken.json'
+    broken.write_text('{"version": 1}',encoding='utf-8')
     script=child_script(tmp_path,"from ordessa_server.__main__ import main\nraise SystemExit(main())\n")
     env=dict(os.environ);env.pop('ORDESSA_STATE',None)
-    result=subprocess.run([sys.executable,'-I','-S',str(script),'--data-root',str(root),'--port','0'],
+    result=subprocess.run([sys.executable,'-I','-S',str(script),'--data-root',str(root),'--port','0',
+                           '--service-config',str(broken)],
         env=env,capture_output=True,text=True,timeout=10)
     assert result.returncode==2, result.stderr
     assert 'AGENT_OWNER_UNAVAILABLE' in result.stderr
-    assert 'current HTTP owner bindings are required' in result.stderr
+    assert 'service configuration' in result.stderr
     assert not result.stdout and not root.exists()
 
 
@@ -130,10 +138,10 @@ def test_http_entrypoint_handshake_authenticated_capabilities_and_cleanup(tmp_pa
                 answered=client.post('/wire/v1/server.hello',json=request,headers=auth)
                 assert answered.status_code==200 and answered.json()['result']['serverId']==hello['serverId']
                 request={'jsonrpc':'2.0','id':'list','method':'operations.call',
-                    'params':{'operationId':'profiles.list','input':{}}}
+                    'params':{'operationId':'agents.profiles.list','input':{}}}
                 result=client.post('/wire/v1/operations.call',json=request,headers=auth).json()['result']
                 assert result['status']=='completed' and result['data']['entries'][0]['profileId']=='peer',result
-                request['id']='not-granted';request['params']['operationId']='profiles.create'
+                request['id']='not-granted';request['params']['operationId']='agents.profiles.create'
                 request['params']['input']={}
                 assert client.post('/wire/v1/operations.call',json=request,headers=auth).json()['result']['status']=='refused'
             from ordessa_server.composition.root_ownership import DataRootOwner

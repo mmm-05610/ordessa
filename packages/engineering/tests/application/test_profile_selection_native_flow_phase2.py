@@ -7,13 +7,13 @@ import asyncio
 
 import pytest
 from dataclasses import replace
-from decision_runtime import DecisionAnswer, FilesystemEvidenceStore
-from decision_runtime.evidence import EvidenceScope
+from ordessa_decision import DecisionAnswer, FilesystemEvidenceStore
+from ordessa_decision.evidence import EvidenceScope
 from ordessa_engineering.adapters.decision.source_job import SourceReviewJobServices
 from ordessa_engineering.adapters.execution_profiles import ProfileTaskInput
 from ordessa_engineering.adapters.profile_flow import ProfileSelectionServices, run_method_profile_selection
 from ordessa_engineering.adapters.profile_method import build_method_execution_selection
-from ordessa_execution_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
 from ordessa_units.api import UnitManager
 from test_method_control_admission import context
 from test_method_profile_policy_phase2 import frozen_policy

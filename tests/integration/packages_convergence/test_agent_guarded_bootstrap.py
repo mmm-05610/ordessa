@@ -13,10 +13,10 @@ import pytest
 
 from endpoint_fixture import LocalEndpointFixture
 from apps.cli.tests.integration.profile_test_owner import profile_owner
-from ordessa_execution_agents.sdk import PrepareContext,BoundPath,SessionBootstrap,ConfigurationArtifact
-from ordessa_execution_agents.public import AgentManager,Records,ManagerRefused,AgentStartRequest,PreparedAgentContext
-from ordessa_execution_agents.sdk.interactions import InteractionService,InteractionsRefused
-from ordessa_execution_agents.sdk.prepare import canonical_digest
+from ordessa_agents.sdk import PrepareContext,BoundPath,SessionBootstrap,ConfigurationArtifact
+from ordessa_agents.public import AgentManager,Records,ManagerRefused,AgentStartRequest,PreparedAgentContext
+from ordessa_agents.sdk.interactions import InteractionService,InteractionsRefused
+from ordessa_agents.sdk.prepare import canonical_digest
 from ordessa_harness_gemini_cli import factory
 from ordessa_infrastructure.encoding import canonical_bytes
 

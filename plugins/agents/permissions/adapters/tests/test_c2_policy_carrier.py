@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from _permissions_adapters_helpers import make_ceiling, make_intent, unverified_ceiling
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, AdapterRefusal, Assessment, Installation, IntentSet,
     TargetDescriptor, TargetHandle, VerificationUnknown,
 )

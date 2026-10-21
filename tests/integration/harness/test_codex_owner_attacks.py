@@ -21,12 +21,12 @@ from ordessa_harness_codex.provider import DEFAULTS_SCHEMA
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from pacthold.public import Environment, InstallationRecord
-from ordessa_execution_agents.profiles import encode_revision_ref
-from ordessa_execution_agents.public import (
+from ordessa_agents.profiles import encode_revision_ref
+from ordessa_agents.public import (
     AgentContributionSet, ConfigurationContractError, ConfigurationUnsupported,
     OwnerProposalInput, ProfileNotFound, agent_services,
 )
-from ordessa_execution_agents.harness.providers.registry.contributions import RUNTIME_METHODS
+from ordessa_agents.harness.providers.registry.contributions import RUNTIME_METHODS
 
 NS = 'codex-owner-attacks'
 DEF = {'environmentNamespace':NS,'definitionId':'codex','revision':'1'}

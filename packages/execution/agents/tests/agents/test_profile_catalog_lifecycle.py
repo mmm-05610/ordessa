@@ -1,7 +1,7 @@
 """Current public ProfileCatalog behavior on an isolated real Environment."""
 
 from __future__ import annotations
-from ordessa_execution_agents.profiles import encode_content
+from ordessa_agents.profiles import encode_content
 
 import pytest
 
@@ -12,7 +12,7 @@ from ordessa_units.public import (
     wire_contract,
     wire_schema_digest,
 )
-from ordessa_execution_agents.profiles import ProfileAccessRefused, ProfileStoreUnavailable
+from ordessa_agents.profiles import ProfileAccessRefused, ProfileStoreUnavailable
 from pacthold.adapters.sqlite.environment.store import KeyConflictError, SqliteStorePort
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 

@@ -3,7 +3,7 @@ import re
 
 import pytest
 
-from ordessa_execution_agents.capability.profiles import _request_key_id
+from ordessa_agents.capability.profiles import _request_key_id
 from ordessa_infrastructure.identifiers import RequestKey
 
 LOCAL_ID = re.compile(r'^[a-z][a-z0-9._-]{0,63}$')

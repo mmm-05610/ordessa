@@ -11,7 +11,7 @@ import pytest
 
 from ordessa_units.errors import UnitGuaranteeUnavailable
 from ordessa_units.public import unit_services, composed_profile_service
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     ProfileAccessRefused, ProfileRevisionConflict, ProfileValidationError,
 )
 from ordessa_server.bootstrap.migrations.harness_profile_history import CapturedHarnessProfile

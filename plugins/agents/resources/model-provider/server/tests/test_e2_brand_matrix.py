@@ -33,7 +33,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from _controlled_harness import (  # noqa: E402
     RESOURCE, ControlledComposition,
 )
-from ordessa_execution_agents.harness.definitions import DesiredFragment  # noqa: E402
+from ordessa_agents.harness.definitions import DesiredFragment  # noqa: E402
 
 from ordessa_model_provider.harness_binding import (  # noqa: E402
     ConfigurationServiceHarnessPort,
@@ -42,7 +42,7 @@ from ordessa_model_provider.ports import (  # noqa: E402
     SESSION_CONFIG_OUTCOME_UNKNOWN, SESSION_CONFIG_REJECTED,
     SESSION_CONFIG_UNSUPPORTED, SessionConfigError,
 )
-from server_plugin_api import (  # noqa: E402
+from ordessa_server_plugin_api import (  # noqa: E402
     Contribution, ContributionBatch, ServerPluginDescriptor,
     ServerPluginRegistration,
 )

@@ -33,7 +33,7 @@ from ordessa_environments.composition import (
     attempt_key,
 )
 from ordessa_environments.definitions.runtime_resources import CapabilityStatus
-from ordessa_execution_agents.harness.definitions.command_projection import HarnessCommandSpec
+from ordessa_agents.harness.definitions.command_projection import HarnessCommandSpec
 from ordessa_infrastructure.encoding.content_identity import digest
 
 

@@ -1,5 +1,5 @@
 """AU002 actual SQLite ledger with controlled Unit owner; no native/model."""
-from ordessa_execution_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
 from dataclasses import replace
 from pathlib import Path
 import sys
@@ -13,7 +13,7 @@ from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.errors import UnitIdentityMismatch, UnitOperationUnknown, UnitAdmissionRefused
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import InvocationIssuer, InvocationAuthorityRefused
-from ordessa_execution_agents.harness.providers.registry.contributions import RUNTIME_METHODS
+from ordessa_agents.harness.providers.registry.contributions import RUNTIME_METHODS
 from ordessa_units.configuration.contracts import (
  ApplicationPolicy, ConfigurationChangeRequest, ConfigurationDescription, ConfigurationSnapshot,
  ConfigurationItemResult, ConfigurationChangeResult, UnitInspection, ConfigurationUnsupported,
@@ -32,7 +32,7 @@ def setup(node_fixture):
  env._fingerprint_port=ProtectedFingerprintHmac({'fixture':b'au-unit-hmac'},active_key_id='fixture')
  # The Node lineage must reference a real frozen manifest: whole-manifest
  # updates bind their base to it and read its declarations for the diff.
- from ordessa_execution_agents.profiles.management.service import ProfileService
+ from ordessa_agents.profiles.management.service import ProfileService
  base_entry=ProfileService(env).create(profile_id='profile-base',name='Base Profile',
   content={'harnessDefinitionRef':{'environmentNamespace':'env','definitionId':'fixture','revision':'1'},
             'schemaVersion':'1','declarations':[{'declarationId':'model','configurationKind':'model',

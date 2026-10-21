@@ -6,9 +6,9 @@ from pathlib import Path
 
 FORBIDDEN = ('ordessa_units', 'ordessa_engineering', 'ordessa_server', 'pacthold',
              'ordessa_kernel', 'ordessa_agent')
-CLI = Path(__file__).resolve().parents[1] / 'src' / 'ordessa_agent_tools'
+CLI = Path(__file__).resolve().parents[1] / 'src' / 'ordessa_cli'
 CAPABILITY = (Path(__file__).resolve().parents[3] / 'packages' / 'execution' / 'agents'
-              / 'src' / 'ordessa_execution_agents' / 'capability')
+              / 'src' / 'ordessa_agents' / 'capability')
 
 
 def imported_modules(path):
@@ -57,4 +57,4 @@ def test_only_the_cli_distribution_registers_the_ordessa_console():
         scripts = data.get('project', {}).get('scripts', {})
         if 'ordessa' in scripts:
             owners.append((str(path.relative_to(root)), scripts['ordessa']))
-    assert owners == [('apps/cli/pyproject.toml', 'ordessa_agent_tools.cli:main')]
+    assert owners == [('apps/cli/pyproject.toml', 'ordessa_cli.cli:main')]

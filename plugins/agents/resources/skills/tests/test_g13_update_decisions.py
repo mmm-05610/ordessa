@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import MountContent, ReconfigurationDecision
+from ordessa_agents.harness.definitions import MountContent, ReconfigurationDecision
 from ordessa_skills.harness_adapters import base
 from ordessa_skills.harness_adapters.capabilities import statement_for
 from ordessa_skills.harness_adapters.intent import (

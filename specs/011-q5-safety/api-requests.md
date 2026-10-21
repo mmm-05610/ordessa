@@ -74,6 +74,6 @@
 - 需要：把提交许可的记录类型与规范化从中性契约暴露，使插件不必 import 宿主内部即可返回它。具体缺口（file:line 均在本树）：
   - `apps/server/src/ordessa_server/acp_admission.py:27-36` 的 `BoundAdmission` 与 `:63-90` 的 permit 规范化/摘要是宿主私有，`:134` 又对 authority 返回值做 `isinstance(bound, BoundAdmission)` 检查；
   - `:21` 的 `AcpAdmissionRefused` 是唯一能被 `AcpAdmissionPortAdapter`（`:383-387`）保留为稳定码的异常，插件异常会被折叠成 `unknown`。
-- 请求形式（任一即可，不要求宿主为本线开特例）：在 `server_plugin_api` 发布 `BoundAdmission`（或等价的中性 permit DTO + 规范化函数），或发布 `AcpAdmissionRefused` 与「authority 可返回的码集合」。
+- 请求形式（任一即可，不要求宿主为本线开特例）：在 `ordessa_server_plugin_api` 发布 `BoundAdmission`（或等价的中性 permit DTO + 规范化函数），或发布 `AcpAdmissionRefused` 与「authority 可返回的码集合」。
 - 失败反例（已就绪，等契约）：本线 `tests/test_host_pre_effect_l2.py` 中的提交侧用例；当前断言的是「无 binder 注入即拒」，若 C0 发布中性类型，这些用例应先红后绿地切换到真实 accepted 路径。
 - 另一条同时依赖 C0 的事实：默认产品 `bootstrap/runtime.py:607` 建 gate 时不传 authority、`AcpAdmissionPortAdapter.ready` 恒 False，因此本线 authority 需由产品装配显式启用。

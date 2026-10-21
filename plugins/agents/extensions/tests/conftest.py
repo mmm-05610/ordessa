@@ -3,7 +3,7 @@
 Same discipline as the Skills conftest: repo `src/` roots are appended
 ONLY when the matching module is not already importable — an installed
 distribution always wins. The published dependencies (`pacthold`,
-`server_plugin_api`, `ordessa_execution_agents.harness.definitions`) come from the verification
+`ordessa_server_plugin_api`, `ordessa_agents.harness.definitions`) come from the verification
 venv (docs/reference/baseline.md); only THIS package needs the path pin.
 """
 from __future__ import annotations

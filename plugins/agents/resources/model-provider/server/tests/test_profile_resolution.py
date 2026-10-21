@@ -5,8 +5,8 @@ import pytest
 
 from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
 from ordessa_model_provider.testing import RecordingSecretStore, harness_descriptor, seed_credential_row, wire_body
-from ordessa_execution_agents.harness.configuration.compilation.model_choice import choice_payload_schema
-from server_plugin_api.internal_errors import ServerError
+from ordessa_agents.harness.configuration.compilation.model_choice import choice_payload_schema
+from ordessa_server_plugin_api.internal_errors import ServerError
 
 
 FACTS = {"provider_in_instance": False, "credential_changed": False}

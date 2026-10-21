@@ -1,0 +1,12 @@
+== startup ==
+{"event":"listening","origin":"http://127.0.0.1:48765","pid":2041941,"serverId":"ordessa-21d7ef35"}
+ordessa-server: instance token /tmp/smoke/root/secrets/http-token (generated, 0600)
+ordessa-server: capabilities agents, environments, decisions
+== harness ==
+status completed ['kilo', 'pi', 'claude', 'codex', 'hermes', 'dsh']
+== profile create ==
+status completed rev 1
+== env exec ==
+status completed stdout 'smoke-ok\n'
+== decisions run ==
+status completed result {'answer': 'accept'}

@@ -6,7 +6,7 @@ These cases read native configuration; no Unit, model, method or Work is run.
 from ordessa_units.bindings.profile_admission import UnitProfileAdmission
 import pytest
 
-from ordessa_execution_agents.profiles import ProfileService, encode_revision_ref
+from ordessa_agents.profiles import ProfileService, encode_revision_ref
 from ordessa_units.public import composed_profile_service
 from ordessa_server.composition.product_runtime import build_product_runtime
 from ordessa_server.composition.product_user_configuration import (

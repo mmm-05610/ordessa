@@ -3,7 +3,7 @@
 P-A of docs/implementation/specifications/015-runtime-preferences-memory。四组运行级参数（compaction / memory /
 shell / retry）做成纯配置域：一个 facet 四 item，八家品牌 adapter（assess/compile/
 verify + `registration_manifest()`），注册进 main 已有的 C2 贡献点
-`harness.configuration-adapters`（`server_plugin_api`），应用链走 C4
+`harness.configuration-adapters`（`ordessa_server_plugin_api`），应用链走 C4
 `ConfigurationApplicationService.apply`。形制仿 `model-provider` 的 adapter 骨架，
 只仿形制、不 import 其代码。
 
@@ -21,7 +21,7 @@ Evidence level: **E-doc（文档级起步）**。每个编译键在 `src/ordessa
 | `common.py` | canonical 词表、字节稳定渲染（JSON/TOML）、版本门（文档级评估窗，不假装 pin）、reconfiguration 词表（含 `unverified`） |
 | `engine.py` | 共享 assess/compile/verify：cell 结论→类型化行为；未映射参数/未知组/admin 键一律显式拒绝 |
 | `{brand}.py` ×8 | pi / codex / claude / hermes / opencode / dsh / qwen / kilo：品牌绑定 + `registration_manifest()` |
-| `bridge.py` | 本地类型→`ordessa_execution_agents.harness.definitions` C2 类型（descriptor / SetField / Match），payload schema `runtime-preferences.item.v1` |
+| `bridge.py` | 本地类型→`ordessa_agents.harness.definitions` C2 类型（descriptor / SetField / Match），payload schema `runtime-preferences.item.v1` |
 | `plugin.py` | 插件声明面：八 adapter 进 `harness.configuration-adapters` contribution batch |
 | `facet.py` | profile facet 四 item（原子整项覆盖）、注册 payload、`addEditor` 声明 manifest、AR-5 memory 契约面 |
 | `session.py` | 会话整项覆盖/两会话隔离/切 profile 清覆盖语义 |

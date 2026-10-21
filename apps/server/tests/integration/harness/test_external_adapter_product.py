@@ -10,13 +10,13 @@ from zipfile import ZipFile
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, ErrorCode, Installation, IntentSet, LaunchPlan, LaunchRequest,
     ResumeRequest, RuntimeConfirmed, RuntimeRefused, RuntimeUnknown,
     TargetDescriptor, TargetHandle,
 )
 from ordessa_server.composition.runtime import build_runtime
-from server_plugin_api import ContributionOwnerBusyError
+from ordessa_server_plugin_api import ContributionOwnerBusyError
 
 RUNTIME_POINT = "harness.runtime-adapters"
 CONFIGURATION_POINT = "harness.configuration-adapters"

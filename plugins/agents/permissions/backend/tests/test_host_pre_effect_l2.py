@@ -29,7 +29,7 @@ STEP-1 DETERMINATION - the seam is only HALF drivable from a plugin:
 * (b) for the SUBMISSION fence: the gate requires
   `isinstance(bound, BoundAdmission)` (`acp_admission.py:134`) where
   `BoundAdmission` is declared in the host module (`acp_admission.py:27-36`)
-  and is NOT re-exported from `server_plugin_api` (that contract declares only
+  and is NOT re-exported from `ordessa_server_plugin_api` (that contract declares only
   four DTOs plus the port protocol). A structurally identical plugin-owned
   record is refused (test 8). The permit's `input_digest` must also equal the
   host's private canonicalisation (`acp_admission.py:63-90`, computed at `:120`),
@@ -48,8 +48,8 @@ import json
 import re
 
 import pytest
-import server_plugin_api
-from server_plugin_api import (
+import ordessa_server_plugin_api
+from ordessa_server_plugin_api import (
     ACP_ADMISSION_PORT,
     ACP_ADMISSION_PORT_VERSION,
     AcpAdmissionResult,
@@ -573,7 +573,7 @@ def test_permit_record_and_authority_are_still_host_owned(tmp_path):
     change claim this as already proven."""
     del tmp_path
     for name in ("BoundAdmission", "AcpPermitAuthority", "AcpAdmissionRefused"):
-        assert not hasattr(server_plugin_api, name), name
+        assert not hasattr(ordessa_server_plugin_api, name), name
 
     class LookAlikeAuthority:
         """Structurally complete, semantically correct - and refused."""
@@ -617,7 +617,7 @@ def test_the_authority_module_imports_no_host_internals() -> None:
             roots |= {alias.name.split(".")[0] for alias in node.names}
         elif isinstance(node, ast.ImportFrom) and node.module and not node.level:
             roots.add(node.module.split(".")[0])
-    assert roots <= {"__future__", "typing", "server_plugin_api"}, roots
+    assert roots <= {"__future__", "typing", "ordessa_server_plugin_api"}, roots
 
 
 # -- 9. the ACP owner accepts this lane's port by its version marker -----------

@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 import pytest
-from decision_runtime.definitions import *
+from ordessa_decision.definitions import *
 from assignment_source.selection import assignment_round, decide_assignment
 from assignment_source.composition import DeterministicProposalSource, RegisteredTemplate, check_schema, DIALECT
 

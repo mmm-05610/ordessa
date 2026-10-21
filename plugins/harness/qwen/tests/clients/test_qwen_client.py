@@ -13,8 +13,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
-from ordessa_execution_agents.harness.transport.channel import ChannelClosed
-from ordessa_execution_agents.harness.transport.http import LoopbackHttpChannel, NonLoopbackRefused
+from ordessa_agents.harness.transport.channel import ChannelClosed
+from ordessa_agents.harness.transport.http import LoopbackHttpChannel, NonLoopbackRefused
 from ordessa_harness_qwen.client import (
     QwenApiError,
     QwenClient,

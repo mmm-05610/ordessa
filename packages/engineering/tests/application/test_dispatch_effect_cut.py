@@ -22,8 +22,8 @@ from ordessa_infrastructure.encoding import canonical_bytes
 
 # Original public Execution owner; qualification selects its frozen dependency site.
 from ordessa_environments import ProcessHandle
-from ordessa_execution_agents.harness.transport import EffectWriteGuard, ChannelClosed, WriterLeaseRefused
-from ordessa_execution_agents.harness.transport.environment_channel import EnvironmentProcessChannel
+from ordessa_agents.harness.transport import EffectWriteGuard, ChannelClosed, WriterLeaseRefused
+from ordessa_agents.harness.transport.environment_channel import EnvironmentProcessChannel
 
 
 def prepared(tmp_path,monkeypatch):

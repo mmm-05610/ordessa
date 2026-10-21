@@ -8,7 +8,7 @@ import pytest
 from ordessa_server.composition.native_channels.registry import _Channel
 from ordessa_server.composition.native_channels.registry import _ObservedTransport
 from ordessa_server.composition.native_channels.registry import AcpChannelRegistry
-from ordessa_execution_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
+from ordessa_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
 
 
 class ImmediateLoop:

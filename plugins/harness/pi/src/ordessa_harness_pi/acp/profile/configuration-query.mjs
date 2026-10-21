@@ -1,4 +1,4 @@
-import { assertConfigurationIdentity } from "../../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/digest.mjs"
+import { assertConfigurationIdentity } from "../../../../../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/digest.mjs"
 import { randomUUID } from 'node:crypto'
 
 export const CONFIGURATION_QUERY = '_ordessa/session/configuration'

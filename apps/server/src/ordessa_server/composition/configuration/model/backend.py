@@ -6,7 +6,7 @@ to know native launch options, account directories or per-brand preparation.
 
 from .bindings import model_descriptor, supports_model_route
 from .bindings import model_port
-from ordessa_execution_agents.harness.contracts.errors.native import NativeModelLaunchRefused
+from ordessa_agents.harness.contracts.errors.native import NativeModelLaunchRefused
 from .bindings import capture_selected_native_model_ports
 
 

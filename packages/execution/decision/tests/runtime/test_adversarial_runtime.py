@@ -1,9 +1,9 @@
 """Replay ACKs and ambiguous remote attempts must not permit completion/retry."""
 from dataclasses import replace
 import pytest
-from decision_runtime.definitions import *
-from decision_runtime.evidence import MemoryEvidenceSink
-from decision_runtime.runtime import run_decision, RuntimeFailure
+from ordessa_decision.definitions import *
+from ordessa_decision.evidence import MemoryEvidenceSink
+from ordessa_decision.runtime import run_decision, RuntimeFailure
 from test_runtime import Provider, build_flow, compose, question, READ
 
 class DurableMemory(MemoryEvidenceSink):

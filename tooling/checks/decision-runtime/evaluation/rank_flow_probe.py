@@ -16,16 +16,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import time
 
 import httpx2
-from decision_runtime.definitions import (TaskBrief, ProposalDraft, ProposalCandidateBatch,
+from ordessa_decision.definitions import (TaskBrief, ProposalDraft, ProposalCandidateBatch,
     DecisionRequest, DecisionAnswer, DecisionServices, ReadContext, RunLimits, FlowRef,
     digest, plain, freeze)
 from assignment_source.build import build_assignment_flow, load_assignment_policy
 from assignment_source.proposals import check_proposal_basis
 from assignment_source.selection import validate_policy
 from assignment_source.offline import OfflineCandidates
-from decision_runtime.evidence import FileEvidenceSink, MemoryEvidenceSink
+from ordessa_decision.evidence import FileEvidenceSink, MemoryEvidenceSink
 from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings
-from decision_runtime.runtime import run_decision, reviewed_code_digest, flow_digest
+from ordessa_decision.runtime import run_decision, reviewed_code_digest, flow_digest
 
 _spec = importlib.util.spec_from_file_location('rank_reference_helpers', Path(__file__).with_name('reference_flow_probe.py'))
 reference = importlib.util.module_from_spec(_spec)
@@ -161,7 +161,7 @@ async def run_plan(plan, output, credential_file, authorize_live=False, *, ledge
         audited = live.AuditedTransport(transport or httpx2.AsyncHTTPTransport(retries=0), ledger, deadline)
         provider = JevDecisionProvider(settings, secret_resolver=lambda _: key, transport=audited)
         ledger.begin('rank'); audited.case_id = 'rank'
-        from decision_runtime.definitions import DecisionQuestion
+        from ordessa_decision.definitions import DecisionQuestion
         questions = tuple(DecisionQuestion.from_dict(q) for q in frozen['questions'])
         recorded = reference.FrozenQuestions(provider, row, save, questions)
         flow = replace(flow, new_state=lambda _: state)

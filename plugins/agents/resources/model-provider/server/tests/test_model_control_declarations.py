@@ -6,7 +6,7 @@ import pytest
 from ordessa_harness_codex.configuration import c2
 from ordessa_model_provider.harness_declarations import ModelConfigurationCatalog
 from ordessa_model_provider.testing import wire_body
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 
 
 def _capture(controls):

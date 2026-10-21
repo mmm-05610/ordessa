@@ -55,7 +55,7 @@ refused (`POLICY_CEILING_VIOLATION`, `APPROVAL_STALE`, `APPROVAL_NOT_ACTIONABLE`
 
 `wire_family.PERMISSION_ERROR_FAMILIES` maps every code this package can emit
 to an **existing** family of the platform's closed wire vocabulary — the names
-the foundation publishes in `server_plugin_api.wire_errors` (`FAMILIES`,
+the foundation publishes in `ordessa_server_plugin_api.wire_errors` (`FAMILIES`,
 `STATIC_ERROR_FAMILIES`, `family_for`). No family is invented and no static
 row is overridden: `APPROVAL_STALE` repeats the platform's own
 `APPROVAL_INVALID` answer verbatim, `POLICY_SCOPE_UNVERIFIED` keeps the

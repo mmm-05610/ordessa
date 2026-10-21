@@ -5,7 +5,7 @@ unique, with **overlap refused at composition time, never last-wins**
 (contracts.md §C1). Since the foundation checkpoint the refusal authority is
 the platform's: the point's conflict registry inside
 `ordessa_server.composition.configuration.contributions` (driven through the public
-`server_plugin_api.stage_contributions`). The package only *declares*;
+`ordessa_server_plugin_api.stage_contributions`). The package only *declares*;
 every refusal below is asserted to be raised by the platform, and the
 package's former private registry - which re-implemented these refusals as
 a second authority - is gone.
@@ -21,9 +21,9 @@ from ordessa_server.composition.configuration.contributions import CONFIGURATION
 from ordessa_server.composition.configuration.contributions import HarnessContributionError
 from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
 from ordessa_server.composition.configuration.contributions import POINT_API_VERSION
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ConfigurationAdapterDescriptor, FieldClaim, ValueSchema, VersionRange)
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     Contribution, ContributionBatch, ServerPluginContext,
     ServerPluginDescriptor, stage_contributions)
 

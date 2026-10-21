@@ -4,7 +4,7 @@ from __future__ import annotations
 from threading import Event, Thread
 
 import pytest
-from server_plugin_api import AbsentContribution, ContributionAccessError, ContributionOwnerBusyError
+from ordessa_server_plugin_api import AbsentContribution, ContributionAccessError, ContributionOwnerBusyError
 
 from contribution_fakes import ContribPlugin, RecordingHandler, contribution, new_host
 from ordessa_server.composition.plugin_host import ResolvedContribution
@@ -200,7 +200,7 @@ def test_disposal_callback_can_read_host_and_same_owner_cannot_reactivate():
 
         def build(self, context):
             registration = owner.build(context)
-            from server_plugin_api import ServerPluginRegistration
+            from ordessa_server_plugin_api import ServerPluginRegistration
             return ServerPluginRegistration(contributions=registration.contributions,
                                             disposal=disposal)
 

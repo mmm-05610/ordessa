@@ -1,8 +1,8 @@
 """Concrete Harness credential selections cannot restore generic Work refs."""
 import dataclasses
 import pytest
-from ordessa_execution_agents.harness.configuration.selection import CredentialSelection,SelectorField
-from ordessa_execution_agents.harness.definitions import NativeCredentialRef,NativeProfileRef
+from ordessa_agents.harness.configuration.selection import CredentialSelection,SelectorField
+from ordessa_agents.harness.definitions import NativeCredentialRef,NativeProfileRef
 
 
 def test_credential_selection_preserves_original_native_identity_and_metadata():

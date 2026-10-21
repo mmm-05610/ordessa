@@ -20,7 +20,7 @@ from agent_tools_fixtures.assembly import (
     PreparationObservation, SqliteStorePort, ProtectedFingerprintHmac,
     UsageMutation, operation_holder, decode_node_ref, Provider, ContextOwner, Owner,
 )
-from ordessa_execution_agents.harness.definitions.runtime_providers import RUNTIME_METHODS, RUNTIME_PROVIDER_VERSION, RuntimeProviderDescriptor
+from ordessa_agents.harness.definitions.runtime_providers import RUNTIME_METHODS, RUNTIME_PROVIDER_VERSION, RuntimeProviderDescriptor
 from ordessa_units.lifecycle.service import AgentLifecycle, LifecycleObservation
 
 

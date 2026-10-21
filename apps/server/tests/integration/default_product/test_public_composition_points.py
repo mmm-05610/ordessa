@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from ordessa_server_product.composition import ServerProductComposition
 from ordessa_server.composition.configuration.product_selection import create_host_product_composition as create_composition
-from server_plugin_api import ContributionPointSpec, unique_contribution_point_specs
+from ordessa_server_plugin_api import ContributionPointSpec, unique_contribution_point_specs
 
 
 def test_exact_harness_point_declarations_share_one_registry_per_composition():

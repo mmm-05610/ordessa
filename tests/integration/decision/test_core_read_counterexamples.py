@@ -5,18 +5,18 @@ from dataclasses import replace
 import pytest
 
 from pacthold.public import Environment, InstallationRecord
-from ordessa_execution_agents.public import (
+from ordessa_agents.public import (
     AgentContributionSet, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION,
     PURE_READ_VERSION, OwnerProposalInput, OwnerProposalAssessment,
     ConfigurationContractError, ConfigurationUnsupported, agent_services,
 )
-from ordessa_execution_agents.harness.providers.registry.contributions import RUNTIME_METHODS
-from ordessa_execution_agents.units.configuration.offers import require_assessment
-from decision_runtime.definitions.models import (
+from ordessa_agents.harness.providers.registry.contributions import RUNTIME_METHODS
+from ordessa_agents.units.configuration.offers import require_assessment
+from ordessa_decision.definitions.models import (
     FlowRef, PolicyRef, RunLimits, RunManifest, Precondition,
     ValidationObligation, ValidationReceipt,
 )
-from decision_runtime.definitions.values import ContractError, digest
+from ordessa_decision.definitions.values import ContractError, digest
 
 DEF = {'environmentNamespace':'counterexample','definitionId':'test','revision':'1'}
 PROVIDER = {'environmentNamespace':'counterexample','providerId':'test','generation':1}

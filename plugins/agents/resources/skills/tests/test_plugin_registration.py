@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     WIRE_ERROR_FAMILIES_API_VERSION,
     WIRE_ERROR_FAMILIES_POINT_ID,
     ContributionDeclarationError,
@@ -124,9 +124,9 @@ def test_the_error_families_contribution_publishes_through_the_host(runtime):  #
 
 def test_the_contributed_families_are_only_wire1_family_names():
     """Closed-vocabulary pin: the payload may name families from
-    `server_plugin_api.FAMILIES` only — a new family is a wire/1 contract
+    `ordessa_server_plugin_api.FAMILIES` only — a new family is a wire/1 contract
     change, never a plugin-side invention."""
-    from server_plugin_api import FAMILIES
+    from ordessa_server_plugin_api import FAMILIES
 
     assert set(SKILLS_ERROR_FAMILIES.values()) <= FAMILIES
     # the point identity we declare is the published one, atomically one row
@@ -137,7 +137,7 @@ def test_the_contributed_families_are_only_wire1_family_names():
 def test_the_registration_shape_carries_the_batch():
     """The batch is declared at registration-build time (the host never
     reads a module table): one Contribution for the point, payload attached."""
-    from server_plugin_api import Contribution, ContributionBatch
+    from ordessa_server_plugin_api import Contribution, ContributionBatch
 
     batch = ContributionBatch((
         Contribution(

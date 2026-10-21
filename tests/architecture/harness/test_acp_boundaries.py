@@ -29,9 +29,9 @@ import pytest
 REPO = Path(__file__).resolve().parents[3]
 PLUGIN = REPO / "plugins" / "harness"
 RUNTIME = REPO / 'apps/server/src/ordessa_server/composition/native_channels'
-BRIDGE = REPO / 'packages/execution/agents/src/ordessa_execution_agents/harness/transport/vendor/harness_remote/bridge'
-SRC = REPO / "packages" / "execution" / "agents" / "src" / "ordessa_execution_agents" / "harness"
-SOURCE_MANIFEST = REPO / 'packages/execution/agents/src/ordessa_execution_agents/harness/transport/vendor/harness_remote/SOURCE.json'
+BRIDGE = REPO / 'packages/execution/agents/src/ordessa_agents/harness/transport/vendor/harness_remote/bridge'
+SRC = REPO / "packages" / "execution" / "agents" / "src" / "ordessa_agents" / "harness"
+SOURCE_MANIFEST = REPO / 'packages/execution/agents/src/ordessa_agents/harness/transport/vendor/harness_remote/SOURCE.json'
 
 #: Directories that never hold code worth scanning.
 SKIP_DIRECTORY_NAMES = {".git", "__pycache__", "node_modules", ".venv", "artifacts", "vendor"}

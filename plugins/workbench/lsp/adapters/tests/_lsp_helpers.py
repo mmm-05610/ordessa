@@ -45,7 +45,7 @@ def ruff_formatter() -> FormatterDefinition:
 
 def captured_harnesses_text() -> str:
     """Capture actual provider fragments, independent of the default product roster."""
-    from ordessa_execution_agents.harness.providers.declarations import RegistrationDeclarations
+    from ordessa_agents.harness.providers.declarations import RegistrationDeclarations
     from ordessa_server.composition.harness_catalog import capture_harness_catalog
 
     paths = sorted(REPO_ROOT.glob(

@@ -13,8 +13,8 @@ import json
 import httpx2
 import pytest
 
-from decision_runtime.definitions import DecisionQuestion, PolicyRef, ReadContext, digest
-from decision_runtime.evidence import FileEvidenceSink
+from ordessa_decision.definitions import DecisionQuestion, PolicyRef, ReadContext, digest
+from ordessa_decision.evidence import FileEvidenceSink
 from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings
 from ordessa_engineering.adapters.filesystem.resource_reader import FileResourceReader
 from ordessa_engineering.adapters.persistence.sqlite.blob_store import SQLiteBlobStore

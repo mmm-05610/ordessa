@@ -20,10 +20,10 @@ from test_unit_instance import Provider, Preparation, Scope
 
 from agent_tools_fixtures.invocation_authority import Authority, CurrentState
 from agent_tools_fixtures.node_publication import Policy
-from ordessa_execution_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
+from ordessa_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.definitions.admission_identity import AdmissionNamespace
-from ordessa_execution_agents.harness.providers.registry.definition_admission import (
+from ordessa_agents.harness.providers.registry.definition_admission import (
     HarnessDefinitionDescriptor, HarnessDefinitionDeclaration,
     HarnessInstallationObservation, HarnessAdmission, HarnessCatalog,
 )
@@ -132,7 +132,7 @@ def build_joint_owner(tmp_path, *, acp_turn_opt_in=False, effect_write_guard_fac
         factory_calls = []
 
         def materialize(agent, environment, facts, snapshot):
-            from ordessa_execution_agents.preparation import ConfigurationResources
+            from ordessa_agents.preparation import ConfigurationResources
             directory_path = environment.files.ensure(
                 str(Path(agent.harness.resources.location).relative_to(root))
             )
@@ -143,7 +143,7 @@ def build_joint_owner(tmp_path, *, acp_turn_opt_in=False, effect_write_guard_fac
             if environment_id != AdmissionNamespace("env") or provider_view.records is not records or provider_view.verifier is not verifier:
                 raise ValueError("fixture factory requires the original Environment and owner view")
             factory_calls.append((environment_id, plan, provider_view))
-            from ordessa_execution_agents.profiles import decode_revision_ref
+            from ordessa_agents.profiles import decode_revision_ref
             from ordessa_units.management import UnitInstance
             unit = UnitInstance(
                 descriptor=descriptor, agent_id="controlled-agent",

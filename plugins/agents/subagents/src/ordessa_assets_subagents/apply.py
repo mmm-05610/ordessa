@@ -1,7 +1,7 @@
 """T12 — drive the complete managed set through one submit permit, then send once.
 
 This module is an **orchestrator** over C0's published `ConfigurationService`
-port (`ordessa_execution_agents.harness.definitions.application`), not a second implementation of it.
+port (`ordessa_agents.harness.definitions.application`), not a second implementation of it.
 It freezes the ordering the design requires (`contracts.md` §C4, §C5 and
 `verification.md` gates G18/G19/G20) and is deliberately honest about which
 half can actually run in this tree today.
@@ -10,13 +10,13 @@ What is real here
 -----------------
 * :class:`ApplyCoordinator` accepts a host-injected, `ConfigurationService`
   **Protocol**-shaped collaborator (`inspect/plan/apply/query/reconcile`,
-  `packages/execution/agents/src/ordessa_execution_agents/harness/definitions/application.py:211-216`) and the
+  `packages/execution/agents/src/ordessa_agents/harness/definitions/application.py:211-216`) and the
   host-supplied `ApplicationTarget` + `TargetHandle`. It calls
   ``service.plan`` then ``service.apply`` (the same two calls C0's controlled
   service exposes at
   `apps/server/src/ordessa_server/composition/configuration/application.py:372,409`)
   and maps each returned DTO — `Confirmed` / `Refused` / `Unknown`
-  (`packages/execution/agents/src/ordessa_execution_agents/harness/definitions/application.py:131-180`) — onto the send-gate. It never writes a file,
+  (`packages/execution/agents/src/ordessa_agents/harness/definitions/application.py:131-180`) — onto the send-gate. It never writes a file,
   spawns a process, opens a network endpoint or speaks ACP itself (FR08); the
   effectful steps stay C0's.
 
@@ -65,7 +65,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Mapping, Sequence
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ApplicationResult,
     ApplicationTarget,
     ConfigurationService,

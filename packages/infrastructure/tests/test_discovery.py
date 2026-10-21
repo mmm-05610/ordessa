@@ -204,7 +204,7 @@ import ordessa_infrastructure.discovery
     result = subprocess.run([sys.executable, '-B', '-c', code], capture_output=True, text=True, timeout=10)
     assert result.returncode == 0, result.stderr
     for planted in ['importlib.metadata.entry_points()', 'importlib.metadata.EntryPoint("n","m:f","g").load()',
-                    'import ordessa_execution_agents']:
+                    'import ordessa_agents']:
         negative = subprocess.run([sys.executable, '-B', '-c', code + '\n' + planted], capture_output=True, text=True, timeout=10)
         assert negative.returncode != 0
         assert 'AssertionError' in negative.stderr

@@ -21,7 +21,7 @@ from ordessa_prompts.backend.service import PromptsService
 from ordessa_prompts.backend.storage import PromptsStore
 from ordessa_prompts.plugin import DATA_DIR_NAME, PLUGIN_ID, PromptsServerPlugin
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     PLUGIN_METHOD_ID,
     SERVER_PLUGIN_API_VERSION,
     ServerMethodDescriptor,

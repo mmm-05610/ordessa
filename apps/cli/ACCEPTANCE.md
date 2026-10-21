@@ -246,7 +246,7 @@ prompt: this row proves the ACP handshake and lifecycle, not a model call.
 - Ctrl+C during an active prompt: the **first** press sends the native
   `session/cancel` notification and keeps waiting; the **second** press stops
   waiting locally. The original result is never rewritten as `cancelled`.
-- Installed import audit: `ordessa_agent_tools.cli` + `session` load no
+- Installed import audit: `ordessa_cli.cli` + `session` load no
   `ordessa_server`, `ordessa_units`, `ordessa_engineering`, `pacthold`,
   `ordessa_kernel` or `ordessa_agent` module; every imported distribution
   origin is the installed site-packages.

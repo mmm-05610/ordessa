@@ -4,7 +4,7 @@ The admitted Unit owner interprets and confirms native configuration. Core
 stores fixed intent and immutable observations, never a mutable actual cache.
 """
 from __future__ import annotations
-from ordessa_execution_agents.profiles.definitions.codec import decode_revision_ref, encode_content, encode_revision_ref
+from ordessa_agents.profiles.definitions.codec import decode_revision_ref, encode_content, encode_revision_ref
 
 import hashlib
 import json
@@ -33,8 +33,8 @@ from ordessa_units.configuration.contracts import (
 from ordessa_units.admission.invocation import InvocationAuthorityRefused, InvocationIssuer
 from ordessa_units.bindings.publication import encode_node_ref
 from ordessa_units.bindings.profile_admission import UnitProfileAdmission
-from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessAdmission
-from ordessa_execution_agents.profiles.definitions.models import ProfileRevisionRef
+from ordessa_agents.harness.providers.registry.definition_admission import HarnessAdmission
+from ordessa_agents.profiles.definitions.models import ProfileRevisionRef
 
 CONFIGURATION_ATTEMPTS = 'agents.configuration-attempts'
 
@@ -306,7 +306,7 @@ class AgentConfiguration:
         never a fabricated all-applied outcome. Applying a Profile never
         writes the catalog back and a Profile update never applies itself.
         """
-        from ordessa_execution_agents.profiles.management.service import ProfileService
+        from ordessa_agents.profiles.management.service import ProfileService
         if (profile_ref is None) == (profile_manifest is None):
             raise ConfigurationContractError('exactly one configuration source required')
         if type(base_profile_ref) is not ProfileRevisionRef:

@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 from ordessa_server.bootstrap.system_access.idempotent_records import IdempotentRecords
 from ordessa_workspace.local_environment import (
     EXECUTION_MODES, LocalEnvironmentProvider,

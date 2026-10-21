@@ -33,7 +33,7 @@ _FORBIDDEN_PREFIXES = (
     "ordessa_server",
     "ordessa_engineering",
     "ordessa_units",
-    "ordessa_execution_agents.units",
+    "ordessa_agents.units",
 )
 _SYSTEM_ACCESS_ROOT = "ordessa_interfaces.system_access"
 
@@ -117,7 +117,7 @@ blocked = (
     "ordessa_server",
     "ordessa_engineering",
     "ordessa_units",
-    "ordessa_execution_agents.units",
+    "ordessa_agents.units",
 )
 original_import = builtins.__import__
 def guarded_import(name, *args, **kwargs):
@@ -164,7 +164,7 @@ print(json.dumps({"origin": str(Path(http_module.__file__).resolve())}))
 
 def test_moved_cursor_codec_keeps_the_historical_wire_format_and_rejects_tampering():
     from ordessa_interfaces.system_access.subscriptions.cursors import CursorCodec
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
 
     codec = CursorCodec(b"fixture-secret")
     cursor = codec.encode("session-1", 42)

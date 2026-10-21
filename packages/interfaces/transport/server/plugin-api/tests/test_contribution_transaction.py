@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     AbsentContribution,
     Contribution,
     ContributionBatch,

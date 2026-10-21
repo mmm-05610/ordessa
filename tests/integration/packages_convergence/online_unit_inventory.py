@@ -14,7 +14,7 @@ DECLARATIONS={'.json','.toml','.yaml','.yml','.lock','.cfg','.ini'}
 META={'Dockerfile','requirements.txt','pyproject.toml','package.json','package-lock.json','python-workspace.json'}
 RULES={
     'units_distribution_or_module':r'\bordessa_units(?:\.[A-Za-z_][\w]*)*\b|\bordessa-units\b',
-    'retired_agent_records_import':r'\bordessa_execution_agents\.harness\.(?:records|transport)(?:\.[A-Za-z_][\w]*)*\b',
+    'retired_agent_records_import':r'\bordessa_agents\.harness\.(?:records|transport)(?:\.[A-Za-z_][\w]*)*\b',
     'unit_owner_or_alias':r'\b(?:UnitRecords|UnitManager|UnitServices|UnitRuntimeProvider|AgentUnitRef|UnitRef|unit_services|agent_services|AgentServices|AgentOwnerPorts|InvocationIssuer|composed_profile_service|resolve_unit_reference|authorize_acp_turn_query|OperationJournal)\b',
     'unit_identity':r'\b(?:unit_ref|unit_ref_bytes|unitRef|unit_id|unitId|reviewer_unit_ref|author_unit_ref|ownerProviderRef)\b',
     'retired_kernel_dependency':r'\bpacthold(?:\.[A-Za-z_][\w]*)*\b|\bpacthold-runtime-compat\b',
@@ -89,9 +89,9 @@ def inventory(root):
         else:
             for line,value in enumerate(text.splitlines(),1):add(value,line,'metadata' if metadata else 'lexical_source')
     # Prove missing public imports against the ACTUAL current Agent public list.
-    tree=ast.parse((root/'packages/execution/agents/src/ordessa_execution_agents/public.py').read_text())
+    tree=ast.parse((root/'packages/execution/agents/src/ordessa_agents/public.py').read_text())
     exports=set(next(ast.literal_eval(n.value) for n in tree.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='__all__' for t in n.targets)))
-    invalid=[{**e,'missing':[n for n in e['names'] if n!='*' and n not in exports]} for e in edges if e['module']=='ordessa_execution_agents.public']
+    invalid=[{**e,'missing':[n for n in e['names'] if n!='*' and n not in exports]} for e in edges if e['module']=='ordessa_agents.public']
     invalid=[e for e in invalid if e['missing']]
     from collections import Counter
     actionable=[f for f in findings if f['category'] in {'production_execution_or_contract_candidate','distribution_or_assembly_candidate','explicit_tool_or_assembly_candidate'}]

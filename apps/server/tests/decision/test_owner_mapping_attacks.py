@@ -3,10 +3,10 @@ from dataclasses import replace
 import pytest
 from test_core_read_seam import setup, DEF
 from ordessa_units.public import OwnerProposalInput
-from decision_runtime.definitions import ContractError
+from ordessa_decision.definitions import ContractError
 from assignment_source.offline import offline_case
 from ordessa_system_access_bindings import OwnerProposalValidator
-from decision_runtime.runtime import run_decision
+from ordessa_decision.runtime import run_decision
 
 
 def native_input(api, draft, ratio):

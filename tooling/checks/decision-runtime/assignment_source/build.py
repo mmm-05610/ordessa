@@ -3,9 +3,9 @@ from dataclasses import dataclass, field, is_dataclass
 from pathlib import Path
 import json
 from pydantic_graph import GraphBuilder, StepContext
-from decision_runtime.definitions import *
-from decision_runtime.runtime import TrustedFlow, flow_digest, reviewed_code_digest
-from decision_runtime.validation.requests import construct
+from ordessa_decision.definitions import *
+from ordessa_decision.runtime import TrustedFlow, flow_digest, reviewed_code_digest
+from ordessa_decision.validation.requests import construct
 from .task_gate import assess_task, compile_task_gate, load_task_gate_policy, GateResult
 from .selection import assignment_round, validate_policy, AssignmentRound
 

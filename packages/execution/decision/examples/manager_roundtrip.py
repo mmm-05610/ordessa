@@ -3,7 +3,7 @@ import asyncio
 
 from pydantic_graph import GraphBuilder
 
-from decision_runtime import (
+from ordessa_decision import (
     BusinessOutcome, DecisionManager, DecisionRequest, DecisionServices,
     FlowRef, MemoryEvidenceSink, PolicyRef, ReadContext, RunContext,
     TaskBrief, TrustedFlow, flow_digest, reviewed_code_digest,

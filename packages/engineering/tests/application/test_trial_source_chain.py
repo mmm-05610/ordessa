@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 import pytest
-from decision_runtime import DecisionAnswer, FileEvidenceReader, ReadContext
+from ordessa_decision import DecisionAnswer, FileEvidenceReader, ReadContext
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.domain.reviews.ref_codec import decode_review_ref
 from test_real_source_chain import (ROOT, SCOPE, ControlledDecisionProvider,

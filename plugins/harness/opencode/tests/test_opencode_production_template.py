@@ -29,7 +29,7 @@ FORBIDDEN_ENVIRONMENT = ("TOKEN", "SECRET", "KEY", "PASSWORD", "CREDENTIAL", "AU
 from functools import partial
 from ordessa_server.composition.harness_catalog import capture_harness_catalog
 from ordessa_server.composition.selected_harness_catalog import capture_selected_harness_catalog
-from ordessa_execution_agents.harness.providers.declarations.capability_claims import capability_claims
+from ordessa_agents.harness.providers.declarations.capability_claims import capability_claims
 
 from ordessa_harness_opencode.registration_declarations import registration_declarations
 

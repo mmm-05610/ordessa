@@ -7,9 +7,9 @@ from types import SimpleNamespace
 import pytest
 from ordessa_interfaces.system_access import CapabilityHost,build_registry
 from ordessa_interfaces.system_access.operations import RequestContext
-from ordessa_execution_agents.public import ProfileService
-from ordessa_execution_agents.sdk.contract_catalog import contract_catalog,contract_catalog_digest
-from ordessa_execution_agents.capability.native import build_native_capability
+from ordessa_agents.public import ProfileService
+from ordessa_agents.sdk.contract_catalog import contract_catalog,contract_catalog_digest
+from ordessa_agents.capability.native import build_native_capability
 from test_recorded_native_configuration import native_case,request,close
 from test_agent_guarded_bootstrap import setup,PEER
 
@@ -76,16 +76,16 @@ def test_foreground_deployment_uses_original_product_owner_and_root(tmp_path):
                 async def read(request,context):
                     # Actual original ProfileService and admission, not fixture result.
                     return OperationResult('completed',data={'entries':len(owner.profile_service.list())})
-                base=CapabilityDescriptor('profiles','controlled-profile-read/1',(
-                    OperationDescriptor('profiles.list',{'type':'object','additionalProperties':False},{'type':'object'}),),'')
-                return (Capability(CapabilityDescriptor(base.id,base.version,base.operations,compute_descriptor_digest(base)),{'profiles.list':read}),)
+                base=CapabilityDescriptor('agents','controlled-profile-read/1',(
+                    OperationDescriptor('agents.profiles.list',{'type':'object','additionalProperties':False},{'type':'object'}),),'')
+                return (Capability(CapabilityDescriptor(base.id,base.version,base.operations,compute_descriptor_digest(base)),{'agents.profiles.list':read}),)
             inputs=AgentOwnerInputs(case.owner.service,case.manager.harness_resolver,case.fixture.resolver,
                 case.manager.preparation_resolver,case.authority,case.authority,capabilities)
             root=tmp_path/'deployment'
             runtime=AgentToolsDeployment(agent_owner_inputs=inputs,authenticate=lambda command:{}).build_runtime(AgentServiceConfiguration(root))
             assert runtime.owner.records is runtime.owner.manager.records
             assert type(runtime.owner.profile_service) is ProfileService
-            result=await runtime.host.call('profiles.list',{},RequestContext({},'actual-read'))
+            result=await runtime.host.call('agents.profiles.list',{},RequestContext({},'actual-read'))
             assert result.status=='completed' and result.data['entries']==1
             assert (root/'state'/'agent-owner'/'agent-instances.sqlite').exists()
             assert not (root/'state'/'core.sqlite').exists()

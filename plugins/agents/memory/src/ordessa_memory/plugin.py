@@ -1,6 +1,6 @@
 """The Ordessa memory domain plugin: the mem0 self-hosted leaf (015 P-B).
 
-Registration shape (server_plugin_api public vocabulary only — this module
+Registration shape (ordessa_server_plugin_api public vocabulary only — this module
 imports no host internals, no Profile implementation, no Harness
 implementation, and never ``ordessa_model_provider``):
 
@@ -25,7 +25,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     WIRE_ERROR_FAMILIES_API_VERSION, WIRE_ERROR_FAMILIES_POINT_ID,
     Contribution, ContributionBatch, ServerMethodDescriptor, ServerPluginContext,
     ServerPluginDescriptor, ServerPluginRegistration,
@@ -45,7 +45,7 @@ PLUGIN_VERSION = "1"
 DATA_DIR_NAME = "memory"
 
 #: The hard dependency: provider resolution comes from the model-provider
-#: catalog port (requires = the access grant, server_plugin_api contract).
+#: catalog port (requires = the access grant, ordessa_server_plugin_api contract).
 REQUIRES = ("ordessa.model-provider",)
 
 CONFIGURATION_POINT = "harness.configuration-adapters"

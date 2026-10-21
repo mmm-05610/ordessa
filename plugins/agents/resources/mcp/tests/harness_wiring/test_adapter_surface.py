@@ -10,7 +10,7 @@ authorises; verify can only ever reach ``Match`` through an attesting
 observer, never through content bytes.
 """
 import pytest
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, AdapterRefusal, Assessment, BindSecret, Installation,
     IntentSet, Match, Mismatch, SetField, TargetDescriptor, TargetHandle,
     VerificationUnknown,
@@ -46,7 +46,7 @@ def test_adapters_are_real_descriptors_admitted_by_the_harness_registry():
     from ordessa_server.composition.configuration.contributions import CONFIGURATION_POINT
     from ordessa_server.composition.configuration.contributions import POINT_API_VERSION
     from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
-    from server_plugin_api import Contribution
+    from ordessa_server_plugin_api import Contribution
     from wiring_helpers import AdapterContributionPlugin
     from ordessa_server.composition.plugin_host import MethodRegistry, ServerPluginHost
 

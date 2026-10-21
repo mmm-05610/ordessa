@@ -10,12 +10,12 @@ from pathlib import Path
 import time
 import httpx2
 from pydantic_graph import GraphBuilder
-from decision_runtime.definitions import (
+from ordessa_decision.definitions import (
     DecisionQuestion, PolicyRef, FlowRef, TaskBrief, RunLimits, DecisionRequest,
     BusinessOutcome, DecisionServices, ReadContext, digest, plain,
 )
-from decision_runtime.runtime import TrustedFlow, RunContext, run_decision, reviewed_code_digest, flow_digest
-from decision_runtime.evidence import FileEvidenceSink
+from ordessa_decision.runtime import TrustedFlow, RunContext, run_decision, reviewed_code_digest, flow_digest
+from ordessa_decision.evidence import FileEvidenceSink
 from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings
 from ordessa_server.composition.temporary_process_capability import ExistingOpenCodeInput
 

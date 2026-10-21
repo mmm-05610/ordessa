@@ -16,8 +16,8 @@ from ordessa_units.management import UnitInstance
 from ordessa_units.records import UnitRecords, OperationJournal
 from ordessa_units.sessions.evidence import AcpUnitEvidence
 from ordessa_units.admission.connection import ConnectionLeasePort
-from ordessa_execution_agents.profiles import ProfileRevisionRef, canonical_content, content_digest, encode_revision_ref
-from ordessa_execution_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
+from ordessa_agents.profiles import ProfileRevisionRef, canonical_content, content_digest, encode_revision_ref
+from ordessa_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 from ordessa_harness_pi import PiAcpHarnessPreparation
 from ordessa_harness_pi.configuration.unit_materialization import PiUnitProfileMaterializer
 from ordessa_units.assembly.process_input import UnitProcessInputBinding

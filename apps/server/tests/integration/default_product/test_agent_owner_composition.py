@@ -25,7 +25,7 @@ from pacthold.public import Environment
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from ordessa_server.composition.runtime import DataRootOwner
-from server_plugin_api import OwnedRootBinding
+from ordessa_server_plugin_api import OwnedRootBinding
 
 
 class _Policy:

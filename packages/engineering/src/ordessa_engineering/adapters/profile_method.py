@@ -4,7 +4,7 @@ Profile selection precedes package authorization. This adapter supplies no
 permission, run state or implicit model retry; an existing TrustedFlow supplies
 its original gateway. The returned objects remain native Profile and Decision.
 """
-from decision_runtime import PolicyRef
+from ordessa_decision import PolicyRef
 
 from ..application.contracts.errors import ApplicationError
 from ..application.orchestration.profile_selection import (

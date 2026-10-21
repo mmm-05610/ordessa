@@ -20,11 +20,11 @@ import pytest
 
 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
 from ordessa_units.records.operation_journal import NativeActivationReceipt
-from ordessa_execution_agents.harness.contracts.models.application import NativeReadback
+from ordessa_agents.harness.contracts.models.application import NativeReadback
 from ordessa_units.records.operation_journal import OperationJournal
-from ordessa_execution_agents.harness.contracts.models.application import RuntimeSnapshot
-from ordessa_execution_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.contracts.models.application import RuntimeSnapshot
+from ordessa_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
+from ordessa_agents.harness.definitions import (
     AdapterContext, ApplicationTarget, Installation, Match, TargetDescriptor,
     TargetHandle,
 )
@@ -33,7 +33,7 @@ from ordessa_server.composition.configuration.product_selection import create_ho
 from ordessa_server.composition.configuration.contributions import (
     CONFIGURATION_POINT, POINT_API_VERSION, HarnessContributionRegistry,
 )
-from server_plugin_api import ContributionPointSpec, ServerPluginSelection
+from ordessa_server_plugin_api import ContributionPointSpec, ServerPluginSelection
 
 from ordessa_runtime_preferences import bridge, common, keys
 from ordessa_runtime_preferences.plugin import RuntimePreferencesAdaptersPlugin
@@ -132,7 +132,7 @@ class Permit:
 
 
 def _fragment(brand: str, value: dict, item_id: str = "compaction"):
-    from ordessa_execution_agents.harness.definitions import DesiredFragment
+    from ordessa_agents.harness.definitions import DesiredFragment
     return DesiredFragment("assets.runtime-preferences", item_id, "1",
                            f"business:{brand}-prefs", "source-1", "set", value)
 

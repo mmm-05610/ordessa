@@ -27,7 +27,7 @@
   - bridge.py 薄桥（方向 adapters→harness-api 单向+边界测试钉住）+ 插件声明面（ContributionBatch, open_points, owner 宿主注入）；真实 HarnessContributionRegistry stage/commit 重叠拒/区间拒/不相交受，host 级 MP-11 见 PB-5；不动 products 组合（d1cc14ee60）
 - [x] PB-3 C4 绑定与 submit permit：`HarnessConfigPort.apply/read_back` 绑 `ConfigurationApplicationService`（configuration_service.py:150）；一次性 permit 全流程；无 permit 裸 apply 必红；admission 未翻转前生产=诚实 refused/unknown（S-06）
   - harness_binding.py 全链 plan→apply(operation_key,permit)→verify→read-back；受控级：permit 全流程+重放回耐久结果/过期拒/跨会话隔离/unknown 阻塞；生产级：无 permit source 零效果诚实拒（S-06/P-E 前不报绿）——受控级/生产级分层陈述在 report §3（ca85ef584d）
-- [x] PB-4 wire error families：13 码经 `wire.error-families` 贡献点自发布（server_plugin_api/contributions.py:74）；异族冲突反例；UNAVAILABLE 不冒充
+- [x] PB-4 wire error families：13 码经 `wire.error-families` 贡献点自发布（ordessa_server_plugin_api/contributions.py:74）；异族冲突反例；UNAVAILABLE 不冒充
   - REQ-Z3-7 清单逐字 13 码 plugin.py 自发布；激活后 family_for 全对；反例=异族冲突拒批且首 owner 存活/静态表矛盾拒/未知码仍 UNAVAILABLE；011 REQ-Z3-7 就此 CLOSED（ca85ef584d）
 - [x] PB-5 三品牌 E2 受控矩阵：pi/codex/claude-code × MP-03/06/07/10/11 逐格证据（受控 fake endpoint；MP-06 真进程 restart-resume）；缺格=该品牌不 ready，整体 PARTIAL
   - 25/25 格全绿（test_e2_brand_matrix.py）：真实 build_runtime host+本包声明面+C4+FakeEndpoint 实收请求=下游实际路由证据；session/new 冒充必不确认；双会话交错；MP-10 哨兵零命中；host 级 MP-11。真实 CLI 装载格三品牌 unknown（如实）→整体口径=受控级全绿、生产装配格 PARTIAL（b37e846fdb）

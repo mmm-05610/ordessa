@@ -6,8 +6,8 @@ resolution, compilation, Harness control, or native configuration effects.
 """
 import pytest
 
-from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
-from ordessa_execution_agents.harness.definitions.configuration_providers import ConfigurationContractError
+from ordessa_agents.harness.definitions.activation import HarnessActivationRef
+from ordessa_agents.harness.definitions.configuration_providers import ConfigurationContractError
 from ordessa_units.public import (
     CONFIGURATION_METHODS,
     CONFIGURATION_PROVIDER_VERSION,

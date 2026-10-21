@@ -7,7 +7,7 @@ import { resolveDeps } from './deps.js'
 import { SESSION_STEERING_METHOD, steeringRequestParser } from './steering.js'
 import { LOADED_TURN_QUERY_METHOD, loadedTurnQueryParser } from './loaded-turn.js'
 import { CONFIGURATION_QUERY, configurationReader } from './configuration-query.mjs'
-import { CONFIGURATION_APPLY, CONFIGURATION_OPERATION, configurationOperations } from "../../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/operation.mjs"
+import { CONFIGURATION_APPLY, CONFIGURATION_OPERATION, configurationOperations } from "../../../../../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/operation.mjs"
 import { piCreation } from './creation.mjs'
 import { piProviderRegistration, PROVIDER_REGISTER } from './provider-registration.mjs'
 

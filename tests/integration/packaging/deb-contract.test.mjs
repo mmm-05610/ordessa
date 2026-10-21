@@ -27,8 +27,7 @@ const OUT = path.join(repoRoot, 'apps/desktop/packaging/.out')
 const DEB = path.join(OUT, id.pkgName + '_' + id.version + '_amd64.deb')
 const TEST_DIR = path.dirname(fileURLToPath(import.meta.url))
 // The esbuild output below is written here, not to os.tmpdir(): the server
-// bridge reads `apps/server/.../data_root_layout.json` relative to its own
-// module URL (`../../../../apps/...`, four levels up), so the bundle must live
+// bridge imports the shared `data_root_layout.json` by relative path, so the bundle must live
 // at the same depth as the source it replaces. This directory is four levels
 // below the repository root, exactly like the source directory.
 const BUNDLE_DIR = path.join(TEST_DIR, '.runtime-bundle')

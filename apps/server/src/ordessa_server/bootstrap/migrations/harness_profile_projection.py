@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 
-from ordessa_execution_agents.profiles import ProfileRevision, ProfileRevisionRef, ProfileService, encode_content
+from ordessa_agents.profiles import ProfileRevision, ProfileRevisionRef, ProfileService, encode_content
 from .harness_profile_history import CapturedHarnessProfile, validated_capture
 from .harness_profile_import import PROVENANCE_FIELD
 

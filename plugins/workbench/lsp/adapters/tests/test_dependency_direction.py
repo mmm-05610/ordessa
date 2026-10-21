@@ -1,7 +1,7 @@
 """016 红线 — 写入面与依赖方向的静态边界。
 
 adapters 只仿形制不 import：不得 import ``pacthold.harness_kit`` 包码（合同词汇
-只从 ``ordessa_execution_agents.harness.definitions``）、不得 import model-provider / permissions /
+只从 ``ordessa_agents.harness.definitions``）、不得 import model-provider / permissions /
 sandbox 域、不得 import server/pacthold 实现。
 """
 from __future__ import annotations
@@ -40,14 +40,14 @@ def test_no_forbidden_imports() -> None:
             stripped = line.lstrip()
             for needle in FORBIDDEN_IMPORTS:
                 if stripped.startswith(needle.rstrip("\n")) and \
-                        not stripped.startswith("from ordessa_execution_agents.harness.definitions") and \
-                        not stripped.startswith("import ordessa_execution_agents.harness.definitions"):
+                        not stripped.startswith("from ordessa_agents.harness.definitions") and \
+                        not stripped.startswith("import ordessa_agents.harness.definitions"):
                     offenders.append(f"{pyfile.name}: {stripped.strip()}")
     assert offenders == []
 
 
-_ALLOWED_ROOTS = {"ordessa_lsp_api", "ordessa_execution_agents.harness.definitions",
-                  "server_plugin_api", "pytest"}
+_ALLOWED_ROOTS = {"ordessa_lsp_api", "ordessa_agents.harness.definitions",
+                  "ordessa_server_plugin_api", "pytest"}
 
 
 def _import_roots(pyfile: Path) -> list[str]:

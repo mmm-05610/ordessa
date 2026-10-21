@@ -22,7 +22,7 @@ RULES = {
     'unit_module': r'\bordessa_units(?:\.[A-Za-z_][\w]*)*\b|\bordessa-units\b',
     'unit_owner': r'\b(?:UnitServices|unit_services|UnitManager|UnitRecords|OperationJournal|UnitOwnerEvidence|UnitRuntimeProvider|[A-Za-z]*RuntimeProvider|LocalUnitInvocationAuthority|UnitExecutionConsumer|composed_profile_service|publish_preparation|publish_unit|resolve_unit_reference|authorize_acp_turn_query)\b',
     'unit_identity': r'\b(?:UnitRef|AgentUnitRef|unitRef|unit_ref|unit_ref_bytes|unitId|unit_id|harnessUnitRef|reviewer_unit_ref|author_unit_ref|ownerProviderRef|harness_unit_ref)\b',
-    'legacy_agent_harness': r'\bordessa_execution_agents\.harness(?:\.[A-Za-z_][\w]*)*\b',
+    'legacy_agent_harness': r'\bordessa_agents\.harness(?:\.[A-Za-z_][\w]*)*\b',
     'legacy_execution_api': r'\bordessa_execution_api(?:\.[A-Za-z_][\w]*)*\b|\bordessa-execution-api\b',
     'environment_authority': r'\b(?:EnvironmentUse|EnvironmentRef|UseRef|ResourceUsePort|EnvironmentProfileStore|EnvironmentAdmission|environmentNamespace|environment_namespace)\b',
     'kernel_environment_runtime': r'\b(?:Environment|EnvironmentKernel|KernelEnvironment|create_environment|open_environment)\b',
@@ -62,9 +62,9 @@ def classify(path, family, syntax, context, symbol):
         return 'documentation_or_evidence', 'Stored evidence/source snapshot; inventoried, not mistaken for a current runtime module.'
     if path.startswith('packages/execution/units/src/'):
         return 'retired_runtime_source_still_present', 'Independent Units implementation still physically exists; not a historical-reader exemption.'
-    if family == 'legacy_agent_harness' and symbol == 'ordessa_execution_agents.harness.providers.catalog':
+    if family == 'legacy_agent_harness' and symbol == 'ordessa_agents.harness.providers.catalog':
         return 'current_sdk_catalog_verified_source', 'Exact new SDK-only immutable HarnessCatalog inspected; the old-looking namespace is not itself a Unit runtime fallback.'
-    if family == 'borrowed_environment_authority' and symbol == '_admission' and path == 'packages/execution/agents/src/ordessa_execution_agents/profiles/management/service.py':
+    if family == 'borrowed_environment_authority' and symbol == '_admission' and path == 'packages/execution/agents/src/ordessa_agents/profiles/management/service.py':
         return 'current_profile_external_admission_port', 'ProfileService explicit Profile admission port; this private field does not by itself borrow kernel Environment.'
     if family == 'agent_publication_seam':
         if path.startswith('packages/execution/agents/src/'):

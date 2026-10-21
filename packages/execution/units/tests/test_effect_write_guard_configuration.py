@@ -10,7 +10,7 @@ if str(support) not in sys.path: sys.path.insert(0,str(support))
 from agent_tools_fixtures.manager_joint import build_joint_owner
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.bindings.publication import decode_node_ref
-from ordessa_execution_agents.harness.transport import EffectWriteGuard, EffectWriteRefused
+from ordessa_agents.harness.transport import EffectWriteGuard, EffectWriteRefused
 
 
 @asynccontextmanager

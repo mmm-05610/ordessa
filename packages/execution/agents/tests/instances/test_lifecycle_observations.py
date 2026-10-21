@@ -4,8 +4,8 @@ import asyncio
 import pytest
 
 from test_lifecycle_control import graph
-from ordessa_execution_agents.sdk.prepare import LaunchObservation,EndpointError,PrepareValueError,validate_lifecycle_observation
-from ordessa_execution_agents.sdk.manager import ManagerRefused
+from ordessa_agents.sdk.prepare import LaunchObservation,EndpointError,PrepareValueError,validate_lifecycle_observation
+from ordessa_agents.sdk.manager import ManagerRefused
 from types import SimpleNamespace
 
 
@@ -78,7 +78,7 @@ def test_completed_receipt_without_using_physical_guard_stays_unknown_no_replay(
 
 
 def test_endpoint_error_after_physical_cut_remains_unknown_and_fenced(tmp_path):
-    from ordessa_execution_agents.sdk.endpoint import EndpointValueError
+    from ordessa_agents.sdk.endpoint import EndpointValueError
     async def scenario():
         manager,records,instance,member=graph(tmp_path)
         async def partial(*args,guard,**kwargs):

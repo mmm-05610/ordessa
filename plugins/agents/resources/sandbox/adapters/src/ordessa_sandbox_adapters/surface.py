@@ -32,7 +32,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any, Mapping, Optional, Sequence, Tuple
 
-from ordessa_execution_agents.harness.definitions.contracts import (
+from ordessa_agents.harness.definitions.contracts import (
     AdapterContext,
     AdapterRefusal,
     Assessment,
@@ -43,8 +43,8 @@ from ordessa_execution_agents.harness.definitions.contracts import (
     Verification,
     VerificationUnknown,
 )
-from ordessa_execution_agents.harness.definitions.errors import ErrorCode
-from ordessa_execution_agents.harness.definitions.intents import IntentSet
+from ordessa_agents.harness.definitions.errors import ErrorCode
+from ordessa_agents.harness.definitions.intents import IntentSet
 from ordessa_sandbox_api import NativeSandboxIntent, PlatformFacts, SandboxErrorCode
 
 from .base import BaseSandboxAdapter

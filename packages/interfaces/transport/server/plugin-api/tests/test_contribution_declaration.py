@@ -5,7 +5,7 @@ import dataclasses
 
 import pytest
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     CONTRIBUTION_POINT_ID,
     PACTHOLD_CONTRIBUTIONS_API_VERSION,
     PACTHOLD_CONTRIBUTIONS_POINT_ID,

@@ -18,7 +18,7 @@ import dataclasses
 
 import pytest
 
-from server_plugin_api import ServerPluginRegistration
+from ordessa_server_plugin_api import ServerPluginRegistration
 
 FIELD_ORDER = [f.name for f in dataclasses.fields(ServerPluginRegistration)]
 

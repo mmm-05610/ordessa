@@ -2,12 +2,12 @@
 
 Before the foundation checkpoint this package had no plugin-visible typed
 refusal path: `wire.py`'s module docstring recorded the request (api-requests
-.md §G1) that `server_plugin_api` either add a refusal type or let the
+.md §G1) that `ordessa_server_plugin_api` either add a refusal type or let the
 dispatch map an error protocol carrying `.code`. Foundation published both
 halves, and this module consumes them the way the other plugins do
 (`plugins/server-compat/error_families.py` is the reference pattern):
 
-* `server_plugin_api.ServerError` — the composition-shared internal error the
+* `ordessa_server_plugin_api.ServerError` — the composition-shared internal error the
   host's dispatch projects onto the wire family set;
 * the open `wire.error-families` contribution point — this package's
   `code -> family` rows reach the host as a `Contribution` inside the
@@ -17,7 +17,7 @@ halves, and this module consumes them the way the other plugins do
   table or falls back on the generic `except Exception` wall.
 
 Domain code → family adjudication (the closed twelve families of
-`server_plugin_api.FAMILIES` only; codes raised outside the wire surface —
+`ordessa_server_plugin_api.FAMILIES` only; codes raised outside the wire surface —
 the `MIGRATION_*` engine and the adapter-internal `HARNESS_*` rulings — are
 deliberately absent, their fall-through stays `UNAVAILABLE`):
 
@@ -46,12 +46,12 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import Any
 
-from server_plugin_api import ServerError
+from ordessa_server_plugin_api import ServerError
 
 from .api.errors import AssetDomainError
 
 #: The code -> family mapping contributed to
-#: ``server_plugin_api.WIRE_ERROR_FAMILIES_POINT_ID`` (api_version
+#: ``ordessa_server_plugin_api.WIRE_ERROR_FAMILIES_POINT_ID`` (api_version
 #: ``WIRE_ERROR_FAMILIES_API_VERSION``). One table, declared atomically —
 #: same discipline as the `skills.*` method family in `wire.py`.
 SKILLS_ERROR_FAMILIES = MappingProxyType({

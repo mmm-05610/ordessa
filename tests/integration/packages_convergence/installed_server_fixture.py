@@ -52,12 +52,24 @@ def build_installed_server(root, temporary, *, extra_projects=()):
     backend_site = Path(setuptools.__file__).resolve().parent.parent
     builds = []
     for name in sorted(selected):
-        source = root/local[name]['path']; stage = temporary/'stages'/name
-        shutil.copytree(source, stage, ignore=shutil.ignore_patterns(
-            '.git','.venv*','node_modules','__pycache__','*.egg-info','build','dist'))
+        # Build IN PLACE: a distribution may own package roots in sibling trees
+        # (one distribution, several plugin packages), so copying just this
+        # project to a staging directory would break its package-dir mapping.
+        # The build base is redirected out of the checkout so no build/ tree is
+        # left behind; *.egg-info is already ignored.
+        source = root/local[name]['path']
+        # Stale in-source artifacts (from an earlier in-place build) would be
+        # copied into the wheel as if they were current packages; remove them.
+        for artifact in (source/'build', source/'dist'):
+            if artifact.exists():
+                shutil.rmtree(artifact)
+        for egg in list(source.glob('*.egg-info')) + list((source/'src').glob('*.egg-info')):
+            shutil.rmtree(egg)
+        build_base = temporary/'build'/name
         code = ('import sys;sys.path.insert(0,'+repr(str(backend_site))+');'
-                'import setuptools.build_meta as backend;backend.build_wheel('+repr(str(wheels))+')')
-        result = _run([sys.executable,'-I','-S','-c',code], cwd=stage, env=env)
+                'import setuptools.build_meta as backend;backend.build_wheel('
+                +repr(str(wheels))+','+repr({'--build-base':str(build_base)})+')')
+        result = _run([sys.executable,'-I','-S','-c',code], cwd=source, env=env)
         builds.append({'distribution':name,'source':str(source),'stdout':result.stdout,'stderr':result.stderr})
     venv = temporary/'venv'
     _run([sys.executable,'-I','-m','venv',str(venv)], cwd=temporary, env=env)
@@ -104,13 +116,16 @@ def build_installed_server(root, temporary, *, extra_projects=()):
     contracts_wheel = next(w for w in wheel_files if w.name.startswith('ordessa_interfaces_contracts-'))
     with zipfile.ZipFile(host_wheel) as host, zipfile.ZipFile(contracts_wheel) as contracts:
         assert not set(host.namelist()) & set(contracts.namelist())
-        contract_source = root/'packages/interfaces/contracts/src/ordessa_interfaces/system_access/contracts'
+        # The `ordessa_interfaces.system_access.contracts` subpackage belongs to
+        # the interfaces distribution: a distribution may add subpackages to a
+        # package it owns, but it must not ship a second copy of a parent package.
+        contract_source = root/'packages/interfaces/system-access/src/ordessa_interfaces/system_access/contracts'
         preserved = list(contract_source.glob('*.py')) + list((contract_source/'schemas').glob('*.json'))
         assert len(list((contract_source/'schemas').glob('*.json'))) == 7
         for source in preserved:
             member = 'ordessa_interfaces/system_access/contracts/'+source.relative_to(contract_source).as_posix()
-            assert contracts.read(member) == source.read_bytes()
-            assert member not in host.namelist()
+            assert host.read(member) == source.read_bytes()
+            assert member not in contracts.namelist()
     (site/'installed_owner_manifest.json').write_text(json.dumps(expected))
     # Audit each actual entry process at exit; never replace its main() call.
     (site/'sitecustomize.py').write_text('''import atexit,hashlib,json,os,pathlib,sys
@@ -123,7 +138,7 @@ def _audit():
  origins={};errors=[]
  for name,module in list(sys.modules.items()):
   if name=='__main__':name=getattr(getattr(module,'__spec__',None),'name',name)
-  if not (name.split('.')[0] in _owners or name.startswith(('ordessa_','decision_runtime'))):continue
+  if not (name.split('.')[0] in _owners or name.startswith(('ordessa_','ordessa_decision'))):continue
   raw=getattr(module,'__file__',None)
   if raw is None:continue
   file=pathlib.Path(raw)

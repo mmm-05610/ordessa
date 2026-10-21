@@ -6,7 +6,7 @@ Every `permissions.policy-adapters` brand ships as a
 payload=<ConfigurationAdapterDescriptor>)` on the plugin registration, and
 admission (shape, duplicate/overlap refusal, field-claim conflict, owner
 injection) belongs to `ordessa_server.composition.configuration.contributions` + the Server host
-(`server_plugin_api` staging protocol). This file pins the DECLARE side;
+(`ordessa_server_plugin_api` staging protocol). This file pins the DECLARE side;
 `test_real_admission_lifecycle.py` pins the ADMIT side against the real
 registry and host.
 
@@ -19,9 +19,9 @@ import re
 import tomllib
 
 import pytest
-from ordessa_execution_agents.harness.definitions import (ConfigurationAdapterDescriptor, ContractError,
+from ordessa_agents.harness.definitions import (ConfigurationAdapterDescriptor, ContractError,
                                  FieldClaim, ValueSchema, VersionRange)
-from server_plugin_api import Contribution, ContributionBatch
+from ordessa_server_plugin_api import Contribution, ContributionBatch
 
 import ordessa_permissions_adapters as adapters
 

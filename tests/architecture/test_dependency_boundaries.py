@@ -431,13 +431,13 @@ def test_configured_internal_metadata_edges_use_project_metadata_paths(tmp_path:
 
 
 def test_configured_execution_decision_owners_remain_independent(tmp_path: Path) -> None:
-    agents = _project(tmp_path, "packages", "execution/agents", "agents-dist", "ordessa_execution_agents")
+    agents = _project(tmp_path, "packages", "execution/agents", "agents-dist", "ordessa_agents")
     decision = _project(tmp_path, "packages", "execution/decision", "decision-dist", "ordessa_execution_decision")
     _plugin = _project(tmp_path, "plugins", "provider", "provider-dist", "concrete_provider")
     _app = _project(tmp_path, "apps", "host", "host-dist", "host_app")
     _project(tmp_path, "apps", "server/deployment/default-product", "product-dist", "product_assembly")
     (agents / "imports.py").write_text("import ordessa_execution_decision\n", encoding="utf-8")
-    (decision / "imports.py").write_text("import ordessa_execution_agents\n", encoding="utf-8")
+    (decision / "imports.py").write_text("import ordessa_agents\n", encoding="utf-8")
 
     findings, errors = scan_root(tmp_path)
 

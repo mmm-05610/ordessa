@@ -37,7 +37,7 @@ from __future__ import annotations
 import re
 from typing import Any, Callable, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     WIRE_DISCOVERY_FACETS_API_VERSION,
     WIRE_DISCOVERY_FACETS_POINT_ID,
     Contribution,

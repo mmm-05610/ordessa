@@ -2,7 +2,7 @@
 from collections.abc import Mapping
 
 from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
-from ordessa_execution_agents.profiles.definitions.codec import decode_revision
+from ordessa_agents.profiles.definitions.codec import decode_revision
 from ordessa_units.lifecycle.unit_lifecycle import plain
 
 

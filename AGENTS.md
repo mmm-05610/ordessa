@@ -40,7 +40,7 @@ been retired (history and restore paths: `docs/reference/index.md`,
 - `apps/desktop` — Electron app shell (its own `AGENTS.md` has the desktop
   host rules). `plugins/*` — desktop plugins. `apps/desktop/packaging/product` — assembly
   manifest for the default product build.
-- `packages/execution/agents` (`ordessa_execution_agents`) owns the sole
+- `packages/execution/agents` (`ordessa_agents`) owns the sole
   Agent/Profile service implementation on the original Pacthold Environment,
   CoreRegistry, store, issuer/verifier and records. UI and CLI are consumers.
   `pacthold.agents` Python imports are retired; the reserved owner, ACL, wire
@@ -152,7 +152,7 @@ access/ACP relay的完整原测试归tests/integration/harness/access，继承�
 新结构只部分生效，旧职责退役与消费者/产品装配仍按各工单验证，不以目录存在报完成。
 
 The original OperationJournal and UnitRecords now belong to
-`ordessa_execution_agents.units.records` in the same execution distribution.
+`ordessa_agents.units.records` in the same execution distribution.
 The old records distribution/import root is retired without aliases; native
 SQLite paths, tables, identities and unknown fences are preserved. Shared
 contracts/materialization and the Codex record-codec split remain W06 targets.

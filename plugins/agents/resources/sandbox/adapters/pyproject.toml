@@ -17,7 +17,7 @@ classifiers = [
 ]
 # Depends only on the published contracts: the Sandbox domain API and its
 # backend service surface, the Server plugin public types, and the Harness C2
-# descriptive vocabulary (`ordessa_execution_agents.harness.definitions` — the payload contract of the
+# descriptive vocabulary (`ordessa_agents.harness.definitions` — the payload contract of the
 # real `harness.configuration-adapters` point, exactly the closure the
 # platform's own third-party contributor fixture declares). No host, no
 # harness package code, no Permissions, no storage.
@@ -25,7 +25,7 @@ dependencies = [
     "ordessa-sandbox-api",
     "ordessa-sandbox-backend",
     "ordessa-server-plugin-api",
-    "ordessa-execution-agents==0.1.0",
+    "ordessa-agents==0.1.0",
 ]
 keywords = ["ordessa", "sandbox", "adapter", "native", "codex", "claude", "pi"]
 

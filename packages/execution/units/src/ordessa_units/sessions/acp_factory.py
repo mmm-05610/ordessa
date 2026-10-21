@@ -4,7 +4,7 @@ import os
 import asyncio
 
 from ordessa_environments import ProcessRequest, require_capabilities, PROCESS_CAPABILITY, BYTE_CHANNEL_CAPABILITY, FILE_AREA_CAPABILITY
-from ordessa_execution_agents.preparation import PreparedAgent, PreparedHarness, ConfigurationResources
+from ordessa_agents.preparation import PreparedAgent, PreparedHarness, ConfigurationResources
 from .sdk_client import SdkAcpClient
 from .environment_channel import EnvironmentProcessChannel
 from ordessa_units.lifecycle.unit_lifecycle import UnitLifecycleRefused, same_reference

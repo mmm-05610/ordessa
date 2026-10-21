@@ -1,4 +1,4 @@
-"""Plugin registration for the Sandbox backend (server_plugin_api public types only).
+"""Plugin registration for the Sandbox backend (ordessa_server_plugin_api public types only).
 
 Contributes the two §C2 ports and exactly one read-only wire method:
 
@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ServerMethodDescriptor,
     ServerPluginContext,
     ServerPluginDescriptor,

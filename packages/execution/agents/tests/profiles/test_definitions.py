@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_execution_agents.profiles.definitions import codec, models, validation
+from ordessa_agents.profiles.definitions import codec, models, validation
 
 MANIFEST = {"schemaVersion": "profile/1", "harnessDefinitionRef": {
     "environmentNamespace": "codec-test", "definitionId": "opaque", "revision": "1"},
@@ -111,21 +111,21 @@ import builtins
 original = builtins.__import__
 def restricted(name, *args, **kwargs):
     if name.startswith(('pacthold', 'ordessa_server', 'ordessa_harness',
-                        'ordessa_units', 'ordessa_execution_agents.harness')):
+                        'ordessa_units', 'ordessa_agents.harness')):
         raise AssertionError('forbidden runtime dependency: ' + name)
     return original(name, *args, **kwargs)
 builtins.__import__ = restricted
 def refuse(*args, **kwargs):
     raise AssertionError('definitions must not open files')
 builtins.open = refuse
-from ordessa_execution_agents.profiles.definitions import models, codec, validation
-from ordessa_execution_agents.profiles.management.service import ProfileService
-from ordessa_execution_agents.profiles.management.ports import ProfileStorePort
+from ordessa_agents.profiles.definitions import models, codec, validation
+from ordessa_agents.profiles.management.service import ProfileService
+from ordessa_agents.profiles.management.ports import ProfileStorePort
 import importlib.util
-assert importlib.util.find_spec("ordessa_execution_agents.profiles.definitions.contracts") is None
-assert importlib.util.find_spec("ordessa_execution_agents.profiles.definitions.wire_schema") is None
+assert importlib.util.find_spec("ordessa_agents.profiles.definitions.contracts") is None
+assert importlib.util.find_spec("ordessa_agents.profiles.definitions.wire_schema") is None
 try:
-    import ordessa_execution_agents.profiles.catalog.service
+    import ordessa_agents.profiles.catalog.service
 except ModuleNotFoundError:
     pass
 else:

@@ -5,7 +5,7 @@ over every module under `src/`, and behaviorally by poisoning the side-effect
 entry points while running the adapters.
 
 Allowed imports: the standard library (minus the forbidden set below),
-`ordessa_permissions_api` (the consumed domain contract), `server_plugin_api`
+`ordessa_permissions_api` (the consumed domain contract), `ordessa_server_plugin_api`
 (the public plugin surface) and this package itself. No host, no harness, no
 compat, no storage.
 """
@@ -35,8 +35,8 @@ FORBIDDEN_PRODUCT_ROOTS = {
     "ordessa_workspace", "fastapi", "pydantic", "httpx", "uvicorn",
 }
 #: 032: the harness contract edge is a dotted grant under the kernel root.
-KERNEL_CONTRACT_EDGE = "ordessa_execution_agents.harness.definitions"
-ALLOWED_NON_STDLIB = {"ordessa_permissions_api", "server_plugin_api",
+KERNEL_CONTRACT_EDGE = "ordessa_agents.harness.definitions"
+ALLOWED_NON_STDLIB = {"ordessa_permissions_api", "ordessa_server_plugin_api",
                       KERNEL_CONTRACT_EDGE,
                       "ordessa_permissions_adapters", "__future__"}
 #: Call attribute names that would mean the compile path touches the filesystem,

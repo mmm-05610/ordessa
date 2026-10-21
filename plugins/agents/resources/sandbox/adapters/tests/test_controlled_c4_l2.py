@@ -76,18 +76,18 @@ from pathlib import Path
 
 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
 from ordessa_units.records.operation_journal import NativeActivationReceipt
-from ordessa_execution_agents.harness.contracts.models.application import NativeReadback
+from ordessa_agents.harness.contracts.models.application import NativeReadback
 from ordessa_units.records.operation_journal import OperationJournal
-from ordessa_execution_agents.harness.contracts.models.application import RuntimeSnapshot
-from ordessa_execution_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.contracts.models.application import RuntimeSnapshot
+from ordessa_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
+from ordessa_agents.harness.definitions import (
     AdapterContext, ApplicationTarget, Assessment, ConfigurationCapabilities,
     ConfigurationAdapterDescriptor, Confirmed, DesiredFragment, ErrorCode,
     FieldClaim, FieldPath, Installation, IntentSet, IntentSource, NotFound,
     OperationRecord, Plan, Refused, RuntimeAdapterDescriptor, SetField,
     TargetDescriptor, TargetHandle, Unknown, ValueSchema, VersionRange,
 )
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     Contribution, ContributionBatch, ServerPluginDescriptor,
     ServerPluginRegistration,
 )

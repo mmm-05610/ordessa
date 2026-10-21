@@ -22,10 +22,10 @@ def test_T63_independent_wheel_optional_boundaries():
     wheels = artifacts / 'wheels'
     assert wheels.is_dir(), 'final owner wheel directory is absent'
     expected = {
-        'decision_runtime': ('decision_runtime', 'decision-runtime', 'packages/execution/decision'),
+        'ordessa_decision': ('ordessa_decision', 'decision-runtime', 'packages/execution/decision'),
         'ordessa_decision_jev': ('ordessa_decision_jev', 'ordessa-decision-jev', 'plugins/decision/jev'),
         'ordessa_units': ('ordessa_units', 'ordessa-units', 'packages/execution/units'),
-        'ordessa_execution_agents': ('ordessa_execution_agents', 'ordessa-execution-agents', 'packages/execution/agents'),
+        'ordessa_agents': ('ordessa_agents', 'ordessa-execution-agents', 'packages/execution/agents'),
         'ordessa_environments': ('ordessa_environments', 'ordessa-environments', 'packages/execution/environments'),
     }
     for stem, (namespace, distribution, project) in expected.items():
@@ -46,13 +46,13 @@ def test_T63_independent_wheel_optional_boundaries():
                 source = ROOT / project / 'src' / name
                 assert source.is_file(), (stem, name)
                 assert archive.read(name) == source.read_bytes(), (stem, name)
-            if stem == 'decision_runtime':
+            if stem == 'ordessa_decision':
                 assert 'Requires-Dist: pydantic-graph==2.54.0' in metadata
                 assert 'Requires-Dist: typesafe-sdk' not in metadata
                 assert 'Requires-Dist: httpx2' not in metadata
-                assert not any(name.startswith('decision_runtime/providers/') for name in names)
+                assert not any(name.startswith('ordessa_decision/providers/') for name in names)
                 for name in ('request.schema.json', 'result.schema.json', 'vectors.json'):
-                    assert 'decision_runtime/definitions/' + name in names
+                    assert 'ordessa_decision/definitions/' + name in names
             elif stem == 'ordessa_decision_jev':
                 for dependency in ('decision-runtime==0.1.0', 'typesafe-sdk==0.7.2', 'httpx2==2.13.1', 'pydantic==2.13.5'):
                     assert 'Requires-Dist: ' + dependency in metadata
@@ -65,10 +65,10 @@ def test_T63_independent_wheel_optional_boundaries():
     script = """
 import importlib.util
 from importlib.metadata import PackageNotFoundError, distribution
-from decision_runtime import DecisionManager
+from ordessa_decision import DecisionManager
 from ordessa_units.api import UnitManager, UnitSpec
 from ordessa_environments import EnvironmentManager, EnvironmentInstance
-for module in ('decision_runtime', 'ordessa_units', 'ordessa_environments', 'ordessa_decision_jev'):
+for module in ('ordessa_decision', 'ordessa_units', 'ordessa_environments', 'ordessa_decision_jev'):
     spec = importlib.util.find_spec(module)
     assert spec is not None and 'site-packages' in spec.origin, (module, spec)
 for module in ('pacthold', 'ordessa_execution_api', 'ordessa_server', 'ordessa_engineering'):

@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
 JEV_SOURCE = ROOT / "plugins/decision/jev/src/ordessa_decision_jev"
-RUNTIME_SOURCE = ROOT / "packages/execution/decision/src/decision_runtime"
+RUNTIME_SOURCE = ROOT / "packages/execution/decision/src/ordessa_decision"
 
 
 def _run_isolated(script: str) -> subprocess.CompletedProcess[str]:
@@ -29,14 +29,14 @@ import sys
 import sysconfig
 
 assert "ordessa_decision_jev" not in sys.modules
-assert "decision_runtime" not in sys.modules
+assert "ordessa_decision" not in sys.modules
 
 class HostImportBlocked(ImportError):
     pass
 
 class HostImportBlocker:
     blocked = {{"pacthold", "ordessa_server", "ordessa_harness", "apps", "products",
-                "ordessa_units", "ordessa_execution_agents", "ordessa_environments"}}
+                "ordessa_units", "ordessa_agents", "ordessa_environments"}}
     def find_spec(self, fullname, path=None, target=None):
         root = fullname.partition(".")[0]
         if root in self.blocked:
@@ -45,7 +45,7 @@ class HostImportBlocker:
 
 sys.meta_path.insert(0, HostImportBlocker())
 provider = importlib.import_module("ordessa_decision_jev.provider")
-runtime = importlib.import_module("decision_runtime")
+runtime = importlib.import_module("ordessa_decision")
 mode = os.environ.get("DECISION_PROVIDER_INSTALL_MODE", "editable")
 if mode == "editable":
     expected_provider = Path({str(JEV_SOURCE / 'provider.py')!r}).resolve()
@@ -58,7 +58,7 @@ elif mode == "wheel":
         "ordessa_decision_jev/provider.py"
     )).resolve()
     expected_runtime = Path(runtime_distribution.locate_file(
-        "decision_runtime/__init__.py"
+        "ordessa_decision/__init__.py"
     )).resolve()
     assert expected_provider.is_file(), expected_provider
     assert expected_runtime.is_file(), expected_runtime
@@ -79,7 +79,7 @@ assert not any(name == "pacthold" or name.startswith("pacthold.") for name in sy
 assert not any(name == "ordessa_server" or name.startswith("ordessa_server.") for name in sys.modules)
 assert not any(name == "apps" or name.startswith("apps.") for name in sys.modules)
 assert not any(name == "products" or name.startswith("products.") for name in sys.modules)
-assert not any(name.partition('.')[0] in {{'ordessa_units', 'ordessa_execution_agents',
+assert not any(name.partition('.')[0] in {{'ordessa_units', 'ordessa_agents',
                                        'ordessa_environments'}} for name in sys.modules)
 assert "ordessa_decision_jev.provider" in sys.modules
 print("installed-jev-provider-isolated")
@@ -101,14 +101,14 @@ class HostImportBlocked(ImportError):
 
 class HostImportBlocker:
     blocked = {"pacthold", "ordessa_server", "ordessa_harness", "apps", "products",
-               "ordessa_units", "ordessa_execution_agents", "ordessa_environments"}
+               "ordessa_units", "ordessa_agents", "ordessa_environments"}
     def find_spec(self, fullname, path=None, target=None):
         if fullname.partition(".")[0] in self.blocked:
             raise HostImportBlocked(fullname)
         return None
 
 sys.meta_path.insert(0, HostImportBlocker())
-for root in ('pacthold', 'ordessa_units', 'ordessa_execution_agents', 'ordessa_environments'):
+for root in ('pacthold', 'ordessa_units', 'ordessa_agents', 'ordessa_environments'):
     try:
         importlib.import_module(root + '.public')
     except HostImportBlocked as error:

@@ -1032,7 +1032,7 @@ def open_local_library_registered_graph(*, graph_root, manifest, candidate, outp
     import time
     from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore
     from ordessa_environments_local import LocalEnvironmentResourceProvider
-    from ordessa_execution_agents.profiles import ProfileService, decode_revision_ref
+    from ordessa_agents.profiles import ProfileService, decode_revision_ref
     from ordessa_units.bindings.profile_admission import UnitProfileAdmission
     from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
     from ordessa_units.assembly import UnitRunPermission

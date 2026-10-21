@@ -1,13 +1,13 @@
 """Transport-only projection of the core-owned Agent public contract."""
 from __future__ import annotations
-from ordessa_execution_agents.profiles import decode_revision_ref, encode_content, encode_profile, encode_revision_ref
+from ordessa_agents.profiles import decode_revision_ref, encode_content, encode_profile, encode_revision_ref
 import json
 
 from ordessa_units.errors import (
     UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch,
     UnitComparisonUnavailable, UnitOperationUnknown,
 )
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     HistoricalProfileIdentityMismatch, ProfileAccessRefused,
     ProfileStoreUnavailable, ProfileChangeUnknown,
 )
@@ -22,7 +22,7 @@ from ordessa_units.public import (
     InvocationAuthorityRefused, ConfigurationRevisionConflict,
     ConfigurationOmissionRefused, OperationNotFound,
 )
-from server_plugin_api import ServerMethodDescriptor, WireError
+from ordessa_server_plugin_api import ServerMethodDescriptor, WireError
 
 
 def _lifecycle_actions(service):

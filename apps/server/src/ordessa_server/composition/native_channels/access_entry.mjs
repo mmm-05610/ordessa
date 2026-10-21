@@ -46,12 +46,12 @@ import readline from "node:readline"
 import { captureLaunchCatalog } from "./launch_catalog.mjs"
 import { selectedLaunchPorts, selectedLaunchProvenancePorts } from "./selected_launch_ports.mjs"
 import { bindLaunchPolicy } from "./launch_policy.mjs"
-import { openAcpConnection, PROCESS_GROUP_OWNERSHIP } from "../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/protocols/acp.mjs"
+import { openAcpConnection, PROCESS_GROUP_OWNERSHIP } from "../../../../../../packages/execution/agents/src/ordessa_agents/harness/protocols/acp.mjs"
 import { matchControlledPeer, resolveControlledPeerAllowlist } from "./controlled-peers.mjs"
 
 
 const here = path.dirname(fileURLToPath(import.meta.url))
-const snapshotRoot = path.resolve(here, "../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/transport/vendor/harness_remote")
+const snapshotRoot = path.resolve(here, "../../../../../../packages/execution/agents/src/ordessa_agents/harness/transport/vendor/harness_remote")
 const CREDENTIAL_PATH = "/runtime/secret/credential"
 const ENVIRONMENT_KEY = /^[A-Z][A-Z0-9_]{0,63}$/
 const SENSITIVE_ENVIRONMENT_KEY = /(TOKEN|SECRET|KEY|PASSWORD|CREDENTIAL|AUTH)/i

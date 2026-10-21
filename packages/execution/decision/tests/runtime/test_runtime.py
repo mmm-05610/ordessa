@@ -6,9 +6,9 @@ import time
 import uuid
 import pytest
 from pydantic_graph import GraphBuilder, StepContext
-from decision_runtime.definitions import *
-from decision_runtime.runtime import *
-from decision_runtime.evidence.codec import record
+from ordessa_decision.definitions import *
+from ordessa_decision.runtime import *
+from ordessa_decision.evidence.codec import record
 
 POLICY = PolicyRef('test-policy','1','sha256:policy')
 READ = ReadContext(object(),'test-read')
@@ -247,7 +247,7 @@ async def test_T13_invalid_answer_and_node_failure():
 
 @pytest.mark.asyncio
 async def test_T15_runs_isolated():
-    from decision_runtime.evidence import MemoryEvidenceSink
+    from ordessa_decision.evidence import MemoryEvidenceSink
     seen_states, calls = {}, []
     class Candidates:
         async def list_candidates(self,task,*args,**kwargs):
@@ -386,7 +386,7 @@ async def test_T28_hung_cancel_cleanup_bounded():
 
 @pytest.mark.asyncio
 async def test_T28_cancellation_resistant_cleanup_bound_and_secondary_error():
-    from decision_runtime.runtime.runner import bounded
+    from ordessa_decision.runtime.runner import bounded
     released, suppressed, done = asyncio.Event(),asyncio.Event(),asyncio.Event()
     async def resistant():
         try:

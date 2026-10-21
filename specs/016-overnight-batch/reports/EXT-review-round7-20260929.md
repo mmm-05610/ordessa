@@ -6,7 +6,7 @@
 
 **2. fake green 迹象**
 
-无。未见删断言/跳过/空测试；第六轮三项（verify/restore 边界声明、claude mismatch 判 unknown、families 取 `server_plugin_api.FAMILIES` 发布集合）均有真实断言对应；测试对拒绝路径、fail-closed 与 schema 不可表达性均有正向验证。
+无。未见删断言/跳过/空测试；第六轮三项（verify/restore 边界声明、claude mismatch 判 unknown、families 取 `ordessa_server_plugin_api.FAMILIES` 发布集合）均有真实断言对应；测试对拒绝路径、fail-closed 与 schema 不可表达性均有正向验证。
 
 **3. 结论**
 

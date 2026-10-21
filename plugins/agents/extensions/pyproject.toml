@@ -11,7 +11,7 @@ license = {text = "MIT"}
 dependencies = [
     "ordessa-server-plugin-api>=0.1.0,<1",
     # Execution owns the Harness declaration types consumed by these adapters.
-    "ordessa-execution-agents==0.1.0",
+    "ordessa-agents==0.1.0",
 ]
 
 [project.optional-dependencies]

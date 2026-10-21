@@ -19,7 +19,7 @@ from ordessa_prompts.backend.service import PromptsService
 from ordessa_prompts.backend.storage import PromptsStore
 from ordessa_prompts.plugin import PromptsServerPlugin
 
-from server_plugin_api import ServerPluginContext
+from ordessa_server_plugin_api import ServerPluginContext
 
 
 class RecordingHandler(logging.Handler):

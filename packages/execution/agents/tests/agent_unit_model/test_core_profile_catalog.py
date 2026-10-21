@@ -1,5 +1,5 @@
 """Real isolated SQLite catalog contract tests; no native/model claims."""
-from ordessa_execution_agents.profiles import encode_content
+from ordessa_agents.profiles import encode_content
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import FrozenInstanceError, dataclass
@@ -8,7 +8,7 @@ from threading import Barrier
 import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_agents.profiles import ProfileAccessRefused, ProfileStoreUnavailable, ProfileRevisionConflict, ProfileChangeUnknown
+from ordessa_agents.profiles import ProfileAccessRefused, ProfileStoreUnavailable, ProfileRevisionConflict, ProfileChangeUnknown
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from pacthold.public import Environment, EnvironmentClosedError

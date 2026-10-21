@@ -9,7 +9,7 @@ from __future__ import annotations
 from hashlib import sha256
 from typing import Iterable
 
-from ordessa_execution_agents.harness.definitions.command_discovery import CommandCandidate, command_catalog
+from ordessa_agents.harness.definitions.command_discovery import CommandCandidate, command_catalog
 from ordessa_infrastructure.encoding.canonical_json import canonical_bytes
 
 

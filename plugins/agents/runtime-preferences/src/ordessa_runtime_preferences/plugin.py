@@ -10,7 +10,7 @@ carries no owner. Activating a second plugin claiming any
 """
 from __future__ import annotations
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     Contribution, ContributionBatch, ServerPluginDescriptor,
     ServerPluginRegistration,
 )

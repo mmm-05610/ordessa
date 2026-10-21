@@ -17,13 +17,13 @@ from contextlib import contextmanager
 from acp import schema
 from acp.exceptions import RequestError
 from ordessa_infrastructure.process.framing import FramingError, Message
-from ordessa_execution_agents.harness.transport import ChannelClosed, LostReceipt, RequestTimeout, WriterLeaseRefused
-from ordessa_execution_agents.harness.protocols.acp import AcpRemoteError
-from ordessa_execution_agents.harness.protocols.acp.callbacks import reply_error, reply_result
-from ordessa_execution_agents.harness.protocols.acp.connection import open_sdk_connection
-from ordessa_execution_agents.harness.protocols.acp.interaction import invoke_bound_callback
-from ordessa_execution_agents.harness.protocols.acp.sessions import validate_request, validate_response
-from ordessa_execution_agents.harness.transport import (
+from ordessa_agents.harness.transport import ChannelClosed, LostReceipt, RequestTimeout, WriterLeaseRefused
+from ordessa_agents.harness.protocols.acp import AcpRemoteError
+from ordessa_agents.harness.protocols.acp.callbacks import reply_error, reply_result
+from ordessa_agents.harness.protocols.acp.connection import open_sdk_connection
+from ordessa_agents.harness.protocols.acp.interaction import invoke_bound_callback
+from ordessa_agents.harness.protocols.acp.sessions import validate_request, validate_response
+from ordessa_agents.harness.transport import (
     EffectWriteGuard, EffectWriteRefused, attach_native_write_failure,
 )
 

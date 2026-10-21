@@ -1,0 +1,2 @@
+ordessa: Service authentication or authorization was refused
+{"apiVersion": "agent-tools/1", "command": "agents profiles list --json", "data": null, "error": {"code": "PERMISSION_DENIED", "message": "Service authentication or authorization was refused", "retryable": false}, "evidenceRefs": [], "operationRef": null, "requestId": "aa16b521bd8742a19fe03b0d30d81aa6", "status": "refused"}

@@ -7,7 +7,7 @@ import sqlite3
 import pytest
 
 from ordessa_infrastructure.encoding.immutable_json import safe_json
-from ordessa_execution_agents.harness.providers.registry import CatalogUnavailable, HarnessAdmission
+from ordessa_agents.harness.providers.registry import CatalogUnavailable, HarnessAdmission
 from ordessa_units.errors import UnitGuaranteeUnavailable, UnitOperationUnknown
 from test_registry_retained_guarantees import _owner, _stage, _declaration, _close
 

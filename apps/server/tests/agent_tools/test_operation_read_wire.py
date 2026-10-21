@@ -9,7 +9,7 @@ NOT_FOUND hides for cross-principal and dual-ACL reads, CONFLICT_REQUEST for
 illegal ref shapes, and the remaining uncontracted operation/resolve/compile
 families still occupying nothing.
 """
-from ordessa_execution_agents.harness.definitions import HarnessActivationRef
+from ordessa_agents.harness.definitions import HarnessActivationRef
 from ordessa_units.errors import UnitAdmissionRefused
 from ordessa_units.errors import UnitGuaranteeUnavailable
 from ordessa_units.errors import UnitIdentityMismatch
@@ -32,7 +32,7 @@ from ordessa_units.public import (
 )
 from pacthold.environment import Environment
 from ordessa_system_access_bindings import agent_core_methods
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 from ordessa_system_access_client import ClientError, Service, WireClient, core_schema
 
 

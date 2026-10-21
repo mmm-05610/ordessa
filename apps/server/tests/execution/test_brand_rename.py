@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import ordessa_skills.resource_contracts as _skill_contracts
-import ordessa_execution_agents.harness.definitions.harness_capabilities as _capabilities
+import ordessa_agents.harness.definitions.harness_capabilities as _capabilities
 
 
 def test_the_contract_ids_keep_their_historical_spelling():

@@ -6,10 +6,10 @@ import pytest
 from ordessa_interfaces_contracts import (
     Capability, OperationResult, validate_capability)
 
-from decision_runtime import DecisionRunner, FilesystemEvidenceStore, RulesOutcome
-from decision_runtime.capability import build_capability as original_build_capability, factory
-from decision_runtime.evidence import EvidenceScope
-from decision_runtime.settings import DecisionsSettings
+from ordessa_decision import DecisionRunner, FilesystemEvidenceStore, RulesOutcome
+from ordessa_decision.capability import build_capability as original_build_capability, factory
+from ordessa_decision.evidence import EvidenceScope
+from ordessa_decision.settings import DecisionsSettings
 
 
 class Engine:
@@ -136,7 +136,7 @@ def test_capability_get_reads_across_processes(tmp_path):
     capability = build_capability(settings(tmp_path))
     ran = asyncio.run(capability.handlers["decisions.run"]({"job": job()}, Context()))
     digest = ran.data["evidence"]["digest"]
-    code = ("from decision_runtime import FilesystemEvidenceStore; from decision_runtime.evidence import EvidenceScope; "
+    code = ("from ordessa_decision import FilesystemEvidenceStore; from ordessa_decision.evidence import EvidenceScope; "
             f"print(FilesystemEvidenceStore({str(tmp_path / 'evidence')!r}).scoped(EvidenceScope('principal','worker')).get({digest!r})['job_digest'])")
     finished = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
     assert finished.returncode == 0, finished.stderr
@@ -162,8 +162,8 @@ def test_concurrent_runs_share_the_store_without_interference(tmp_path):
 
 
 def test_query_reads_the_original_run_without_claiming_or_executing(tmp_path):
-    from decision_runtime.definitions.values import digest_hex, job_document_bound
-    from decision_runtime.job import validate_job
+    from ordessa_decision.definitions.values import digest_hex, job_document_bound
+    from ordessa_decision.job import validate_job
 
     evaluations = []
     class CountingEngine(Engine):

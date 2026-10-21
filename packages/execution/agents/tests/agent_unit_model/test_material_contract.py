@@ -11,7 +11,7 @@ from typing import ClassVar, get_type_hints
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
+from ordessa_agents.harness.definitions.activation import HarnessActivationRef
 from ordessa_units.definitions.admission_identity import AgentNodeRef
 from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.public import (

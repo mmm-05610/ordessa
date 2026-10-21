@@ -35,7 +35,7 @@ def test_verifier_uses_selected_node_and_keeps_complete_policy(monkeypatch, tmp_
     argv, options = calls[0]
     assert Path(argv[0]).resolve() == selected.resolve()
     assert argv[0] == str(selected), "The verifier must honor the product's Node PATH"
-    assert Path(argv[4]).read_bytes() == (Path(__file__).resolve().parents[5] / 'packages/execution/agents/src/ordessa_execution_agents/harness/providers/resolution/_deployment/native-artifact-policy.mjs').read_bytes()
+    assert Path(argv[4]).read_bytes() == (Path(__file__).resolve().parents[5] / 'packages/execution/agents/src/ordessa_agents/harness/providers/resolution/_deployment/native-artifact-policy.mjs').read_bytes()
     assert "verifyInstalledArtifact" in argv[3]
     assert "variant:'native-profile'" in argv[3] if brand != "pi" else "variant:'pi-profile'" in argv[3]
     assert options["check"] is True and options["timeout"] == 30
@@ -57,7 +57,7 @@ def test_verification_failure_is_never_replaced_with_another_policy(monkeypatch,
 
 
 def test_missing_node_does_not_fall_back_to_system_node(monkeypatch):
-    from ordessa_execution_agents.harness.providers.resolution.verifier_deployment import installed_verifier
+    from ordessa_agents.harness.providers.resolution.verifier_deployment import installed_verifier
 
     monkeypatch.setenv("PATH", "")
     with pytest.raises(RuntimeError, match="NATIVE_VERIFIER_NODE_MISSING"):
@@ -66,10 +66,10 @@ def test_missing_node_does_not_fall_back_to_system_node(monkeypatch):
 
 
 def test_missing_installed_policy_does_not_search_other_trees(monkeypatch, tmp_path):
-    from ordessa_execution_agents.harness.providers.resolution import verifier_deployment
+    from ordessa_agents.harness.providers.resolution import verifier_deployment
 
-    monkeypatch.setattr(verifier_deployment, "__file__", str(tmp_path / "site-packages/ordessa_execution_agents/harness/providers/resolution/verifier_deployment.py"))
-    monkeypatch.setattr(verifier_deployment.resources, "files", lambda name: tmp_path / "site-packages/ordessa_execution_agents/harness/providers/resolution")
+    monkeypatch.setattr(verifier_deployment, "__file__", str(tmp_path / "site-packages/ordessa_agents/harness/providers/resolution/verifier_deployment.py"))
+    monkeypatch.setattr(verifier_deployment.resources, "files", lambda name: tmp_path / "site-packages/ordessa_agents/harness/providers/resolution")
     with pytest.raises(RuntimeError, match="NATIVE_VERIFIER_POLICY_MISSING"):
         with verifier_deployment.installed_verifier():
             pytest.fail("An incomplete installation must refuse")
@@ -93,9 +93,9 @@ def test_wheel_contains_original_policy_without_source_tree(tmp_path):
     installed = tmp_path / "installed"
     with zipfile.ZipFile(next(wheels.glob("*.whl"))) as wheel:
         wheel.extractall(installed)
-    policy = installed / "ordessa_execution_agents/harness/providers/resolution/_deployment/native-artifact-policy.mjs"
+    policy = installed / "ordessa_agents/harness/providers/resolution/_deployment/native-artifact-policy.mjs"
     assert policy.is_file(), "The non-editable distribution omits the complete verifier"
-    assert policy.read_bytes() == (Path(__file__).resolve().parents[5] / 'packages/execution/agents/src/ordessa_execution_agents/harness/providers/resolution/_deployment/native-artifact-policy.mjs').read_bytes()
+    assert policy.read_bytes() == (Path(__file__).resolve().parents[5] / 'packages/execution/agents/src/ordessa_agents/harness/providers/resolution/_deployment/native-artifact-policy.mjs').read_bytes()
     private_bin = tmp_path / "private-bin"
     private_bin.mkdir()
     selected_node = private_bin / "node"
@@ -105,7 +105,7 @@ def test_wheel_contains_original_policy_without_source_tree(tmp_path):
     extension_policy = {**extension, "mode": "profile", "variant": "pi-profile"}
     script = """import hashlib,json,sys,subprocess
 sys.path.insert(0,sys.argv[1])
-from ordessa_execution_agents.harness.providers.resolution.verifier_deployment import installed_verifier
+from ordessa_agents.harness.providers.resolution.verifier_deployment import installed_verifier
 with installed_verifier() as (node,policy):
  probe=subprocess.run([node,'--input-type=module','-e',
   'import {pathToFileURL} from "node:url"; const {verifyInstalledArtifact}=await import(pathToFileURL(process.argv[1]).href); verifyInstalledArtifact({artifactBase:"/ordessa-missing-verifier-test-root",artifact:"pi-profile-runtime",packageName:"@automatalabs/pi-acp",version:"0.5.0",variant:"pi-profile",extensionPolicy:JSON.parse(process.argv[2])});',str(policy),sys.argv[2]],capture_output=True,text=True)

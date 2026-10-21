@@ -11,7 +11,7 @@ the measured facts O1-O6 recorded BEFORE any code change.
     DRIVEN FOR REAL below (tests 4-8).
 (b) for the submission fence: `acp_admission.py:134` requires
     `isinstance(bound, BoundAdmission)` of the host-declared record
-    (`acp_admission.py:27-36`), which `server_plugin_api` does not publish
+    (`acp_admission.py:27-36`), which `ordessa_server_plugin_api` does not publish
     (measured: hasattr == False for BoundAdmission / AcpPermitAuthority /
     AcpAdmissionRefused), plus the private digest recipe (`:63-90,:120`) and the
     host-only refusal type (`:21`, caught at `:383`). NOT drivable from a plugin
@@ -104,9 +104,9 @@ Outcomes per scenario (all PASS):
    invented. A port with no authority installed refuses POLICY_ADAPTER_MISSING
    / answers False.
 9. blocker pins: BoundAdmission / AcpPermitAuthority / AcpAdmissionRefused are
-   still absent from server_plugin_api and a structurally complete plugin-owned
+   still absent from ordessa_server_plugin_api and a structurally complete plugin-owned
    permit is refused ("submission permit binding is invalid") with an empty
-   recorder; host_authority.py imports only __future__/typing/server_plugin_api
+   recorder; host_authority.py imports only __future__/typing/ordessa_server_plugin_api
    (ast-checked); the public port alone grants no authority.
 10. harness consumer path: AcpChannelServerPlugin.build with
     ports[ACP_ADMISSION_PORT] == this lane's PermissionsAcpAdmission passes its

@@ -3,10 +3,10 @@ from dataclasses import replace
 
 import pytest
 
-from ordessa_execution_agents.harness.providers.registry.errors import CatalogAdmissionRefused, CatalogIdentityConflict
+from ordessa_agents.harness.providers.registry.errors import CatalogAdmissionRefused, CatalogIdentityConflict
 from ordessa_units.admission.material_admission import material_registration_snapshot
 from ordessa_units.public import unit_services, AGENT_MANAGEMENT_CONTRACT_VERSION
-from ordessa_execution_agents.harness.providers.registry.definition_admission import (
+from ordessa_agents.harness.providers.registry.definition_admission import (
     HarnessContributionSet,
     HarnessDefinitionDeclaration,
     HarnessDefinitionDescriptor,
@@ -15,7 +15,7 @@ from ordessa_execution_agents.harness.providers.registry.definition_admission im
 from ordessa_system_access_bindings import agent_core_methods
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from pacthold.public import Environment, InstallationRecord
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 
 @pytest.fixture

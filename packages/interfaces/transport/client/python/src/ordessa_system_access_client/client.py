@@ -79,6 +79,38 @@ class Service:
     token: str
 
 
+#: A configured token file is a locator, never a secret in the configuration.
+_MAX_TOKEN_BYTES = 4096
+
+
+def read_token_file(path: str) -> str:
+    """Read one private token file: regular, no symlink, mode 0600, printable ASCII.
+
+    The Server writes this file itself (auto-generated on first start); a caller
+    only ever names its path. A group/other-accessible or oversized file is
+    refused rather than trimmed: silently accepting it would widen who can use
+    the instance.
+    """
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError:
+        raise ClientError("TOKEN_UNAVAILABLE", "The configured token file is unavailable", 3) from None
+    with os.fdopen(fd, "rb") as stream:
+        mode = os.fstat(stream.fileno()).st_mode
+        if not stat.S_ISREG(mode) or mode & 0o077:
+            raise ClientError("TOKEN_PERMISSIONS", "The token file must be a private regular file (0600)", 3)
+        raw = stream.read(_MAX_TOKEN_BYTES + 1)
+    if len(raw) > _MAX_TOKEN_BYTES:
+        raise ClientError("TOKEN_UNAVAILABLE", "The token file is oversized", 3)
+    try:
+        token = raw.decode("ascii").strip()
+    except UnicodeDecodeError:
+        raise ClientError("TOKEN_UNAVAILABLE", "The token file is not ASCII", 3) from None
+    if not token or any(ord(char) < 33 or ord(char) > 126 for char in token):
+        raise ClientError("TOKEN_UNAVAILABLE", "The token file has no usable token value", 3)
+    return token
+
+
 def load_service(path: str, alias: str) -> Service:
     try:
         # Refuse symlink substitution and inspect the same descriptor we read.
@@ -95,14 +127,20 @@ def load_service(path: str, alias: str) -> Service:
             raise ValueError("configuration shape")
         for name, entry in config["services"].items():
             if (not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", name)
-                    or not isinstance(entry, dict) or set(entry) != {"endpoint", "tokenEnv"}):
-                raise ValueError("service shape; plaintext secrets are forbidden")
+                    or not isinstance(entry, dict)
+                    or set(entry) not in ({"endpoint", "tokenEnv"}, {"endpoint", "tokenFile"})):
+                raise ValueError("service shape; endpoint plus exactly one of tokenEnv/tokenFile")
             validate_endpoint(entry["endpoint"])
-            if not isinstance(entry["tokenEnv"], str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", entry["tokenEnv"]):
-                raise ValueError("token environment name")
+            if "tokenEnv" in entry:
+                if not isinstance(entry["tokenEnv"], str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", entry["tokenEnv"]):
+                    raise ValueError("token environment name")
+            elif not isinstance(entry["tokenFile"], str) or not os.path.isabs(entry["tokenFile"]):
+                raise ValueError("token file must be an absolute path")
         entry = config["services"].get(alias)
         if entry is None:
             raise ClientError("SERVICE_NOT_CONFIGURED", "Selected service is not configured", 2)
+        if "tokenFile" in entry:
+            return Service(alias, entry["endpoint"].rstrip("/"), read_token_file(entry["tokenFile"]))
         token = os.environ.get(entry["tokenEnv"], "")
         if not token or any(ord(char) < 33 or ord(char) > 126 for char in token):
             raise ClientError("TOKEN_UNAVAILABLE", "A valid token environment value is required", 3)
@@ -235,13 +273,13 @@ class CapabilityClient:
         return self._envelope('operations.describe',{'operationId':operation_id},request_id)
 
     def invoke(self,operation_id,inputs,request_id,*,effectful=True):
-        if (type(operation_id) is not str or not re.fullmatch(r'[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+',operation_id)
+        if (type(operation_id) is not str or not re.fullmatch(r'[a-z][a-zA-Z0-9-]*(\.[a-z][a-zA-Z0-9-]*)+',operation_id)
                 or type(inputs) is not dict):
             raise ClientError('PARAMETER_INVALID','Invalid capability invocation',2)
         return self._envelope('operations.call',{'operationId':operation_id,'input':inputs},request_id,effectful=effectful)
 
     def profile_capabilities(self,request_id,required_operation):
-        envelope=self.invoke('profiles.capabilities',{},request_id,effectful=False)
+        envelope=self.invoke('agents.profiles.capabilities',{},request_id,effectful=False)
         if envelope['status']!='completed':
             raise ClientError('CORE_API_UNAVAILABLE','Original Profile capability unavailable',4)
         value=envelope['data'];schema=profile_schema()
@@ -252,6 +290,6 @@ class CapabilityClient:
                 or type(value['environmentNamespace']) is not str or not value['environmentNamespace']
                 or type(value['supports']) is not dict or value['supports'].get('profileCatalog') is not True
                 or type(value['supportedMethods']) is not list or required_operation not in value['supportedMethods']
-                or any(type(x) is not str or not x.startswith('profiles.') for x in value['supportedMethods'])):
+                or any(type(x) is not str or not x.startswith('agents.profiles.') for x in value['supportedMethods'])):
             raise ClientError('CORE_VERSION_UNSUPPORTED','Original Profile data schema/support mismatch',4)
         return value

@@ -9,7 +9,7 @@ therefore `unknown` and never offered. Everything this module can honestly
 declare is a placement intent whose evidence ceiling is `projected`.
 
 No process is spawned, no path is written, no harness symbol is imported —
-the module is pure domain data over the published `ordessa_execution_agents.harness.definitions`
+the module is pure domain data over the published `ordessa_agents.harness.definitions`
 vocabulary; registration rides the published
 `harness.configuration-adapters` contribution point (see
 `contribution.py` and `plugin.py`).

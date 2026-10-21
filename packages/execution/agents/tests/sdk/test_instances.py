@@ -1,7 +1,7 @@
 """Endpoint and agent-instance references: closed JSON, no authority, strict decode."""
 import pytest
 
-from ordessa_execution_agents.sdk.instances import AgentInstanceRef, EndpointRef, ReferenceError_
+from ordessa_agents.sdk.instances import AgentInstanceRef, EndpointRef, ReferenceError_
 
 DIGEST = 'sha256:' + 'a' * 64
 

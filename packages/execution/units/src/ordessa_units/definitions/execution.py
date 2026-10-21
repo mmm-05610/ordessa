@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from types import MappingProxyType
 from typing import Mapping
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     NativeProfileRef, NativeCredentialRef, NativeContinuationRef,
 )
 from ordessa_units.bindings.materials import ResourceRef

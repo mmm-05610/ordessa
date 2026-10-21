@@ -1,5 +1,5 @@
 """AU002 actual SQLite ledger with controlled Unit owner; no native/model."""
-from ordessa_execution_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
 from dataclasses import replace
 from pathlib import Path
 import sys
@@ -12,7 +12,7 @@ from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.errors import UnitIdentityMismatch, UnitOperationUnknown, UnitAdmissionRefused
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import InvocationIssuer, InvocationAuthorityRefused
-from ordessa_execution_agents.harness.providers.registry.contributions import RUNTIME_METHODS
+from ordessa_agents.harness.providers.registry.contributions import RUNTIME_METHODS
 from ordessa_units.configuration.contracts import (
  ApplicationPolicy, ConfigurationChangeRequest, ConfigurationDescription, ConfigurationSnapshot,
  ConfigurationItemResult, ConfigurationChangeResult, UnitInspection, ConfigurationUnsupported,
@@ -224,7 +224,7 @@ def test_public_wire_configuration_apply_inspect_query_do_not_publish_nodes_capa
 
 @pytest.mark.parametrize('failure',['stale','authority','identity','shape'])
 def test_public_wire_safe_version_authority_request_and_shape_errors(setup,wire,failure):
- from server_plugin_api import WireError
+ from ordessa_server_plugin_api import WireError
  params=wire_params(setup)
  family='INVALID_REQUEST'
  if failure=='stale':
@@ -241,7 +241,7 @@ def test_public_wire_safe_version_authority_request_and_shape_errors(setup,wire,
 
 @pytest.mark.parametrize('method', ['agents.nodes.stop','agents.nodes.release','agents.nodes.recover'])
 def test_unwired_lifecycle_port_is_typed_unsupported(setup,wire,method):
- from server_plugin_api import WireError
+ from ordessa_server_plugin_api import WireError
  # stop/release/recover are now wired to the composed core coordinator, but
  # this fixture still assembles no lifecycle observation port. Preserve the
  # unwired guard semantics: every lifecycle port without its original

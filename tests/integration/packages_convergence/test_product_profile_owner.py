@@ -5,7 +5,7 @@ This qualifies only Profile creation/pin/replay, not legacy staged Unit assembly
 import importlib.util
 from pathlib import Path
 import pytest
-from ordessa_execution_agents.profiles import ProfileService,ProfileValidationError
+from ordessa_agents.profiles import ProfileService,ProfileValidationError
 
 
 def test_product_profile_owner_uses_public_store_admission_and_pinned_validator(tmp_path):

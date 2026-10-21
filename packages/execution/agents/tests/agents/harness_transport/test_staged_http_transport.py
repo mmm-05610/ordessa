@@ -18,8 +18,8 @@ from typing import Any, Iterator
 
 import pytest
 
-from ordessa_execution_agents.harness.transport.channel import ChannelClosed, FramingError
-from ordessa_execution_agents.harness.transport.http import (
+from ordessa_agents.harness.transport.channel import ChannelClosed, FramingError
+from ordessa_agents.harness.transport.http import (
     HttpChannelFailure,
     LoopbackHttpChannel,
     NonLoopbackRefused,

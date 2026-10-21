@@ -1,6 +1,6 @@
 import pytest
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     CredentialRefV1,
     NativeCredentialRef,
 )

@@ -1,7 +1,7 @@
 {
   "implementation": {
     "decision_contract_version": "decision/1",
-    "decision_runtime": {
+    "ordessa_decision": {
       "__init__.py": "sha256:49ede42486faf36e7b5f740ff02f851b766ec686544c48caa09c484f0e89c48e",
       "definitions/__init__.py": "sha256:dbb6323e9ba51498ca85bc39176625e6fb3af85480db02f12ac52eee86476a12",
       "definitions/errors.py": "sha256:0cafc526e2425dc6da3e78aaa3f865dab18a93022a75e4666b0a18200057506a",
@@ -22,7 +22,7 @@
       "validation/__init__.py": "sha256:d3495549f280851be28a9050a876377a399247ab782c2f230f0ada3ad0a5b983",
       "validation/requests.py": "sha256:00127ff24b42d509f6a61518709455c715c5107b6adf5a0c93043089ccd774d9"
     },
-    "decision_runtime_version": "0.1.0",
+    "ordessa_decision_version": "0.1.0",
     "engineering": {
       "__init__.py": "sha256:f4b3b6a968f581d043eb0fc14298bd1b9f33959057d18f68b3fc2b16e2c68fe2",
       "adapters/__init__.py": "sha256:9dd668c167f939d8be25685915baaadf981855e80de5641618bec0c3f76a856e",

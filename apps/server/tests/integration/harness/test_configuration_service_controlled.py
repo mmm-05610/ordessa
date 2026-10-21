@@ -15,7 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Event
 import pytest
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, ApplicationTarget, Assessment, ConfigurationAdapterDescriptor,
     DesiredFragment, FieldClaim, FieldPath, Installation, IntentSet, IntentSource,
     SetField, TargetDescriptor, TargetHandle, ValueSchema, VerificationUnknown,
@@ -24,13 +24,13 @@ from ordessa_execution_agents.harness.definitions import (
 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
 from ordessa_units.records.operation_journal import FenceObservation
 from ordessa_units.records.operation_journal import NativeActivationReceipt
-from ordessa_execution_agents.harness.contracts.models.application import NativeReadback
+from ordessa_agents.harness.contracts.models.application import NativeReadback
 from ordessa_units.records.operation_journal import OperationJournal
-from ordessa_execution_agents.harness.contracts.models.application import RuntimeSnapshot
+from ordessa_agents.harness.contracts.models.application import RuntimeSnapshot
 from ordessa_server.composition.configuration.contributions import CONFIGURATION_POINT
-from ordessa_execution_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
+from ordessa_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
 from ordessa_server.composition.runtime import build_runtime
-from server_plugin_api import (AbsentContribution, Contribution, ContributionBatch, ContributionOwnerBusyError,
+from ordessa_server_plugin_api import (AbsentContribution, Contribution, ContributionBatch, ContributionOwnerBusyError,
                                ServerPluginDescriptor, ServerPluginRegistration)
 
 

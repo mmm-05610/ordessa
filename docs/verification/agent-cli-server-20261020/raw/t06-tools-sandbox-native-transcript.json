@@ -1,0 +1,244 @@
+{
+  "source": "codex-app-server/1 native rollout, derived summary (account identifiers and developer instructions omitted)",
+  "rolloutFile": "rollout-2026-10-21T10-57-57-01a15c64-df0a-7793-a714-b2ca48480ec4.jsonl",
+  "malformedLines": 0,
+  "recordCount": 23,
+  "sessionMeta": {
+    "session_id": "01a15c64-df0a-7793-a714-b2ca48480ec4",
+    "id": "01a15c64-df0a-7793-a714-b2ca48480ec4",
+    "cwd": "/tmp/t06-tools-sandbox/work",
+    "originator": "ordessa-cli",
+    "cli_version": "0.157.1",
+    "model_provider": "openai"
+  },
+  "turnContext": {
+    "turnId": "01a15c64-e088-7552-b9ce-2f29bd9a0fa9",
+    "cwd": "/tmp/t06-tools-sandbox/work",
+    "approvalPolicy": "never",
+    "sandboxPolicy": {
+      "type": "workspace-write",
+      "network_access": false,
+      "exclude_tmpdir_env_var": false,
+      "exclude_slash_tmp": false
+    },
+    "permissionProfile": {
+      "type": "managed",
+      "file_system": {
+        "type": "restricted",
+        "entries": [
+          {
+            "path": {
+              "type": "special",
+              "value": {
+                "kind": "root"
+              }
+            },
+            "access": "read"
+          },
+          {
+            "path": {
+              "type": "path",
+              "path": "/tmp/t06-tools-sandbox/work"
+            },
+            "access": "write"
+          },
+          {
+            "path": {
+              "type": "special",
+              "value": {
+                "kind": "slash_tmp"
+              }
+            },
+            "access": "write"
+          },
+          {
+            "path": {
+              "type": "special",
+              "value": {
+                "kind": "tmpdir"
+              }
+            },
+            "access": "write"
+          },
+          {
+            "path": {
+              "type": "path",
+              "path": "/tmp/t06-tools-sandbox/work/.git"
+            },
+            "access": "read",
+            "missing_path_behavior": "skip"
+          },
+          {
+            "path": {
+              "type": "path",
+              "path": "/tmp/t06-tools-sandbox/work/.agents"
+            },
+            "access": "read",
+            "missing_path_behavior": "skip"
+          },
+          {
+            "path": {
+              "type": "path",
+              "path": "/tmp/t06-tools-sandbox/work/.codex"
+            },
+            "access": "read",
+            "missing_path_behavior": "skip"
+          }
+        ]
+      },
+      "network": "restricted"
+    },
+    "model": "gpt-5.6-sol"
+  },
+  "turnRecords": [
+    {
+      "type": "task_started",
+      "turnId": "01a15c64-e088-7552-b9ce-2f29bd9a0fa9",
+      "durationMs": null,
+      "lastAgentMessage": ""
+    },
+    {
+      "type": "task_complete",
+      "turnId": "01a15c64-e088-7552-b9ce-2f29bd9a0fa9",
+      "durationMs": 9348,
+      "lastAgentMessage": "ordessa-tool-ok"
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "text": "<environment_context>\n  <cwd>/tmp/t06-tools-sandbox/work</cwd>\n  <shell>bash</shell>\n  <current_date>2026-10-21</current_date>\n  <timezone>Asia/Shanghai</timezone>\n  <filesystem><workspace_roots><root>/tmp/t06-tools-sandbox/work</root></workspace_roots><permission_profile type=\"managed\"><file_system type=\"restricted\"><entry access=\"read\"><special>:root</special></entry><entry access=\"write\"><path>/tmp/t06-tools-sandbox/work</path></entry><entry access=\"write\"><special>:slash_tmp</special></entry><entry access=\"write\"><special>:tmpdir</special></entry><entry access=\"read\"><path>/tmp/t06-tools-sandbox/work/.git</path></entry><entry access=\"read\"><path>/tmp/t06-tools-sandbox/work/.agents</path></entry><entry access=\"read\"><path>/tmp/t06-tools-sandbox/work/.codex</path></entry></file_system></permission_profile></filesystem>\n</environment_context>"
+    },
+    {
+      "role": "user",
+      "text": "在你的工作目录创建文件 `tools-proof.txt`，内容写 `ordessa-tool-ok`；然后用命令读取它并只回复文件内容。"
+    },
+    {
+      "role": "UserMessage",
+      "text": "在你的工作目录创建文件 `tools-proof.txt`，内容写 `ordessa-tool-ok`；然后用命令读取它并只回复文件内容。"
+    },
+    {
+      "role": "AgentMessage",
+      "text": "我会创建该文件，再用命令读取核对。"
+    },
+    {
+      "role": "assistant",
+      "text": "我会创建该文件，再用命令读取核对。"
+    },
+    {
+      "role": "AgentMessage",
+      "text": "ordessa-tool-ok"
+    },
+    {
+      "role": "assistant",
+      "text": "ordessa-tool-ok"
+    }
+  ],
+  "items": [
+    {
+      "type": "UserMessage",
+      "name": null,
+      "callId": null
+    },
+    {
+      "type": "AgentMessage",
+      "name": null,
+      "callId": null
+    },
+    {
+      "type": "custom_tool_call",
+      "name": "exec",
+      "callId": "call_06e4be1ac9c24084b82947936dc8ec06"
+    },
+    {
+      "type": "FileChange",
+      "name": null,
+      "callId": null
+    },
+    {
+      "type": "CommandExecution",
+      "name": null,
+      "callId": null
+    },
+    {
+      "type": "custom_tool_call_output",
+      "name": null,
+      "callId": "call_06e4be1ac9c24084b82947936dc8ec06"
+    },
+    {
+      "type": "AgentMessage",
+      "name": null,
+      "callId": null
+    }
+  ],
+  "toolEvents": [
+    {
+      "type": "custom_tool_call",
+      "name": "exec",
+      "callId": "call_06e4be1ac9c24084b82947936dc8ec06",
+      "summary": "{\"type\": \"custom_tool_call\", \"id\": \"ctc_0bb1f22bbbc41558016ad82a3ad0c48191ad3cd9c994f0241a\", \"status\": \"completed\", \"call_id\": \"call_06e4be1ac9c24084b82947936dc8ec06\", \"name\": \"exec\", \"input\": \"const p = \\\"*** Begin Patch\\\\n*** Add File: tools-proof.txt\\\\n+ordessa-tool-ok\\\\n*** End Patch\\\";\\nconst r1 = await tools.apply_patch(p);\\nconst r2 = await tools.exec_command({cmd:\\\"sed -n '1p' tools-proof.txt\\\",\\\"workdir\\\":\\\"/tmp/t06-tools-sandbox/work\\\",\\\"yield_time_ms\\\":10000,\\\"max_output_tokens\\\":100});\\ntext(r2.output);\\n\", \"internal_chat_message_metadata_passthrough\": {\"turn_id\": \"01a15c64-e088-7552-b9ce-2f29bd9a0fa9\", \"create_time\": 1792551482.8193846}}"
+    },
+    {
+      "type": "FileChange",
+      "name": null,
+      "callId": null,
+      "summary": "{\"type\": \"FileChange\", \"id\": \"exec-7b24ebf9-8106-4c8f-a746-4b0222ab69f5\", \"changes\": {\"/tmp/t06-tools-sandbox/work/tools-proof.txt\": {\"type\": \"add\", \"content\": \"ordessa-tool-ok\\n\"}}, \"status\": \"completed\", \"stdout\": \"Success. Updated the following files:\\nA tools-proof.txt\\n\", \"stderr\": \"\"}"
+    },
+    {
+      "type": "CommandExecution",
+      "name": null,
+      "callId": null,
+      "summary": "{\"type\": \"CommandExecution\", \"id\": \"exec-72c03fbe-a6c8-46a7-a43e-d1f4f9971bd4\", \"process_id\": \"12350\", \"command\": [\"/bin/bash\", \"-lc\", \"sed -n '1p' tools-proof.txt\"], \"cwd\": \"file:///tmp/t06-tools-sandbox/work\", \"parsed_cmd\": [{\"type\": \"read\", \"cmd\": \"sed -n 1p tools-proof.txt\", \"name\": \"tools-proof.txt\", \"path\": \"tools-proof.txt\"}], \"source\": \"unified_exec_startup\", \"status\": \"completed\", \"stdout\": \"ordessa-tool-ok\\n\", \"stderr\": \"\", \"aggregated_output\": \"ordessa-tool-ok\\n\", \"exit_code\": 0, \"duration\": {\"secs\": 0, \"nanos\": 16102}, \"formatted_output\": \"ordessa-tool-ok\\n\"}"
+    },
+    {
+      "type": "custom_tool_call_output",
+      "name": null,
+      "callId": "call_06e4be1ac9c24084b82947936dc8ec06",
+      "summary": "{\"type\": \"custom_tool_call_output\", \"id\": \"ctco_01a15c64-fb12-75e0-bd15-d9669d70ebcc\", \"call_id\": \"call_06e4be1ac9c24084b82947936dc8ec06\", \"output\": [{\"type\": \"input_text\", \"text\": \"Script completed\\nWall time 0.2 seconds\\nOutput:\\n\"}, {\"type\": \"input_text\", \"text\": \"ordessa-tool-ok\\n\"}], \"internal_chat_message_metadata_passthrough\": {\"turn_id\": \"01a15c64-e088-7552-b9ce-2f29bd9a0fa9\", \"create_time\": 1792551484.1788402}}"
+    }
+  ],
+  "tokenUsage": [
+    {
+      "threadId": "01a15c64-df0a-7793-a714-b2ca48480ec4",
+      "turnId": "01a15c64-e088-7552-b9ce-2f29bd9a0fa9",
+      "sessionId": "01a15c64-df0a-7793-a714-b2ca48480ec4",
+      "turnTokens": {
+        "input_tokens": 13206,
+        "cached_input_tokens": 6656,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 117,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 13323
+      },
+      "threadTokens": {
+        "input_tokens": 13206,
+        "cached_input_tokens": 6656,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 117,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 13323
+      }
+    },
+    {
+      "threadId": "01a15c64-df0a-7793-a714-b2ca48480ec4",
+      "turnId": "01a15c64-e088-7552-b9ce-2f29bd9a0fa9",
+      "sessionId": "01a15c64-df0a-7793-a714-b2ca48480ec4",
+      "turnTokens": {
+        "input_tokens": 26557,
+        "cached_input_tokens": 19712,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 125,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 26682
+      },
+      "threadTokens": {
+        "input_tokens": 26557,
+        "cached_input_tokens": 19712,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 125,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 26682
+      }
+    }
+  ]
+}

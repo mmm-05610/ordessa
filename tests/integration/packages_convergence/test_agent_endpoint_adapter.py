@@ -3,10 +3,11 @@ import asyncio
 from pathlib import Path
 from types import SimpleNamespace
 
-from ordessa_environments import EnvironmentManager, EnvironmentUseOperations, EnvironmentEndpoints, OwnerScope, SQLiteEnvironmentStore
+from ordessa_environments import (EnvironmentManager, EnvironmentUseOperations, EnvironmentEndpoints,
+    EnvironmentRefused, OwnerScope, ProcessRequest, SQLiteEnvironmentStore)
 from ordessa_environments_local import LocalEnvironmentResourceProvider
-from ordessa_execution_agents.sdk.prepare import BoundPath, LaunchPlan, SessionBootstrap, ConfigurationArtifact
-from ordessa_agent_tools.composition.endpoints import EnvironmentEndpointResolver
+from ordessa_agents.sdk.prepare import BoundPath, LaunchPlan, SessionBootstrap, ConfigurationArtifact
+from ordessa_agents.bridges.environment_endpoints import EnvironmentEndpointResolver
 
 
 def test_positive_sdk_launch_no_acp_observe_terminate_detach_and_no_use_release(tmp_path):
@@ -20,7 +21,8 @@ def test_positive_sdk_launch_no_acp_observe_terminate_detach_and_no_use_release(
         use = uses.acquire(instance.identity,scope,request_id='acquire',sharing=False,invocation=invocation)['useIdentity']
         endpoints = EnvironmentEndpoints(uses)
         ref = endpoints.export(use,scope,capabilities=['launcher','observe','communicate','terminate','detach'],request_id='export',invocation=invocation)['endpointRef']
-        adapter = EnvironmentEndpointResolver(endpoints, invocation_resolver=lambda caller: invocation if caller is invocation else None)
+        adapter = EnvironmentEndpointResolver(endpoints, invocation_resolver=lambda caller: invocation if caller is invocation else None,
+            process_request_factory=ProcessRequest.build, refusal=EnvironmentRefused)
         bound = await adapter.resolve(ref, invocation)
         assert not any(k in vars(bound) for k in ('environment_ref','use_ref','use','environment'))
         plan = LaunchPlan(('/bin/cat',),BoundPath('work','.'),{},(),(),(),(),SessionBootstrap('none'),('launcher',))
@@ -56,7 +58,8 @@ def test_mutated_launch_plan_digest_is_refused_before_real_spawn(tmp_path):
         use=uses.acquire(instance.identity,scope,request_id='acquire',sharing=False,invocation=invocation)['useIdentity']
         endpoints=EnvironmentEndpoints(uses)
         ref=endpoints.export(use,scope,capabilities=['launcher'],request_id='export',invocation=invocation)['endpointRef']
-        bound=await EnvironmentEndpointResolver(endpoints,invocation_resolver=lambda _:invocation).resolve(ref,invocation)
+        bound=await EnvironmentEndpointResolver(endpoints,invocation_resolver=lambda _:invocation,
+            process_request_factory=ProcessRequest.build,refusal=EnvironmentRefused).resolve(ref,invocation)
         plan=LaunchPlan(('/bin/echo','must-not-launch'),BoundPath('work','.'),{},(),(),(),(),SessionBootstrap('none'),('launcher',))
         # Simulate foreign/compromised producer mutating after validation. Even if
         # SDK sealing changes, object.__setattr__ cannot bypass adapter recheck.
@@ -78,7 +81,8 @@ def test_materialize_verify_then_launch_configuration_without_adapter_orchestrat
         use=uses.acquire(instance.identity,scope,request_id='acquire',sharing=False,invocation=invocation)['useIdentity']
         endpoints=EnvironmentEndpoints(uses)
         ref=endpoints.export(use,scope,capabilities=['launcher','files','observe','communicate','detach'],request_id='export',invocation=invocation)['endpointRef']
-        resolver=EnvironmentEndpointResolver(endpoints,invocation_resolver=lambda _:invocation)
+        resolver=EnvironmentEndpointResolver(endpoints,invocation_resolver=lambda _:invocation,
+            process_request_factory=ProcessRequest.build,refusal=EnvironmentRefused)
         bound=await resolver.resolve(ref,invocation)
         body='materialized-positive'
         digest='sha256:'+__import__('hashlib').sha256(body.encode()).hexdigest()

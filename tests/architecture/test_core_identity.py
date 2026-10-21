@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-CORE = "ordessa_execution_agents.harness.providers"
+CORE = "ordessa_agents.harness.providers"
 BINDING = "ordessa_server_product.harness_adapters"
 DECLARATIONS = CORE + ".declarations"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -113,7 +113,7 @@ def test_the_registry_content_is_the_declaration_file_unchanged() -> None:
     assert len(tomllib.loads(text)["harness"]) == len(registry.all()) == 8
     assert __import__("hashlib").sha256(captured.registry_bytes).hexdigest() == (
         "956aec189bc21eae998a17f2994648f929c905799538e89c3e947e2f1e1fea1f")
-    import ordessa_execution_agents.harness.providers.declarations as declarations
+    import ordessa_agents.harness.providers.declarations as declarations
     assert not hasattr(declarations, "REGISTRY")
     assert not hasattr(declarations, "DEFINITIONS")
 

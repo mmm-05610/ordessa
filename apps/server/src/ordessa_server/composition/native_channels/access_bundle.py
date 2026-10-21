@@ -26,7 +26,7 @@ def stage_access_entry(destination: Path, captured_catalog: CapturedHarnessCatal
     for name in ('composition/native_channels/launch_catalog.mjs', 'composition/native_channels/selected_launch_ports.mjs', 'composition/native_channels/launch_policy.mjs', 'composition/native_channels/access_entry.mjs', 'composition/native_channels/controlled-peers.mjs'):
         sources.append(("apps/server/src/ordessa_server/" + name, files("ordessa_server").joinpath(name)))
     for name in ('harness/transport/profile_vocabulary.mjs', 'harness/protocols/acp.mjs', 'harness/transport/vendor/harness_remote/bridge/src/acp-client.js', 'harness/transport/vendor/harness_remote/bridge/src/backward-line-scan.js', 'harness/transport/executable_lookup.mjs', 'harness/transport/launch_resolution.mjs', 'harness/transport/launch_descriptor.mjs', 'harness/transport/vendor/harness_remote/SOURCE.json', 'harness/transport/vendor/harness_remote/LICENSE', 'harness/transport/vendor/harness_remote/PATCHES.md', 'harness/providers/resolution/_deployment/native-artifact-policy.mjs'):
-        sources.append(("packages/execution/agents/src/ordessa_execution_agents/" + name, files("ordessa_execution_agents").joinpath(name)))
+        sources.append(("packages/execution/agents/src/ordessa_agents/" + name, files("ordessa_agents").joinpath(name)))
     for logical_root, declared in selected_acp_resources():
         for name, source in declared:
             sources.append((logical_root + "/" + name, source))

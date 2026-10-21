@@ -7,8 +7,8 @@ import asyncio,sqlite3
 from types import SimpleNamespace
 from pathlib import Path
 import pytest
-from ordessa_execution_agents.public import ManagerRefused
-from ordessa_execution_agents.sdk.interactions import InteractionsRefused
+from ordessa_agents.public import ManagerRefused
+from ordessa_agents.sdk.interactions import InteractionsRefused
 from ordessa_server.composition.root_ownership import _issue_owned_root_binding
 from ordessa_server.composition.agent_owner import AgentOwnerInputs,AgentOwnerUnavailable,assemble_agent_owner,_expected_binding
 from ordessa_server_product.composition import ServerProductComposition
@@ -28,8 +28,8 @@ def test_sdk_product_same_original_sources_and_history_not_reinterpreted(tmp_pat
             from ordessa_interfaces_contracts import Capability,CapabilityDescriptor,OperationDescriptor,OperationResult,compute_descriptor_digest
             calls.append(actual)
             async def read(request,context):return OperationResult('completed',data={})
-            base=CapabilityDescriptor('profiles','owner-test/1',(OperationDescriptor('profiles.read',{'type':'object'},{'type':'object'}),),'')
-            return (Capability(CapabilityDescriptor(base.id,base.version,base.operations,compute_descriptor_digest(base)),{'profiles.read':read}),)
+            base=CapabilityDescriptor('agents','owner-test/1',(OperationDescriptor('agents.profiles.read',{'type':'object'},{'type':'object'}),),'')
+            return (Capability(CapabilityDescriptor(base.id,base.version,base.operations,compute_descriptor_digest(base)),{'agents.profiles.read':read}),)
         inputs=AgentOwnerInputs(case.owner.service,case.manager.harness_resolver,case.fixture.resolver,
             case.manager.preparation_resolver,case.authority,case.authority,methods)
         owner=None
@@ -196,7 +196,7 @@ def test_current_agent_tools_deployment_owns_one_sdk_records_and_releases_root(t
         case = await setup(tmp_path/'fixture', PEER)
         runtime = None
         from contextlib import contextmanager
-        from ordessa_execution_agents.capability.instances import build_agent_capability
+        from ordessa_agents.capability.instances import build_agent_capability
         class Guard:
             @contextmanager
             def guard_write(self, binding, invocation):

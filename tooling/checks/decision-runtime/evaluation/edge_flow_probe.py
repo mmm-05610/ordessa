@@ -12,16 +12,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import time
 
 import httpx2
-from decision_runtime.definitions import (TaskBrief, ConfigurationOffer, CandidateBatch,
+from ordessa_decision.definitions import (TaskBrief, ConfigurationOffer, CandidateBatch,
     DecisionRequest, DecisionAnswer, DecisionQuestion, DecisionServices, ReadContext,
     RunLimits, FlowRef, ValidationReceipt, ObligationResult, digest, plain, freeze)
 from assignment_source.build import build_assignment_flow, load_assignment_policy
 from assignment_source.composition import DeterministicProposalSource, RegisteredTemplate, check_schema
 from assignment_source.proposals import check_proposal_basis
 from assignment_source.selection import validate_policy
-from decision_runtime.evidence import FileEvidenceSink, MemoryEvidenceSink
+from ordessa_decision.evidence import FileEvidenceSink, MemoryEvidenceSink
 from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings
-from decision_runtime.runtime import run_decision, reviewed_code_digest, flow_digest
+from ordessa_decision.runtime import run_decision, reviewed_code_digest, flow_digest
 
 _spec = importlib.util.spec_from_file_location('edge_reference_helpers', Path(__file__).with_name('reference_flow_probe.py'))
 reference = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(reference)

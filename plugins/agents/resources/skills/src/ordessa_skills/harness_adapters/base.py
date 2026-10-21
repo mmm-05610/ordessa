@@ -7,7 +7,7 @@ pure functions — `assess(target)`, `compile(resolved_set, target)`,
 
 * imports `pacthold.harness_kit` or any host/harness internal (AGENTS.md rule 3;
   the evidence strings merely *cite* harness files by path:line) — it does
-  consume the published standalone contract `ordessa_execution_agents.harness.definitions`;
+  consume the published standalone contract `ordessa_agents.harness.definitions`;
 * writes to a filesystem, spawns a process or sends anything anywhere —
   `compile` only produces the published `IntentSet` dataclass values; the
   physical mount, HOME write and restart are Harness-owned operations on
@@ -24,7 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Sequence
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ContentRef as PublishedContentRef,
     IntentSet as PublishedIntentSet,
     IntentSource as PublishedIntentSource,

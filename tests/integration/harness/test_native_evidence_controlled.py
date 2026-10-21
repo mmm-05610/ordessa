@@ -15,22 +15,22 @@ import sqlite3
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import ApplicationTarget, Confirmed, ContractError, Plan
-from ordessa_execution_agents.harness.definitions.native_evidence import (
+from ordessa_agents.harness.definitions import ApplicationTarget, Confirmed, ContractError, Plan
+from ordessa_agents.harness.definitions.native_evidence import (
     LaunchProvenanceFacts, NativeEvidence, NativeOwnerReceiptFacts,
     NativeSessionIdentityFacts,
 )
 from native_evidence_fixture import ControlledNativeStandIn
 from native_evidence_fixture import EVIDENCE_SUPPORTED_BRANDS
 from native_evidence_fixture import EVIDENCE_UNSUPPORTED_BRANDS
-from ordessa_execution_agents.units.records.operation_journal import FenceObservation
-from ordessa_execution_agents.units.records.operation_journal import NativeActivationReceipt
-from ordessa_execution_agents.units.records.native_evidence import NativeEvidenceService
+from ordessa_agents.units.records.operation_journal import FenceObservation
+from ordessa_agents.units.records.operation_journal import NativeActivationReceipt
+from ordessa_agents.units.records.native_evidence import NativeEvidenceService
 from native_evidence_fixture import NativeEvidenceUnsupported
-from ordessa_execution_agents.units.records.operation_journal import OperationJournal
+from ordessa_agents.units.records.operation_journal import OperationJournal
 from native_evidence_fixture import supply_brand_evidence
 from ordessa_server.composition.selected_harness_catalog import capture_selected_harness_catalog
-from ordessa_execution_agents.harness.definitions.native_channels import NativeSessionObservation
+from ordessa_agents.harness.definitions.native_channels import NativeSessionObservation
 
 
 NOW = datetime(2026, 9, 28, 12, 0, tzinfo=timezone.utc)

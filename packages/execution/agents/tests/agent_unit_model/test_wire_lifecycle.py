@@ -13,7 +13,7 @@ import pytest
 from agent_tools_fixtures.lifecycle import lifecycle as core_lifecycle
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.public import unit_services, encode_node_ref, AGENT_MANAGEMENT_CONTRACT_VERSION
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 
 def wire_params(node_ref, request_id):

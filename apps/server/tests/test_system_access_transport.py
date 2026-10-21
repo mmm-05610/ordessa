@@ -9,7 +9,7 @@ from starlette.websockets import WebSocket, WebSocketDisconnect
 from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority
 from ordessa_server.composition.runtime import build_runtime
 from ordessa_interfaces.http import create_app
-from server_plugin_api import HttpRouteDescriptor, ServerPluginDescriptor, ServerPluginRegistration
+from ordessa_server_plugin_api import HttpRouteDescriptor, ServerPluginDescriptor, ServerPluginRegistration
 
 
 class RoutePlugin:

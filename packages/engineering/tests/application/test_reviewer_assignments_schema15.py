@@ -409,7 +409,7 @@ def test_business_assignment_uses_actual_agent_binding_reads_and_live_read_revoc
     import importlib.util
     from ordessa_engineering.adapters.native_records.agent_execution import AgentExecutionConsumer
     from ordessa_engineering.adapters.persistence.sqlite.blob_store import SQLiteBlobStore
-    from ordessa_execution_agents.public import AgentInstanceRef
+    from ordessa_agents.public import AgentInstanceRef
     path=Path(__file__).resolve().parents[3]/'execution/agents/tests/sdk/interaction_fixtures.py'
     spec=importlib.util.spec_from_file_location('original_assignment_read_fixture',path)
     fixture=importlib.util.module_from_spec(spec);spec.loader.exec_module(fixture)

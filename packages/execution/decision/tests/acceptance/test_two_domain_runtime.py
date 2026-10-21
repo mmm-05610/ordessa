@@ -13,7 +13,7 @@ EXAMPLE = ROOT / 'packages/execution/decision/examples/two_domain_runtime.py'
 @pytest.fixture(scope='module')
 def domain_api():
     # The example is also the independently runnable no-host entry point.
-    return runpy.run_path(str(EXAMPLE), run_name='decision_runtime_example')
+    return runpy.run_path(str(EXAMPLE), run_name='ordessa_decision_example')
 
 
 @pytest.mark.asyncio

@@ -5,7 +5,7 @@ from agent_tools_fixtures.lifecycle import lifecycle
 from agent_tools_fixtures.node_publication import setup
 from ordessa_units.errors import UnitGuaranteeUnavailable
 from ordessa_units.definitions.operations import UsageMutation, operation_holder, node_holder
-from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
+from ordessa_agents.harness.definitions.activation import HarnessActivationRef
 from ordessa_units.bindings.materials import MaterialProviderPin
 from ordessa_units.bindings.material_operations import material_provider_ref
 

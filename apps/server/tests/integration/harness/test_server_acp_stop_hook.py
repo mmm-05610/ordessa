@@ -20,7 +20,7 @@ test_platform_stop_hooks.py`.
 """
 from __future__ import annotations
 
-from server_plugin_api import ServerPluginContext
+from ordessa_server_plugin_api import ServerPluginContext
 
 from ordessa_server.composition.native_channels.plugin import PLUGIN_ID
 from ordessa_server.composition.native_channels.plugin import AcpChannelServerPlugin

@@ -65,12 +65,12 @@ assert importlib.util.find_spec('ordessa_environment_api') is None
 assert importlib.util.find_spec('pacthold') is None
 assert importlib.util.find_spec('ordessa_harness_transport') is None
 assert all(importlib.util.find_spec(name) is None for name in ('ordessa_harness', 'ordessa_server',
-    'ordessa_agent_tools', 'server_plugin_api', 'ordessa_harness_pi', 'ordessa_harness_claude_code',
+    'ordessa_cli', 'ordessa_server_plugin_api', 'ordessa_harness_pi', 'ordessa_harness_claude_code',
     'ordessa_harness_codex', 'ordessa_harness_dsh'))
 from ordessa_harness_grok_build.acp_model_configuration import GrokBuildAdapter, GROK_BUILD_MODEL_KIND, ADAPTER_ID
 from ordessa_harness_grok_build import GrokBuildRuntimeProvider, GrokBuildCapabilityUnsupported
 from ordessa_harness_grok_build.client import describe
-from ordessa_execution_agents.harness.definitions.model_compilation import AdapterContext,ChoiceRequest,TargetHandle,Refusal,Verdict
+from ordessa_agents.harness.definitions.model_compilation import AdapterContext,ChoiceRequest,TargetHandle,Refusal,Verdict
 manifest = GrokBuildAdapter().registration_manifest()
 assert manifest['adapter_id'] == 'assets.model-provider.grok-build' and manifest['kind'] == 'grok-build.model'
 assert manifest['native_target'] is None and manifest['claims'] == {}

@@ -3,8 +3,8 @@ import ast
 from dataclasses import replace
 from pathlib import Path
 import pytest
-from ordessa_execution_agents.sdk import PrepareContext,BoundPath,SessionBootstrap,HarnessError
-from ordessa_execution_agents.profiles import decode_content
+from ordessa_agents.sdk import PrepareContext,BoundPath,SessionBootstrap,HarnessError
+from ordessa_agents.profiles import decode_content
 from ordessa_harness_gemini_cli import factory
 
 PIN={'environmentNamespace':'test','definitionId':'gemini','revision':'1'}
@@ -52,12 +52,12 @@ def test_all_gemini_runtime_imports_use_only_sdk_and_no_retired_client_name():
     for path in Path(module.__file__).parent.glob('*.py'):
         for node in ast.walk(ast.parse(path.read_text())):
             if isinstance(node,ast.ImportFrom) and (node.module or '').startswith('ordessa_'):
-                assert node.module=='ordessa_execution_agents.sdk'
+                assert node.module=='ordessa_agents.sdk'
 
 
 def test_actual_profile_owner_calls_real_gemini_validator_before_its_atomic_commit(tmp_path):
     from threading import RLock
-    from ordessa_execution_agents.profiles import ProfileService,SqliteProfileStore,ProfileValidationError
+    from ordessa_agents.profiles import ProfileService,SqliteProfileStore,ProfileValidationError
     from ordessa_infrastructure.security.fingerprints import HmacKeyRing
     from ordessa_infrastructure.encoding import canonical_bytes
     class Policy:

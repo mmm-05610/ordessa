@@ -7,8 +7,8 @@ not resend an unknown operation. No new work/status table is introduced.
 from dataclasses import asdict, dataclass
 import hashlib
 
-from decision_runtime.definitions import plain
-from decision_runtime.definitions.values import canonical
+from ordessa_decision.definitions import plain
+from ordessa_decision.definitions.values import canonical
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.application.usecases.artifacts import ArtifactUseCases
 from ordessa_engineering.application.usecases.proposal_closure import resolve_record

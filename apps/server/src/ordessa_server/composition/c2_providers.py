@@ -5,8 +5,8 @@ brands nor issues a new authority: publication uses the existing PluginHost.
 """
 from __future__ import annotations
 
-from ordessa_execution_agents.harness.definitions import ConfigurationAdapterDescriptor
-from server_plugin_api import (
+from ordessa_agents.harness.definitions import ConfigurationAdapterDescriptor
+from ordessa_server_plugin_api import (
     Contribution, ContributionBatch, ServerPluginDescriptor, ServerPluginRegistration,
 )
 

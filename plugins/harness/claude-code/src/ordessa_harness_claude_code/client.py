@@ -7,7 +7,7 @@ artifacts are historical resources, never a fallback for this native provider.
 import json
 import uuid
 
-from ordessa_execution_agents.sdk import (
+from ordessa_agents.sdk import (
     HarnessDescriptor, HarnessError, PrepareContext, ProfileContent, LaunchPlan,
 )
 from .native_channel import ConfigRefusal, FAMILY_ID, PROTOCOL, compile_config
@@ -198,7 +198,7 @@ class ClaudePromptHandler:
     protocol_id = 'claude-stream-json/1'
 
     def encode_prompt(self, session_id, params_bytes, operation_ref):
-        from ordessa_execution_agents.sdk.native_prompt import prompt_text
+        from ordessa_agents.sdk.native_prompt import prompt_text
         text = prompt_text(params_bytes)
         value = {'type': 'user',
                  'message': {'role': 'user', 'content': [{'type': 'text', 'text': text}]}}

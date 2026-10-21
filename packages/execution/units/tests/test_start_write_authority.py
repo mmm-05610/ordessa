@@ -5,7 +5,7 @@ from test_unit_instance import flow
 from ordessa_units.sessions.sdk_client import SdkAcpClient
 from ordessa_units.lifecycle.unit_lifecycle import UnitLifecycleRefused
 from ordessa_units.records.unit_records import UnitRecordsRefused
-from ordessa_execution_agents.preparation import SessionBootstrap
+from ordessa_agents.preparation import SessionBootstrap
 
 
 @pytest.mark.parametrize('method', ['initialize', 'session/new', 'session/load'])

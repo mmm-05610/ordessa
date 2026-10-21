@@ -44,8 +44,8 @@ class EngineeringAgentEffectHandoff:
                 or binding.prompt_ref.media_type!='application/json'
                 or self.dispatch.blobs.read_verified(binding.prompt_ref)!=prepared.prompt_bytes):
             raise ApplicationError('DISPATCH_EFFECT_BINDING_MISMATCH')
-        from ordessa_execution_agents.sdk.interactions import TurnRef,TurnReceipt,BindingProvenance,turn_query
-        from ordessa_execution_agents.sdk.instances import AgentInstanceRef
+        from ordessa_agents.sdk.interactions import TurnRef,TurnReceipt,BindingProvenance,turn_query
+        from ordessa_agents.sdk.instances import AgentInstanceRef
         from .agent_execution import _original_sync
         turn=TurnRef.decode(decode_json(prepared.turn_ref_bytes))
         if canonical_bytes(turn.instance_ref.projection())!=binding.agent_ref_bytes:
@@ -107,8 +107,8 @@ class EngineeringAgentEffectHandoff:
                 @contextmanager
                 def guard_write(self,write,invocation):
                     nonlocal used
-                    from ordessa_execution_agents.sdk.interactions import WriteBinding,TurnRef
-                    from ordessa_execution_agents.sdk.acp import prompt_frame
+                    from ordessa_agents.sdk.interactions import WriteBinding,TurnRef
+                    from ordessa_agents.sdk.acp import prompt_frame
                     if (not active or used or invocation is not send_invocation
                             or asyncio.current_task() is not origin_task or threading.current_thread() is not origin_thread):
                         raise ApplicationError('DISPATCH_EFFECT_HANDOFF_BINDING_INVALID')

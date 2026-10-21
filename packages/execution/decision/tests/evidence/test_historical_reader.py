@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from decision_runtime.historical import ReadContext, FileEvidenceReader
+from ordessa_decision.historical import ReadContext, FileEvidenceReader
 
 ROOT = Path(__file__).resolve().parents[5]
 RUN_ID = '0cf02263-2bbf-4e92-b604-a7184c1a6442'
@@ -16,7 +16,7 @@ HISTORY = (ROOT / 'docs/implementation/specifications/031-jev-decision-module/ev
 
 
 def test_historical_reader_has_no_writer_and_foreign_read_authority_is_refused(tmp_path):
-    import decision_runtime.historical as historical
+    import ordessa_decision.historical as historical
     root, copy = _copy_for_reader(tmp_path)
     original = {p.name:p.read_bytes() for p in copy.iterdir() if p.is_file()}
     authority = object()

@@ -1,5 +1,5 @@
 """One host contribution registry shared by declarations and pre-binding."""
-from server_plugin_api import ContributionPointSpec, unique_contribution_point_specs
+from ordessa_server_plugin_api import ContributionPointSpec, unique_contribution_point_specs
 from .contributions import (CONFIGURATION_POINT, POINT_API_VERSION, RUNTIME_POINT,
                             HarnessContributionRegistry)
 

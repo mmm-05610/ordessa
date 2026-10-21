@@ -13,6 +13,3 @@ dependencies = ["jsonschema>=4.20,<5", "referencing==0.36.2"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.setuptools.package-data]
-"ordessa_interfaces.system_access.contracts" = ["schemas/*.json"]

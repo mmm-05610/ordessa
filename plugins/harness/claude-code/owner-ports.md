@@ -29,7 +29,7 @@ still imports removed `configuration.runtime.ClaudeLiveModelRuntime`.
 `products/server/.../configuration/model/common.py` consumes retained pure
 `acp_model_facts`; this is data, not a runtime fallback.
 The exact authorized staging path
-`products/agent-tools/src/ordessa_agent_tools/native_clients/claude.py` does not exist.
+`products/agent-tools/src/ordessa_cli/native_clients/claude.py` does not exist.
 
 Existing leaf tests importing removed modules are deliberately retained, including
 provider/SDK/stream-json/assembly/Unit lifecycle/owner projection/configuration

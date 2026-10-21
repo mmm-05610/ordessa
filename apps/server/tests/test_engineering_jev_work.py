@@ -14,8 +14,8 @@ from pathlib import Path
 import httpx2
 import pytest
 
-from decision_runtime.definitions import PolicyRef, ReadContext, digest
-from decision_runtime.evidence import FileEvidenceSink
+from ordessa_decision.definitions import PolicyRef, ReadContext, digest
+from ordessa_decision.evidence import FileEvidenceSink
 from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.domain.artifacts.refs import ArtifactRevisionRef

@@ -2,7 +2,7 @@
 
 The Sandbox adapters import the consumed Sandbox contracts, the public Server
 plugin surface and — since the foundation checkpoint — the Harness C2
-*descriptive* vocabulary (`ordessa_execution_agents.harness.definitions.contracts/.schema`), exactly the
+*descriptive* vocabulary (`ordessa_agents.harness.definitions.contracts/.schema`), exactly the
 closure the platform's own third-party contributor fixture declares
 (`plugins/harness/tests/fixtures/external_adapter`). Harness package CODE
 (`pacthold.harness_kit`), the Server host, pacthold and Permissions stay forbidden
@@ -26,10 +26,10 @@ FORBIDDEN_ROOTS = {
     "ordessa_permissions_adapters",
 }
 ALLOWED_EXTERNAL = {"ordessa_sandbox_api", "ordessa_sandbox_backend",
-                    "server_plugin_api", "ordessa_execution_agents.harness.definitions"}
+                    "ordessa_server_plugin_api", "ordessa_agents.harness.definitions"}
 
 
-HARNESS_DEFINITIONS_GRANTS = {"ordessa_execution_agents.harness.definitions"}
+HARNESS_DEFINITIONS_GRANTS = {"ordessa_agents.harness.definitions"}
 
 
 def _imported_roots() -> set[str]:
@@ -105,7 +105,7 @@ from ordessa_sandbox_adapters import (
     build_configuration_batch,
     build_configuration_descriptor,
 )
-from server_plugin_api import ServerPluginContext
+from ordessa_server_plugin_api import ServerPluginContext
 
 # Pins were captured by the caller before this isolated process starts.
 # This process imports no Host, brand code, registry or resource loader.

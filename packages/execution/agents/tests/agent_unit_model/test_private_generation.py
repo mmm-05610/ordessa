@@ -7,11 +7,11 @@ import stat
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ContentRef, FieldPath, IntentSet, IntentSource, MountContent,
     RemoveOwnedContent, ResetField, SetField, TargetDescriptor, TargetHandle,
 )
-from ordessa_execution_agents.harness.configuration.materialization import (
+from ordessa_agents.harness.configuration.materialization import (
     AuthorizedIntents, MaterializationError, MergeAuthority, OwnedContent,
     TargetAuthority, materialize_generation,
 )
@@ -100,7 +100,7 @@ def test_unsupported_reset_rule_refuses_before_writes(tmp_path):
      {'keep': {'flag': True}, 'model': {'selected': 'fixture'}}),
 ])
 def test_structured_set_reset_preserves_unclaimed_nested_values(tmp_path, codec, suffix, before, expected):
-    import ordessa_execution_agents.harness.configuration.materialization.private_generation as module
+    import ordessa_agents.harness.configuration.materialization.private_generation as module
 
     root = make_root(tmp_path / "instance")
     resource = ("private", f"settings.{suffix}")
@@ -118,7 +118,7 @@ def test_structured_set_reset_preserves_unclaimed_nested_values(tmp_path, codec,
 
 @pytest.mark.parametrize("literal", ["on", "off", "yes", "no", "012"])
 def test_yaml_12_ambiguous_implicit_scalar_remains_unclaimed_string(tmp_path, literal):
-    import ordessa_execution_agents.harness.configuration.materialization.private_generation as module
+    import ordessa_agents.harness.configuration.materialization.private_generation as module
 
     root = make_root(tmp_path / "instance")
     resource = ("private", "settings.yaml")
@@ -134,7 +134,7 @@ def test_yaml_12_ambiguous_implicit_scalar_remains_unclaimed_string(tmp_path, li
 
 
 def test_yaml_12_core_numeric_scalars_keep_their_types(tmp_path):
-    import ordessa_execution_agents.harness.configuration.materialization.private_generation as module
+    import ordessa_agents.harness.configuration.materialization.private_generation as module
 
     root = make_root(tmp_path / "instance")
     resource = ("private", "settings.yaml")
@@ -233,7 +233,7 @@ def test_group_writable_root_refused(tmp_path):
 
 @pytest.mark.parametrize("codec", ["json", "toml", "yaml"])
 def test_root_replacement_before_publish_refuses_and_cleans_candidate(tmp_path, monkeypatch, codec):
-    import ordessa_execution_agents.harness.configuration.materialization.private_generation as module
+    import ordessa_agents.harness.configuration.materialization.private_generation as module
 
     root = tmp_path / "instance"
     make_root(root)
@@ -265,7 +265,7 @@ def test_remove_other_owner_refuses_before_private_write(tmp_path):
 
 
 def test_second_file_write_failure_cannot_publish_half_generation(tmp_path, monkeypatch):
-    import ordessa_execution_agents.harness.configuration.materialization.private_generation as module
+    import ordessa_agents.harness.configuration.materialization.private_generation as module
 
     root = tmp_path / "instance"
     make_root(root)
@@ -332,7 +332,7 @@ def test_null_ancestor_is_not_silently_replaced_by_object(tmp_path):
 
 
 def test_candidate_symlink_swap_before_rename_cannot_publish_attacker_tree(tmp_path, monkeypatch):
-    import ordessa_execution_agents.harness.configuration.materialization.private_generation as module
+    import ordessa_agents.harness.configuration.materialization.private_generation as module
 
     root = make_root(tmp_path / "instance")
     attacker = tmp_path / "attacker"
@@ -355,7 +355,7 @@ def test_candidate_symlink_swap_before_rename_cannot_publish_attacker_tree(tmp_p
 
 
 def test_candidate_directory_swap_is_quarantined_without_deleting_foreign_bytes(tmp_path, monkeypatch):
-    import ordessa_execution_agents.harness.configuration.materialization.private_generation as module
+    import ordessa_agents.harness.configuration.materialization.private_generation as module
 
     root = make_root(tmp_path / "instance")
     foreign = root / "foreign"
@@ -379,7 +379,7 @@ def test_candidate_directory_swap_is_quarantined_without_deleting_foreign_bytes(
 
 
 def test_post_rename_byte_mutation_is_detected_and_generation_removed(tmp_path, monkeypatch):
-    import ordessa_execution_agents.harness.configuration.materialization.private_generation as module
+    import ordessa_agents.harness.configuration.materialization.private_generation as module
 
     root = make_root(tmp_path / "instance")
     original = module.os.rename
@@ -397,7 +397,7 @@ def test_post_rename_byte_mutation_is_detected_and_generation_removed(tmp_path, 
 
 
 def test_post_scan_name_swap_is_refused_without_returning_swapped_path(tmp_path, monkeypatch):
-    import ordessa_execution_agents.harness.configuration.materialization.private_generation as module
+    import ordessa_agents.harness.configuration.materialization.private_generation as module
 
     root = make_root(tmp_path / "instance")
     attacker = tmp_path / "attacker"

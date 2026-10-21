@@ -2,7 +2,7 @@ import { createReadStream } from "node:fs"
 import { open, readdir } from "node:fs/promises"
 import { homedir } from "node:os"
 import path from "node:path"
-import { scanLinesBackward } from "../../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/transport/vendor/harness_remote/bridge/src/backward-line-scan.js"
+import { scanLinesBackward } from "../../../../../../../packages/execution/agents/src/ordessa_agents/harness/transport/vendor/harness_remote/bridge/src/backward-line-scan.js"
 
 const MODEL_CONTEXT_LOOKBACK_BYTES = 4 * 1024 * 1024
 

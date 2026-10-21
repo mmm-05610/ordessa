@@ -6,10 +6,10 @@ import subprocess
 
 import pytest
 
-from ordessa_execution_agents.harness.configuration.compilation.native_digest import configuration_digest
+from ordessa_agents.harness.configuration.compilation.native_digest import configuration_digest
 
 ROOT = Path(__file__).resolve().parents[6]
-DIGEST = ROOT / "packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/digest.mjs"
+DIGEST = ROOT / "packages/execution/agents/src/ordessa_agents/harness/configuration/acp/digest.mjs"
 READER = ROOT / "plugins/harness/pi/src/ordessa_harness_pi/acp/profile/configuration-query.mjs"
 
 

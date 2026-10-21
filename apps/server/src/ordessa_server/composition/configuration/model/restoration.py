@@ -11,7 +11,7 @@ import json
 from threading import RLock
 from contextlib import nullcontext
 
-from ordessa_execution_agents.harness.configuration.compilation.native_digest import configuration_digest
+from ordessa_agents.harness.configuration.compilation.native_digest import configuration_digest
 from .bindings import model_port
 
 

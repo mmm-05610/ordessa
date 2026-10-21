@@ -22,7 +22,7 @@ from contextlib import redirect_stderr, redirect_stdout
 
 import pytest
 
-import ordessa_agent_tools.cli as cli
+import ordessa_cli.cli as cli
 from ordessa_system_access_client import CapabilityClient, ClientError, load_service
 
 # A fake bearer that must never appear on a failure surface.

@@ -15,7 +15,7 @@ from __future__ import annotations
 import tomllib
 
 import pytest
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, Installation, IntentSource, Mismatch, TargetDescriptor,
     TargetHandle, VerificationUnknown,
 )

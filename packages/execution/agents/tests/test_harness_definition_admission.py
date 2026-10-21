@@ -6,12 +6,12 @@ from threading import RLock
 
 import pytest
 
-from ordessa_execution_agents.harness.providers.registry.errors import (
+from ordessa_agents.harness.providers.registry.errors import (
     CatalogAdmissionRefused,
     CatalogUnavailable,
     CatalogIdentityConflict,
 )
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.providers.registry import (
     AdmittedHarnessDefinition,
     HarnessAdmission,
     HarnessCatalog,
@@ -21,7 +21,7 @@ from ordessa_execution_agents.harness.providers.registry import (
     harness_registration_snapshot,
 )
 from ordessa_units.admission.context import UnitAdmissionContext
-from ordessa_execution_agents.harness.definitions.errors import CoreDTOError
+from ordessa_agents.harness.definitions.errors import CoreDTOError
 
 
 class Policy:

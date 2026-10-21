@@ -1,8 +1,8 @@
 """Former Pi factory guarantees at the sole Unit channel owner; no child spawn."""
 from pathlib import Path
 import pytest
-from ordessa_execution_agents.harness.transport import LaunchSpec
-from ordessa_execution_agents.preparation import PreparedHarness,ConfigurationResources,SessionBootstrap
+from ordessa_agents.harness.transport import LaunchSpec
+from ordessa_agents.preparation import PreparedHarness,ConfigurationResources,SessionBootstrap
 from ordessa_units.sessions.acp_factory import AcpChannelFactory
 from ordessa_units.lifecycle.unit_lifecycle import UnitLifecycleRefused
 from ordessa_environments import EnvironmentRefused

@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ordessa_execution_agents.harness.transport import EffectWriteRefused
+from ordessa_agents.harness.transport import EffectWriteRefused
 from ordessa_units.errors import UnitIdentityMismatch
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_interfaces.system_access.contracts.transport import AccessError
@@ -414,7 +414,7 @@ def historical_query_world(tmp_path):
     """
     import hashlib
     import os
-    from ordessa_execution_agents.profiles import encode_revision_ref
+    from ordessa_agents.profiles import encode_revision_ref
     from ordessa_infrastructure.encoding.immutable_json import safe_json
     from ordessa_units.admission.invocation import InvocationIssuer
     from ordessa_units.admission.local_state import FixedUnitCurrentState

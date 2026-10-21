@@ -7,7 +7,7 @@ from dataclasses import replace
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions.model_compilation import (
+from ordessa_agents.harness.definitions.model_compilation import (
     AdapterContext, ChoiceRequest, RequestParams, Refusal, TargetHandle, Verdict,
 )
 from ordessa_harness_dsh.acp_model_configuration import (

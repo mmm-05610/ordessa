@@ -19,11 +19,11 @@ ALLOWED_ROOTS = {
     "__future__", "hashlib", "json", "typing", "dataclasses", "ipaddress",
     "socket", "time", "types", "urllib", "ordessa_model_provider",
     "contextlib", "pathlib", "re", "sqlite3", "unicodedata", "collections",
-    "server_plugin_api", "ordessa_execution_agents", "ordessa_interfaces",
+    "ordessa_server_plugin_api", "ordessa_agents", "ordessa_interfaces",
     "ordessa_infrastructure",
 }
 PUBLIC_DEPENDENCIES = {
-    "ordessa_execution_agents": ("ordessa_execution_agents.harness.definitions",),
+    "ordessa_agents": ("ordessa_agents.harness.definitions",),
     "ordessa_interfaces": (
         "ordessa_interfaces.system_access.contracts.idempotency",
         "ordessa_interfaces.system_access.contracts.storage",
@@ -95,6 +95,6 @@ def test_boundary_refuses_planted_host_legacy_and_private_contract_imports(tmp_p
     imports = _imports(offender)
     assert len(imports) == 4
     assert all(not _allowed(module) for module in imports)
-    assert _allowed("ordessa_execution_agents.harness.definitions")
+    assert _allowed("ordessa_agents.harness.definitions")
     assert not _allowed("ordessa_execution_api.harness")
     assert _allowed("ordessa_interfaces.system_access.contracts.storage")

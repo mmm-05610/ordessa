@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     FAMILIES,
     STATIC_ERROR_FAMILIES,
     ServerError,

@@ -12,11 +12,11 @@ from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
-from decision_runtime.historical.context import ReadContext
-from decision_runtime.historical.models import ProposalDraft, ValidationObligation, ExternalRef
-from decision_runtime.historical.values import ContractError, plain
-from ordessa_execution_agents.harness.providers.catalog import HarnessCatalog
-from ordessa_execution_agents.sdk.harness import HarnessDescriptor, HarnessError
+from ordessa_decision.historical.context import ReadContext
+from ordessa_decision.historical.models import ProposalDraft, ValidationObligation, ExternalRef
+from ordessa_decision.historical.values import ContractError, plain
+from ordessa_agents.harness.providers.catalog import HarnessCatalog
+from ordessa_agents.sdk.harness import HarnessDescriptor, HarnessError
 from ordessa_system_access_bindings.decision import (
     ReadOwners, OrdessaReadFacade, ObservationQuery, OwnerProposalValidator,
 )
@@ -58,7 +58,7 @@ def test_original_profile_ref_filtered_scope_and_real_owner_denial(owner, tmp_pa
     profile = original.service.create(profile_id='sample', name='Sample', content={
         'harnessDefinitionRef': DEF, 'schemaVersion': '1', 'declarations': []},
         request=original.service.request_key('create'))
-    from ordessa_execution_agents.profiles import encode_revision_ref
+    from ordessa_agents.profiles import encode_revision_ref
     def snapshot():
         return {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in tmp_path.rglob('*') if path.is_file()}
     before = snapshot()
@@ -80,7 +80,7 @@ def test_original_profile_ref_filtered_scope_and_real_owner_denial(owner, tmp_pa
     filtered = observe(adapter, 'profiles', context)
     assert not filtered.complete and filtered.unobserved_items == ('permission_filtered_items',)
     assert not filtered.observations
-    from ordessa_execution_agents.profiles import ProfileAccessRefused
+    from ordessa_agents.profiles import ProfileAccessRefused
     with pytest.raises(ProfileAccessRefused): observe(adapter, 'profile', context, {'profile_ref': ref})
     policy.allowed = False
     with pytest.raises(ProfileAccessRefused): observe(adapter, 'profiles', context)
@@ -207,7 +207,7 @@ def test_isolated_import_avoids_unit_online_and_graph():
     code = """import sys,json
 sys.path[:0]=json.loads(sys.argv[1])
 from ordessa_system_access_bindings.decision import OrdessaReadFacade,OwnerProposalValidator
-for n in ('ordessa_units.public','ordessa_units.configuration.offers','ordessa_units.api','decision_runtime.runtime','decision_runtime.runtime.manager','decision_runtime.flows'):
+for n in ('ordessa_units.public','ordessa_units.configuration.offers','ordessa_units.api','ordessa_decision.runtime','ordessa_decision.runtime.manager','ordessa_decision.flows'):
  assert n not in sys.modules,n
 """
     result = subprocess.run([sys.executable, '-I', '-S', '-c', code, json.dumps(sys.path)], capture_output=True, text=True)

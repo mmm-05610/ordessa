@@ -6,7 +6,7 @@ from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_system_access_bindings.engineering_wire import EngineeringApplicationPorts, SUPPORTED_METHODS
 from ordessa_server.composition.engineering import EngineeringServerPlugin, select_engineering
 import pytest
-from server_plugin_api.wire_errors import WireError
+from ordessa_server_plugin_api.wire_errors import WireError
 
 
 def test_registered_catalog_and_requests_share_one_public_service_and_original_factory(tmp_path):

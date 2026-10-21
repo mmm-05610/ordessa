@@ -22,7 +22,7 @@ import hashlib
 
 import pytest
 
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 from skills_wire_support import (  # noqa: F811
     dispatch, domain_code, expect_domain_refusal, expect_shape_refusal,

@@ -13,11 +13,11 @@ from dataclasses import dataclass, replace
 from typing import Mapping, Optional
 
 import native_helpers as nh
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, ApplicationTarget, Assessment, Installation, Plan,
     TargetDescriptor, TargetHandle,
 )
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     Contribution, ContributionBatch, ServerPluginDescriptor,
     ServerPluginRegistration,
 )
@@ -128,12 +128,12 @@ def make_plan(target, plan_id="plan-proof-1"):
 
 
 def refused(code, message="stub refusal"):
-    from ordessa_execution_agents.harness.definitions import Refused
+    from ordessa_agents.harness.definitions import Refused
     return Refused(code, (message,), True)
 
 
 def submission_unknown():
-    from ordessa_execution_agents.harness.definitions import Unknown
+    from ordessa_agents.harness.definitions import Unknown
     return Unknown("op-1", "verifying", ("effect-1",),
                    ("readback pending",), "reconcile")
 

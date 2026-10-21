@@ -4,8 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
-from ordessa_execution_agents.harness.providers.declarations import RegistrationDeclarations
-from ordessa_execution_agents.harness.providers.declarations import HarnessRegistry, load_registry
+from ordessa_agents.harness.providers.declarations import RegistrationDeclarations
+from ordessa_agents.harness.providers.declarations import HarnessRegistry, load_registry
 
 _REGISTRY_PREFIX = b'schema_version = 1\n\n'
 _LAUNCH_PREFIX = b'{\n  "schema_version": 1,\n  "harnesses": [\n'

@@ -45,7 +45,7 @@ async def _selection_effect_acquire(_identity, _deadline):
 
 
 def _selection_effect_factory(unit_ref, operation_ref, input_digest, params):
-    from ordessa_execution_agents.harness.transport import EffectWriteGuard
+    from ordessa_agents.harness.transport import EffectWriteGuard
     return EffectWriteGuard(unit_ref, operation_ref, input_digest, params, _selection_effect_acquire)
 
 

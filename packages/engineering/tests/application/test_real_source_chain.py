@@ -12,9 +12,9 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from decision_runtime import DecisionAnswer, FilesystemEvidenceStore, default_host_limits
-from decision_runtime.evidence import EvidenceScope
-from decision_runtime.definitions.values import MAX_JOB_DOCUMENT_BYTES
+from ordessa_decision import DecisionAnswer, FilesystemEvidenceStore, default_host_limits
+from ordessa_decision.evidence import EvidenceScope
+from ordessa_decision.definitions.values import MAX_JOB_DOCUMENT_BYTES
 from ordessa_engineering.adapters.decision.source_job import SourceReviewJobServices
 from ordessa_infrastructure.encoding import canonical_bytes, decode_json
 from ordessa_engineering.adapters.filesystem.project_sources import ProjectSourceMaterials

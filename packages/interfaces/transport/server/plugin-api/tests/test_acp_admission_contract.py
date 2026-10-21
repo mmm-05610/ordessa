@@ -6,7 +6,7 @@ from typing import get_type_hints
 
 import pytest
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ACP_ADMISSION_PORT,
     ACP_ADMISSION_PORT_VERSION,
     AcpAdmissionPort,

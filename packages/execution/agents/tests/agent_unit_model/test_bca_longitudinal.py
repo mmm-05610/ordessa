@@ -52,7 +52,7 @@ from ordessa_units.errors import (
     UnitIdentityMismatch,
     UnitOperationUnknown,
 )
-from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
+from ordessa_agents.harness.definitions.activation import HarnessActivationRef
 from ordessa_units.definitions.admission_identity import AgentNodeRef
 from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, operation_holder
 from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
@@ -112,18 +112,18 @@ from ordessa_units.bindings.preparation_effects import (
     PreparationEffectPlan,
     verify_preparation_effect,
 )
-from ordessa_execution_agents.profiles import ProfileService
+from ordessa_agents.profiles import ProfileService
 from ordessa_units.public import (
     AdmittedConfigurationProviderMetadata,
     unit_services,
 )
-from ordessa_execution_agents.harness.providers.registry.contributions import (
+from ordessa_agents.harness.providers.registry.contributions import (
     RUNTIME_METHODS,
     RUNTIME_PROVIDER_VERSION,
     AgentContributionSet,
     RuntimeProviderDescriptor,
 )
-from ordessa_execution_agents.harness.definitions.configuration_providers import (
+from ordessa_agents.harness.definitions.configuration_providers import (
     CONFIGURATION_PROVIDER_VERSION,
     ConfigurationContractError,
     ConfigurationProviderPin,

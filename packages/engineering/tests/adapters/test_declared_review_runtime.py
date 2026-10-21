@@ -13,7 +13,7 @@ from types import SimpleNamespace
 import pytest
 
 from ordessa_engineering.application.contracts.errors import ApplicationError
-from ordessa_execution_agents.harness.transport import EffectWriteGuard
+from ordessa_agents.harness.transport import EffectWriteGuard
 from ordessa_engineering.adapters.native_records import declared_review_runtime as review_runtime
 
 

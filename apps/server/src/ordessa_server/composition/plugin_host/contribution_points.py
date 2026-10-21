@@ -30,7 +30,7 @@ from dataclasses import dataclass, replace
 from typing import Any
 from uuid import uuid4
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     AbsentContribution,
     Contribution,
     InvalidDeclarationError,

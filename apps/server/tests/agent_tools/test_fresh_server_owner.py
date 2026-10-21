@@ -17,8 +17,8 @@ from agent_tools_fixtures.invocation_authority import Authority, CurrentState
 from test_unit_instance import Provider, Preparation, Scope
 from ordessa_units.definitions.admission_identity import AdmissionNamespace
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor,RUNTIME_PROVIDER_VERSION
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor,RUNTIME_PROVIDER_VERSION
+from ordessa_agents.harness.providers.registry import (
     HarnessDefinitionDeclaration,HarnessDefinitionDescriptor,HarnessInstallationObservation,
     HarnessContributionSet,HarnessAdmission,harness_registration_snapshot)
 from ordessa_units.admission.material_admission import material_registration_snapshot
@@ -29,7 +29,7 @@ from ordessa_units.admission.connection import ConnectionLeasePort
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.bindings.assembly import PreparationContext
 from ordessa_units.bindings.publication import decode_node_ref
-from ordessa_execution_agents.profiles import decode_revision_ref
+from ordessa_agents.profiles import decode_revision_ref
 from pacthold.public import Environment,InstallationRecord
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
@@ -81,7 +81,7 @@ def root_owner(tmp_path,kind,*,acp_turn_opt_in=True,effect_write_guard_factory=N
         descriptor=RuntimeProviderDescriptor('pi',RUNTIME_PROVIDER_VERSION,definition,'sha256:'+'a'*64,
             ('plan_preparation','prepare','start','connect','describe_access','stop','release'))
         def materialize(agent,environment,facts,snapshot):
-            from ordessa_execution_agents.preparation import ConfigurationResources
+            from ordessa_agents.preparation import ConfigurationResources
             location=environment.files.ensure(str(Path(agent.harness.resources.location).relative_to(local_root)))
             (Path(location)/'settings.json').write_text('{}')
             return ConfigurationResources(agent.harness.resources.kind,location,True)

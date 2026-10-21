@@ -25,7 +25,7 @@ Covers, in order:
   paths appear ONLY in the fake's records, never on the host filesystem.
 
 The missing L3 seam (recorded for C0): no PUBLISHED harness symbol accepts
-these resources — ``ordessa_execution_agents.harness.definitions`` exports no skill contract and
+these resources — ``ordessa_agents.harness.definitions`` exports no skill contract and
 the only consumer is the harness-internal
 ``ordessa_server_product.harness_adapters.adapters.generic_cli`` plus the execution providers'
 ``request.resolved_inputs`` handoff (core dispatch, api-requests.md §G2);
@@ -43,7 +43,7 @@ import pytest
 from assignments_support import make_database, make_skill
 from ordessa_server.composition.selected_harness_catalog import capture_selected_harness_catalog
 from packages.execution.units.tests.runtime.peers import FakeHost, FakeSandbox, FakeTerminal
-from ordessa_execution_agents.harness.definitions.command_projection import HarnessCommandSpec
+from ordessa_agents.harness.definitions.command_projection import HarnessCommandSpec
 from ordessa_environments.definitions.runtime_resources import RuntimeHostRef, RuntimeHostV1, SandboxRef, SandboxV1, TerminalSessionRef, TerminalSessionV1
 from ordessa_infrastructure.filesystem.content_digest import content_digest
 from ordessa_infrastructure.encoding.content_identity import digest
@@ -568,7 +568,7 @@ def test_refused_preflight_leaves_the_composition_untouched(tmp_path):
     # even if a stale declaration slipped past Q1, the assembler's own
     # pre-start validation refuses before ANY attempt: zero registrations
     # added, zero submissions.
-    from ordessa_execution_agents.harness.definitions.command_projection import RuntimeSourceDeclaration
+    from ordessa_agents.harness.definitions.command_projection import RuntimeSourceDeclaration
     stale = RuntimeSourceDeclaration(
         kind="skill-tree",
         source_path=str(env.store.revision_dir("t14-one", 1)),

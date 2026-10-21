@@ -11,7 +11,7 @@ from collections import deque
 import pytest
 
 from ordessa_harness_dsh.client import DshAcpClient, DshRpcError
-from ordessa_execution_agents.harness.transport import (
+from ordessa_agents.harness.transport import (
     ChannelClosed, LaunchSpec, LostReceipt, Message, PreparedFrameRefused,
     ProcessChannel, RequestTimeout, WriterLeaseRefused,
 )

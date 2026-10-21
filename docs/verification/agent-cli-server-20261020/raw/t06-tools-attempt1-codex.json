@@ -1,0 +1,243 @@
+{
+  "brand": "codex",
+  "prompt": "在你的工作目录创建文件 `tools-proof.txt`，内容写 `ordessa-tool-ok`；然后用命令读取它并只回复文件内容。",
+  "artifact": "tools-proof.txt",
+  "expectedContent": "ordessa-tool-ok",
+  "codexModel": "gpt-5.6-sol",
+  "maxModelCalls": 1,
+  "skipPrompt": false,
+  "steps": {
+    "acquire": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "ae0b3370c35743e6aef2d168750cac00",
+      "command": "call environments.acquire --input /tmp/t06-tools-codex/acquire.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/fd6cbec126e94fe6af042036555e029c",
+        "useIdentity": "environment-use/46297993990144b3be765e32e3258d83",
+        "status": "completed",
+        "ownerScope": {
+          "kind": "principal",
+          "ref": "instance"
+        },
+        "environmentIdentity": "environment/c48e3ade2ea3431b9e7597c0fd6c1bb0"
+      },
+      "error": null,
+      "operationRef": "environment-operation/fd6cbec126e94fe6af042036555e029c",
+      "evidenceRefs": []
+    },
+    "start": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "start-1",
+      "command": "call agents.start --input /tmp/t06-tools-codex/start.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-start-receipt/1",
+        "instanceId": "instance-35bb21b49c3349c3a0339a3253aa3b1d",
+        "operationRef": "agent-start/24296322f5744ce087dbe1adf48d233a",
+        "state": "running",
+        "instanceRef": {
+          "schemaVersion": "agent-instance/1",
+          "namespace": "server",
+          "instanceId": "instance-35bb21b49c3349c3a0339a3253aa3b1d",
+          "bindingDigest": "sha256:1492ec903f9c5fdfeabd0bb1bd0d9a0b120240a13531a7951adca1111eb5f8e5"
+        },
+        "processEndpointRef": {
+          "schemaVersion": "agent-endpoint/1",
+          "issuer": "environment-endpoints:56b5e1f4cd36d8f5bbff1ca0",
+          "endpointId": "endpoint/80ca370514a54a3683be9993c04cc52f",
+          "revision": "1",
+          "descriptorDigest": "sha256:424e7d3213c6681be306eaa15614ccb604407d3ee05d1c6eb22ce1f63e17bdf7"
+        },
+        "sessionId": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+        "error": null
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    }
+  },
+  "origin": "http://127.0.0.1:49807",
+  "identity": "environment/c48e3ade2ea3431b9e7597c0fd6c1bb0",
+  "control": {
+    "write": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "91737b043d34465eb4226446c1b827ee",
+      "command": "call environments.files --input /tmp/t06-tools-codex/control-write.json",
+      "status": "completed",
+      "data": {
+        "operation": "write",
+        "path": "t06-control-pre.txt",
+        "bytes": 14,
+        "byteLength": 14
+      },
+      "error": null,
+      "operationRef": "environment-command/8465dede92ed4172ac9da8d7d8dcc7e2",
+      "evidenceRefs": []
+    },
+    "read": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "4b88c9419c094d7582b21e3d5f64dc1a",
+      "command": "call environments.files --input /tmp/t06-tools-codex/control-read.json",
+      "status": "completed",
+      "data": {
+        "content": "t06-control-ok"
+      },
+      "error": null,
+      "operationRef": "environment-command/f5c6bfc526954ebc9152ec03519da8cf",
+      "evidenceRefs": []
+    },
+    "content": "t06-control-ok",
+    "matches": true,
+    "contentSha256": "sha256:2338fa885eceb380e2446f204440d6220c26c83e76b8b5a1ecd42b925b6b5645"
+  },
+  "instanceRef": {
+    "schemaVersion": "agent-instance/1",
+    "namespace": "server",
+    "instanceId": "instance-35bb21b49c3349c3a0339a3253aa3b1d",
+    "bindingDigest": "sha256:1492ec903f9c5fdfeabd0bb1bd0d9a0b120240a13531a7951adca1111eb5f8e5"
+  },
+  "sessionId": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+  "processEndpointRef": {
+    "schemaVersion": "agent-endpoint/1",
+    "issuer": "environment-endpoints:56b5e1f4cd36d8f5bbff1ca0",
+    "endpointId": "endpoint/80ca370514a54a3683be9993c04cc52f",
+    "revision": "1",
+    "descriptorDigest": "sha256:424e7d3213c6681be306eaa15614ccb604407d3ee05d1c6eb22ce1f63e17bdf7"
+  },
+  "codexProcessesBefore": [
+    {
+      "pid": 1892946,
+      "cmdline": "/home/maoqh/.vscode/extensions/openai.chatgpt-26.1007.21434-linux-x64/bin/linux-x86_64/codex -c features.code_mode_host=true app-server --analytics-default-enabled"
+    },
+    {
+      "pid": 2070365,
+      "cmdline": "bash -c cd /home/maoqh/projects/ordessa/worktree/agent-cli-server-20261020 && rm -f /tmp/t06-budget.txt && python3 tmp/t06_tools.py --workspace /tmp/t06-tools-codex --budget /tmp/t06-budget.txt --rece"
+    },
+    {
+      "pid": 2070373,
+      "cmdline": "python3 tmp/t06_tools.py --workspace /tmp/t06-tools-codex --budget /tmp/t06-budget.txt --receipt /tmp/t06-codex.json"
+    },
+    {
+      "pid": 2070374,
+      "cmdline": "/home/maoqh/projects/ordessa/worktree/agent-cli-server-20261020/.venv-w1/bin/python /home/maoqh/projects/ordessa/worktree/agent-cli-server-20261020/.venv-w1/bin/ordessa-server --data-root /tmp/t06-too"
+    },
+    {
+      "pid": 2070397,
+      "cmdline": "node /home/maoqh/.local/bin/codex app-server -c model=\"gpt-5.6-sol\""
+    },
+    {
+      "pid": 2070404,
+      "cmdline": "/home/maoqh/.local/lib/node_modules/@openai/codex/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/bin/codex app-server -c model=\"gpt-5.6-sol\""
+    },
+    {
+      "pid": 2070491,
+      "cmdline": "/bin/bash -lc if [ -z \"${BASH_ENV-}\" ] && [ -n \"${HOME-}\" ] && [ -r \"$HOME/.bashrc\" ]; then\n  . \"$HOME/.bashrc\"\nfi\necho '# Snapshot file'\necho '# Unset all aliases to avoid conflicts with functions'\ne"
+    }
+  ],
+  "turn": {
+    "modelCallNumber": 1,
+    "prompt": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "prompt-a",
+      "command": "call agents.prompt --input /tmp/t06-tools-codex/prompt-input-a.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-protocol-turn/1",
+        "turnRef": {
+          "schemaVersion": "agent-turn-ref/1",
+          "instanceRef": {
+            "schemaVersion": "agent-instance/1",
+            "namespace": "server",
+            "instanceId": "instance-35bb21b49c3349c3a0339a3253aa3b1d",
+            "bindingDigest": "sha256:1492ec903f9c5fdfeabd0bb1bd0d9a0b120240a13531a7951adca1111eb5f8e5"
+          },
+          "turnId": "turn/f2c3bda26c1e447185672228849ebfec"
+        },
+        "sessionId": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+        "agentOperationRef": "agent-operation/f8a260c70a984790890f24410db86e1e",
+        "endpointRequestId": "sha256:8a65781269bd1a38fb29a1c26429de462681a91a71c36fa3541502a048d82056",
+        "endpointOperationRef": "environment-operation/47f66c1dff0f46bcac51af6006985efc",
+        "engineeringAttemptRef": null,
+        "inputDigest": "sha256:750afaab54082853d0457c5628f698ceeca64cb6ffd8c5f034787688055998db",
+        "state": "completed",
+        "revision": 3,
+        "observationBytes": {
+          "answer": "无法创建：当前工作目录为只读。",
+          "bytesSent": 328,
+          "delivery": "confirmed",
+          "items": 1,
+          "method": "turn/completed",
+          "protocol": "codex-app-server/1",
+          "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+          "turnStatus": "completed"
+        },
+        "observationDigest": "sha256:a9ca5ada489b61a42ba621cafcc0b50a756b78b257a05990c10785a8a432f561"
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "status": "COMPLETED",
+    "promptOperationRef": "agent-operation/f8a260c70a984790890f24410db86e1e",
+    "turnId": "turn/f2c3bda26c1e447185672228849ebfec",
+    "nativeTurnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+    "turnStatus": "completed",
+    "delivery": "confirmed",
+    "bytesSent": 328,
+    "items": 1,
+    "answer": "无法创建：当前工作目录为只读。",
+    "inputDigest": "sha256:750afaab54082853d0457c5628f698ceeca64cb6ffd8c5f034787688055998db",
+    "observationDigest": "sha256:a9ca5ada489b61a42ba621cafcc0b50a756b78b257a05990c10785a8a432f561",
+    "endpointOperationRef": "environment-operation/47f66c1dff0f46bcac51af6006985efc",
+    "revision": 3,
+    "state": "completed",
+    "sessionId": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+    "observationBytes": {
+      "answer": "无法创建：当前工作目录为只读。",
+      "bytesSent": 328,
+      "delivery": "confirmed",
+      "items": 1,
+      "method": "turn/completed",
+      "protocol": "codex-app-server/1",
+      "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+      "turnStatus": "completed"
+    }
+  },
+  "outcome": "ROUND_ERROR",
+  "error": "ModuleNotFoundError: No module named 'ordessa_agents'",
+  "serverExitCode": -15,
+  "log": [
+    "== service configuration ==",
+    "{\"allowlist\": [\"codex\"], \"providers\": {\"codex\": {\"command\": [\"/home/maoqh/.local/bin/codex\"]}}}",
+    "SERVER> {\"event\":\"listening\",\"origin\":\"http://127.0.0.1:49807\",\"pid\":2070374,\"serverId\":\"ordessa-t06-codex\"}",
+    "== environments create local (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"fa96235e60504ab9a805467be71d0807\", \"command\": \"environments create local --root /tmp/t06-tools-codex/work --alias demo\", \"status\": \"completed\", \"data\": {\"identity\": \"environment/c48e3ade2ea3431b9e7597c0fd6c1bb0\", \"alias\": \"demo\", \"aliases\": [\"demo\"], \"provider\": \"local\", \"backendId\": \"/tmp/t06-tools-codex/work\", \"phase\": \"ready\", \"generation\": 0, \"state\": \"running\", \"observationStale\": false, \"observedAt\": \"2026-10-21T02:43:54.091542+00:00\", \"operationStatus\": {\"phase\": \"ready\", \"operation\": null}, \"activeUses\": 0, \"isolation\": \"none\", \"endpointKind\": \"local-directory\", \"health\": \"ready\", \"capabilities\": {\"isolation\": \"none\", \"statuses\": {\"byte-channel\": \"supported\", \"files\": \"supported\", \"process\": \"supported\", \"stderr\": \"supported\", \"terminal\": \"unsupported\"}, \"provides\": [\"byte-channel\", \"files\", \"process\", \"stderr\"], \"values\": {\"provider\": \"local\", \"resourceKind\": \"directory\"}, \"assurance\": {\"isolation\": \"none\", \"isolationIsSecurityBoundary\": false, \"localDevelopmentOnly\": true, \"providerAssurance\": \"provider_self_report\", \"statement\": \"provider-reported isolation; it is not a permission, lease or hold\"}}}, \"error\": null, \"operationRef\": \"environment-command/66cef0604bec4759b2872a5d4ee6d31a\", \"evidenceRefs\": []}",
+    "== environments.files write control (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"91737b043d34465eb4226446c1b827ee\", \"command\": \"call environments.files --input /tmp/t06-tools-codex/control-write.json\", \"status\": \"completed\", \"data\": {\"operation\": \"write\", \"path\": \"t06-control-pre.txt\", \"bytes\": 14, \"byteLength\": 14}, \"error\": null, \"operationRef\": \"environment-command/8465dede92ed4172ac9da8d7d8dcc7e2\", \"evidenceRefs\": []}",
+    "== environments.files cat control (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"4b88c9419c094d7582b21e3d5f64dc1a\", \"command\": \"call environments.files --input /tmp/t06-tools-codex/control-read.json\", \"status\": \"completed\", \"data\": {\"content\": \"t06-control-ok\"}, \"error\": null, \"operationRef\": \"environment-command/f5c6bfc526954ebc9152ec03519da8cf\", \"evidenceRefs\": []}",
+    "== environments.acquire (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"ae0b3370c35743e6aef2d168750cac00\", \"command\": \"call environments.acquire --input /tmp/t06-tools-codex/acquire.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/fd6cbec126e94fe6af042036555e029c\", \"useIdentity\": \"environment-use/46297993990144b3be765e32e3258d83\", \"status\": \"completed\", \"ownerScope\": {\"kind\": \"principal\", \"ref\": \"instance\"}, \"environmentIdentity\": \"environment/c48e3ade2ea3431b9e7597c0fd6c1bb0\"}, \"error\": null, \"operationRef\": \"environment-operation/fd6cbec126e94fe6af042036555e029c\", \"evidenceRefs\": []}",
+    "== environments.export-endpoint (raw wire) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"export-raw\", \"command\": \"environments.export-endpoint\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/22fc30dae46f40c8a1611209a9c25391\", \"useIdentity\": \"environment-use/46297993990144b3be765e32e3258d83\", \"status\": \"completed\", \"endpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:56b5e1f4cd36d8f5bbff1ca0\", \"endpointId\": \"endpoint/a9fcff7470d44823b8f35c719a4360d3\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:e677d585bff00e354bcd66c301762686f40413ba31e732c3416600333b00bf0d\"}, \"descriptor\": {\"schemaVersion\": \"environment-endpoint-descriptor/2\", \"endpointId\": \"endpoint/a9fcff7470d44823b8f35c719a4360d3\", \"revision\": \"1\", \"capabilities\": [\"communicate\", \"detach\", \"files\", \"launcher\", \"observe\", \"terminate\"], \"rootKeys\": [\"cache\", \"config\", \"data\", \"home\", \"state\", \"tmp\", \"work\"], \"preparedConfigurations\": [], \"reconnect\": \"unsupported\", \"providerId\": \"local\", \"endpointKind\": \"local-directory\"}}, \"error\": null, \"operationRef\": \"environment-operation/22fc30dae46f40c8a1611209a9c25391\", \"evidenceRefs\": []}",
+    "== agents harness list ==",
+    "[\"codex\"]",
+    "== agents profiles create (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"32fd41dc445e4b628997fbc3e87ed00d\", \"command\": \"agents profiles create demo-codex --name codex --manifest /tmp/t06-tools-codex/manifest.json\", \"status\": \"completed\", \"data\": {\"profileId\": \"demo-codex\", \"catalogRevision\": 1, \"displayName\": \"codex\", \"archivedAt\": null, \"currentManifestRef\": {\"environmentNamespace\": \"server\", \"profileId\": \"demo-codex\", \"manifestRevision\": 1, \"contentDigest\": \"sha256:7e5151bf0a27b248f1110c24181a8c2c0aab5f4a7ad7cd0b8276e655d1b7088a\"}}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.start (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"start-1\", \"command\": \"call agents.start --input /tmp/t06-tools-codex/start.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-start-receipt/1\", \"instanceId\": \"instance-35bb21b49c3349c3a0339a3253aa3b1d\", \"operationRef\": \"agent-start/24296322f5744ce087dbe1adf48d233a\", \"state\": \"running\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-35bb21b49c3349c3a0339a3253aa3b1d\", \"bindingDigest\": \"sha256:1492ec903f9c5fdfeabd0bb1bd0d9a0b120240a13531a7951adca1111eb5f8e5\"}, \"processEndpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:56b5e1f4cd36d8f5bbff1ca0\", \"endpointId\": \"endpoint/80ca370514a54a3683be9993c04cc52f\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:424e7d3213c6681be306eaa15614ccb604407d3ee05d1c6eb22ce1f63e17bdf7\"}, \"sessionId\": \"01a15c58-1edc-7592-96cb-625b4273b2d3\", \"error\": null}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== sessionId: 01a15c58-1edc-7592-96cb-625b4273b2d3",
+    "== real model call 1/1 ==",
+    "== agents.prompt (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"prompt-a\", \"command\": \"call agents.prompt --input /tmp/t06-tools-codex/prompt-input-a.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-protocol-turn/1\", \"turnRef\": {\"schemaVersion\": \"agent-turn-ref/1\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-35bb21b49c3349c3a0339a3253aa3b1d\", \"bindingDigest\": \"sha256:1492ec903f9c5fdfeabd0bb1bd0d9a0b120240a13531a7951adca1111eb5f8e5\"}, \"turnId\": \"turn/f2c3bda26c1e447185672228849ebfec\"}, \"sessionId\": \"01a15c58-1edc-7592-96cb-625b4273b2d3\", \"agentOperationRef\": \"agent-operation/f8a260c70a984790890f24410db86e1e\", \"endpointRequestId\": \"sha256:8a65781269bd1a38fb29a1c26429de462681a91a71c36fa3541502a048d82056\", \"endpointOperationRef\": \"environment-operation/47f66c1dff0f46bcac51af6006985efc\", \"engineeringAttemptRef\": null, \"inputDigest\": \"sha256:750afaab54082853d0457c5628f698ceeca64cb6ffd8c5f034787688055998db\", \"state\": \"completed\", \"revision\": 3, \"observationBytes\": {\"answer\": \"无法创建：当前工作目录为只读。\", \"bytesSent\": 328, \"delivery\": \"confirmed\", \"items\": 1, \"method\": \"turn/completed\", \"protocol\": \"codex-app-server/1\", \"turnId\": \"01a15c58-204b-7053-b29a-76da66501a6b\", \"turnStatus\": \"completed\"}, \"observationDigest\": \"sha256:a9ca5ada489b61a42ba621cafcc0b50a756b78b257a05990c10785a8a432f561\"}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== turn: turnId=turn/f2c3bda26c1e447185672228849ebfec nativeTurnId=01a15c58-204b-7053-b29a-76da66501a6b turnStatus=completed delivery=confirmed items=1 answer='无法创建：当前工作目录为只读。'",
+    "== round error: ModuleNotFoundError: No module named 'ordessa_agents'",
+    "== server exit code: -15"
+  ],
+  "budget": {
+    "limit": 1,
+    "counterFile": "/tmp/t06-budget.txt",
+    "usedAfter": 1
+  }
+}

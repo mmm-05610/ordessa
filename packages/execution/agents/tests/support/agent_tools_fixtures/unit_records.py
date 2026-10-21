@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import ApplicationTarget, Plan, Confirmed
+from ordessa_agents.harness.definitions import ApplicationTarget, Plan, Confirmed
 from ordessa_units.records.operation_journal import OperationJournal, FenceObservation, JournalError
 from ordessa_units.records.unit_records import (
     UnitRecords, UnitRecordsRefused, CanonicalConfigurationScopeRef, RecordTicket,

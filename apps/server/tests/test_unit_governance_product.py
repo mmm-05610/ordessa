@@ -1,16 +1,16 @@
 """Product-selected original stores and role registration, zero native/model IO."""
 from ordessa_units.errors import UnitGuaranteeUnavailable
-from ordessa_execution_agents.harness.providers.registry.errors import CatalogUnavailable
+from ordessa_agents.harness.providers.registry.errors import CatalogUnavailable
 import hashlib
 import pytest
 from types import SimpleNamespace
 from ordessa_server.composition.product_unit_admission import create_product_unit_admission
 from ordessa_server.composition.unit_runtime import UnitRuntimeOwner
 from ordessa_server.composition.harness_registration import HarnessDefinitionHandler
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.providers.registry import (
     HarnessDefinitionDeclaration,HarnessDefinitionDescriptor,HarnessInstallationObservation)
 from ordessa_units.persistence.sqlite.store import SqliteUnitStore,WriterLockHeldError
-from server_plugin_api import ServerPluginDescriptor
+from ordessa_server_plugin_api import ServerPluginDescriptor
 
 class TestFingerprint:
     def describe(self):
@@ -109,7 +109,7 @@ def test_role_unknown_commit_never_replays_or_closes_catalog(tmp_path,monkeypatc
 def test_runtime_unknown_retains_original_writer_and_os_root(tmp_path):
     from ordessa_server.composition.runtime import build_runtime,DataRootOwner
     from ordessa_server.bootstrap.storage.product_database import Database
-    from server_plugin_api import ServerPluginSelection
+    from ordessa_server_plugin_api import ServerPluginSelection
     selection=ServerPluginSelection(plugins=(),environment_factory=scope)
     runtime=build_runtime(tmp_path/'root',server_plugins=selection,database_factory=Database)
     runtime.start()

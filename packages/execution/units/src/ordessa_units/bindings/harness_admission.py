@@ -1,5 +1,5 @@
 """Interpret the Harness catalog's read refusals at the Unit boundary."""
-from ordessa_execution_agents.harness.providers.registry.errors import (
+from ordessa_agents.harness.providers.registry.errors import (
     CatalogAdmissionRefused, CatalogIdentityConflict, CatalogUnavailable,
 )
 from ordessa_units.errors import (

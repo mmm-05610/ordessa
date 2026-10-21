@@ -7,14 +7,14 @@ import hashlib
 import json
 
 import pytest
-from ordessa_execution_agents.harness.definitions import ApplicationTarget, DesiredFragment, Installation
+from ordessa_agents.harness.definitions import ApplicationTarget, DesiredFragment, Installation
 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
-from ordessa_execution_agents.units.records.operation_journal import OperationJournal
-from ordessa_execution_agents.units.configuration.actions import ActionGrant
+from ordessa_agents.units.records.operation_journal import OperationJournal
+from ordessa_agents.units.configuration.actions import ActionGrant
 from _brand_c2 import SelectedBrandC2Plugin, owner_for_brand, descriptor_for
 from ordessa_harness_pi.configuration.runtime import PiLiveModelRuntime
 from ordessa_server.composition.configuration.model.live_service import native_model_runtime
-from ordessa_execution_agents.harness.configuration.compilation.native_context import NativeLiveModelContext
+from ordessa_agents.harness.configuration.compilation.native_context import NativeLiveModelContext
 
 
 @pytest.mark.parametrize('brand,protocol,provider,api', [
@@ -23,10 +23,10 @@ from ordessa_execution_agents.harness.configuration.compilation.native_context i
 ])
 def test_native_compiler_accepts_bounded_nested_groups_but_not_malformed_catalog(brand, protocol, provider, api):
     from importlib import import_module
-    from ordessa_execution_agents.harness.definitions import AdapterRefusal, InvokeAction, IntentSource
+    from ordessa_agents.harness.definitions import AdapterRefusal, InvokeAction, IntentSource
     option = {'value': 'new', '_meta': {'ordessaModel': {
         'provider': provider, 'api': api, 'baseUrl': 'https://fixture.test/v1', 'model': 'new'}}}
-    from ordessa_execution_agents.harness.definitions.native_channels import (
+    from ordessa_agents.harness.definitions.native_channels import (
         NativeConfigurationObservation, NativeSessionObservation,
     )
     owner = NativeSessionObservation('channel', 'execution', 'ledger', 'native')
@@ -44,9 +44,9 @@ def test_native_compiler_accepts_bounded_nested_groups_but_not_malformed_catalog
     for options in ([{'options': [{'options': [{'options': [option]}]}]}], ['malformed'],
                     [{'value': 'new', '_meta': 'malformed'}], [option, option]):
         assert isinstance(compile_live_model(observed(options), desired, source), AdapterRefusal)
-from ordessa_execution_agents.harness.configuration.compilation.native_digest import configuration_digest
+from ordessa_agents.harness.configuration.compilation.native_digest import configuration_digest
 from ordessa_server.composition.native_channels.profile_owner import ProfileConfigurationSnapshot
-from ordessa_execution_agents.harness.definitions.native_channels import NativeSessionObservation
+from ordessa_agents.harness.definitions.native_channels import NativeSessionObservation
 from ordessa_server.composition.runtime import build_runtime
 
 
@@ -183,9 +183,9 @@ def test_wrong_independent_model_readback_is_unknown_never_confirmed(rig):
 
 
 def test_preflight_does_not_refresh_away_a_change_since_c4_capture(rig):
-    from ordessa_execution_agents.units.configuration.actions import ActionBatch
-    from ordessa_execution_agents.units.configuration.actions import ActionInvocation
-    from ordessa_execution_agents.harness.definitions import IntentSource, InvokeAction
+    from ordessa_agents.units.configuration.actions import ActionBatch
+    from ordessa_agents.units.configuration.actions import ActionInvocation
+    from ordessa_agents.harness.definitions import IntentSource, InvokeAction
     service, runtime, target, _, _, calls, options, _ = rig
     runtime.capture(target)
     grant = service.action_grants[0]

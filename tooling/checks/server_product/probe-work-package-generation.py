@@ -225,7 +225,7 @@ def generation_file_approval(*, runtime, permission, environment_instance):
 def compose(root, model, app_factory, holder):
     from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore
     from ordessa_environments_local import LocalEnvironmentResourceProvider
-    from ordessa_execution_agents.profiles import ProfileService
+    from ordessa_agents.profiles import ProfileService
     from ordessa_units.bindings.profile_admission import UnitProfileAdmission
     from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
     from ordessa_units.assembly import UnitRunPermission
@@ -250,7 +250,7 @@ def compose(root, model, app_factory, holder):
             reviewed_bridge_sha256=(bridge_sha if 'reviewed_bridge_sha256' in holder else None))
         profiles = ProfileService(UnitProfileAdmission(context))
         if reuse:
-            from ordessa_execution_agents.profiles import decode_revision_ref
+            from ordessa_agents.profiles import decode_revision_ref
             profile_ref = decode_revision_ref(holder['profile_revision'])
             revision = profiles.get_revision(profile_ref)
             if revision.ref != profile_ref or profile_ref.environment_namespace != namespace:
@@ -421,7 +421,7 @@ def application_factory(root, holder, *, live, long_context=False, review_input_
         from ordessa_engineering.domain.common.models.values import Digest
         from ordessa_engineering.methods import load_method
         from ordessa_engineering.methods.definitions.models import MethodSource
-        from decision_runtime import DecisionServices, ReadContext, FileEvidenceSink, PolicyRef
+        from ordessa_decision import DecisionServices, ReadContext, FileEvidenceSink, PolicyRef
         from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings
         from ordessa_server.composition.temporary_process_capability import ExistingOpenCodeInput
         from ordessa_system_access_bindings.engineering_wire import EngineeringApplicationPorts
@@ -946,7 +946,7 @@ def main():
         result['stage']='work_generation'
         invoke('engineering.work.start',{'work_id':work_id,'revision':2,'method_ref':asdict(method),
             'associations':[{'kind':'proposal','ref':change_ref}]},'start-generation-work')
-        from ordessa_execution_agents.profiles import encode_revision_ref
+        from ordessa_agents.profiles import encode_revision_ref
         result['generation_invocations']=1
         # Persist the one-shot boundary before dispatch. If the host disconnects
         # after this point, reconcile the original operation; never invoke again.

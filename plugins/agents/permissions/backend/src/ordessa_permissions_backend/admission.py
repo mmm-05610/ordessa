@@ -2,7 +2,7 @@
 
 This is the module the harness-api checkpoint registered as missing (G1: "The
 default product's ACP admission port reports ready=False: Q5 authorizer ...
-not wired"). It adapts the neutral `server_plugin_api` admission DTOs onto
+not wired"). It adapts the neutral `ordessa_server_plugin_api` admission DTOs onto
 `Authorizer`; it imports the plugin contract and the permissions domain and
 nothing else - no host, no harness, no transport internals.
 
@@ -63,7 +63,7 @@ from ordessa_permissions_api import (
     build_operation_request,
     intersect_ceilings,
 )
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ACP_ADMISSION_PORT_VERSION,
     AcpAdmissionResult,
     AcpChannelBinding,

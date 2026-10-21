@@ -108,7 +108,7 @@ describe('C-01 §3 — the symlink question is asked before anything is read', (
 describe('C-01 §5 — one set of literals, read by both entry points', () => {
   it('reads the layout the Server package ships, and never restates it', () => {
     const source = readFileSync(
-      path.join(REPO_ROOT, 'apps/server/src/ordessa_server/bootstrap/data_root_layout.json'),
+      path.join(REPO_ROOT, 'packages/infrastructure/src/ordessa_infrastructure/layout/data_root_layout.json'),
       'utf8',
     )
     const shared = JSON.parse(source) as { layout: Record<string, string> }

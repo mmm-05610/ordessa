@@ -3,7 +3,7 @@
  * resolves it.
  *
  * The literals live in ONE file, `data_root_layout.json`, which is the same
- * file `apps/server/src/ordessa_server/bootstrap/data_root.py` loads. This
+ * file `ordessa_infrastructure.layout` loads (and the Server re-exports). This
  * module only reads it and applies the two-step order; it never restates a
  * path, a variable name or a permission. A cross-language test compares both
  * sides' answers for the same environment, so a divergence fails a test
@@ -21,7 +21,7 @@ import path from 'node:path'
 // data. A runtime `readFileSync(new URL(..., import.meta.url))` cannot survive
 // the CJS desktop bundle: esbuild empties `import.meta` there and `new URL` on
 // an undefined base throws `Invalid URL` at require time.
-import sharedLayout from '../../../../../apps/server/src/ordessa_server/bootstrap/data_root_layout.json'
+import sharedLayout from '../../../../../packages/infrastructure/src/ordessa_infrastructure/layout/data_root_layout.json'
 
 export interface DataRootLayout {
   readonly schemaVersion: number

@@ -1,0 +1,4 @@
+ordessa-server: data root /tmp/t09/root
+ordessa-server: instance token /tmp/t09/root/secrets/http-token (reused, 0600)
+ordessa-server: capabilities agents, environments, decisions
+ordessa-server: harness admitted kilo, pi, claude, codex, hermes, dsh

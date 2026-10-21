@@ -3,7 +3,7 @@
 The `harness-api` checkpoint (record
 ``docs/implementation/specifications/011-plugin-rollout/checkpoints/harness-api.json``, status READY,
 implementation ``61966e3118``, published ``d3f026904e`` and merged into this
-lane as ``953fb915eb``) makes ``ordessa_execution_agents.harness.definitions`` a published, consumable
+lane as ``953fb915eb``) makes ``ordessa_agents.harness.definitions`` a published, consumable
 contract, so the seam that the foundation lane left explicitly UNBOUND is bound
 here for real:
 
@@ -42,7 +42,7 @@ from _sandbox_adapters_helpers import (
     pi_intent,
     target_handle,
 )
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ConfigurationAdapter,
     ConfigurationAdapterDescriptor,
     FieldPath,
@@ -129,7 +129,7 @@ def test_harness_api_checkpoint_ref_matches_the_bound_api_tree():
         ["git", "ls-tree", "--name-only", retired.stdout.strip()],
         cwd=REPO_ROOT, capture_output=True, text=True)
     assert listing.returncode == 0, listing.stderr
-    new_home = REPO_ROOT / "packages/execution/agents/src/ordessa_execution_agents/harness/definitions"
+    new_home = REPO_ROOT / "packages/execution/agents/src/ordessa_agents/harness/definitions"
     for name in listing.stdout.split():
         assert name.endswith((".py", ".typed")), f"unexpected checkpoint member {name}"
         # The old standalone package aggregator was intentionally replaced by
@@ -171,14 +171,14 @@ def test_every_bound_c3_symbol_is_a_recorded_public_export():
 
 def test_bound_symbols_are_the_published_module_objects():
     """Module identity, not a same-named copy: the classes the seam constructs
-    are the ones ``ordessa_execution_agents.harness.definitions`` exports."""
-    import ordessa_execution_agents.harness.definitions
+    are the ones ``ordessa_agents.harness.definitions`` exports."""
+    import ordessa_agents.harness.definitions
     for name in BOUND_C3_SYMBOLS | BOUND_CONTRACT_SYMBOLS:
-        assert hasattr(ordessa_execution_agents.harness.definitions, name), name
+        assert hasattr(ordessa_agents.harness.definitions, name), name
     from ordessa_sandbox_adapters import seam
-    assert seam.SetField is ordessa_execution_agents.harness.definitions.SetField
-    assert seam.TargetHandle is ordessa_execution_agents.harness.definitions.TargetHandle
-    assert seam.IntentSet is ordessa_execution_agents.harness.definitions.IntentSet
+    assert seam.SetField is ordessa_agents.harness.definitions.SetField
+    assert seam.TargetHandle is ordessa_agents.harness.definitions.TargetHandle
+    assert seam.IntentSet is ordessa_agents.harness.definitions.IntentSet
 
 
 # --------------------------------------------------------------- the binding
@@ -365,7 +365,7 @@ def test_no_src_module_redefines_the_platform_vocabulary():
             assert "pacthold.harness_kit" not in roots, \
                 f"{path.name} imports harness CODE: {sorted(roots)}"
         for imported in _harness_api_imports(path):
-            assert imported.startswith("ordessa_execution_agents.harness.definitions"), imported
+            assert imported.startswith("ordessa_agents.harness.definitions"), imported
             symbol = imported.split(".")[-1]
             assert symbol in names or symbol in {"looks_secret_name", "validate_json",
                                                  "closed_object", "JsonValue",
@@ -387,8 +387,8 @@ def _harness_api_imports(path: Path) -> set[str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             found |= {a.name for a in node.names
-                      if a.name.startswith("ordessa_execution_agents.harness.definitions")}
+                      if a.name.startswith("ordessa_agents.harness.definitions")}
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module \
-                and node.module.startswith("ordessa_execution_agents.harness.definitions"):
+                and node.module.startswith("ordessa_agents.harness.definitions"):
             found |= {f"{node.module}.{a.name}" for a in node.names}
     return found

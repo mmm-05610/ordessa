@@ -22,7 +22,7 @@ from ordessa_engineering.domain.approvals.implementation import WorkPackageAutho
 from ordessa_engineering.domain.approvals.scope import EnvironmentRef
 from ordessa_engineering.domain.changes.dispatch_codec import decode_dispatch
 from ordessa_engineering.domain.common.models.values import Digest
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     ProfileRevisionRef, decode_revision_ref, encode_revision_ref,
 )
 from ordessa_infrastructure.encoding import decode_json

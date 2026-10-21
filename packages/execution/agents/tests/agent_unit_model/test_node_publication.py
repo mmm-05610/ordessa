@@ -11,8 +11,8 @@ from ordessa_units.bindings.publication import (
     AgentNodeRef, NodePublication, NodePublicationEvidence, encode_node_ref,
     decode_node_ref, IDENTITIES, NODES,
 )
-from ordessa_execution_agents.harness.providers.registry.contributions import RuntimeProviderDescriptor, RUNTIME_METHODS, RUNTIME_PROVIDER_VERSION
-from ordessa_execution_agents.harness.providers.registry.contributions import AgentContributionSet
+from ordessa_agents.harness.providers.registry.contributions import RuntimeProviderDescriptor, RUNTIME_METHODS, RUNTIME_PROVIDER_VERSION
+from ordessa_agents.harness.providers.registry.contributions import AgentContributionSet
 from pacthold.public import Environment, InstallationRecord
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.errors import UnitIdentityMismatch, UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitOperationUnknown
@@ -540,7 +540,7 @@ def test_ordinary_non_agent_usage_is_not_runtime_hold(setup):
 def test_valid_material_provider_hold_does_not_block_unrelated_runtime_retirement(setup):
     from ordessa_units.bindings.materials import MaterialProviderPin
     from ordessa_units.bindings.material_operations import material_provider_ref
-    from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
+    from ordessa_agents.harness.definitions.activation import HarnessActivationRef
     _, store, env, _, _, pub, request, _, intent, activation = setup
     holder = operation_holder(request, intent.operation_ref)
     material = material_provider_ref(MaterialProviderPin(

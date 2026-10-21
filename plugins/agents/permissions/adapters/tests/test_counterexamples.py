@@ -24,7 +24,7 @@ import pytest
 from ordessa_permissions_api import RuleAction
 
 from _permissions_adapters_helpers import make_ceiling, make_intent
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ConfigurationAdapterDescriptor, ValueSchema, VersionRange)
 from ordessa_permissions_adapters import (
     AdapterCode,
@@ -46,7 +46,7 @@ from ordessa_server.composition.configuration.contributions import CONFIGURATION
 from ordessa_server.composition.configuration.contributions import HarnessContributionError
 from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
 from ordessa_server.composition.configuration.contributions import POINT_API_VERSION
-from server_plugin_api import Contribution, ContributionBatch, stage_contributions
+from ordessa_server_plugin_api import Contribution, ContributionBatch, stage_contributions
 
 
 def test_a_user_allow_cannot_widen_an_admin_deny_in_compiled_output() -> None:

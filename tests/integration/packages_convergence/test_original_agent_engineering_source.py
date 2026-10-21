@@ -13,11 +13,11 @@ import hashlib,json,threading,sys
 
 import pytest
 from endpoint_fixture import LocalEndpointFixture
-from ordessa_execution_agents.sdk.manager import AgentManager,Records
-from ordessa_execution_agents.sdk.interactions import InteractionService,BindingProvenance,InteractionsRefused
-from ordessa_execution_agents.sdk.instances import AgentInstanceRef
-from ordessa_execution_agents.sdk.prepare import canonical_digest
-from ordessa_execution_agents.profiles import ProfileRevisionRef,encode_revision_ref
+from ordessa_agents.sdk.manager import AgentManager,Records
+from ordessa_agents.sdk.interactions import InteractionService,BindingProvenance,InteractionsRefused
+from ordessa_agents.sdk.instances import AgentInstanceRef
+from ordessa_agents.sdk.prepare import canonical_digest
+from ordessa_agents.profiles import ProfileRevisionRef,encode_revision_ref
 from ordessa_infrastructure.encoding import canonical_bytes
 from ordessa_engineering.adapters.native_records.agent_execution import AgentExecutionConsumer
 from ordessa_engineering.adapters.persistence.sqlite.engineering_library import EngineeringLibrary
@@ -81,8 +81,8 @@ def original_provenance(instance,process_ref,plan_digest):
 def seed_controlled_instance(records,process_ref,plan_digest):
     # Existing explicit preparation fixture, now carrying its full original
     # immutable material. This still does NOT qualify Profile/bootstrap.
-    from ordessa_execution_agents.instances.contracts import InstanceBindingMaterial
-    from ordessa_execution_agents.sdk.harness import HarnessDescriptor
+    from ordessa_agents.instances.contracts import InstanceBindingMaterial
+    from ordessa_agents.sdk.harness import HarnessDescriptor
     profile=ProfileRevisionRef('existing-namespace','controlled-profile',1,'sha256:'+'b'*64)
     harness=HarnessDescriptor('controlled-fixture',{'environmentNamespace':'existing-namespace',
         'definitionId':'controlled-fixture','revision':'1'},'sha256:'+'d'*64,'acp',(),())
@@ -114,7 +114,7 @@ def test_original_manager_preclaim_engineering_binding_physical_send_and_full_bl
             raw=canonical_bytes({'sessionId':'controlled-session','prompt':[]})
             prepared=consumer.claim_and_prepare(instance.projection(),raw,request_id='original-request',
                 engineering_attempt_ref='external-attempt',send_invocation=fixture.invocation,read_invocation=authority.reader)
-            from ordessa_execution_agents.sdk.interactions import TurnRef
+            from ordessa_agents.sdk.interactions import TurnRef
             turn=TurnRef.decode(json.loads(prepared.turn_ref_bytes))
             parent=records.turn(turn.turn_id)
             assert parent.status=='reserved' and parent.operation_ref==prepared.agent_operation_ref

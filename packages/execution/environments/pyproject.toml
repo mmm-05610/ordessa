@@ -10,12 +10,35 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = ["ordessa-infrastructure==0.1.0", "ordessa-interfaces-contracts==0.1.0"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.pytest.ini_options]
-pythonpath = ["src"]
-testpaths = ["tests"]
+[project.optional-dependencies]
+# Provider-only dependencies: the owner distribution stays installable without a
+# container runtime; selecting the OpenShell provider implies this extra.
+openshell = ["openshell==0.1.3", "grpcio>=1.78.0", "protobuf>=6.31.1"]
 
 [project.entry-points."ordessa.capabilities"]
 environments = "ordessa_environments.capability:factory"
+
+# One distribution, several package roots: the owner plus the providers kept in
+# plugins/environments/* (architecture keeps provider implementations in plugins;
+# packaging keeps them owned by the environments distribution).
+[tool.setuptools]
+packages = [
+    "ordessa_environments",
+    "ordessa_environments.composition",
+    "ordessa_environments.definitions",
+    "ordessa_environments.management",
+    "ordessa_environments_local",
+    "ordessa_environments_openshell",
+]
+
+[tool.setuptools.package-dir]
+"ordessa_environments" = "src/ordessa_environments"
+"ordessa_environments.composition" = "src/ordessa_environments/composition"
+"ordessa_environments.definitions" = "src/ordessa_environments/definitions"
+"ordessa_environments.management" = "src/ordessa_environments/management"
+"ordessa_environments_local" = "../../../plugins/environments/local/src/ordessa_environments_local"
+"ordessa_environments_openshell" = "../../../plugins/environments/openshell/src/ordessa_environments_openshell"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests", "../../../plugins/environments/local/tests", "../../../plugins/environments/openshell/tests"]

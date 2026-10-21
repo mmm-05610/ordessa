@@ -3,7 +3,7 @@ requires = ["setuptools>=68,<77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ordessa-agent-tools"
+name = "ordessa-cli"
 version = "0.1.0a3"
 description = "Single Ordessa CLI: environments, agents and decisions"
 requires-python = ">=3.12"
@@ -11,21 +11,19 @@ dependencies = [
   "ordessa-interfaces==0.1.0",
   "ordessa-interfaces-contracts==0.1.0",
   "ordessa-system-access-client==0.1.0",
-  "ordessa-execution-agents==0.1.0",
+  "ordessa-infrastructure==0.1.0",
+  "ordessa-agents==0.1.0",
   "ordessa-environments==0.1.0",
-  "ordessa-environments-local==0.1.0",
-  "decision-runtime==0.2.0",
-  "ordessa-decision-rules-cel==0.1.0",
+  "ordessa-decision==0.3.0",
 ]
 
 [project.optional-dependencies]
 # Explicit real-provider selections; the base CLI still lists the installed
 # catalog and keeps every non-model close available.
-harness-kilo = ["ordessa-harness-kilo==0.1.0a1"]
-decision-jev = ["ordessa-decision-jev==0.1.0"]
+decision-jev = ["ordessa-decision[jev]==0.3.0"]
 
 [project.scripts]
-ordessa = "ordessa_agent_tools.cli:main"
+ordessa = "ordessa_cli.cli:main"
 
 [tool.setuptools]
 include-package-data = false
@@ -34,7 +32,7 @@ include-package-data = false
 where = ["src"]
 
 [tool.setuptools.package-data]
-ordessa_agent_tools = []
+ordessa_cli = []
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

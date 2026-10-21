@@ -1,4 +1,4 @@
-import { jsonDigest, stableJSON } from "../../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/digest.mjs"
+import { jsonDigest, stableJSON } from "../../../../../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/digest.mjs"
 
 const exact = (v, keys) => v && typeof v === 'object' && !Array.isArray(v)
   && Object.keys(v).length === keys.length && keys.every(k => Object.hasOwn(v, k))

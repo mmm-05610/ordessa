@@ -37,8 +37,8 @@ import inspect
 from pathlib import Path
 
 import pytest
-from ordessa_execution_agents.harness.configuration.compilation.model_choice import ModelChoiceAdapter
-from ordessa_execution_agents.harness.providers.declarations.schema import ProfileSpec
+from ordessa_agents.harness.configuration.compilation.model_choice import ModelChoiceAdapter
+from ordessa_agents.harness.providers.declarations.schema import ProfileSpec
 
 
 @lru_cache(maxsize=1)

@@ -4,7 +4,7 @@ No Unit/provider ledger, direct client, permission lease or ACP translation:
 the harness encodes its own JSON-RPC frames and the owner only guards the
 physical write and observes the matching response.
 """
-from ordessa_execution_agents.sdk import HarnessDescriptor,HarnessError,PrepareContext,ProfileContent,LaunchPlan
+from ordessa_agents.sdk import HarnessDescriptor,HarnessError,PrepareContext,ProfileContent,LaunchPlan
 from .native_channel import compile_config,ConfigRefusal
 from .rpc import encode_request
 
@@ -103,7 +103,7 @@ class CodexHarnessProvider:
             lambda rid:encode_request(rid,'initialize',{'clientInfo':{'name':'ordessa-cli','version':'1'}}))
         if type(reply) is not dict or 'result' not in reply:raise HarnessError('NATIVE_BOOTSTRAP_INVALID')
         reply=await channel.exchange('thread/start',
-            lambda rid:encode_request(rid,'thread/start',{'approvalPolicy':'never','sandbox':'read-only'}))
+            lambda rid:encode_request(rid,'thread/start',{'approvalPolicy':'never','sandbox':'workspace-write'}))
         if type(reply) is not dict or type(reply.get('result')) is not dict:
             raise HarnessError('NATIVE_BOOTSTRAP_INVALID')
         thread=reply['result'].get('thread')
@@ -149,7 +149,7 @@ class CodexPromptHandler:
         self._messages[session_id] = text[-4096:]
 
     def encode_prompt(self, session_id, params_bytes, operation_ref):
-        from ordessa_execution_agents.sdk.native_prompt import prompt_text
+        from ordessa_agents.sdk.native_prompt import prompt_text
         text = prompt_text(params_bytes)
         return encode_request(str(operation_ref), 'turn/start',
                               {'threadId': session_id, 'input': [{'type': 'text', 'text': text}]})

@@ -7,15 +7,15 @@ from dataclasses import asdict
 import hashlib
 import json
 
-from ordessa_execution_agents.harness.definitions import ApplicationTarget
+from ordessa_agents.harness.definitions import ApplicationTarget
 from ordessa_units.configuration.actions import ActionBatch
 from ordessa_units.records.operation_journal import NativeActivationReceipt
 from .profile_owner import ProfileSessionOwner
 from .registry import AcpChannelRegistry
-from ordessa_execution_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
+from ordessa_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
 
 
-from ordessa_execution_agents.harness.configuration.compilation.native_digest import configuration_digest
+from ordessa_agents.harness.configuration.compilation.native_digest import configuration_digest
 
 ACTION_ID = 'acp.session.set-config-option'
 

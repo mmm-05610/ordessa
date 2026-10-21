@@ -46,7 +46,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, BindSecret, ContentRef, ContractError, FieldPath,
     Installation, IntentSet, IntentSource, InvokeAction, MountContent,
     RemoveOwnedContent, ResetField, SetField, TargetDescriptor, TargetHandle,
@@ -184,7 +184,7 @@ def test_no_module_of_this_package_defines_a_contract_owned_intent_type():
             offenders.append(f"{path.relative_to(PKG_DIR)}: defines {name}")
     assert offenders == [], (
         "SR-1b: two sealed intent vocabularies cannot both survive integration — "
-        "these names belong to ordessa_execution_agents.harness.definitions:\n" + "\n".join(offenders))
+        "these names belong to ordessa_agents.harness.definitions:\n" + "\n".join(offenders))
     assert bound_names(ast.parse(
         (PKG_DIR / "adapters/base.py").read_text(encoding="utf-8"))) & (
         CONTRACT_OWNED_NAMES | PROTOCOL_NAMES_WITH_LOCAL_IMPLEMENTATION
@@ -205,7 +205,7 @@ def test_no_module_of_this_package_defines_a_contract_owned_intent_type():
         if exported is None:
             continue  # not re-exported at all is legal; a look-alike is not
         module = getattr(exported, "__module__", "") or ""
-        assert module.startswith("ordessa_execution_agents.harness.definitions"), (
+        assert module.startswith("ordessa_agents.harness.definitions"), (
             f"adapters.{name} is re-exported from {module!r}, not the contract")
 
 
@@ -218,7 +218,7 @@ def test_the_local_configuration_adapter_base_really_implements_the_protocol():
     implementation and becomes the second vocabulary CA2 warned about.
     """
     from ordessa_assets_subagents.adapters import base as adapters_base
-    from ordessa_execution_agents.harness.definitions import ConfigurationAdapter as ContractProtocol
+    from ordessa_agents.harness.definitions import ConfigurationAdapter as ContractProtocol
 
     for member in sorted(getattr(ContractProtocol, "__annotations__", {}) or ()):
         assert hasattr(adapters_base.ConfigurationAdapter, member), member
@@ -233,7 +233,7 @@ def test_the_local_configuration_adapter_base_really_implements_the_protocol():
         directory_context((TargetHandle("assets-native-subagents-claude-generation", 1),)),
         [make_item()], source())
     assert type(produced) is IntentSet, type(produced)
-    assert IntentSet.__module__.startswith("ordessa_execution_agents.harness.definitions")
+    assert IntentSet.__module__.startswith("ordessa_agents.harness.definitions")
 
 
 def test_the_deleted_local_vocabulary_has_no_consumer_left():

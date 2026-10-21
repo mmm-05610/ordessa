@@ -14,10 +14,10 @@ import sqlite3
 from contextlib import closing
 from typing import Any, Callable
 
-from ordessa_execution_agents.public import (
+from ordessa_agents.public import (
     AgentManager, Records, InteractionService, ProfileService, HarnessCatalog,
 )
-from server_plugin_api import OwnedRootBinding, RootOwnershipError
+from ordessa_server_plugin_api import OwnedRootBinding, RootOwnershipError
 from ordessa_server.composition.root_ownership import _is_issued_owned_root_binding
 
 
@@ -277,14 +277,15 @@ def assemble_agent_owner(environment, inputs: AgentOwnerInputs,
         if stat.S_ISLNK(info.st_mode) or (info.st_dev,info.st_ino)!=identity:
             raise AgentOwnerUnavailable('Agent record identity changed while opening')
         binding.validate_for(root_path=path.parents[2],store_path=store_path,child_path=path)
-        from ordessa_execution_agents.sdk.manager import ManagerRefused
-        from ordessa_execution_agents.sdk.interactions import InteractionsRefused
+        from ordessa_agents.sdk.manager import ManagerRefused
+        from ordessa_agents.sdk.interactions import InteractionsRefused
         lifecycle=_RootBoundPort(inputs.lifecycle_authority,binding,store_path,ManagerRefused)
         interaction=_RootBoundPort(inputs.interaction_authority,binding,store_path,InteractionsRefused)
         manager=AgentManager(inputs.endpoint_resolver,records,profile_service=inputs.profile_service,
             harness_resolver=inputs.harness_catalog,preparation_resolver=inputs.preparation_resolver,
             lifecycle_authority=lifecycle)
-        source=InteractionService(records,interaction,inputs.endpoint_resolver)
+        source=InteractionService(records,interaction,inputs.endpoint_resolver,
+            native_prompts=inputs.harness_catalog.prompt_handlers())
         return AssembledAgentOwner(manager,source,records,inputs.profile_service,
             inputs.harness_catalog,inputs.method_factory,inputs.close)
     except BaseException:

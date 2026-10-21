@@ -33,11 +33,11 @@ def _graph(tmp_path, *, phase_key="selected-report-phase"):
     import time
     from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore
     from ordessa_environments_local import LocalEnvironmentResourceProvider
-    from ordessa_execution_agents.harness.providers.registry import (
+    from ordessa_agents.harness.providers.registry import (
         HarnessDefinitionDeclaration, HarnessDefinitionDescriptor,
         HarnessInstallationObservation,
     )
-    from ordessa_execution_agents.profiles import ProfileService
+    from ordessa_agents.profiles import ProfileService
     from ordessa_interfaces.system_access.access_control.authentication import AccessGrant
     from ordessa_interfaces.system_access.contracts.refs import Scope
     from ordessa_server.composition.configuration.product_selection import create_host_product_composition

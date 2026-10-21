@@ -12,7 +12,7 @@ from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority,AccessGrant
 from ordessa_server.composition.packages_convergence import build_product_registry_runtime
 from ordessa_server.entrypoints.foreground import run
-from ordessa_execution_agents.capability.profiles import build_profile_capability
+from ordessa_agents.capability.profiles import build_profile_capability
 from ordessa_server.composition.agent_bindings.profile_access import OriginalProfileAccess
 from ordessa_server_product.composition import ServerProductComposition
 from ordessa_server.composition.agent_owner import AgentOwnerInputs
@@ -25,7 +25,7 @@ def test_product_foreground_cli_uses_original_context_authority_and_retains_owne
         runtime=None;selected=[None];mapped=[]
         scope=Scope('fixture-realm','fixture-project')
         issuer=InstanceAccessAuthority(lambda:'controlled-test-token',principal_id='existing-test-caller',
-            grants=(AccessGrant(scope,('profiles.list',)),),legacy_principal=None)
+            grants=(AccessGrant(scope,('agents.profiles.list',)),),legacy_principal=None)
         access=OriginalProfileAccess(issuer,
             caller_resolver=lambda invocation:selected[0] if invocation is case.fixture.invocation else None,
             scope_for_service=lambda service:scope if service is case.owner.service else None,
@@ -38,7 +38,7 @@ def test_product_foreground_cli_uses_original_context_authority_and_retains_owne
         def context(caller,request_id,deadline):
             issuer.verify(caller);selected[0]=caller;mapped.append(request_id)
             return RequestContext({'id':caller.principal_id},request_id,deadline)
-        async def invoke(caller,request_id,op='profiles.list'):
+        async def invoke(caller,request_id,op='agents.profiles.list'):
             out=io.StringIO();err=io.StringIO()
             code=await run(['call',op,'--input','-','--json','--request-id',request_id],
                 runtime=runtime,caller=caller,stdin=io.BytesIO(b'{}'),stdout=out,stderr=err)
@@ -72,7 +72,7 @@ def test_product_foreground_cli_uses_original_context_authority_and_retains_owne
 
 
 def test_retained_lifecycle_authority_method_rechecks_original_product_root(tmp_path):
-    from ordessa_execution_agents.sdk.manager import ManagerRefused
+    from ordessa_agents.sdk.manager import ManagerRefused
     from ordessa_server.composition.root_ownership import OWNER_MARKER_NAME
     import pytest
     async def scenario():

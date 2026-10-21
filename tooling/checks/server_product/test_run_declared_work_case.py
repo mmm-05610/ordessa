@@ -1505,7 +1505,7 @@ def _report_recovery_fixture(tmp_path, monkeypatch, *, fail_first_review=False, 
     from ordessa_server.composition.unit_file_callback_approval import UnitFileCallbackApproval
     from ordessa_units.api.manager import UnitManager
     from ordessa_units.api import UnitApiRefused
-    from ordessa_execution_agents.harness.transport.environment_channel import EnvironmentProcessChannel
+    from ordessa_agents.harness.transport.environment_channel import EnvironmentProcessChannel
     from ordessa_engineering.application.contracts.dispatch_identity import unit_bootstrap_request_key
     from ordessa_engineering.application.usecases.changes.dispatch_continuation import CONTINUATION_OPERATION
     import ordessa_engineering.application.usecases.support.clock as engineering_clock
@@ -1603,7 +1603,7 @@ def _report_recovery_fixture(tmp_path, monkeypatch, *, fail_first_review=False, 
     binding = WorkBinding(work_id, source.scope, source.method, 1,
                           (WorkAssociation('package', source.package_ref),))
     work_digest = Digest('sha256', content_digest(work_binding_projection(binding)).removeprefix('sha256:'))
-    from ordessa_execution_agents.profiles import encode_revision_ref
+    from ordessa_agents.profiles import encode_revision_ref
     profile = encode_revision_ref(source.profile_ref)
     environment_ref = EnvironmentRef(source.scope.realm_id, source.profile_ref.profile_id,
         Digest('sha256', profile['contentDigest'].removeprefix('sha256:')))
@@ -1953,7 +1953,7 @@ def test_registered_report_recovery_uses_native_owners_and_replay_sends_nothing(
     from ordessa_engineering.application.contracts.dispatch_identity import work_dispatch_key
     from ordessa_engineering.domain.common.models.values import Digest
     from ordessa_engineering.domain.common.mechanisms.codec import decode_blob_ref
-    from ordessa_execution_agents.harness.transport.environment_channel import EnvironmentProcessChannel
+    from ordessa_agents.harness.transport.environment_channel import EnvironmentProcessChannel
     from ordessa_units.api.manager import UnitManager
     from ordessa_units.api.unit import Unit
     f = _report_recovery_fixture(tmp_path, monkeypatch,

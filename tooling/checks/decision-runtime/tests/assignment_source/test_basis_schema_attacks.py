@@ -2,7 +2,7 @@
 from dataclasses import replace
 
 import pytest
-from decision_runtime.definitions import (
+from ordessa_decision.definitions import (
     CandidateOffer, ContractError, ExternalRef, Precondition, ProposalDraft,
     TaskBrief, ValidationObligation, VersionedObservation, digest, plain,
 )

@@ -12,7 +12,7 @@ from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.errors import UnitGuaranteeUnavailable, UnitIdentityMismatch
 from ordessa_units.definitions.operations import OperationIntent, StepIntent
 from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
-from ordessa_execution_agents.profiles import ProfileRevisionRef, decode_revision_ref, encode_revision_ref
+from ordessa_agents.profiles import ProfileRevisionRef, decode_revision_ref, encode_revision_ref
 from ordessa_units.admission.invocation import InvocationIssuer
 from ordessa_units.bindings.publication import decode_node_ref
 from ordessa_units.lifecycle.unit_lifecycle import same_reference
@@ -93,7 +93,7 @@ def _live_selection_validator(services, unit_ref, *, expected_profile_revision,
                 services.nodes._permission(request=RequestKey(
                     request['environmentNamespace'], request['principalScope'], request['requestId']))
             elif original.intent.kind == 'unit-public-prepare':
-                from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessAdmission
+                from ordessa_agents.harness.providers.registry.definition_admission import HarnessAdmission
                 local_context = original.intent.context_ref
                 admitted = HarnessAdmission(env).describe(local_context['harnessDefinitionRef'])
                 if safe_json(admitted.provider_ref) != safe_json(unit.facts['providerRef']):

@@ -3,8 +3,8 @@ from dataclasses import dataclass
 import hashlib
 import json
 from ordessa_units.admission.generation import reserve_next_generation
-from ordessa_execution_agents.harness.providers.registry.errors import CatalogUnavailable
-from server_plugin_api import ServerPluginDescriptor,ServerContributionHandler
+from ordessa_agents.harness.providers.registry.errors import CatalogUnavailable
+from ordessa_server_plugin_api import ServerPluginDescriptor,ServerContributionHandler
 
 @dataclass
 class _OwnerRound:

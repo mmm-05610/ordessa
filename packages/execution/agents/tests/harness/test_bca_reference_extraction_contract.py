@@ -8,8 +8,8 @@ No Unit runtime, Environment, grant issuer or provider is constructed here.
 """
 import pytest
 
-from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
-from ordessa_execution_agents.harness.definitions.configuration_providers import (
+from ordessa_agents.harness.definitions.activation import HarnessActivationRef
+from ordessa_agents.harness.definitions.configuration_providers import (
     CONFIGURATION_PROVIDER_VERSION, ConfigurationContractError,
     ConfigurationProviderDescriptor, ConfigurationProviderPin, ConfigurationRoute,
 )

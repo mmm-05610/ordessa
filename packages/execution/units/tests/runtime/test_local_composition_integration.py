@@ -27,7 +27,7 @@ from ordessa_environments.composition import (
     RuntimeBundle,
 )
 from ordessa_environments_local import LocalCompositionProvider
-from ordessa_execution_agents.harness.definitions.command_projection import HarnessCommandSpec
+from ordessa_agents.harness.definitions.command_projection import HarnessCommandSpec
 from ordessa_infrastructure.encoding.content_identity import digest
 from ordessa_units.assembly.runtime.coordinator import (
     ResolvedComposition,

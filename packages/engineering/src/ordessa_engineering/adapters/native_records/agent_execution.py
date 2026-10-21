@@ -76,8 +76,8 @@ class AgentExecutionConsumer:
         """Independently authorized original identity read, not a reviewer role."""
         self._require_source(read_invocation)
         raw=agent_instance_ref_bytes(agent_ref)
-        from ordessa_execution_agents.public import AgentInstanceRef
-        from ordessa_execution_agents.sdk.interactions import BindingProvenance
+        from ordessa_agents.public import AgentInstanceRef
+        from ordessa_agents.sdk.interactions import BindingProvenance
         instance=AgentInstanceRef.decode(decode_json(raw))
         observed=_original_sync(self._source.read_binding(instance,invocation=read_invocation))
         if type(observed) is not BindingProvenance or observed.instance_ref!=instance:
@@ -87,8 +87,8 @@ class AgentExecutionConsumer:
     def read_agent_binding(self, agent_ref, *, read_invocation):
         """Original independently authorized Profile/source provenance, never a label."""
         self._require_source(read_invocation)
-        from ordessa_execution_agents.public import AgentInstanceRef
-        from ordessa_execution_agents.sdk.interactions import BindingProvenance
+        from ordessa_agents.public import AgentInstanceRef
+        from ordessa_agents.sdk.interactions import BindingProvenance
         instance = AgentInstanceRef.decode(decode_json(agent_instance_ref_bytes(agent_ref)))
         observed = _original_sync(self._source.read_binding(instance, invocation=read_invocation))
         if type(observed) is not BindingProvenance or observed.instance_ref != instance:
@@ -99,7 +99,7 @@ class AgentExecutionConsumer:
     def prompt_input_digest(self,execution_ref,params):
         """Original fixed-session digest DATA for a selected review invocation."""
         from ...domain.changes.agent_execution_ref import AgentExecutionRecordRef
-        from ordessa_execution_agents.public import AgentInstanceRef
+        from ordessa_agents.public import AgentInstanceRef
         if type(execution_ref) is not AgentExecutionRecordRef:raise ApplicationError('AGENT_EXECUTION_RECORD_REQUIRED')
         raw=canonical_bytes(params,profile=LIBRARY_JSON_PROFILE)
         if len(raw)>_MAX_PROMPT_BYTES:raise ApplicationError('RECORDED_DISPATCH_INPUT_TOO_LARGE')
@@ -150,8 +150,8 @@ class AgentExecutionConsumer:
         if type(params_bytes) is not bytes or len(params_bytes)>_MAX_PROMPT_BYTES:
             raise ApplicationError('RECORDED_DISPATCH_INPUT_INVALID')
         _reject_callbacks(_decode_prompt(params_bytes))
-        from ordessa_execution_agents.sdk.instances import AgentInstanceRef
-        from ordessa_execution_agents.sdk.interactions import FrozenPrompt,TurnReceipt
+        from ordessa_agents.sdk.instances import AgentInstanceRef
+        from ordessa_agents.sdk.interactions import FrozenPrompt,TurnReceipt
         instance=AgentInstanceRef.decode(decode_json(raw_ref))
         provenance=_original_sync(self._source.read_binding(instance,invocation=read_invocation))
         projected=_projection(provenance,'agent-binding-provenance/1')
@@ -192,8 +192,8 @@ class AgentExecutionConsumer:
         if type(params_bytes) is not bytes or len(params_bytes)>_MAX_PROMPT_BYTES:
             raise ApplicationError('RECORDED_DISPATCH_INPUT_INVALID')
         _reject_callbacks(_decode_prompt(params_bytes))
-        from ordessa_execution_agents.sdk.instances import AgentInstanceRef
-        from ordessa_execution_agents.sdk.interactions import FrozenPrompt,TurnRef,TurnReadQuery,TurnReceipt,BindingProvenance
+        from ordessa_agents.sdk.instances import AgentInstanceRef
+        from ordessa_agents.sdk.interactions import FrozenPrompt,TurnRef,TurnReadQuery,TurnReceipt,BindingProvenance
         instance=AgentInstanceRef.decode(decode_json(raw_ref))
         if type(original_turn_ref) is not TurnRef or original_turn_ref.instance_ref!=instance:
             raise ApplicationError('AGENT_ORIGINAL_TURN_BINDING_REQUIRED')
@@ -253,8 +253,8 @@ class AgentExecutionConsumer:
         self._require_source(read_invocation)
         if type(prepared) is not PreparedAgentInput:
             raise ApplicationError('AGENT_PREPARED_INPUT_REQUIRED')
-        from ordessa_execution_agents.sdk.interactions import FrozenPrompt,TurnRef,TurnReadQuery,TurnReceipt
-        from ordessa_execution_agents.sdk.instances import AgentInstanceRef
+        from ordessa_agents.sdk.interactions import FrozenPrompt,TurnRef,TurnReadQuery,TurnReceipt
+        from ordessa_agents.sdk.instances import AgentInstanceRef
         instance=AgentInstanceRef.decode(decode_json(prepared.agent_ref_bytes))
         turn=TurnRef.decode(decode_json(prepared.turn_ref_bytes))
         prompt=FrozenPrompt(instance,prepared.session_id,prepared.prompt_bytes,prepared.prompt_input_digest)
@@ -277,8 +277,8 @@ class AgentExecutionConsumer:
         """Authorized cold read from the same original turn, never send/recovery."""
         from ...domain.changes.agent_execution_ref import AgentExecutionRecordRef
         from ...application.contracts.execution_observations import AgentExecutionObservationRef
-        from ordessa_execution_agents.sdk.instances import AgentInstanceRef
-        from ordessa_execution_agents.sdk.interactions import TurnRef,TurnReceipt,BindingProvenance
+        from ordessa_agents.sdk.instances import AgentInstanceRef
+        from ordessa_agents.sdk.interactions import TurnRef,TurnReceipt,BindingProvenance
         self._require_source(read_invocation)
         if type(execution_ref) is not AgentExecutionRecordRef:raise ApplicationError('AGENT_EXECUTION_RECORD_REQUIRED')
         instance=AgentInstanceRef.decode(decode_json(execution_ref.agent_ref_bytes))
@@ -327,8 +327,8 @@ class AgentExecutionConsumer:
         from ...domain.changes.agent_dispatch_codec import encode_agent_dispatch,decode_agent_dispatch
         from ...domain.changes.agent_execution_ref import AgentExecutionRecordRef
         from ...domain.common.outcomes.diagnostics import ReferenceError
-        from ordessa_execution_agents.sdk.instances import AgentInstanceRef
-        from ordessa_execution_agents.sdk.interactions import TurnRef,TurnReceipt,BindingProvenance,TurnReadQuery
+        from ordessa_agents.sdk.instances import AgentInstanceRef
+        from ordessa_agents.sdk.interactions import TurnRef,TurnReceipt,BindingProvenance,TurnReadQuery
         self._require_source(read_invocation)
         if type(binding) not in (AgentDispatchBinding, AgentWorkDispatchBinding):raise ApplicationError('AGENT_DISPATCH_BINDING_REQUIRED')
         if decode_agent_dispatch(encode_agent_dispatch(binding))!=binding:raise ApplicationError('AGENT_DISPATCH_BINDING_INVALID')
@@ -370,8 +370,8 @@ class AgentDispatchSources:
         self.source=source;self.resolver=read_invocation_resolver
 
     def _read(self,context,package,agent_ref):
-        from ordessa_execution_agents.sdk.instances import AgentInstanceRef
-        from ordessa_execution_agents.sdk.interactions import BindingProvenance
+        from ordessa_agents.sdk.instances import AgentInstanceRef
+        from ordessa_agents.sdk.interactions import BindingProvenance
         if context.scope!=package.scope:raise ApplicationError('DISPATCH_SOURCE_PROFILE_MISMATCH')
         instance=AgentInstanceRef.decode(decode_json(agent_instance_ref_bytes(agent_ref)))
         invocation=self.resolver(context,package,instance)

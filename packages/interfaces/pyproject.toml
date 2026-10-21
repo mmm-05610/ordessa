@@ -13,12 +13,14 @@ dependencies = ["ordessa-interfaces-contracts==0.1.0", "jsonschema>=4.20,<5", "r
 # namespace-container directories from replacing the package's own __init__.
 packages = ["ordessa_interfaces", "ordessa_interfaces.http", "ordessa_interfaces.system_access",
     "ordessa_interfaces.system_access.access_control",
-    "ordessa_interfaces.system_access.services", "ordessa_interfaces.system_access.subscriptions", "ordessa_interfaces.transport", "ordessa_interfaces.channels", "ordessa_interfaces.channels.cli", "ordessa_interfaces.channels.mcp"]
+    "ordessa_interfaces.system_access.services", "ordessa_interfaces.system_access.subscriptions",
+    "ordessa_interfaces.system_access.contracts", "ordessa_interfaces.transport", "ordessa_interfaces.channels", "ordessa_interfaces.channels.cli", "ordessa_interfaces.channels.mcp"]
 
 [tool.setuptools.package-dir]
 "ordessa_interfaces" = "src/ordessa_interfaces"
 "ordessa_interfaces.http" = "transport/server/src/ordessa_interfaces/http"
 "ordessa_interfaces.system_access" = "system-access/src/ordessa_interfaces/system_access"
+"ordessa_interfaces.system_access.contracts" = "system-access/src/ordessa_interfaces/system_access/contracts"
 "ordessa_interfaces.channels" = "channels/src/ordessa_interfaces/channels"
 "ordessa_interfaces.channels.cli" = "channels/cli/src/ordessa_interfaces/channels/cli"
 "ordessa_interfaces.channels.mcp" = "channels/mcp/src/ordessa_interfaces/channels/mcp"
@@ -26,3 +28,6 @@ packages = ["ordessa_interfaces", "ordessa_interfaces.http", "ordessa_interfaces
 [project.optional-dependencies]
 mcp = ["mcp==2.2.0"]
 test-mcp = ["mcp==2.2.0", "httpx>=0.28,<1"]
+
+[tool.setuptools.package-data]
+"ordessa_interfaces.system_access.contracts" = ["schemas/*.json"]

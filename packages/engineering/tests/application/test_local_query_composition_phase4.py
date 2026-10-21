@@ -120,7 +120,7 @@ def test_q_first_query_keeps_original_namespace_principal_and_digest(
     from ordessa_engineering.domain.common.models.values import Digest
     from ordessa_infrastructure.encoding.immutable_json import safe_json
     from ordessa_interfaces.system_access.contracts.refs import Scope
-    from ordessa_execution_agents.profiles import encode_revision_ref
+    from ordessa_agents.profiles import encode_revision_ref
     from ordessa_engineering.application.contracts.execution_dispatch import EXECUTION_DISPATCH
 
     world = assembled_live_owner

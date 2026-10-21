@@ -12,10 +12,10 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_retired_agents_driver_loader_and_unconsumed_worker_fixture_are_absent():
-    assert not (ROOT / "packages/execution/agents/src/ordessa_execution_agents/harness/providers/native_driver.mjs").exists()
+    assert not (ROOT / "packages/execution/agents/src/ordessa_agents/harness/providers/native_driver.mjs").exists()
     assert not (ROOT / "apps/server/tests/fixtures/fixture_native_driver.mjs").exists()
     metadata = tomllib.loads((ROOT / "packages/execution/agents/pyproject.toml").read_text())
-    members = metadata["tool"]["setuptools"]["package-data"]["ordessa_execution_agents"]
+    members = metadata["tool"]["setuptools"]["package-data"]["ordessa_agents"]
     assert "harness/providers/native_driver.mjs" not in members
 
 

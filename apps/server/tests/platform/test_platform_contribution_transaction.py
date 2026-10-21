@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     PACTHOLD_CONTRIBUTIONS_API_VERSION,
     PACTHOLD_CONTRIBUTIONS_POINT_ID,
     AbsentContribution,

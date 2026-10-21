@@ -36,7 +36,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     AcpAdmissionResult,
     AcpAttachmentReference,
     AcpChannelBinding,

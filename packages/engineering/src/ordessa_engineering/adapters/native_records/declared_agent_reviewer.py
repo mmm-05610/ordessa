@@ -98,7 +98,7 @@ class DeclaredAgentReviewerSource:
         has already matched the exact WriteBinding and original frame digest.
         This span is synchronous and surrounds only its bounded physical write.
         """
-        from ordessa_execution_agents.sdk.interactions import WriteBinding, TurnReceipt, BindingProvenance
+        from ordessa_agents.sdk.interactions import WriteBinding, TurnReceipt, BindingProvenance
         try:task=asyncio.current_task()
         except RuntimeError:task=None
         if (type(prepared) is not PreparedAgentInput or type(write_binding) is not WriteBinding
@@ -228,7 +228,7 @@ class DeclaredAgentReviewerSource:
                 if (captured.state!='completed' or captured.authority_id!=self.factory.authority_id
                         or captured.blob_ref!=execution.captured_observation_ref or not captured.report_text):
                     raise ApplicationError('REVIEW_SOURCE_INCOMPLETE')
-                from ordessa_execution_agents.sdk.interactions import TurnReceipt
+                from ordessa_agents.sdk.interactions import TurnReceipt
                 receipt=TurnReceipt.decode(decode_json(self.blobs.read_verified(captured.blob_ref)))
                 params=decode_json(self.blobs.read_verified(locator.params_ref))
                 expected=self.prompt_parameters(context,plan,request,assignment,receipt.session_id)

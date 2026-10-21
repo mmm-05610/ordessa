@@ -4,8 +4,8 @@ from pathlib import Path
 import tomllib
 import pytest
 from ordessa_server.composition.packages_convergence import build_harness_catalog
-from ordessa_execution_agents.public import HarnessCatalog
-from ordessa_execution_agents.sdk import HarnessError
+from ordessa_agents.public import HarnessCatalog
+from ordessa_agents.sdk import HarnessError
 
 ROOT=Path(__file__).parents[3]
 

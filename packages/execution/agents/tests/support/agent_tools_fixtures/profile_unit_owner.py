@@ -1,7 +1,7 @@
 """Small real Units owner for Profile storage/CAS tests."""
 from threading import RLock
 
-from ordessa_execution_agents.harness.providers.registry import HarnessCatalog
+from ordessa_agents.harness.providers.registry import HarnessCatalog
 from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
 from ordessa_units.admission.material_registration import MaterialCatalog
 from ordessa_units.public import UnitAdmissionContext

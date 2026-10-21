@@ -3,11 +3,11 @@ import asyncio
 import json
 from types import SimpleNamespace
 import pytest
-from decision_runtime import DecisionAnswer, DecisionRunner, RulesOutcome
-from decision_runtime.capability import build_capability
-from decision_runtime.definitions.values import DecisionError,canonical_bytes,digest_hex
-from decision_runtime.evidence import EvidenceScope,FilesystemEvidenceStore
-from decision_runtime.settings import DecisionsSettings
+from ordessa_decision import DecisionAnswer, DecisionRunner, RulesOutcome
+from ordessa_decision.capability import build_capability
+from ordessa_decision.definitions.values import DecisionError,canonical_bytes,digest_hex
+from ordessa_decision.evidence import EvidenceScope,FilesystemEvidenceStore
+from ordessa_decision.settings import DecisionsSettings
 
 
 def snapshot(root):

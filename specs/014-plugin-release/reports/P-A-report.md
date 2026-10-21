@@ -22,7 +22,7 @@ extensions 通道就绪；三品牌矩阵受控版 12 条绿 + 金样钉定；S-
   4. `pip install -e 'apps/server[dev]' -e 'plugins/harness[dev]' -e plugins/workspace
      -e plugins/server-compat -e plugins/runtime-compat -e products/server -e plugins/profile`
      （`-e plugins/profile` = F6 补录项）
-  5. `python -c "import pacthold, server_plugin_api, ordessa_harness_api,
+  5. `python -c "import pacthold, ordessa_server_plugin_api, ordessa_harness_api,
      ordessa_server, ordessa_harness, ordessa_server_product, ordessa_profile,
      pacthold_runtime_compat, …"` → 全过
 - npm：本树 `npm ci` 因根 lock 缺 profile 三 workspace 条目而红

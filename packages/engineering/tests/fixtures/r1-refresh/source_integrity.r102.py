@@ -35,19 +35,19 @@ def _sha256(path: Path) -> str:
 def implementation_facts() -> dict[str, Any]:
     engineering_root = importlib.resources.files('ordessa_engineering')
     try:
-        from decision_runtime import DecisionRequest
-        decision_root = Path(importlib.import_module('decision_runtime').__file__).parent
+        from ordessa_decision import DecisionRequest
+        decision_root = Path(importlib.import_module('ordessa_decision').__file__).parent
         runtime_version = importlib.metadata.version('decision-runtime')
         graph_version = importlib.metadata.version('pydantic-graph')
     except (ImportError, importlib.metadata.PackageNotFoundError, TypeError) as exc:
         raise EngineeringError('operation_registry_dependency_unavailable') from exc
-    return {'engineering': ({name: _sha256(engineering_root.joinpath(*name.split('/'))) for name in ENGINEERING_FILES} | {'ordessa_infrastructure:' + name: _sha256(importlib.resources.files('ordessa_infrastructure').joinpath(*name.split('/'))) for name in INFRASTRUCTURE_FILES}), 'decision_runtime': {name: _sha256(decision_root / name) for name in DECISION_RUNTIME_FILES}, 'decision_runtime_version': runtime_version, 'decision_contract_version': next((item.default for item in fields(DecisionRequest) if item.name == 'contract_version'), None), 'pydantic_graph_version': graph_version, 'jsonschema_version': importlib.metadata.version('jsonschema'), 'referencing_version': importlib.metadata.version('referencing')}
+    return {'engineering': ({name: _sha256(engineering_root.joinpath(*name.split('/'))) for name in ENGINEERING_FILES} | {'ordessa_infrastructure:' + name: _sha256(importlib.resources.files('ordessa_infrastructure').joinpath(*name.split('/'))) for name in INFRASTRUCTURE_FILES}), 'ordessa_decision': {name: _sha256(decision_root / name) for name in DECISION_RUNTIME_FILES}, 'ordessa_decision_version': runtime_version, 'decision_contract_version': next((item.default for item in fields(DecisionRequest) if item.name == 'contract_version'), None), 'pydantic_graph_version': graph_version, 'jsonschema_version': importlib.metadata.version('jsonschema'), 'referencing_version': importlib.metadata.version('referencing')}
 
 
 def verify_implementation(registry: Mapping[str, Any]) -> None:
     """The active registry's implementation must equal the live source closure."""
     implementation = registry['implementation']
-    source_keys = {'engineering', 'decision_runtime', 'decision_runtime_version', 'decision_contract_version', 'pydantic_graph_version', 'jsonschema_version', 'referencing_version'}
+    source_keys = {'engineering', 'ordessa_decision', 'ordessa_decision_version', 'decision_contract_version', 'pydantic_graph_version', 'jsonschema_version', 'referencing_version'}
     if not isinstance(implementation, Mapping) or set(implementation) != source_keys:
         raise EngineeringError('operation_registry_implementation_shape')
     if implementation != implementation_facts():

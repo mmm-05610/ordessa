@@ -13,7 +13,7 @@ import textwrap
 
 import pytest
 
-from ordessa_execution_agents.harness.transport import (
+from ordessa_agents.harness.transport import (
     ChannelClosed,
     FrameReader,
     FramingError,

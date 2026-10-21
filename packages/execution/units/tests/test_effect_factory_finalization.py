@@ -8,7 +8,7 @@ import pytest
 
 pytest_plugins = ("test_local_owner",)
 
-from ordessa_execution_agents.harness.transport import EffectWriteGuard
+from ordessa_agents.harness.transport import EffectWriteGuard
 from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_units.admission.owner_selection import AgentOwnerUnavailable
 from ordessa_units.admission.invocation import InvocationAuthorityRefused

@@ -13,7 +13,7 @@ from __future__ import annotations
 import pathlib
 
 import pytest
-from server_plugin_api import (ServerPluginContext, ServerPluginRegistration)
+from ordessa_server_plugin_api import (ServerPluginContext, ServerPluginRegistration)
 from support import (admin_ceiling, approval_record, clock_at, effective_digest,
                      make_operation, seeded_database, seed_session, run_start_hooks, utc)
 

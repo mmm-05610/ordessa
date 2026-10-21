@@ -1,7 +1,7 @@
 """Consumer-facing test endpoint fixture proof; real short process, zero models."""
 import asyncio
 from endpoint_fixture import LocalEndpointFixture
-from ordessa_execution_agents.sdk.endpoint import BoundEndpoint
+from ordessa_agents.sdk.endpoint import BoundEndpoint
 
 
 def test_worker_consumable_exact_endpoint_and_explicit_caller_cleanup(tmp_path):

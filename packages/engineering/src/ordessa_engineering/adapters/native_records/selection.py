@@ -9,7 +9,7 @@ from ordessa_engineering.domain.packages.models import ImplementationPackage
 from ordessa_engineering.domain.packages.models import PreparedPackagePayload
 from ordessa_engineering.domain.approvals.implementation import WorkPackageAuthorization
 from ordessa_engineering.domain.common.models.values import Digest
-from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref
+from ordessa_agents.profiles import ProfileRevisionRef, encode_revision_ref
 from ordessa_units.public import DirectoryBindingRef, InvocationContext, UnitServices
 
 

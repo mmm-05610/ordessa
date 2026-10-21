@@ -8,7 +8,7 @@ import sqlite3
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ApplicationTarget, Confirmed, ErrorCode, NotFound, Plan, Refused, Unknown,
 )
 from ordessa_units.records.operation_journal import FenceObservation

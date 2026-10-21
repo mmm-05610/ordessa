@@ -15,7 +15,7 @@ from pathlib import Path
 import stat
 from types import MappingProxyType
 
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.providers.registry import (
     HarnessDefinitionDeclaration,
     HarnessDefinitionDescriptor,
     HarnessInstallationObservation,

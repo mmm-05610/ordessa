@@ -7,9 +7,9 @@ import pytest
 
 from endpoint_fixture import LocalEndpointFixture
 from ordessa_environments import EnvironmentRefused
-from ordessa_execution_agents.sdk.instances import AgentInstanceRef
-from ordessa_execution_agents.sdk.interactions import TurnRef,WriteBinding,GuardedSendObservation
-from ordessa_execution_agents.sdk.prepare import canonical_digest
+from ordessa_agents.sdk.instances import AgentInstanceRef
+from ordessa_agents.sdk.interactions import TurnRef,WriteBinding,GuardedSendObservation
+from ordessa_agents.sdk.prepare import canonical_digest
 
 
 def fixed_binding(process_ref,frame,agent_operation='original-agent-operation'):

@@ -9,8 +9,8 @@ from threading import Barrier, RLock
 
 import pytest
 
-from ordessa_execution_agents.harness.providers.registry import HarnessCatalog
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.harness.providers.registry import HarnessCatalog
+from ordessa_agents.profiles import (
     Profile,
     ProfileAccessRefused,
     ProfileChangeUnknown,
@@ -18,7 +18,7 @@ from ordessa_execution_agents.profiles import (
     ProfileService,
     ProfileValidationError,
 )
-from ordessa_execution_agents.profiles.management.compatibility import (
+from ordessa_agents.profiles.management.compatibility import (
     PROFILE_RECORDS,
 )
 from ordessa_infrastructure.identifiers import RequestKey

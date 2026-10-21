@@ -7,11 +7,11 @@ them to a verdict and the conversation owner alone records user acceptance.
 from dataclasses import asdict, dataclass
 
 from pydantic_graph import GraphBuilder
-from decision_runtime.definitions import (
+from ordessa_decision.definitions import (
     BusinessOutcome, DecisionQuestion, DecisionRequest, DecisionServices,
     FlowRef, RunLimits, TaskBrief, plain,
 )
-from decision_runtime.runtime import (
+from ordessa_decision.runtime import (
     RunContext, TrustedFlow, flow_digest, reviewed_code_digest, run_decision,
 )
 from ordessa_engineering.application.contracts.errors import ApplicationError

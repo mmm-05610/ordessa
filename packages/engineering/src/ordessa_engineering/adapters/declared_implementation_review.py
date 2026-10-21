@@ -10,7 +10,7 @@ from dataclasses import asdict
 import hashlib
 from collections.abc import Mapping
 
-from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref
+from ordessa_agents.profiles import ProfileRevisionRef, encode_revision_ref
 from ordessa_infrastructure.encoding import canonical_bytes
 
 from ..application.contracts.errors import ApplicationError

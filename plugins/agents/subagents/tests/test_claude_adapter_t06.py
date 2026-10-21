@@ -17,7 +17,7 @@ import dataclasses
 import re
 
 import pytest
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, Installation, IntentSource, Match, Mismatch,
     TargetDescriptor, TargetHandle, VerificationUnknown,
 )
@@ -105,7 +105,7 @@ def test_assessment_supported_without_evidence_is_constructor_error():
 
 
 def test_to_real_maps_the_contract_assessment_shape():
-    from ordessa_execution_agents.harness.definitions import Assessment as ContractAssessment
+    from ordessa_agents.harness.definitions import Assessment as ContractAssessment
     real = ADAPTER.assess_detail(CLAUDE_CONTEXT).to_real()
     assert type(real) is ContractAssessment
     assert real.status in {"supported", "unsupported", "unknown"}
@@ -301,7 +301,7 @@ def test_every_produced_intent_targets_the_private_handle_only():
         assert "\\" not in intent.relative_name
     # capability: without the compile path, the raw constructor would ACCEPT
     # a `~` single-segment name — Q3's grammar layer is load-bearing:
-    from ordessa_execution_agents.harness.definitions import ContentRef, MountContent as RealMount
+    from ordessa_agents.harness.definitions import ContentRef, MountContent as RealMount
     RealMount(SOURCE, CLAUDE_HANDLE, "~x.md",
               ContentRef("a" * 64, "a" * 64, 1), "read-only")
     with pytest.raises(errors.DomainError):
@@ -383,7 +383,7 @@ def test_verify_unobserved_items_stay_unknown():
 
 
 def test_verify_rejects_foreign_facet_intent_set():
-    from ordessa_execution_agents.harness.definitions import IntentSet as RealIntentSet
+    from ordessa_agents.harness.definitions import IntentSet as RealIntentSet
     # empty set: nothing managed — observed "x" stays UNKNOWN, no crash
     # (capability probe that verify works on sets without managed members):
     result = ADAPTER.verify_observations(base.FileExistenceObservation("x"),

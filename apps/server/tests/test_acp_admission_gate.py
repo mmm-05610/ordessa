@@ -10,7 +10,7 @@ from ordessa_server.composition.acp_admission import (
     AcpAdmissionGate, AcpAdmissionPortAdapter, AcpAdmissionRefused,
     BoundAdmission, _digest, prompt_input,
 )
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ACP_ADMISSION_PORT, AcpAttachmentReference, AcpChannelBinding,
     AcpPermissionDecision, AcpSubmissionRequest,
 )
@@ -302,7 +302,7 @@ def test_channel_release_retires_volatile_admissions_and_request_ids():
 def test_confirmed_wire_release_prunes_gate_without_a_websocket_subscriber():
     from ordessa_server.composition.plugin_host import MethodRegistry, StreamRouteRegistry
     from ordessa_interfaces.system_access.services.invocation import WireService
-    from server_plugin_api import ServerMethodDescriptor, StreamRouteDescriptor
+    from ordessa_server_plugin_api import ServerMethodDescriptor, StreamRouteDescriptor
 
     gate = AcpAdmissionGate(Authority(), clock=lambda: 100)
     gate.authorize_submission(CONNECTION, SUBMISSION)

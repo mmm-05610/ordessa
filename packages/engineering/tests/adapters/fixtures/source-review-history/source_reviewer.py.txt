@@ -18,7 +18,7 @@ from copy import deepcopy
 from dataclasses import asdict
 from hashlib import sha256
 
-from decision_runtime import (BusinessOutcome, DecisionAnswer, DecisionQuestion,
+from ordessa_decision import (BusinessOutcome, DecisionAnswer, DecisionQuestion,
     DecisionRequest, DecisionResult, DecisionServices, FlowRef, PolicyRef, RunContext,
     RunLimits, RunManifest,
     TaskBrief, TrustedFlow, flow_digest, reviewed_code_digest, run_decision)

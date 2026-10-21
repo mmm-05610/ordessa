@@ -20,7 +20,7 @@ import subprocess
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import harness_capabilities as caps
+from ordessa_agents.harness.definitions import harness_capabilities as caps
 from ordessa_server.composition.selected_harness_catalog import capture_selected_harness_catalog
 
 
@@ -33,7 +33,7 @@ JS_PROJECTION = PLUGIN / "runtime" / "capability_declarations.json"
 #: host bootstrap. The gate keeps asserting the same property (the files exist
 #: and name no Harness brand) on the surviving surface.
 NEUTRAL_FILES = (
-    "packages/execution/agents/src/ordessa_execution_agents/harness/definitions/harness_capabilities.py",
+    "packages/execution/agents/src/ordessa_agents/harness/definitions/harness_capabilities.py",
     "apps/server/src/ordessa_server/composition/runtime.py",
 )
 BRAND_TOKEN = re.compile(r"\b(?:codex|claude|hermes|opencode|pi-acp|deepseek|omp)\b", re.I)
@@ -76,7 +76,7 @@ def test_a_deployment_may_only_declare_canonical_boolean_abilities():
     asserts the contract directly: canonical spelling accepted, drift aliases
     and non-boolean values typed-refused.
     """
-    from ordessa_execution_agents.harness.definitions.harness_capabilities import validate_claims
+    from ordessa_agents.harness.definitions.harness_capabilities import validate_claims
 
     # The canonical spelling is accepted, including an explicit false.
     assert validate_claims(

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import importlib
 
-import server_plugin_api
+import ordessa_server_plugin_api
 
 PRE_EXISTING_EXPORTS = [
     "SERVER_PLUGIN_API_VERSION",
@@ -57,29 +57,29 @@ CONTRIBUTION_EXPORTS = [
 
 
 def test_every_exported_name_resolves():
-    for name in server_plugin_api.__all__:
-        assert hasattr(server_plugin_api, name), f"__all__ advertises missing {name}"
+    for name in ordessa_server_plugin_api.__all__:
+        assert hasattr(ordessa_server_plugin_api, name), f"__all__ advertises missing {name}"
 
 
 def test_pre_existing_exports_survive_the_contribution_addition():
     for name in PRE_EXISTING_EXPORTS:
-        assert name in server_plugin_api.__all__, f"{name} dropped from __all__"
-        assert getattr(server_plugin_api, name) is not None
+        assert name in ordessa_server_plugin_api.__all__, f"{name} dropped from __all__"
+        assert getattr(ordessa_server_plugin_api, name) is not None
 
 
 def test_contribution_exports_are_public():
     for name in CONTRIBUTION_EXPORTS:
-        assert name in server_plugin_api.__all__, f"{name} missing from __all__"
-        assert getattr(server_plugin_api, name) is not None
+        assert name in ordessa_server_plugin_api.__all__, f"{name} missing from __all__"
+        assert getattr(ordessa_server_plugin_api, name) is not None
 
 
 def test_all_lists_everything_and_submodules_stay_importable():
-    assert len(server_plugin_api.__all__) == len(set(server_plugin_api.__all__))
+    assert len(ordessa_server_plugin_api.__all__) == len(set(ordessa_server_plugin_api.__all__))
     for module_name in ("contract", "errors", "contributions", "internal_errors",
                         "record_encoding", "wire_errors", "wire_shape"):
-        module = importlib.import_module(f"server_plugin_api.{module_name}")
+        module = importlib.import_module(f"ordessa_server_plugin_api.{module_name}")
         for name in (set(PRE_EXISTING_EXPORTS) | set(CONTRIBUTION_EXPORTS)):
-            exported = getattr(server_plugin_api, name)
+            exported = getattr(ordessa_server_plugin_api, name)
             if name in vars(module) or hasattr(module, name):
                 assert getattr(module, name) is exported
 
@@ -108,11 +108,11 @@ PUBLISHED_WIRE_EXPORTS = [
 
 def test_the_published_wire_surface_is_exported():
     for name in PUBLISHED_WIRE_EXPORTS:
-        assert name in server_plugin_api.__all__, f"{name} missing from __all__"
-        assert getattr(server_plugin_api, name) is not None
+        assert name in ordessa_server_plugin_api.__all__, f"{name} missing from __all__"
+        assert getattr(ordessa_server_plugin_api, name) is not None
 
 
 def test_the_published_surface_adds_nothing_to_the_closed_family_set():
     """`FAMILIES` is the twelve of wire/1; publishing it must not grow it."""
-    assert len(server_plugin_api.FAMILIES) == 12
-    assert server_plugin_api.WireError("NOT_FOUND", "x").family == "NOT_FOUND"
+    assert len(ordessa_server_plugin_api.FAMILIES) == 12
+    assert ordessa_server_plugin_api.WireError("NOT_FOUND", "x").family == "NOT_FOUND"

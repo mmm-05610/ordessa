@@ -1,0 +1,84 @@
+{
+  "note": "derived summary of the codex app-server native rollout written by the harness process into the prepared private home; no account identifiers and no credential material are included",
+  "rolloutFile": "sessions/2026/10/21/rollout-2026-10-21T10-31-07-01a15c4c-4f2d-74f3-bee0-ff3e094c62fa.jsonl",
+  "sessionMeta": {
+    "id": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+    "session_id": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+    "cwd": "/tmp/t05-multiturn-codex/work",
+    "cli_version": "0.157.1",
+    "originator": "ordessa-cli",
+    "source": "vscode",
+    "timestamp": "2026-10-21T02:31:07.309Z"
+  },
+  "recordTypeCounts": {
+    "session_meta": 1,
+    "event_msg": 10,
+    "event_msg/task_started": 2,
+    "response_item": 8,
+    "world_state": 1,
+    "turn_context": 2,
+    "event_msg/item_completed": 4,
+    "token_usage_record": 2,
+    "event_msg/token_count": 2,
+    "event_msg/task_complete": 2
+  },
+  "responseItemCounts": {
+    "message/developer": 3,
+    "message/user": 3,
+    "message/assistant": 2
+  },
+  "modelMessages": [
+    {
+      "role": "user",
+      "text": "<environment_context>\n  <cwd>/tmp/t05-multiturn-codex/work</cwd>\n  <shell>bash</shell>\n  <current_date>2026-10-21</curre"
+    },
+    {
+      "role": "user",
+      "text": "计算 17*23，只回复数字。"
+    },
+    {
+      "role": "assistant",
+      "text": "391"
+    },
+    {
+      "role": "user",
+      "text": "计算 12*12，只回复数字。"
+    },
+    {
+      "role": "assistant",
+      "text": "144"
+    }
+  ],
+  "usageRecords": [
+    {
+      "kind": "token_usage",
+      "thread_id": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+      "turn_id": "01a15c4c-54be-7fb0-860c-2c0270ab6190",
+      "session_id": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+      "response_id": "resp_02f2d0d47c153a48016ad823f52e148191bec57f635c503895",
+      "input_tokens": 13098,
+      "output_tokens": 5,
+      "total_tokens": 13103,
+      "thread_total_tokens": 13103
+    },
+    {
+      "kind": "task_complete",
+      "last_agent_message": "391"
+    },
+    {
+      "kind": "token_usage",
+      "thread_id": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+      "turn_id": "01a15c4c-7e88-7c72-9cbb-301b1eea53b0",
+      "session_id": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+      "response_id": "resp_02f2d0d47c153a48016ad823f7f9c48191a41b4ea55eb07f09",
+      "input_tokens": 13118,
+      "output_tokens": 5,
+      "total_tokens": 13123,
+      "thread_total_tokens": 26226
+    },
+    {
+      "kind": "task_complete",
+      "last_agent_message": "144"
+    }
+  ]
+}

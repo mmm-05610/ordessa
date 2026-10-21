@@ -28,7 +28,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Sequence
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ConfigurationAdapterDescriptor, FieldClaim, IntentSet, ValueSchema,
     VersionRange,
 )

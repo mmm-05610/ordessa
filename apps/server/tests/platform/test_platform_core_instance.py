@@ -8,7 +8,7 @@ registration path. No model or native process is invoked.
 from __future__ import annotations
 from ordessa_units.errors import UnitAdmissionRefused
 from ordessa_server.composition.runtime import RuntimeCompositionUnavailable
-from ordessa_execution_agents.harness.providers.registry.errors import CatalogIdentityConflict
+from ordessa_agents.harness.providers.registry.errors import CatalogIdentityConflict
 from pacthold.core.registration import RegistrationConflictError
 
 import json
@@ -25,13 +25,13 @@ from ordessa_units.public import (
     AgentContributionSet, DirectoryBindingRef, InvocationCurrentState,
     InvocationGrant, unit_services,
 )
-from ordessa_execution_agents.harness.providers.registry.contributions import (
+from ordessa_agents.harness.providers.registry.contributions import (
     RUNTIME_METHODS, RUNTIME_PROVIDER_VERSION, RuntimeProviderDescriptor,
 )
 from ordessa_units.bindings.assembly import PreparationContext, PreparationObservation
 from ordessa_units.bindings.publication import NodePublicationEvidence, decode_node_ref
 from ordessa_units.lifecycle.service import LifecycleObservation
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     Contribution, ContributionBatch, PACTHOLD_CONTRIBUTIONS_API_VERSION,
     PACTHOLD_CONTRIBUTIONS_POINT_ID, ServerPluginDescriptor, ServerPluginRegistration,
 )

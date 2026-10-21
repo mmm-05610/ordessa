@@ -14,7 +14,7 @@ from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.errors import UnitOperationUnknown
 from ordessa_units.channels.reservations import CapturedInputRef, CapturedInputEvidence, FIRST_SESSION_ATTEMPTS
 from ordessa_units.admission.invocation import InvocationAuthorityRefused, InvocationIssuer
-from ordessa_execution_agents.harness.transport import LaunchSpec, ProcessChannel, RequestTimeout, WriterLeaseRefused, LostReceipt
+from ordessa_agents.harness.transport import LaunchSpec, ProcessChannel, RequestTimeout, WriterLeaseRefused, LostReceipt
 
 
 PEER = '''import sys,json,hashlib

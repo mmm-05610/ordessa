@@ -32,7 +32,7 @@ def main():
         # Source fallback here could hide a broken installer or wrong checkout.
         env.pop('PYTHONPATH',None)
     env['PYTHONNOUSERSITE']='1';env['PYTHONDONTWRITEBYTECODE']='1'
-    command=([sys.executable,'-m','ordessa_agent_tools'] if args.entrypoint=='module'
+    command=([sys.executable,'-m','ordessa_cli'] if args.entrypoint=='module'
              else [str(Path(sys.executable).parent/'ordessa')])
     cases=[]
     def run(name,argv,code=0,stdin=None,exact=None,contains=None,exact_stderr=None):

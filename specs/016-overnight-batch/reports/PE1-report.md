@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | PE1-1 authority 记录模型 | ✅ | `api/src/ordessa_permissions_api/authority.py`:`AuthorityRecord`(13 字段冻结 DTO)、`AuthorityScope/SourceKind/StateKind`、决定性 `authority_id_for`;读既有 `server_approvals` 与 intent 规则,**无平行存储**(store 数不变:server_approvals 加 4 可空列) |
 | PE1-2 查询面 | ✅ | 端口 `permissions.authority.query@1`(api `PermissionsAuthorityQueryPort` 五方法);backend `PermissionsAuthority` 实现;wire 只读方法 `permissions.authority.query`(required 空/optional 6 参数,响应闭形 `{ready,records}`);DTO 全字段冻结见 `reports/PE1-api-requests.md` §3 |
-| PE1-3 接入贡献 | ✅ | `plugin.py` build:`provided_ports={..., AUTHORITY_PORT: authority}` + `ServerMethodDescriptor`(availability 挂真实可读性)——server_plugin_api Contribution 形态,零 core 改动;守卫测试 `test_the_authority_fact_port_is_provided_and_bound_to_the_api_literal` 钉 api/backend 字面量不漂移 |
+| PE1-3 接入贡献 | ✅ | `plugin.py` build:`provided_ports={..., AUTHORITY_PORT: authority}` + `ServerMethodDescriptor`(availability 挂真实可读性)——ordessa_server_plugin_api Contribution 形态,零 core 改动;守卫测试 `test_the_authority_fact_port_is_provided_and_bound_to_the_api_literal` 钉 api/backend 字面量不漂移 |
 | PE1-4 受控测试四态 | ✅ | `backend/tests/test_authority_query.py`:在场(`test_present_*`)/缺席(空元组+None,**断言绝不默认放行**)/过期(出列表,lookup 报 expired)/被撤销(出列表+consume 拒花);另有 consumed 态 |
 | PE1-5 边界测试 | ✅ | 依赖方向门(auto-glob 覆盖新模块,backend 门含禁词文本扫描)全绿;两会话互不串扰 `test_two_sessions_never_see_each_others_authorization`;规则事实永不回答 session 查询(有专门断言) |
 | PE1-6 report+api-requests 回填 | ✅ | 本文件 + `reports/PE1-api-requests.md`(DTO 13 字段全列+失败反例+对 core 的显式请求) |
@@ -90,7 +90,7 @@ core/环境卡点,如实带账。
 
 复用(机制零重造):既有 `server_approvals` 存储(加 4 可空列,零迁移)、
 `PolicyRepository` intents 读取、`wire_family` 既有 code→family 表、
-`server_plugin_api` 端口注册/方法描述符/`WireError`、describe 面的只读纪律模式
+`ordessa_server_plugin_api` 端口注册/方法描述符/`WireError`、describe 面的只读纪律模式
 (availability+闭形响应+码-only 拒绝)、`_store` 事件写入器、backend 测试
 `support.py` 全套真实存储设施、既有依赖方向门(auto-glob 无需改)。
 

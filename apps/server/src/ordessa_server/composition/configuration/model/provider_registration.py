@@ -2,7 +2,7 @@
 from dataclasses import asdict
 from types import SimpleNamespace
 
-from ordessa_execution_agents.harness.configuration.compilation.native_digest import configuration_digest
+from ordessa_agents.harness.configuration.compilation.native_digest import configuration_digest
 from .bindings import model_port
 from ordessa_server.composition.selected_native_configuration import capture_selected_native_model_ports
 from .restoration import _EvidenceCode, ProviderRestorationService, ProviderRestorationOutcome

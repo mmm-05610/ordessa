@@ -11,7 +11,7 @@ class NativeBuild(build_py):
     def run(self):
         super().run()
         root = Path(self.build_lib)
-        pattern = re.compile(r'''(["'])(?:\.\./)+packages/execution/agents/src/ordessa_execution_agents/([^"']+)\1''')
+        pattern = re.compile(r'''(["'])(?:\.\./)+packages/execution/agents/src/ordessa_agents/([^"']+)\1''')
         for module in (root / 'ordessa_harness_pi').rglob('*'):
             if module.suffix not in ('.js', '.mjs'):
                 continue
@@ -19,7 +19,7 @@ class NativeBuild(build_py):
                 relative = Path(match[2])
                 if relative.is_absolute() or '..' in relative.parts:
                     raise ValueError('Invalid native Execution dependency path')
-                target = root / 'ordessa_execution_agents' / relative
+                target = root / 'ordessa_agents' / relative
                 path = os.path.relpath(target, module.parent).replace(os.sep, '/')
                 return match[1] + path + match[1]
             module.write_text(pattern.sub(relocate, module.read_text()))

@@ -31,7 +31,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
     parser.add_argument("template_arguments", nargs=argparse.REMAINDER)
     options = parser.parse_args(arguments)
     from ordessa_server.composition.selected_harness_catalog import capture_selected_harness_catalog
-    from ordessa_execution_agents.harness.providers.declarations.capability_claims import capability_claims
+    from ordessa_agents.harness.providers.declarations.capability_claims import capability_claims
 
     captured = capture_selected_harness_catalog()
     template = importlib.import_module(TEMPLATES[options.brand])

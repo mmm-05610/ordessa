@@ -131,7 +131,7 @@ def bind_unit_manager(inputs: AgentOwnerInputs, *, environment_id, provider_view
     from ordessa_units.records import UnitRecords
     from ordessa_units.management.manager import UnitManager
     from ordessa_units.management.instance import UnitInstance
-    from ordessa_execution_agents.profiles import decode_revision_ref
+    from ordessa_agents.profiles import decode_revision_ref
     from ordessa_infrastructure.encoding.immutable_json import safe_json
     from .invocation import InvocationIssuer, InvocationVerifier
 

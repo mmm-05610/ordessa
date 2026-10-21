@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from decision_runtime.definitions.values import digest
-from decision_runtime.definitions.ports import ReadContext
-from decision_runtime.evidence import EvidenceError, FileEvidenceSink, FileEvidenceReader, MemoryEvidenceSink
+from ordessa_decision.definitions.values import digest
+from ordessa_decision.definitions.ports import ReadContext
+from ordessa_decision.evidence import EvidenceError, FileEvidenceSink, FileEvidenceReader, MemoryEvidenceSink
 
 def run(awaitable): return asyncio.run(awaitable)
 
@@ -134,9 +134,9 @@ def test_t32_corruption_never_success(store, corrupt):
 
 _CHILD = r'''
 import asyncio, os, sys
-from decision_runtime.definitions.ports import ReadContext
-from decision_runtime.definitions.values import digest
-from decision_runtime.evidence import FileEvidenceSink
+from ordessa_decision.definitions.ports import ReadContext
+from ordessa_decision.definitions.values import digest
+from ordessa_decision.evidence import FileEvidenceSink
 root, run_id, window = sys.argv[1:]
 async def main():
     sink = FileEvidenceSink(root, read_context=ReadContext(object(), 'test.scope'))

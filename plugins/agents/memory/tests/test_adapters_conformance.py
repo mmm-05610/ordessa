@@ -15,10 +15,10 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import VersionRange
+from ordessa_agents.harness.definitions import VersionRange
 from ordessa_server.composition.configuration.contributions import HarnessContributionError
 from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
-from server_plugin_api import Contribution, ContributionBatch, stage_contributions
+from ordessa_server_plugin_api import Contribution, ContributionBatch, stage_contributions
 
 from ordessa_memory import bridge, common, facet
 from ordessa_memory.bridge import BridgeMemoryAdapter
@@ -226,7 +226,7 @@ def test_pure_modules_never_import_sibling_plugins_or_host(module):
         stripped = line.strip()
         if stripped.startswith(("import ", "from ")):
             imported = stripped.split()[1]
-            if imported == "ordessa_execution_agents.harness.definitions" or imported.startswith("ordessa_execution_agents.harness.definitions."):
+            if imported == "ordessa_agents.harness.definitions" or imported.startswith("ordessa_agents.harness.definitions."):
                 continue  # 032: the kernel contract edge is the published vocabulary
             root = imported.split(".")[0]
             assert root not in {

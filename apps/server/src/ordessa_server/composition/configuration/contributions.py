@@ -11,12 +11,12 @@ from threading import RLock
 from types import MethodType
 from typing import Any
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ConfigurationAdapterDescriptor, FieldClaim, RuntimeAdapterDescriptor,
     ValueSchema, VersionRange,
 )
-from server_plugin_api import Contribution, ServerContributionHandler
-from ordessa_execution_agents.harness.definitions.contribution_points import (
+from ordessa_server_plugin_api import Contribution, ServerContributionHandler
+from ordessa_agents.harness.definitions.contribution_points import (
     RUNTIME_POINT, CONFIGURATION_POINT, POINT_API_VERSION, HarnessContributionError,
 )
 

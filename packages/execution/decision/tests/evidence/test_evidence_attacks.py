@@ -11,10 +11,10 @@ import uuid
 
 import pytest
 
-from decision_runtime.definitions.values import canonical, digest
-from decision_runtime.evidence.codec import record
-from decision_runtime.definitions.ports import ReadContext
-from decision_runtime.evidence import EvidenceError, FileEvidenceReader, FileEvidenceSink, MemoryEvidenceSink
+from ordessa_decision.definitions.values import canonical, digest
+from ordessa_decision.evidence.codec import record
+from ordessa_decision.definitions.ports import ReadContext
+from ordessa_decision.evidence import EvidenceError, FileEvidenceReader, FileEvidenceSink, MemoryEvidenceSink
 
 
 def run(awaitable):

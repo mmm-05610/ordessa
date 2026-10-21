@@ -1,7 +1,7 @@
 """Finite policy outcomes and genuine new job evidence; no historical rewrite."""
 from itertools import product
 import pytest
-from decision_runtime import check_summary, digest_hex
+from ordessa_decision import check_summary, digest_hex
 from ordessa_engineering.adapters.decision.client import select_review
 from ordessa_engineering.domain.artifacts.library_materials import MaterialRef
 from ordessa_engineering.domain.artifacts.library_material_codec import content_digest

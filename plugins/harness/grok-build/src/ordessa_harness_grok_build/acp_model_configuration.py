@@ -4,7 +4,7 @@ The old AdapterContext/target/intent runtime is retired. Channel executable pins
 are not model-configuration evidence, and no applied/readback result is invented.
 """
 from collections.abc import Mapping
-from ordessa_execution_agents.sdk import HarnessError
+from ordessa_agents.sdk import HarnessError
 from . import acp_model_facts as common
 
 ADAPTER_ID='assets.model-provider.grok-build'

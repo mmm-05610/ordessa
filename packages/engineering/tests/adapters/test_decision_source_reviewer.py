@@ -7,12 +7,12 @@ import json
 from types import SimpleNamespace
 
 import pytest
-from decision_runtime.historical.models import (
+from ordessa_decision.historical.models import (
     BusinessOutcome, DecisionAnswer, DecisionQuestion, DecisionRequest,
     DecisionResult, FlowRef, PolicyRef, RunLimits, RunManifest, TaskBrief,
 )
-from decision_runtime import DecisionAnswer as CurrentAnswer, DecisionQuestion as CurrentQuestion, FilesystemEvidenceStore
-from decision_runtime.evidence import EvidenceScope
+from ordessa_decision import DecisionAnswer as CurrentAnswer, DecisionQuestion as CurrentQuestion, FilesystemEvidenceStore
+from ordessa_decision.evidence import EvidenceScope
 from ordessa_engineering.adapters.decision.source_job import (
     SourceReviewJobServices, SourceReviewRequest, SourceReviewTask,
 )

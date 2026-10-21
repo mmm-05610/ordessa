@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable
 from ordessa_units.bindings.harness_admission import read_harness_definition
 from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     Profile,
     ProfileRevision,
     ProfileRevisionRef,
@@ -17,8 +17,8 @@ from ordessa_execution_agents.profiles import (
     encode_revision,
     encode_revision_ref,
 )
-from ordessa_execution_agents.harness.definitions.runtime_providers import RUNTIME_PROVIDER_VERSION
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.definitions.runtime_providers import RUNTIME_PROVIDER_VERSION
+from ordessa_agents.harness.providers.registry import (
     AdmittedHarnessDefinition,
     HarnessCatalog,
     HarnessDefinitionDescriptor,

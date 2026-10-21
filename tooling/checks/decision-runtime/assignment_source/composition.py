@@ -7,7 +7,7 @@ unsupported dialects/keywords produce named gaps, never a guessed valid schema.
 from collections.abc import Mapping
 from dataclasses import dataclass
 import math
-from decision_runtime.definitions import ProposalCandidateBatch, ProposalDraft, ContractError, freeze, plain
+from ordessa_decision.definitions import ProposalCandidateBatch, ProposalDraft, ContractError, freeze, plain
 
 DIALECT = 'https://json-schema.org/draft/2020-12/schema'
 MAX_SCHEMA_DEPTH = 32

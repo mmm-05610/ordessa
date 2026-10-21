@@ -2,22 +2,22 @@
 
 Since `harness-api` was published at the historical checkpoint
 `codex/011-harness-api-ready` (SR-1b), this module is a *producer* layer over
-`ordessa_execution_agents.harness.definitions`, not a
+`ordessa_agents.harness.definitions`, not a
 parallel vocabulary:
 
 * `assess(context, request)` returns the real
-  :class:`ordessa_execution_agents.harness.definitions.Assessment`; the per-pin, per-cell honesty
+  :class:`ordessa_agents.harness.definitions.Assessment`; the per-pin, per-cell honesty
   record (capability-matrix.md) survives as the INTERNAL
   :class:`Assessment`/`CellVerdict` shape behind :meth:`assess_detail`, so
   `supported` can never be claimed without proof even though the contract
   itself would allow an evidence-less `supported` (gap reported);
 * `compile(context, collection, source)` returns the real
-  :class:`ordessa_execution_agents.harness.definitions.IntentSet` built by
+  :class:`ordessa_agents.harness.definitions.IntentSet` built by
   :func:`~.intents.compile_all` — the target is the server-issued
   `TargetHandle` inside the injected `AdapterContext`, the ownership is the
   host-injected `IntentSource`; there is no `TargetSlot` any more;
 * `verify(context, observed)` returns the real
-  :class:`ordessa_execution_agents.harness.definitions.Verification` (`Match` / `Mismatch` /
+  :class:`ordessa_agents.harness.definitions.Verification` (`Match` / `Mismatch` /
   `VerificationUnknown`). The observation state machine — a materialised
   file can never yield `loaded` (G11/G12) — still decides: `Match` requires
   a loader-class observation, so the ladder is preserved and the protocol
@@ -39,7 +39,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, ClassVar, Mapping, Sequence, Union
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, AdapterRefusal, Assessment as RealAssessment,
     ConfigurationAdapterDescriptor, ErrorCode, FieldClaim, IntentSet,
     IntentSource, Match, Mismatch, TargetDescriptor as RealTargetDescriptor,
@@ -166,7 +166,7 @@ class Assessment:
     """The internal, per-pin detail record; `to_real` yields the contract DTO.
 
     The contract would let `Assessment("supported")` stand with no evidence
-    at all (`packages/execution/agents/src/ordessa_execution_agents/harness/definitions/contracts.py:191-206` only requires a
+    at all (`packages/execution/agents/src/ordessa_agents/harness/definitions/contracts.py:191-206` only requires a
     *reason* for the negative states) — Q3 keeps its stricter constructor
     rule so `supported` can never be claimed without proof (SR-1b(c) answer
     plus a reported gap asking C0 to make evidence mandatory).

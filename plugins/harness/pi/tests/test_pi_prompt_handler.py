@@ -1,7 +1,7 @@
 """pi-rpc/1 prompt handler: encode, settle observation, abort."""
 import json
 
-from ordessa_execution_agents.sdk.native_prompt import observe_native_prompt
+from ordessa_agents.sdk.native_prompt import observe_native_prompt
 from ordessa_harness_pi.provider import PiPromptHandler
 
 SESSION = 'sess-1'

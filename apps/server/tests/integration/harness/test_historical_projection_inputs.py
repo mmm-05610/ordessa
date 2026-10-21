@@ -4,13 +4,13 @@ import json
 from types import SimpleNamespace
 
 import pytest
-from ordessa_execution_agents.profiles import exact_historical_envelope
+from ordessa_agents.profiles import exact_historical_envelope
 from ordessa_server.bootstrap.migrations.harness_profile_projection import HistoricalHarnessRef, HistoricalProfileView
 from ordessa_harness_claude_code.profile import ClaudeProfileRef, ClaudeProjection
 from ordessa_harness_hermes.projection import HermesProjection
 from ordessa_harness_opencode.profiles import OpenCodeProfileRef
 from ordessa_harness_opencode.projection import OpenCodeProjector
-from ordessa_execution_agents.harness.definitions import NativeProfileRef
+from ordessa_agents.harness.definitions import NativeProfileRef
 
 
 def _view(harness_type, native, *, disabled=False):

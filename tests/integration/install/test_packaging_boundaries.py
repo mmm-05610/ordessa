@@ -26,8 +26,8 @@ import pytest
 PLUGIN = Path(__file__).resolve().parents[3] / "plugins" / "harness"
 REPO = Path(__file__).resolve().parents[3]
 RUNTIME = REPO / "apps/server/src/ordessa_server/composition/native_channels"
-BRIDGE = REPO / "packages/execution/agents/src/ordessa_execution_agents/harness/transport/vendor/harness_remote/bridge"
-SRC = Path(__file__).resolve().parents[3] / 'packages/execution/agents' / "src" / "ordessa_execution_agents" / "harness"
+BRIDGE = REPO / "packages/execution/agents/src/ordessa_agents/harness/transport/vendor/harness_remote/bridge"
+SRC = Path(__file__).resolve().parents[3] / 'packages/execution/agents' / "src" / "ordessa_agents" / "harness"
 def _brand_tooling(brand: str) -> Path:
     return PLUGIN / brand / "tooling"
 BUILDERS = PLUGIN

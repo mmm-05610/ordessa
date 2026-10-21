@@ -27,8 +27,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Sequence
 
-from ordessa_execution_agents.harness.definitions.contracts import Assessment, Verification
-from ordessa_execution_agents.harness.definitions.intents import TargetHandle
+from ordessa_agents.harness.definitions.contracts import Assessment, Verification
+from ordessa_agents.harness.definitions.intents import TargetHandle
 from ordessa_sandbox_api import (
     NativeSandboxIntent,
     PlatformFacts,

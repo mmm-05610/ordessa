@@ -1,6 +1,6 @@
 import dataclasses
 import pytest
-from decision_runtime.definitions import *
+from ordessa_decision.definitions import *
 
 def ref(ns='local'): return ExternalRef(ns,{'id':'same','revision':'1'})
 def proposal():

@@ -8,7 +8,7 @@
   "dependsOn": {},
   "publicExports": [
     "packages/pacthold/src/pacthold/public — Core, CoreStore, resource/execution contracts; no plugin import",
-    "packages/server-plugin-api/src/server_plugin_api — ContributionPointSpec, owned carrier registration and lifecycle contracts",
+    "packages/server-plugin-api/src/ordessa_server_plugin_api — ContributionPointSpec, owned carrier registration and lifecycle contracts",
     "apps/server/src/ordessa_server/bootstrap — build_runtime and typed product/storage/historical-provider refusals",
     "products/server/src/ordessa_server_product — selected default composition, public server_contribution_points and database_type",
     "packages/desktop-platform/* — extension contracts/host/loader/native bridge; C7/C8 integrated",

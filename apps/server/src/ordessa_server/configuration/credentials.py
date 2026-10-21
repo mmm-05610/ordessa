@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 from ordessa_infrastructure.identifiers import now
 from ordessa_interfaces.system_access.contracts.storage import DatabasePort
 

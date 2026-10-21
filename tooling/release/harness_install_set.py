@@ -69,7 +69,7 @@ def moduleattr(module, *names, default=None):
 
 
 def verify_artifact_tree(path: Path) -> str:
-    from ordessa_execution_agents.harness.providers.resolution.artifacts.tree_identity import (runtime_artifact_tree_digest)
+    from ordessa_agents.harness.providers.resolution.artifacts.tree_identity import (runtime_artifact_tree_digest)
 
     return runtime_artifact_tree_digest(path)
 
@@ -175,7 +175,7 @@ def adapter_summary(module):
 
 def source_build_files(source_root: Path, owner_id: str, *, requires_npm: bool):
     """Explicit source-workflow context, not a provider installation directory."""
-    from ordessa_execution_agents.harness.providers.declarations.installation_recipe import BuildRecipeFiles
+    from ordessa_agents.harness.providers.declarations.installation_recipe import BuildRecipeFiles
     if not isinstance(source_root, Path) or not source_root.is_absolute():
         raise ValueError("INSTALLATION_BUILD_PATH_INVALID")
     if not isinstance(owner_id, str) or not re.fullmatch(r"[a-z][a-z0-9-]{0,127}", owner_id):

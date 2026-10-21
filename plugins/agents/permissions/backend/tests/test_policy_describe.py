@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 
 import pytest
-from server_plugin_api import (ACP_ADMISSION_PORT, ServerPluginContext,
+from ordessa_server_plugin_api import (ACP_ADMISSION_PORT, ServerPluginContext,
                                ServerMethodDescriptor)
 from support import admin_ceiling, seeded_database, seed_session, run_start_hooks
 
@@ -282,7 +282,7 @@ def test_undeclared_stored_fields_cannot_smuggle_keys(tmp_path):
 
 def test_host_refuses_unknown_request_param(tmp_path):
     from ordessa_server.composition.plugin_host.host import MethodRegistry
-    from server_plugin_api.wire_errors import WireError as HostWireError
+    from ordessa_server_plugin_api.wire_errors import WireError as HostWireError
     from ordessa_interfaces.system_access.services.invocation import WireService
 
     _, registration = build(tmp_path=tmp_path)
@@ -338,7 +338,7 @@ def test_scope_filters_entries_and_principal_is_inert(tmp_path):
     # answer and never changes it (it attributes nothing here).
     assert call(registration, {"principal": "someone"}) == full
 
-    from server_plugin_api import WireError
+    from ordessa_server_plugin_api import WireError
     with pytest.raises(WireError):
         call(registration, {"scope": "banana"})
     with pytest.raises(WireError):

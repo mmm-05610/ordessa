@@ -78,14 +78,14 @@ from __future__ import annotations
 import dataclasses
 
 import pytest
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, Assessment, BindSecret, ConfigurationAdapterDescriptor,
     ContractError, FieldClaim, Installation, Intent, IntentSet, IntentSource,
     Match, MountContent, RemoveOwnedContent, ResetField, SetField,
     TargetDescriptor, TargetHandle, ValueSchema, VersionRange, closed_object,
     validate_json,
 )
-from ordessa_execution_agents.harness.definitions.schema import looks_secret_name
+from ordessa_agents.harness.definitions.schema import looks_secret_name
 
 from ordessa_assets_subagents import dto, errors
 from ordessa_assets_subagents.adapters import claude, intents
@@ -234,7 +234,7 @@ def test_sealed_json_validators_are_the_real_gate():
     with pytest.raises(ContractError):
         validate_json({"api_key": "x"})
     with pytest.raises(ContractError):
-        SetField(SOURCE, HANDLE, __import__("ordessa_execution_agents.harness.definitions", fromlist=["_"]).FieldPath(("token",)),
+        SetField(SOURCE, HANDLE, __import__("ordessa_agents.harness.definitions", fromlist=["_"]).FieldPath(("token",)),
                  "abc")
     closed = closed_object(model=ValueSchema("string"))
     with pytest.raises(ContractError):

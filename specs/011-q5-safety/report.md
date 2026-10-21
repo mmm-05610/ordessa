@@ -91,7 +91,7 @@ apps/server                                                                 -> 4
    42 个 FAILED ID 与 25 个 ERROR ID 与消费后冻结账本逐 ID diff 为空
 ```
 
-新增能力：`PermissionsAcpAdmission`（中立 port `acp.admission.gate` 的 Q5 侧适配；accepted 只在 grant 绑定同一 operation digest/target/ceiling+policy revision/native generation 时给出，其余 refused/unknown，`ready` 由「装了 authority + 有权威 native session/generation」推导）、`migration.py`（旧 Profile 规则版本化导入为用户意图，不等价项标 `needsReview` 且不进意图、绝不自动 allow）、sandbox C3 真实意图产出（`SetField/ResetField/InvokeAction/IntentSet`）、两域拒绝码到既有 `server_plugin_api.FAMILIES` 的映射、Permissions「权限与审批」Settings 区与品牌模式入口的拒绝路径。
+新增能力：`PermissionsAcpAdmission`（中立 port `acp.admission.gate` 的 Q5 侧适配；accepted 只在 grant 绑定同一 operation digest/target/ceiling+policy revision/native generation 时给出，其余 refused/unknown，`ready` 由「装了 authority + 有权威 native session/generation」推导）、`migration.py`（旧 Profile 规则版本化导入为用户意图，不等价项标 `needsReview` 且不进意图、绝不自动 allow）、sandbox C3 真实意图产出（`SetField/ResetField/InvokeAction/IntentSet`）、两域拒绝码到既有 `ordessa_server_plugin_api.FAMILIES` 的映射、Permissions「权限与审批」Settings 区与品牌模式入口的拒绝路径。
 
 检查点修订：新记录 `specs/011-plugin-rollout/checkpoints/permissions-api-r3.json`，分支 `codex/011-permissions-api-ready-r3`，implementationSha `6ac8f54a14ba2299cec8e34ede95e7b637168aff`；r1/r2 记录与分支不改写，兼容关系写在各自 `supersedes`。
 

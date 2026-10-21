@@ -12,4 +12,4 @@
 
 ## 三、结论
 
-**有保留** —— 诚实性与边界纪律合格（纯内存、无 HOME/网络/进程写入，diff 可见部分全部落在 `plugins/assets/extensions/` 内，未越界写其它包），但 `verify()` 的可伪造 Match 与 `compile()` 永久拒绝的任务一致性需先澄清；截断尾部的 wire/plugin/security 测试无法核验，`ordessa-harness-api`/`server_plugin_api` 形状（`ValueSchema`/`ContributionBatch` 等）只能靠被截断的测试背书，建议跑全量测试后再定稿。
+**有保留** —— 诚实性与边界纪律合格（纯内存、无 HOME/网络/进程写入，diff 可见部分全部落在 `plugins/assets/extensions/` 内，未越界写其它包），但 `verify()` 的可伪造 Match 与 `compile()` 永久拒绝的任务一致性需先澄清；截断尾部的 wire/plugin/security 测试无法核验，`ordessa-harness-api`/`ordessa_server_plugin_api` 形状（`ValueSchema`/`ContributionBatch` 等）只能靠被截断的测试背书，建议跑全量测试后再定稿。

@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier, Event
 
 import pytest
-from ordessa_execution_agents.harness.transport import (PreparedFrame, PreparedFramePool, PreparedFrameRefused,
+from ordessa_agents.harness.transport import (PreparedFrame, PreparedFramePool, PreparedFrameRefused,
     native_frame_bytes, ProcessChannel, LaunchSpec, ChannelClosed, FramingError, RequestTimeout, WriterLeaseRefused)
 
 

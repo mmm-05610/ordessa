@@ -28,14 +28,14 @@ from ordessa_server.composition.configuration.contributions import CONFIGURATION
 from ordessa_server.composition.configuration.contributions import HarnessContributionError
 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
 from ordessa_units.records.operation_journal import OperationJournal
-from ordessa_execution_agents.harness.contracts.models.application import RuntimeSnapshot
-from ordessa_execution_agents.harness.configuration.materialization import MergeAuthority
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.contracts.models.application import RuntimeSnapshot
+from ordessa_agents.harness.configuration.materialization import MergeAuthority
+from ordessa_agents.harness.definitions import (
     AdapterContext, AdapterRefusal, ApplicationTarget, Assessment, ErrorCode, Installation,
     TargetDescriptor, TargetHandle, VerificationUnknown,
 )
 from _sandbox_adapters_helpers import build_controlled_server_runtime
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     Contribution,
     ContributionBatch,
     ContributionOwnerBusyError,
@@ -196,7 +196,7 @@ def test_callable_c2_accepts_shape_but_refuses_effect_without_sandbox_facts():
 def test_failed_round_publishes_nothing(tmp_path):
     """Two sandbox descriptors whose claims collide stage in one batch: the
     platform refuses the pair and the real host publishes NOTHING."""
-    from ordessa_execution_agents.harness.definitions import FieldClaim, ValueSchema, VersionRange
+    from ordessa_agents.harness.definitions import FieldClaim, ValueSchema, VersionRange
     twin = CODEX_DESCRIPTOR.__class__(
         "sandbox.codex.twin", "v1", "sandbox.native-configuration", "1", "codex",
         CODEX_DESCRIPTOR.native_versions, CODEX_DESCRIPTOR.adapter_versions,

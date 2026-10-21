@@ -10,7 +10,7 @@ from collections.abc import Mapping
 
 from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
 from ordessa_units.errors import UnitApiRefused, UnitIdentityMismatch, UnitGuaranteeUnavailable
 from .contracts import WorkspaceExecutionEvidence
 from .reservations import CapturedInputRef

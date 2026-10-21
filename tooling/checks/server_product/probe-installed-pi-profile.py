@@ -13,7 +13,7 @@ import tempfile
 import argparse
 
 from ordessa_server.composition.configuration.product_selection import create_host_product_composition as create_composition
-from ordessa_execution_agents.harness.definitions import ApplicationTarget
+from ordessa_agents.harness.definitions import ApplicationTarget
 
 
 def probe(artifact_root="/opt/ordessa/harnesses/artifacts", *, apply_profile=False):

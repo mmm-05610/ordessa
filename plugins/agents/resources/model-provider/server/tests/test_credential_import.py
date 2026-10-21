@@ -6,7 +6,7 @@ from uuid import uuid4
 import sqlite3
 
 import pytest
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 from ordessa_server.configuration.credentials import CredentialRecords
 from ordessa_server.composition.plugin_host.host import ServerPluginHost
 from ordessa_interfaces.system_access.services.invocation import WireService
@@ -229,7 +229,7 @@ def test_malformed_store_shape_has_no_inferred_locator_cleanup(rig):
 
 def test_wire_saved_protocol_endpoint_credential_choice_resolves_and_omission_preserves(rig):
     from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
-    from ordessa_execution_agents.harness.configuration.compilation.model_choice import choice_payload_schema
+    from ordessa_agents.harness.configuration.compilation.model_choice import choice_payload_schema
     imported = import_key(rig)
     body = dict(requestId='request-save-01', **wire_body(harness='codex', credentialId=imported['credentialId'], configuration=[],
         protocols=['openai-responses'], endpoints={'openai-responses': 'http://127.0.0.1:9/v1'}))

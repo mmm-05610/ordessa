@@ -8,7 +8,7 @@ identity rules require (`api/identity.py`, `assignments/model.py`).
 
 Refusal vocabulary: validators raise the domain's `AssetDomainError` with
 code ``INVALID_REQUEST``; the wire boundary converts every domain refusal
-into the published internal error (`server_plugin_api.ServerError`, see
+into the published internal error (`ordessa_server_plugin_api.ServerError`, see
 `error_families.to_server_error`) and the host's dispatch projects it onto
 the wire family through THIS composition's `wire.error-families`
 contribution (`error_families.SKILLS_ERROR_FAMILIES`, carried by the
@@ -33,7 +33,7 @@ import binascii
 import re
 from typing import Any, Callable, Mapping
 
-from server_plugin_api import ServerMethodDescriptor
+from ordessa_server_plugin_api import ServerMethodDescriptor
 
 from .api.errors import AssetDomainError
 from .api.identity import ASSET_ID
@@ -150,7 +150,7 @@ def _supported() -> "tuple[bool, str | None]":
 
 
 def _native_unknown() -> "tuple[bool, str | None]":
-    #: Re-evaluated against the merged harness-api (`ordessa_execution_agents.harness.definitions`,
+    #: Re-evaluated against the merged harness-api (`ordessa_agents.harness.definitions`,
     #: publication `d3f026904e`): the API publishes the APPLY side
     #: (adapter compile/verify, ConfigurationService, target handles handed
     #: to the adapter at apply time) but NO plugin-queryable read handle or
@@ -334,7 +334,7 @@ def build_methods(service: SkillsService, *, owner: str) -> tuple[ServerMethodDe
 
         The domain keeps raising `AssetDomainError` (its stores and the
         resolver refuse in their own vocabulary); at the wire edge the
-        refusal is projected onto `server_plugin_api.ServerError`, so the
+        refusal is projected onto `ordessa_server_plugin_api.ServerError`, so the
         host dispatch resolves its family through this composition's
         contributed `wire.error-families` rows instead of flattening the
         exception into the generic class-name fall-through. The original

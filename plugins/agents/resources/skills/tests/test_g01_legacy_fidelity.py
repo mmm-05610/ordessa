@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_execution_agents.harness.providers.resolution.artifacts.tree_identity import (runtime_artifact_tree_digest)
+from ordessa_agents.harness.providers.resolution.artifacts.tree_identity import (runtime_artifact_tree_digest)
 
 from ordessa_skills.api import evidence
 from ordessa_skills.api.errors import (
@@ -163,7 +163,7 @@ def test_retired_profile_registration_port_is_absent():
     # and observed for load evidence — now lives on the PUBLISHED types,
     # checked here so the legacy semantics did not silently vanish:
     import inspect
-    from ordessa_execution_agents.harness.definitions import (
+    from ordessa_agents.harness.definitions import (
         ConfigurationAdapter, ConfigurationCapabilities, ConfigurationService,
     )
     adapter_methods = {name for name, _

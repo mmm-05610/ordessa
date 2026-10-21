@@ -4,8 +4,8 @@ from __future__ import annotations
 import json
 import pytest
 
-from server_plugin_api import AcpAdmissionResult, ServerPluginContext
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import AcpAdmissionResult, ServerPluginContext
+from ordessa_server_plugin_api import WireError
 
 from ordessa_server.composition.native_channels.plugin import AcpChannelServerPlugin
 from ordessa_server.composition.native_channels.plugin import PLUGIN_ID

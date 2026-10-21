@@ -8,12 +8,12 @@ from pathlib import Path
 from copy import deepcopy
 from uuid import uuid4
 
-from ordessa_execution_agents.harness.definitions import ActionDescriptor, Installation, ValueSchema
-from ordessa_execution_agents.harness.contracts.models.application import NativeReadback, RuntimeSnapshot
-from ordessa_execution_agents.harness.configuration.materialization import MergeAuthority
+from ordessa_agents.harness.definitions import ActionDescriptor, Installation, ValueSchema
+from ordessa_agents.harness.contracts.models.application import NativeReadback, RuntimeSnapshot
+from ordessa_agents.harness.configuration.materialization import MergeAuthority
 from ordessa_server.composition.native_channels.action_factories import create_native_action_executor
-from ordessa_execution_agents.harness.configuration.compilation.native_digest import configuration_digest
-from ordessa_execution_agents.harness.configuration.compilation.native_context import NativeLiveModelContext
+from ordessa_agents.harness.configuration.compilation.native_digest import configuration_digest
+from ordessa_agents.harness.configuration.compilation.native_context import NativeLiveModelContext
 
 
 INPUT = ValueSchema("object", properties=(("configId", ValueSchema("string", enum=("model",))),

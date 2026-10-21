@@ -40,7 +40,7 @@ class ForbiddenImportError(ImportError):
 FORBIDDEN = (
     'pacthold.agents',
     'apps', 'products',
-    'ordessa_server', 'ordessa_server_product', 'ordessa_agent_tools',
+    'ordessa_server', 'ordessa_server_product', 'ordessa_cli',
     'ordessa_harness_claude_code', 'ordessa_harness_codex',
     'ordessa_harness_copilot', 'ordessa_harness_dsh',
     'ordessa_harness_gemini_cli', 'ordessa_harness_goose',
@@ -67,10 +67,10 @@ boundary = ImportBoundary()
 sys.meta_path.insert(0, boundary)
 
 import ordessa_units.public as public
-from ordessa_execution_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor
-from ordessa_execution_agents.harness.definitions.configuration_providers import ConfigurationProviderDescriptor
+from ordessa_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor
+from ordessa_agents.harness.definitions.configuration_providers import ConfigurationProviderDescriptor
 
-expected_public = ROOT / 'packages/execution/agents/src/ordessa_execution_agents/public.py'
+expected_public = ROOT / 'packages/execution/agents/src/ordessa_agents/public.py'
 assert Path(public.__file__).resolve() == expected_public.resolve()
 assert public.RuntimeProviderDescriptor is RuntimeProviderDescriptor
 assert public.ConfigurationProviderDescriptor is ConfigurationProviderDescriptor
@@ -101,7 +101,7 @@ else:
 # ordinary missing-module ImportError cannot make the boundary test pass.
 for name in ('pacthold.agents', 'pacthold.agents.public',
              'pacthold.agents.schema', 'pacthold.agents.managed_input',
-             'ordessa_server', 'ordessa_server_product', 'ordessa_agent_tools',
+             'ordessa_server', 'ordessa_server_product', 'ordessa_cli',
              'ordessa_harness_codex', 'ordessa_harness_pi'):
     try:
         importlib.import_module(name)

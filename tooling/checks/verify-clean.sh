@@ -179,7 +179,7 @@ export ORDESSA_TEST_PYTHON="$SCRATCH/venv/bin/python"
 critical npm_ci npm ci --no-audit --no-fund || { record "DEPENDENT GATES NOT_RUN"; exit 1; }
 critical connector_npm_ci npm --prefix tests/integration/acp-connector ci --no-audit --no-fund || { record "DEPENDENT GATES NOT_RUN"; exit 1; }
 
-gate current_owner_imports python -c 'import server_plugin_api, ordessa_units, ordessa_units.persistence.sqlite, ordessa_environments, ordessa_execution_agents, ordessa_execution_agents.harness.definitions, ordessa_execution_agents.profiles.management, ordessa_interfaces, ordessa_infrastructure, ordessa_server, ordessa_server.bootstrap.storage.product_database, ordessa_server.bootstrap.migrations.legacy_source, ordessa_server_product, ordessa_harness_hermes'
+gate current_owner_imports python -c 'import ordessa_server_plugin_api, ordessa_units, ordessa_units.persistence.sqlite, ordessa_environments, ordessa_agents, ordessa_agents.harness.definitions, ordessa_agents.profiles.management, ordessa_interfaces, ordessa_infrastructure, ordessa_server, ordessa_server.bootstrap.storage.product_database, ordessa_server.bootstrap.migrations.legacy_source, ordessa_server_product, ordessa_harness_hermes'
 gate starlette_version python -c 'import starlette; assert starlette.__version__ == "1.7.0", starlette.__version__'
 gate typecheck npm run typecheck
 gate acp_connector_rig env ORDESSA_VITEST_CASE_LEDGER="$RUN_DIR/acp-connector.case.json" npx vitest run --root tests/integration/acp-connector --reporter=default --reporter="$SNAPSHOT/tooling/checks/vitest_case_ledger_reporter.mjs"

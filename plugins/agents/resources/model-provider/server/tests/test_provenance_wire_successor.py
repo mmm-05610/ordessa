@@ -8,7 +8,7 @@ server-compat surface.
 from __future__ import annotations
 
 import pytest
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 from ordessa_model_provider.plugin import PLUGIN_ID, ModelProviderPlugin
 from ordessa_model_provider.testing import wire_body

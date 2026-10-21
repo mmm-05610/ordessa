@@ -4,10 +4,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from ordessa_execution_agents.sdk.manager import ManagerRefused
+from ordessa_agents.sdk.manager import ManagerRefused
+from ordessa_environments import EnvironmentRefused,ProcessRequest
 from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority,AccessGrant
-from ordessa_agent_tools.composition.endpoints import EnvironmentEndpointResolver
+from ordessa_agents.bridges.environment_endpoints import EnvironmentEndpointResolver
 from test_agent_guarded_bootstrap import setup
 
 
@@ -47,7 +48,8 @@ def test_actual_credential_rotation_refuses_old_cut_and_allows_new_same_owner(tm
             def environment_caller(invocation):
                 original_caller(invocation)
                 return case.fixture.invocation  # SAME existing owner/capabilities
-            case.manager.resolver=EnvironmentEndpointResolver(case.fixture._endpoints,invocation_resolver=environment_caller)
+            case.manager.resolver=EnvironmentEndpointResolver(case.fixture._endpoints,invocation_resolver=environment_caller,
+                process_request_factory=ProcessRequest.build,refusal=EnvironmentRefused)
             raw=next(iter(case.fixture._manager._owned_process_handles.values()))._target
             original=raw.popen.terminate
             def terminate():signals.append('signal');return original()

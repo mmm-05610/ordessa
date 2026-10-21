@@ -5,7 +5,7 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ContributionDeclarationError, ContributionPointSpec,
     ServerContributionHandler, unique_contribution_point_specs,
 )

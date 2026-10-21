@@ -15,8 +15,11 @@ import tomllib
 
 
 def _safe_directory(project_dir: Path, root: Path, value: str, label: str) -> Path:
+    # A distribution may source packages from a sibling tree inside the same
+    # checkout (one distribution, several plugin packages); the containment
+    # check below is the security boundary, so `..` itself is allowed.
     relative = Path(value)
-    if relative.is_absolute() or ".." in relative.parts:
+    if relative.is_absolute():
         raise ValueError(f"unsafe {label}: {value}")
     candidate = project_dir / relative
     resolved = candidate.resolve()
@@ -51,10 +54,12 @@ def _package_source_paths(project_dir: Path, root: Path, metadata: dict) -> list
             raise ValueError(f"invalid setuptools packages.find.where: {project_dir}")
         roots.extend(_safe_directory(project_dir, root, value, "package source") for value in where)
     elif isinstance(packages, list):
-        if not packages or not all(
-            isinstance(name, str) and _valid_package_name(name) for name in packages
-        ):
+        if not all(isinstance(name, str) and _valid_package_name(name) for name in packages):
             raise ValueError(f"invalid explicit setuptools packages list: {project_dir}")
+        if not packages:
+            # A metapackage ships no importable package; it only declares the
+            # lower closure. No source root is derived for it.
+            return []
         mappings = sorted(package_dir, key=lambda key: (key.count("."), len(key)), reverse=True)
         for name in packages:
             matches = [key for key in mappings if key == "" or name == key or name.startswith(key + ".")]
@@ -185,9 +190,24 @@ def main() -> int:
     else:
         print(f"Validated {len(directories)} same-source Python distributions", flush=True)
     if args.install:
-        command = [sys.executable, "-m", "pip", "install", "--disable-pip-version-check",
-                   "--no-deps", "--no-build-isolation"]
+        # A distribution whose packages span several source roots cannot be
+        # represented by an editable install: setuptools' editable finder maps
+        # each listed package, but only one root answers for the parent package,
+        # so sibling roots become invisible at import time. Those distributions
+        # are installed as wheels (non-editable); single-root ones stay editable
+        # so ordinary source edits keep taking effect without reinstalling.
+        editable: list[Path] = []
+        wheels: list[Path] = []
         for directory in directories:
+            metadata = tomllib.loads((directory / "pyproject.toml").read_text())
+            roots_for_project = _package_source_paths(directory, args.root.resolve(), metadata)
+            # Only a single-root distribution keeps an editable install; multi-root
+            # layouts and no-code metapackages are installed as wheels.
+            (editable if len(roots_for_project) == 1 else wheels).append(directory)
+        base = [sys.executable, "-m", "pip", "install", "--disable-pip-version-check",
+                "--no-deps", "--no-build-isolation"]
+        command = base + [str(directory) for directory in wheels]
+        for directory in editable:
             command.extend(["-e", str(directory)])
         return subprocess.call(command)
     return 0

@@ -167,7 +167,7 @@
 包级测试现在全绿，但绿的原因里混进两处未闭合项，先记下来再处理：
 
 1. **`pyproject.toml` 仍写 `dependencies = []`**，而 `src/**` 实际导入
-   `ordessa_harness_api`、`ordessa_permissions_api`、`server_plugin_api`
+   `ordessa_harness_api`、`ordessa_permissions_api`、`ordessa_server_plugin_api`
    （以及下面第 2 条那个不该存在的 backend 导入）。守卫放宽了白名单却没有同步声明依赖，
    后果是"独立安装"与隔离环境（G21）会拿到一个装不起来就跑不通的包——
    这是声明层缺失，不是测试层能掩盖的。须补：

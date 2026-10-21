@@ -5,7 +5,7 @@ from dataclasses import replace
 from types import SimpleNamespace
 import pytest
 from test_agent_guarded_bootstrap import setup
-from ordessa_execution_agents.public import InteractionService
+from ordessa_agents.public import InteractionService
 from ordessa_engineering.adapters.native_records.agent_selection import OriginalAgentDispatchSelection
 from ordessa_engineering.application.contracts.errors import ApplicationError
 

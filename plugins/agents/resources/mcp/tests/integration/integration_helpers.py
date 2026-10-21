@@ -62,22 +62,22 @@ import ordessa_permissions_backend as q5_backend           # noqa: E402
 import support                                             # noqa: E402 (real Q5 DB helpers)
 
 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
-from ordessa_execution_agents.harness.contracts.models.application import NativeReadback
+from ordessa_agents.harness.contracts.models.application import NativeReadback
 from ordessa_units.records.operation_journal import OperationJournal
-from ordessa_execution_agents.harness.contracts.models.application import RuntimeSnapshot
+from ordessa_agents.harness.contracts.models.application import RuntimeSnapshot
 from ordessa_server.composition.configuration.contributions import CONFIGURATION_POINT
 from ordessa_server.composition.configuration.contributions import POINT_API_VERSION
 from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
-from ordessa_execution_agents.harness.configuration.materialization import (               # noqa: E402
+from ordessa_agents.harness.configuration.materialization import (               # noqa: E402
     MergeAuthority, TargetAuthority,
 )
-from ordessa_execution_agents.harness.definitions import (                          # noqa: E402
+from ordessa_agents.harness.definitions import (                          # noqa: E402
     AdapterContext, ApplicationTarget, Assessment, Installation,
     TargetDescriptor, TargetHandle,
 )
 from ordessa_server.composition.plugin_host import MethodRegistry, ServerPluginHost  # noqa: E402
 from ordessa_interfaces.system_access.services.invocation import WireService       # noqa: E402
-from server_plugin_api import WireError                    # noqa: E402
+from ordessa_server_plugin_api import WireError                    # noqa: E402
 
 import native_helpers as nh                                # noqa: E402
 import wiring_helpers as wh                                # noqa: E402

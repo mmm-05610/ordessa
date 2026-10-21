@@ -19,7 +19,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     AbsentContribution,
     CleanupError,
     ContributionBatchCleanupError,

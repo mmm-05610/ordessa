@@ -63,7 +63,7 @@ def test_current_plan_refuses_source_or_foreign_facts_drift(mutation):
     if mutation == 'source-content':
         inputs['facts']['engineering']['adapters/decision/source_job.py'] = 'sha256:'+'0'*64
     elif mutation == 'source-omission':
-        del inputs['facts']['decision_runtime']['historical/reader.py']
+        del inputs['facts']['ordessa_decision']['historical/reader.py']
     elif mutation == 'dependency':
         inputs['facts']['jsonschema_version'] = '4.19.2'
     elif mutation == 'contract':

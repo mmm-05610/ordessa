@@ -7,7 +7,7 @@ import hashlib
 
 import pytest
 
-from decision_runtime.definitions import PolicyRef, digest
+from ordessa_decision.definitions import PolicyRef, digest
 from ordessa_engineering.adapters.persistence.sqlite.blob_store import SQLiteBlobStore
 from ordessa_engineering.adapters.persistence.sqlite.engineering_library import EngineeringLibrary
 from ordessa_engineering.adapters.persistence.sqlite.snapshot_store import SQLiteSnapshotStore

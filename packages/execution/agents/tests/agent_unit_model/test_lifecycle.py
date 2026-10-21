@@ -22,7 +22,7 @@ from agent_tools_fixtures.assembly import (
     PreparationObservation, SqliteStorePort, ProtectedFingerprintHmac,
     UsageMutation, operation_holder, decode_node_ref, Provider, ContextOwner, Owner,
 )
-from ordessa_execution_agents.harness.definitions.runtime_providers import RUNTIME_METHODS, RUNTIME_PROVIDER_VERSION, RuntimeProviderDescriptor
+from ordessa_agents.harness.definitions.runtime_providers import RUNTIME_METHODS, RUNTIME_PROVIDER_VERSION, RuntimeProviderDescriptor
 from ordessa_units.lifecycle.service import AgentLifecycle, LifecycleObservation
 
 
@@ -217,7 +217,7 @@ def test_lifecycle_requires_composed_authorities(lifecycle):
 
 
 def test_draining_exact_owner_can_stop_release_then_retire_without_new_admission(lifecycle):
-    from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
+    from ordessa_agents.harness.definitions.activation import HarnessActivationRef
     from ordessa_units.definitions.operations import node_holder
     from ordessa_units.errors import UnitAdmissionRefused
     coordinator, owner, provider, node_ref, node, env, store, request, pin, current = lifecycle

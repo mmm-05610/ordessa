@@ -1,6 +1,6 @@
 """Pure proposal validation and local noDelegation rule receipts."""
 from datetime import datetime, timezone
-from decision_runtime.definitions import (
+from ordessa_decision.definitions import (
     ProposalDraft, ValidationObligation, ObligationResult, ValidationReceipt,
     ExternalRef, Precondition, BusinessOutcome, validate_ready, digest, ContractError,
 )

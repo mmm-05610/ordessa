@@ -50,7 +50,7 @@ from ordessa_units.admission.material_admission import MaterialAdmission
 from ordessa_units.admission.material_registration import MaterialCatalog
 from ordessa_units.bindings.material_operations import MaterialOperations
 from ordessa_units.definitions.materials import ReconcileSupport, ResourceProviderDescriptor
-from ordessa_execution_agents.harness.providers.registry import HarnessCatalog
+from ordessa_agents.harness.providers.registry import HarnessCatalog
 
 _ENV = "env"
 _PRINCIPAL = "principal"

@@ -24,10 +24,10 @@ import pytest
 from ordessa_environments import EnvironmentRefused, ProcessRequest
 from ordessa_units.assembly.process_input import UnitProcessInput
 
-from ordessa_execution_agents.preparation import (
+from ordessa_agents.preparation import (
     ConfigurationResources, PreparedAgent, PreparedHarness, SessionBootstrap)
-from ordessa_execution_agents.harness.transport import LaunchSpec
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.harness.transport import LaunchSpec
+from ordessa_agents.profiles import (
     ProfileRevisionRef, canonical_content, content_digest, encode_revision_ref)
 from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_harness_pi.configuration.unit_materialization import (

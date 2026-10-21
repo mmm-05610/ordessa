@@ -4,7 +4,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
-from server_plugin_api.wire_errors import WireError
+from ordessa_server_plugin_api.wire_errors import WireError
 
 CURSOR_PREFIX = "w1"
 OLDER_CURSOR_PREFIX = "w1o"

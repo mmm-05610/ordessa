@@ -38,7 +38,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ServerMethodDescriptor,
     WireError,
     bounded as _bounded,

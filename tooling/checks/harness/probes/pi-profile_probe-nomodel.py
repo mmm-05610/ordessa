@@ -118,7 +118,7 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                 if channel is None:
                     request('_ordessa/session/configuration', {'sessionId': native}, fails=True)
                 else:
-                    from ordessa_execution_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
+                    from ordessa_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
                     try:
                         channel.query_native_configuration(native)
                     except NativeConfigurationUnavailable:
@@ -136,9 +136,9 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                 thinking = next(o for o in initial["configOptions"] if o["id"] == "thinkingLevel")
                 different = next(o["value"] for o in thinking["options"] if o["value"] != thinking["currentValue"])
                 if owner_operations:
-                    from ordessa_execution_agents.harness.definitions import ApplicationTarget, InvokeAction, IntentSource
-                    from ordessa_execution_agents.units.configuration.actions import ActionBatch
-                    from ordessa_execution_agents.units.configuration.actions import ActionInvocation
+                    from ordessa_agents.harness.definitions import ApplicationTarget, InvokeAction, IntentSource
+                    from ordessa_agents.units.configuration.actions import ActionBatch
+                    from ordessa_agents.units.configuration.actions import ActionInvocation
                     from ordessa_server.composition.native_channels.profile_owner import ProfileSessionOwner
                     from ordessa_server.composition.native_channels.registry import AcpChannelRegistry
                     from ordessa_server.composition.native_channels.action_factories import create_pi_action_executor as PiSessionActionExecutor
@@ -176,15 +176,15 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                         {'sessionId': native, 'operationId': payload['operationId']})
                     assert retained == operation
                     if owner_live_model:
-                        from ordessa_execution_agents.harness.definitions import DesiredFragment, Installation
+                        from ordessa_agents.harness.definitions import DesiredFragment, Installation
                         from ordessa_server.composition.c2_providers import configuration_provider_plugin
                         from ordessa_harness_pi.registration import configuration_adapters
                         from ordessa_harness_pi.configuration.runtime import PiLiveModelRuntime
                         from ordessa_server.composition.configuration.model.live_service import native_model_runtime
-                        from ordessa_execution_agents.harness.configuration.compilation.native_context import NativeLiveModelContext
+                        from ordessa_agents.harness.configuration.compilation.native_context import NativeLiveModelContext
                         from ordessa_server.composition.configuration.application import ConfigurationApplicationService
-                        from ordessa_execution_agents.units.records.operation_journal import OperationJournal
-                        from ordessa_execution_agents.units.configuration.actions import ActionGrant
+                        from ordessa_agents.units.records.operation_journal import OperationJournal
+                        from ordessa_agents.units.configuration.actions import ActionGrant
                         from ordessa_server.composition.runtime import build_runtime
                         carrier_runtime = build_runtime(home / "controlled-carrier")
                         try:
@@ -263,7 +263,7 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                 if channel is None:
                     request("_ordessa/session/configuration", {"sessionId": native, "desired": different}, fails=True)
                 else:
-                    from ordessa_execution_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
+                    from ordessa_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
                     try:
                         channel.transport.send_line(json.dumps({'jsonrpc': '2.0', 'id': 'client-config',
                             'method': '_ordessa/session/configuration', 'params': {'sessionId': native}}))
@@ -274,7 +274,7 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                 request("session/close", {"sessionId": native})
                 refused_configuration(native)
                 if channel is not None:
-                    from ordessa_execution_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
+                    from ordessa_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
                     try:
                         channel.query_native_configuration(native)
                     except NativeConfigurationUnavailable:

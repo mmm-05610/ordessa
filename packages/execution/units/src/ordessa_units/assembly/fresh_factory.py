@@ -3,7 +3,7 @@
 Applications select concrete environment/Harness capabilities here, once.
 They do not construct Unit internals or receive another store/issuer/ledger.
 """
-from ordessa_execution_agents.profiles import decode_revision_ref
+from ordessa_agents.profiles import decode_revision_ref
 from ordessa_units.admission.owner_selection import FreshUnitFactory, AgentOwnerUnavailable
 from ordessa_units.admission.owner_ports import AgentProviderView
 from ordessa_units.management import UnitInstance

@@ -15,7 +15,7 @@ from typing import Any, Sequence
 from ordessa_environments.definitions.runtime_ports import SecretMountInput
 
 from .coordinator import ResolvedComposition, RuntimeCompositionCoordinator
-from ordessa_execution_agents.harness.definitions.command_projection import HarnessCommandSpec
+from ordessa_agents.harness.definitions.command_projection import HarnessCommandSpec
 from ordessa_environments.composition import MountPlan, PreparedMountSource, RuntimeBinding, RuntimeBundle, RuntimePreparationRejected
 from ordessa_environments.definitions.runtime_resources import RuntimeHostV1, SandboxV1, guest_path
 from ordessa_infrastructure.filesystem.content_digest import content_digest

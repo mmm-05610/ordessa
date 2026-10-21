@@ -4,8 +4,8 @@ import asyncio
 from dataclasses import replace
 from pathlib import Path
 import pytest
-from ordessa_execution_agents.sdk import BoundPath,PrepareContext,SessionBootstrap,HarnessError
-from ordessa_execution_agents.profiles import decode_content
+from ordessa_agents.sdk import BoundPath,PrepareContext,SessionBootstrap,HarnessError
+from ordessa_agents.profiles import decode_content
 from ordessa_harness_pi import factory
 
 PIN={'environmentNamespace':'test','definitionId':'pi','revision':'1'}
@@ -70,20 +70,29 @@ def test_all_runtime_imports_use_sdk_only_and_old_client_is_absent():
                 # The plugin may only import the host-independent execution SDK; any
                 # module inside that sdk package (for example sdk.native_prompt) is
                 # still SDK surface, never a host internal.
-                assert (node.module == 'ordessa_execution_agents.sdk'
-                        or node.module.startswith('ordessa_execution_agents.sdk.'))
+                assert (node.module == 'ordessa_agents.sdk'
+                        or node.module.startswith('ordessa_agents.sdk.'))
 
 
 def test_factory_bindings_and_entrypoint_are_explicit():
-    import tomllib
+    """H2: the brand no longer owns a distribution; `ordessa-agents` declares it.
+
+    The declaration must still be exactly one explicit entry point on the
+    installed distribution — read from metadata, not from a plugin pyproject
+    that no longer exists.
+    """
+    from importlib.metadata import entry_points, metadata as distribution_metadata
     with pytest.raises(HarnessError,match='HARNESS_BINDINGS_INVALID'):factory.build({})
-    metadata=tomllib.loads((Path(__file__).parents[1]/'pyproject.toml').read_text())
-    assert metadata['project']['entry-points']['ordessa.harness_providers']['pi']=='ordessa_harness_pi.provider:factory'
+    matches=[point for point in entry_points(group='ordessa.harness_providers') if point.name=='pi']
+    assert len(matches)==1, matches
+    assert matches[0].value=='ordessa_harness_pi.provider:factory'
+    assert matches[0].dist is not None
+    assert matches[0].dist.metadata['Name']=='ordessa-agents'
 
 
 def test_actual_profile_owner_calls_real_pi_validator_before_its_atomic_commit(tmp_path):
     from threading import RLock
-    from ordessa_execution_agents.profiles import ProfileService,SqliteProfileStore,ProfileValidationError
+    from ordessa_agents.profiles import ProfileService,SqliteProfileStore,ProfileValidationError
     from ordessa_infrastructure.security.fingerprints import HmacKeyRing
     from ordessa_infrastructure.encoding import canonical_bytes
     class Policy:

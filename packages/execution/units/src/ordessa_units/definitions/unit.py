@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from collections.abc import Mapping
 
-from ordessa_execution_agents.profiles import ProfileRevisionRef
+from ordessa_agents.profiles import ProfileRevisionRef
 from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
 
 

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { configurationDigest } from "../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/digest.mjs"
+import { configurationDigest } from "../../../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/digest.mjs"
 import { piCreation } from "../../src/ordessa_harness_pi/acp/profile/creation.mjs"
 import { piProviderRegistration } from "../../src/ordessa_harness_pi/acp/profile/provider-registration.mjs"
 

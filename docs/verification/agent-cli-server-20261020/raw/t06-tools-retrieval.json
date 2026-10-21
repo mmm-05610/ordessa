@@ -1,0 +1,440 @@
+{
+  "workRoot": "/tmp/t06-tools-codex/work",
+  "artifact": "tools-proof.txt",
+  "budgetUsed": 1,
+  "native": {
+    "path": "home/sessions/2026/10/21/rollout-2026-10-21T10-44-01-01a15c58-1edc-7592-96cb-625b4273b2d3.jsonl",
+    "malformedLines": 0,
+    "timedOut": false,
+    "records": 25,
+    "sessionMeta": {
+      "session_id": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+      "id": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+      "cwd": "/tmp/t06-tools-codex/work",
+      "originator": "ordessa-cli",
+      "cli_version": "0.157.1",
+      "model_provider": "openai"
+    },
+    "turnContexts": [
+      {
+        "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+        "cwd": "/tmp/t06-tools-codex/work",
+        "approvalPolicy": "never",
+        "sandboxPolicy": {
+          "type": "read-only"
+        },
+        "permissionProfile": {
+          "type": "managed",
+          "file_system": {
+            "type": "restricted",
+            "entries": [
+              {
+                "path": {
+                  "type": "special",
+                  "value": {
+                    "kind": "root"
+                  }
+                },
+                "access": "read"
+              }
+            ]
+          },
+          "network": "restricted"
+        },
+        "model": "gpt-5.6-sol"
+      }
+    ],
+    "turnRecords": [
+      {
+        "type": "task_started",
+        "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+        "durationMs": null,
+        "lastAgentMessage": ""
+      },
+      {
+        "type": "task_complete",
+        "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+        "durationMs": 11329,
+        "lastAgentMessage": "无法创建：当前工作目录为只读。"
+      }
+    ],
+    "items": [
+      {
+        "type": "UserMessage",
+        "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+        "text": "在你的工作目录创建文件 `tools-proof.txt`，内容写 `ordessa-tool-ok`；然后用命令读取它并只回复文件内容。"
+      },
+      {
+        "type": "AgentMessage",
+        "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+        "text": "我会创建该文件，再通过命令读取并核对内容。"
+      },
+      {
+        "type": "Reasoning",
+        "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+        "raw": "{\"type\": \"Reasoning\", \"id\": \"rs_0c1891c433000020016ad826f9b4888191b8e77bc2faaf396b\", \"summary_text\": [], \"raw_content\": []}"
+      },
+      {
+        "type": "reasoning",
+        "name": null,
+        "callId": null,
+        "raw": "{\"type\": \"reasoning\", \"id\": \"rs_0c1891c433000020016ad826f9b4888191b8e77bc2faaf396b\", \"summary\": [], \"encrypted_content\": \"gAAAAABq2Cb51iQo3-Ys2SpMSRzLZgbdewzpWN-5BPz2gu82-joY2exRBeMq8EJGutnTkDdIWV6_YgoP1kyi_tHLj7NAhk_9HrELHEG0FKdFj0wnsPHQ1jFILz9YdATQGZu_7Ep-L2iJuK7ddT86PXEUNzGbt2bfVmcN3fgrKiEJJ6qC85Ui-PSMrO4abl66l9FvHTh_zTrxEs75RD2TZF0vl1Uro5EcNNNirPG7LFyti3ck36B_wQCjbE8fnSeTu5v4Mhklj9WPx2bs5w-XTVS6VVuwISNd0X-wZnWbImH2H2cMUtyYg1tkDiOM8765FnG_9RGHG4q9KMi_Mpu53ybgYVK_iBbh_S1RFVTJjRDexbz8BbyJq0StHFN7mCAZ2bSqRaRxiSz8ohTJq-V4TC-O7iE2cKPRYEYm16NDKd07hcQA-hClYVimIAih6Svhb6KdXBUidFz7PpluwNunCiZE0ZFnsg3jZbjQ9KOnNRuL2aK-K8Hd5yXKlIQvdgcQjtjzhI742uLNWj6_oQd9px4XfP5bo5mOyF0y9Jv4gnVAu2uF5H-7mzyu2UbR09u043J_nUDZbRcwre6N5x7dNtN5JERgGM8zROJ_ewmu8pc9oNzzHAF6nMZMOJWknIvw3u0k6rhXz_SfU_R-RPeBLai3DmTETMObE7k3cO7R6xGCJziHy0HrQFSz138JQCL9s8nNkrnM4CLBHwNQwUaY-R1OKkyYAloIh6r4Cjt0418IUtkPGo_aiFMAyy4jfDjsgTAHeoYs69jldeSISyET2j65sThYfgDHwHrgAhdv1SGTPV3GuYVl9EAdASUvfqWFaeV9kbbcWbkMQGIcYP7ai9gGL1WiofA5_P4mWHhr7p8goT7FgP743LvIeJZMyuvgugjt4OQ2quhpfInRHk0Ba_pfEmupnQDurflid42wA3mvPZQBjFf0UkL-gn0hpzylUgpsDenVOlAduoIjZ1YFy4dFo5_B7jqrA0WlpYtd4OBICazNgaXiiQ_E7y11FTn7-fWIqVSINTMqjbv4BjB8lsDvxCgBG6cY8StUnIhS1s-pj59XImfhl8MG27aUdS9zIbKQi3Qp7sOUqRDlhjNZcNmFF-TJfkgqgqil0942zktqMD9X4Fl1Ao9oeeH1DvOwqoXYuiJhYzJlBEqqf0O3cDq7KmG8fSqESID-bsVJ70S5PgU5YMnsG281gks3Kyha_gtPSMhFk_2SHHyzHembmxAO4Cs3v50oDRgvHtrRyZ5ECK4Tx1MpwwBjGnI4kmZKuozP3skyN1hdOpnZfvqCQppt3JFBtpemeDF06n7XPHz1lQFbvxjaeduBiuocRa7CsFPb6ihVHQXLmKQGrCaxJF8BbeeRXqjiOq"
+      },
+      {
+        "type": "custom_tool_call",
+        "name": "exec",
+        "callId": "call_8c8dd0e4639e4dd99582219fd3a14a95",
+        "raw": "{\"type\": \"custom_tool_call\", \"id\": \"ctc_0c1891c433000020016ad826f9c5688191a8b86e79a7b7f911\", \"status\": \"completed\", \"call_id\": \"call_8c8dd0e4639e4dd99582219fd3a14a95\", \"name\": \"exec\", \"input\": \"const patch = \\\"*** Begin Patch\\\\n*** Add File: tools-proof.txt\\\\n+ordessa-tool-ok\\\\n*** End Patch\\\";\\nconst r = await tools.apply_patch(patch);\\ntext(r);\\n\", \"internal_chat_message_metadata_passthrough\": {\"turn_id\": \"01a15c58-204b-7053-b29a-76da66501a6b\", \"create_time\": 1792550649.7767277}}"
+      },
+      {
+        "type": "custom_tool_call_output",
+        "name": null,
+        "callId": "call_8c8dd0e4639e4dd99582219fd3a14a95",
+        "raw": "{\"type\": \"custom_tool_call_output\", \"id\": \"ctco_01a15c58-41c8-7812-a164-cb7023d137b0\", \"call_id\": \"call_8c8dd0e4639e4dd99582219fd3a14a95\", \"output\": [{\"type\": \"input_text\", \"text\": \"Script failed\\nWall time 0.0 seconds\\nOutput:\\n\"}, {\"type\": \"input_text\", \"text\": \"Script error:\\npatch rejected: writing is blocked by read-only sandbox; rejected by user approval settings\"}], \"internal_chat_message_metadata_passthrough\": {\"turn_id\": \"01a15c58-204b-7053-b29a-76da66501a6b\", \"create_time\": 1792550650.312657}}"
+      },
+      {
+        "type": "Reasoning",
+        "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+        "raw": "{\"type\": \"Reasoning\", \"id\": \"rs_0c1891c433000020016ad826fca6108191b23368ab1cc289c9\", \"summary_text\": [], \"raw_content\": []}"
+      },
+      {
+        "type": "reasoning",
+        "name": null,
+        "callId": null,
+        "raw": "{\"type\": \"reasoning\", \"id\": \"rs_0c1891c433000020016ad826fca6108191b23368ab1cc289c9\", \"summary\": [], \"encrypted_content\": \"gAAAAABq2Cb871c3W37sM890FOA3xUmc_pWRW8vOWp4HHPiukU0ss3bqVJK4XPvq40JZYDIurzWe5dvsy0rCnOCNbr24JyVtyLVI8hspghhIFozDHsBPfd5LqxUfsPiyQZUB51hhe9Gna0OQqHPddMeJdfyuHq9D4DejIkD_tpm5-HVRjaJcYrsq6_8Hm3fcbaiqZDdztay7LpS9vl8qtRXHYgBVUQa-MCpUghOTPN5v2lU7aEGJyRiNrINF7PLS2yG4U9vtnMIGhmZk3kExvo5dYyZrbAwpD54pTW4Q7AoVdBGlxBKPhRTTjF5bsxNUmrwWJkqzmYLvkAURqp7eVLVjp4c8HfG3m36MIKZqYIz66ZwVwsr6bs55WFMesXXyewE2gEki-wnXnc7LmesqYbA9gaIx4GB_vJok8M5KH0z5oekyebRPC7GzSvd6Ze6fdHdpzSJUgr0g2dlTHkRvlH-BK2NabH0PEhWRSx3NlvwV8ru1g2nSDtrOtj4IKs2BSigGmfaUC1te50QhItU3L9LhW_5HNTKzHZ7KT-taIw1lFmR2UQozrzDPNOb59idwKzpO_EkwYySLXrHtQV9wS0xn2ah5uWZu6bRnJGxc8ohzkV1g-z_TvCJ0e3b7mUUb6Qev33BRja3eeFq-EfK7QPleqGP8WRG4zRFi0sgWSOWmd-NarF5LlhYDavnn-TWTlcDBi7gay76JFnCOHy-LXGvYqGKJq-yuOij5LUcwZ_zkPFmnjL10NsIbS-5L7NwFYLQ8ybT9e4JcWiwPSv98UpwVIceh-Iokn3W6NbrU3EXR5FKNz61aawIPPMWjcvOjJW5BvczDjOS57jsRT-ArQSgV9UPqLt37iNFINQzaE_BnYylI7DQDCi8RC_EFmg3GZ9dAhp6Q93oAiNGOmUakYIfbH9OA5dcWJvhgwAMmSXdwps_qeoiGaSLwHyUlOYnevlhX2T8SXBT03NzI6HGp-uPFs00R1Uo1yAF4dyYWoabKgBjCkbWCzPPJu5Sk3ddUWH01vw40gus2N3DqrzugvEOMs2GqjJOSDXbNASdY5F4BlpHfWZP0h4DT8L2Z2ShG4lC5SajbNhv7NMouLUhO2VI2Z-Y7BF6WC5x1SgZ1jhLeZw2h_3YJOt12lM-avEgi9E1Hio2mtMF9KFYkJiTZwqqLyWhxYDFw5Yu2ECgm1jicRbqj9UohswaB-F0IIrHRihJFCn2mH4z1aj1FDcjvrKfZb47Jcq4XGR2KdXQ5IfEjK45XPW7K2j6x8Zh5XL-mHmBdFaFCPsgmU1CsnzRXP2v3jeLAW7q-Sw0QcikPYEsqp3GVyG8au-SzAKGBOL8qH-xFcVJ7Ty_Pgz6f1JSNU88-ykKG0lX0lM"
+      },
+      {
+        "type": "AgentMessage",
+        "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+        "text": "无法创建：当前工作目录为只读。"
+      }
+    ],
+    "messages": [
+      {
+        "role": "developer",
+        "text": "ded supporting resources. (file: r0/skill-creator/SKILL.md)\n- skill-installer: Install Codex skills into $CODEX_HOME/skills from a curated list or a GitHub repo path. Use when a user asks to list installable skills, install a curated skill, or install a skill from another repo (including private repos). (file: r0/skill-installer/SKILL.md)\n</skills_instructions><permissions instructions>\nFilesystem sandboxing defines which files can be read or written. `sandbox_mode` is `read-only`: The sandbox only permits reading files. Network access is restricted.\nApproval policy is currently never. Do not provide the `sandbox_permissions` for any reason, commands will be rejected.\n</permissions instructions><apps_instructions>\n## Apps (Connectors)\nApps (Connectors) can be explicitly triggered in user messages in the format `[$app-name](app://{connector_id})`. Apps can also be implicitly triggered as long as the context suggests usage of available apps.\nAn app is equivalent to a set of MCP tools within the `codex_apps` MCP.\nAn installed app's MCP tools are either provided to you already, or can be lazy-loaded through the `tool_search` tool. If `tool_search` is available, the apps that are searchable by `tools_search` will be listed by it.\nDo not additionally call list_mcp_resources or list_mcp_resource_templates for apps.\n</apps_instructions><recommended_plugins>\nHere is a list of plugins that are available but not installed.\n\n- Dropbox (app-69b31dc2110c8191b8b47dc98fe5a052@openai-curated-remote)\n- Box (box@openai-curated-remote)\n- Codex Security (codex-security@openai-curated-remote)\n- Figma (figma@openai-curated-remote)\n- Linear (linear@openai-curated-remote)\n- Notion (notion@openai-curated-remote)\n- OpenAI Developers (openai-developers@openai-curated-remote)\n- Outlook Calendar (outlook-calendar@openai-curated-remote)\n- Outlook Email (outlook-email@openai-curated-remote)\n- SharePoint (sharepoint@openai-curated-remote)\n- Teams (teams@openai-curated-remote)\n</recommended_plugins>"
+      },
+      {
+        "role": "developer",
+        "text": "the team, including the agents that you can assign tasks to, are equally intelligent and capable, and have access to the same set of tools.\n\nYou can use `spawn_agent` to create a new agent, `followup_task` to give an existing agent a new task and trigger a turn, and `send_message` to pass a message to a running agent without triggering a turn.\nChild agents can also spawn their own sub-agents.\nYou can decide how much context you want to propagate to your sub-agents with the `fork_turns` parameter.\n\nYou will receive messages in the analysis channel in the form:\n```\nMessage Type: MESSAGE | FINAL_ANSWER\nTask name: <recipient>\nSender: <author>\nPayload:\n<payload text>\n```\nThey may be addressed as to=/root\n\nNote that collaboration tools cannot be called from inside `functions.exec`. Call `spawn_agent`, `send_message`, `followup_task`, `wait_agent`, `interrupt_agent`, and `list_agents` only as direct tool calls using the recipient shown in their tool definitions, such as `to=functions.collaboration.spawn_agent`, since they are intentionally absent from the `functions.exec` `tools.*` namespace. Available tools in `functions.exec` are explicitly described with a `tools` namespace in the developer message.\n\nAll agents share the same directory. In detail:\n- All agents have access to the same container and filesystem as you.\n- All agents use the same current working directory.\n- As a result, edits made by one agent are immediately visible to all other agents.\n\nWhen calling `wait_agent`, prefer longer waits (minutes) to avoid busy polling.\n\nThere are 4 available concurrency slots, meaning that up to 4 agents can be active at once, including you.\n\nFull-history forks (`fork_turns` omitted or `\"all\"`) inherit the parent model and reasoning effort and do not accept overrides. Only set `model` or `reasoning_effort` when explicitly requested by the user, applicable `AGENTS.md` instructions, or skill instructions; when doing so, set `fork_turns` to `\"none\"` or a positive integer string."
+      },
+      {
+        "role": "developer",
+        "text": "<multi_agent_mode>Any earlier instruction enabling proactive multi-agent delegation no longer applies. Do not spawn sub-agents unless the user or applicable AGENTS.md/skill instructions explicitly ask for sub-agents, delegation, or parallel agent work.</multi_agent_mode>"
+      },
+      {
+        "role": "user",
+        "text": "<environment_context>\n  <cwd>/tmp/t06-tools-codex/work</cwd>\n  <shell>bash</shell>\n  <current_date>2026-10-21</current_date>\n  <timezone>Asia/Shanghai</timezone>\n  <filesystem><workspace_roots><root>/tmp/t06-tools-codex/work</root></workspace_roots><permission_profile type=\"managed\"><file_system type=\"restricted\"><entry access=\"read\"><special>:root</special></entry></file_system></permission_profile></filesystem>\n</environment_context>"
+      },
+      {
+        "role": "user",
+        "text": "在你的工作目录创建文件 `tools-proof.txt`，内容写 `ordessa-tool-ok`；然后用命令读取它并只回复文件内容。"
+      },
+      {
+        "role": "UserMessage",
+        "text": "在你的工作目录创建文件 `tools-proof.txt`，内容写 `ordessa-tool-ok`；然后用命令读取它并只回复文件内容。"
+      },
+      {
+        "role": "AgentMessage",
+        "text": "我会创建该文件，再通过命令读取并核对内容。"
+      },
+      {
+        "role": "assistant",
+        "text": "我会创建该文件，再通过命令读取并核对内容。"
+      },
+      {
+        "role": "AgentMessage",
+        "text": "无法创建：当前工作目录为只读。"
+      },
+      {
+        "role": "assistant",
+        "text": "无法创建：当前工作目录为只读。"
+      }
+    ],
+    "tokenUsage": [
+      {
+        "threadId": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+        "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+        "sessionId": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+        "turnTokens": {
+          "input_tokens": 13047,
+          "cached_input_tokens": 11136,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 118,
+          "reasoning_output_tokens": 48,
+          "total_tokens": 13165
+        },
+        "threadTokens": {
+          "input_tokens": 13047,
+          "cached_input_tokens": 11136,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 118,
+          "reasoning_output_tokens": 48,
+          "total_tokens": 13165
+        }
+      },
+      {
+        "threadId": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+        "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+        "sessionId": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+        "turnTokens": {
+          "input_tokens": 26254,
+          "cached_input_tokens": 24064,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 194,
+          "reasoning_output_tokens": 108,
+          "total_tokens": 26448
+        },
+        "threadTokens": {
+          "input_tokens": 26254,
+          "cached_input_tokens": 24064,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 194,
+          "reasoning_output_tokens": 108,
+          "total_tokens": 26448
+        }
+      }
+    ],
+    "toolEvents": [
+      {
+        "type": "Reasoning",
+        "name": null,
+        "callId": null,
+        "summary": "{\"type\": \"Reasoning\", \"id\": \"rs_0c1891c433000020016ad826f9b4888191b8e77bc2faaf396b\", \"summary_text\": [], \"raw_content\": []}"
+      },
+      {
+        "type": "reasoning",
+        "name": null,
+        "callId": null,
+        "summary": "{\"type\": \"reasoning\", \"id\": \"rs_0c1891c433000020016ad826f9b4888191b8e77bc2faaf396b\", \"summary\": [], \"encrypted_content\": \"gAAAAABq2Cb51iQo3-Ys2SpMSRzLZgbdewzpWN-5BPz2gu82-joY2exRBeMq8EJGutnTkDdIWV6_YgoP1kyi_tHLj7NAhk_9HrELHEG0FKdFj0wnsPHQ1jFILz9YdATQGZu_7Ep-L2iJuK7ddT86PXEUNzGbt2bfVmcN3fgrKiEJJ6qC85Ui-PSMrO4abl66l9FvHTh_zTrxEs75RD2TZF0vl1Uro5EcNNNirPG7LFyti3ck36B_wQCjbE8fnSeTu5v4Mhklj9WPx2bs5w-XTVS6VVuwISNd0X-wZnWbImH2H2cMUtyYg1tkDiOM8765FnG_9RGHG4q9KMi_Mpu53ybgYVK_iBbh_S1RFVTJjRDexbz8BbyJq0StHFN7mCAZ2bSqRaRxiSz8ohTJq-V4TC-O7iE2cKPRYEYm16NDKd07hcQA-hClYVimIAih6Svhb6KdXBUidFz7PpluwNunCiZE0ZFnsg3jZbjQ9KOnNRuL2aK-K8Hd5yXKlIQvdgcQjtjzhI742uLNWj6_oQd9px4XfP5bo5mOyF0y9Jv4gnVAu2uF5H-7mzyu2UbR09u043"
+      },
+      {
+        "type": "custom_tool_call",
+        "name": "exec",
+        "callId": "call_8c8dd0e4639e4dd99582219fd3a14a95",
+        "summary": "{\"type\": \"custom_tool_call\", \"id\": \"ctc_0c1891c433000020016ad826f9c5688191a8b86e79a7b7f911\", \"status\": \"completed\", \"call_id\": \"call_8c8dd0e4639e4dd99582219fd3a14a95\", \"name\": \"exec\", \"input\": \"const patch = \\\"*** Begin Patch\\\\n*** Add File: tools-proof.txt\\\\n+ordessa-tool-ok\\\\n*** End Patch\\\";\\nconst r = await tools.apply_patch(patch);\\ntext(r);\\n\", \"internal_chat_message_metadata_passthrough\": {\"turn_id\": \"01a15c58-204b-7053-b29a-76da66501a6b\", \"create_time\": 1792550649.7767277}}"
+      },
+      {
+        "type": "custom_tool_call_output",
+        "name": null,
+        "callId": "call_8c8dd0e4639e4dd99582219fd3a14a95",
+        "summary": "{\"type\": \"custom_tool_call_output\", \"id\": \"ctco_01a15c58-41c8-7812-a164-cb7023d137b0\", \"call_id\": \"call_8c8dd0e4639e4dd99582219fd3a14a95\", \"output\": [{\"type\": \"input_text\", \"text\": \"Script failed\\nWall time 0.0 seconds\\nOutput:\\n\"}, {\"type\": \"input_text\", \"text\": \"Script error:\\npatch rejected: writing is blocked by read-only sandbox; rejected by user approval settings\"}], \"internal_chat_message_metadata_passthrough\": {\"turn_id\": \"01a15c58-204b-7053-b29a-76da66501a6b\", \"create_time\": 1792550650.312657}}"
+      },
+      {
+        "type": "Reasoning",
+        "name": null,
+        "callId": null,
+        "summary": "{\"type\": \"Reasoning\", \"id\": \"rs_0c1891c433000020016ad826fca6108191b23368ab1cc289c9\", \"summary_text\": [], \"raw_content\": []}"
+      },
+      {
+        "type": "reasoning",
+        "name": null,
+        "callId": null,
+        "summary": "{\"type\": \"reasoning\", \"id\": \"rs_0c1891c433000020016ad826fca6108191b23368ab1cc289c9\", \"summary\": [], \"encrypted_content\": \"gAAAAABq2Cb871c3W37sM890FOA3xUmc_pWRW8vOWp4HHPiukU0ss3bqVJK4XPvq40JZYDIurzWe5dvsy0rCnOCNbr24JyVtyLVI8hspghhIFozDHsBPfd5LqxUfsPiyQZUB51hhe9Gna0OQqHPddMeJdfyuHq9D4DejIkD_tpm5-HVRjaJcYrsq6_8Hm3fcbaiqZDdztay7LpS9vl8qtRXHYgBVUQa-MCpUghOTPN5v2lU7aEGJyRiNrINF7PLS2yG4U9vtnMIGhmZk3kExvo5dYyZrbAwpD54pTW4Q7AoVdBGlxBKPhRTTjF5bsxNUmrwWJkqzmYLvkAURqp7eVLVjp4c8HfG3m36MIKZqYIz66ZwVwsr6bs55WFMesXXyewE2gEki-wnXnc7LmesqYbA9gaIx4GB_vJok8M5KH0z5oekyebRPC7GzSvd6Ze6fdHdpzSJUgr0g2dlTHkRvlH-BK2NabH0PEhWRSx3NlvwV8ru1g2nSDtrOtj4IKs2BSigGmfaUC1te50QhItU3L9LhW_5HNTKzHZ7KT-taIw1lFmR2UQozrzDPNOb59idwKz"
+      }
+    ]
+  },
+  "hostArtifact": {
+    "path": "/tmp/t06-tools-codex/work/tools-proof.txt",
+    "exists": false
+  },
+  "origin": "http://127.0.0.1:47661",
+  "create": {
+    "apiVersion": "agent-tools/1",
+    "requestId": "deac13f009a347c098e7cc0f8f8191b0",
+    "command": "environments create local --root /tmp/t06-tools-codex/work --alias retrieval",
+    "status": "completed",
+    "data": {
+      "identity": "environment/004f5173f9d14e02b7827f296cf6dd66",
+      "alias": "retrieval",
+      "aliases": [
+        "retrieval"
+      ],
+      "provider": "local",
+      "backendId": "/tmp/t06-tools-codex/work",
+      "phase": "ready",
+      "generation": 0,
+      "state": "running",
+      "observationStale": false,
+      "observedAt": "2026-10-21T02:48:41.780427+00:00",
+      "operationStatus": {
+        "phase": "ready",
+        "operation": null
+      },
+      "activeUses": 0,
+      "isolation": "none",
+      "endpointKind": "local-directory",
+      "health": "ready",
+      "capabilities": {
+        "isolation": "none",
+        "statuses": {
+          "byte-channel": "supported",
+          "files": "supported",
+          "process": "supported",
+          "stderr": "supported",
+          "terminal": "unsupported"
+        },
+        "provides": [
+          "byte-channel",
+          "files",
+          "process",
+          "stderr"
+        ],
+        "values": {
+          "provider": "local",
+          "resourceKind": "directory"
+        },
+        "assurance": {
+          "isolation": "none",
+          "isolationIsSecurityBoundary": false,
+          "localDevelopmentOnly": true,
+          "providerAssurance": "provider_self_report",
+          "statement": "provider-reported isolation; it is not a permission, lease or hold"
+        }
+      }
+    },
+    "error": null,
+    "operationRef": "environment-command/878ae559ea0c464483a9dfdd8c4a76b0",
+    "evidenceRefs": []
+  },
+  "retrievalIdentity": "environment/004f5173f9d14e02b7827f296cf6dd66",
+  "ls": {
+    "apiVersion": "agent-tools/1",
+    "requestId": "b51c7cce064a4b6d88fe7383e3877e43",
+    "command": "call environments.files --input /tmp/t06-tools-retrieve/ls.json",
+    "status": "completed",
+    "data": {
+      "entries": [
+        "t06-control-pre.txt",
+        "home/.sandbox_migration",
+        "home/auth.json",
+        "home/goals_1.sqlite",
+        "home/installation_id",
+        "home/logs_2.sqlite",
+        "home/memories_1.sqlite",
+        "home/models_cache.json",
+        "home/queue_1.sqlite",
+        "home/state_5.sqlite",
+        "home/state_5.sqlite-shm",
+        "home/state_5.sqlite-wal",
+        "home/thread_history_1.sqlite",
+        "home/cache/codex_apps_server_info/fc504a36ed8a44e4ede9d5b275f96639cd21839d.json",
+        "home/cache/codex_apps_tools/fc504a36ed8a44e4ede9d5b275f96639cd21839d.json",
+        "home/sessions/2026/10/21/rollout-2026-10-21T10-44-01-01a15c58-1edc-7592-96cb-625b4273b2d3.jsonl",
+        "home/skills/.system/.codex-system-skills.marker",
+        "home/skills/.system/imagegen/LICENSE.txt",
+        "home/skills/.system/imagegen/SKILL.md",
+        "home/skills/.system/imagegen/agents/openai.yaml",
+        "home/skills/.system/imagegen/assets/imagegen-small.svg",
+        "home/skills/.system/imagegen/assets/imagegen.png",
+        "home/skills/.system/imagegen/references/cli.md",
+        "home/skills/.system/imagegen/references/codex-network.md",
+        "home/skills/.system/imagegen/references/image-api.md",
+        "home/skills/.system/imagegen/references/prompting.md",
+        "home/skills/.system/imagegen/references/sample-prompts.md",
+        "home/skills/.system/imagegen/scripts/image_gen.py",
+        "home/skills/.system/imagegen/scripts/remove_chroma_key.py",
+        "home/skills/.system/openai-docs/LICENSE.txt",
+        "home/skills/.system/openai-docs/SKILL.md",
+        "home/skills/.system/openai-docs/agents/openai.yaml",
+        "home/skills/.system/openai-docs/assets/openai-small.svg",
+        "home/skills/.system/openai-docs/assets/openai.png",
+        "home/skills/.system/openai-docs/references/codex-self-knowledge.md",
+        "home/skills/.system/openai-docs/references/latest-model.md",
+        "home/skills/.system/openai-docs/references/mcp-diagnostics.md",
+        "home/skills/.system/openai-docs/references/model-migration.md",
+        "home/skills/.system/openai-docs/references/model-selection.md",
+        "home/skills/.system/openai-docs/references/official-docs.md",
+        "home/skills/.system/openai-docs/references/prompting-guide.md",
+        "home/skills/.system/openai-docs/references/upgrade-guide.md",
+        "home/skills/.system/openai-docs/references/upgrading-to-gpt-6-astra.md",
+        "home/skills/.system/openai-docs/scripts/fetch-codex-manual.mjs",
+        "home/skills/.system/openai-docs/scripts/resolve-latest-model-info",
+        "home/skills/.system/openai-docs/scripts/resolve-latest-model-info.cjs",
+        "home/skills/.system/plugin-creator/SKILL.md",
+        "home/skills/.system/plugin-creator/agents/openai.yaml",
+        "home/skills/.system/plugin-creator/assets/plugin-creator-small.svg",
+        "home/skills/.system/plugin-creator/assets/plugin-creator.png",
+        "home/skills/.system/plugin-creator/references/installing-and-updating.md",
+        "home/skills/.system/plugin-creator/references/plugin-json-spec.md",
+        "home/skills/.system/plugin-creator/scripts/create_basic_plugin.py",
+        "home/skills/.system/plugin-creator/scripts/identifier_validation.py",
+        "home/skills/.system/plugin-creator/scripts/read_marketplace_name.py",
+        "home/skills/.system/plugin-creator/scripts/update_plugin_cachebuster.py",
+        "home/skills/.system/plugin-creator/scripts/validate_plugin.py",
+        "home/skills/.system/review-agent/SKILL.md",
+        "home/skills/.system/review-agent/agents/openai.yaml",
+        "home/skills/.system/skill-creator/SKILL.md",
+        "home/skills/.system/skill-creator/license.txt",
+        "home/skills/.system/skill-creator/agents/openai.yaml",
+        "home/skills/.system/skill-creator/assets/skill-creator-small.svg",
+        "home/skills/.system/skill-creator/assets/skill-creator.png",
+        "home/skills/.system/skill-creator/references/openai_yaml.md",
+        "home/skills/.system/skill-creator/scripts/generate_openai_yaml.py",
+        "home/skills/.system/skill-creator/scripts/init_skill.py",
+        "home/skills/.system/skill-creator/scripts/quick_validate.py",
+        "home/skills/.system/skill-installer/LICENSE.txt",
+        "home/skills/.system/skill-installer/SKILL.md",
+        "home/skills/.system/skill-installer/agents/openai.yaml",
+        "home/skills/.system/skill-installer/assets/skill-installer-small.svg",
+        "home/skills/.system/skill-installer/assets/skill-installer.png",
+        "home/skills/.system/skill-installer/scripts/github_utils.py",
+        "home/skills/.system/skill-installer/scripts/install-skill-from-github.py",
+        "home/skills/.system/skill-installer/scripts/list-skills.py",
+        "home/thread-writer-locks/.coordination.lock"
+      ]
+    },
+    "error": null,
+    "operationRef": "environment-command/a30c1b0ae6484b8d92da67ede8b5b3aa",
+    "evidenceRefs": []
+  },
+  "entryCount": 77,
+  "entrySample": [
+    "t06-control-pre.txt"
+  ],
+  "artifactListed": false,
+  "controlListed": true,
+  "cat": {
+    "apiVersion": "agent-tools/1",
+    "requestId": "f7b4f96e398641b98f8ef3a30eeb2f38",
+    "command": "call environments.files --input /tmp/t06-tools-retrieve/cat.json",
+    "status": "unknown",
+    "data": null,
+    "error": {
+      "code": "EFFECT_UNKNOWN",
+      "message": "Capability operation did not complete",
+      "retryable": false
+    },
+    "operationRef": "environment-command/f9dac11331f143ffa0fe43c5aa0566e2",
+    "evidenceRefs": []
+  },
+  "controlCat": {
+    "apiVersion": "agent-tools/1",
+    "requestId": "3ffd1fd16d9a4f759b438198440e1303",
+    "command": "call environments.files --input /tmp/t06-tools-retrieve/cat-control.json",
+    "status": "completed",
+    "data": {
+      "content": "t06-control-ok"
+    },
+    "error": null,
+    "operationRef": "environment-command/9102cb1686fb4898b92c84287d09e20e",
+    "evidenceRefs": []
+  },
+  "controlContent": "t06-control-ok",
+  "controlMatches": true,
+  "serverExitCode": -15,
+  "log": [
+    "== native transcript: home/sessions/2026/10/21/rollout-2026-10-21T10-44-01-01a15c58-1edc-7592-96cb-625b4273b2d3.jsonl toolEvents=6 ==",
+    "== host artifact: {\"path\": \"/tmp/t06-tools-codex/work/tools-proof.txt\", \"exists\": false}",
+    "SERVER> {\"event\":\"listening\",\"origin\":\"http://127.0.0.1:47661\",\"pid\":2072559,\"serverId\":\"ordessa-t06-retrieve\"}",
+    "== environments create local over the round work root (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"deac13f009a347c098e7cc0f8f8191b0\", \"command\": \"environments create local --root /tmp/t06-tools-codex/work --alias retrieval\", \"status\": \"completed\", \"data\": {\"identity\": \"environment/004f5173f9d14e02b7827f296cf6dd66\", \"alias\": \"retrieval\", \"aliases\": [\"retrieval\"], \"provider\": \"local\", \"backendId\": \"/tmp/t06-tools-codex/work\", \"phase\": \"ready\", \"generation\": 0, \"state\": \"running\", \"observationStale\": false, \"observedAt\": \"2026-10-21T02:48:41.780427+00:00\", \"operationStatus\": {\"phase\": \"ready\", \"operation\": null}, \"activeUses\": 0, \"isolation\": \"none\", \"endpointKind\": \"local-directory\", \"health\": \"ready\", \"capabilities\": {\"isolation\": \"none\", \"statuses\": {\"byte-channel\": \"supported\", \"files\": \"supported\", \"process\": \"supported\", \"stderr\": \"supported\", \"terminal\": \"unsupported\"}, \"provides\": [\"byte-channel\", \"files\", \"process\", \"stderr\"], \"values\": {\"provider\": \"local\", \"resourceKind\": \"directory\"}, \"assurance\": {\"isolation\": \"none\", \"isolationIsSecurityBoundary\": false, \"localDevelopmentOnly\": true, \"providerAssurance\": \"provider_self_report\", \"statement\": \"provider-reported isolation; it is not a permission, lease or hold\"}}}, \"error\": n",
+    "== files ls (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"b51c7cce064a4b6d88fe7383e3877e43\", \"command\": \"call environments.files --input /tmp/t06-tools-retrieve/ls.json\", \"status\": \"completed\", \"data\": {\"entries\": [\"t06-control-pre.txt\", \"home/.sandbox_migration\", \"home/auth.json\", \"home/goals_1.sqlite\", \"home/installation_id\", \"home/logs_2.sqlite\", \"home/memories_1.sqlite\", \"home/models_cache.json\", \"home/queue_1.sqlite\", \"home/state_5.sqlite\", \"home/state_5.sqlite-shm\", \"home/state_5.sqlite-wal\", \"home/thread_history_1.sqlite\", \"home/cache/codex_apps_server_info/fc504a36ed8a44e4ede9d5b275f96639cd21839d.json\", \"home/cache/codex_apps_tools/fc504a36ed8a44e4ede9d5b275f96639cd21839d.json\", \"home/sessions/2026/10/21/rollout-2026-10-21T10-44-01-01a15c58-1edc-7592-96cb-625b4273b2d3.jsonl\", \"home/skills/.system/.codex-system-skills.marker\", \"home/skills/.system/imagegen/LICENSE.txt\", \"home/skills/.system/imagegen/SKILL.md\", \"home/skills/.system/imagegen/agents/openai.yaml\", \"home/skills/.system/imagegen/assets/imagegen-small.svg\", \"home/skills/.system/imagegen/assets/imagegen.png\", \"home/skills/.system/imagegen/references/cli.md\", \"home/skills/.system/imagegen/references/codex-network.md\", \"home/skil",
+    "== files cat tools-proof.txt (exit 6) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"f7b4f96e398641b98f8ef3a30eeb2f38\", \"command\": \"call environments.files --input /tmp/t06-tools-retrieve/cat.json\", \"status\": \"unknown\", \"data\": null, \"error\": {\"code\": \"EFFECT_UNKNOWN\", \"message\": \"Capability operation did not complete\", \"retryable\": false}, \"operationRef\": \"environment-command/f9dac11331f143ffa0fe43c5aa0566e2\", \"evidenceRefs\": []}",
+    "== files cat t06-control-pre.txt (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"3ffd1fd16d9a4f759b438198440e1303\", \"command\": \"call environments.files --input /tmp/t06-tools-retrieve/cat-control.json\", \"status\": \"completed\", \"data\": {\"content\": \"t06-control-ok\"}, \"error\": null, \"operationRef\": \"environment-command/9102cb1686fb4898b92c84287d09e20e\", \"evidenceRefs\": []}",
+    "== server exit code: -15"
+  ]
+}

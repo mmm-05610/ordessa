@@ -32,14 +32,14 @@ from dataclasses import replace
 import pytest
 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
 from ordessa_units.records.operation_journal import NativeActivationReceipt
-from ordessa_execution_agents.harness.contracts.models.application import NativeReadback
+from ordessa_agents.harness.contracts.models.application import NativeReadback
 from ordessa_units.records.operation_journal import OperationJournal
-from ordessa_execution_agents.harness.contracts.models.application import RuntimeSnapshot
+from ordessa_agents.harness.contracts.models.application import RuntimeSnapshot
 from ordessa_server.composition.configuration.contributions import CONFIGURATION_POINT
 from ordessa_server.composition.configuration.contributions import POINT_API_VERSION
 from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
-from ordessa_execution_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
+from ordessa_agents.harness.definitions import (
     AdapterContext, ApplicationTarget, Assessment, Installation,
     TargetDescriptor, TargetHandle,
 )
@@ -313,7 +313,7 @@ def test_foreign_target_handle_cannot_be_claimed(tmp_path):
     """An intent aimed at a handle the contribution never claimed (wrong
     target id) exceeds registered claims — the service refuses it before
     any materialization."""
-    from ordessa_execution_agents.harness.definitions import FieldPath, IntentSet, IntentSource, SetField
+    from ordessa_agents.harness.definitions import FieldPath, IntentSet, IntentSource, SetField
 
     adapter = ChainProbeAdapter(claude_mod.CLAUDE, verify_fn=claude_mod.verify_native)
 
@@ -347,7 +347,7 @@ def test_launch_request_binds_the_plan_snapshot_ref():
 
 
 def test_runtime_unknown_and_reconfiguration_views():
-    from ordessa_execution_agents.harness.definitions import ReconfigurationDecision, RuntimeUnknown, Unknown
+    from ordessa_agents.harness.definitions import ReconfigurationDecision, RuntimeUnknown, Unknown
 
     view = nb.runtime_unknown_view(RuntimeUnknown("inst-1", ("alloc",), ("readback",)))
     assert view["kind"] == "unknown" and view["pendingChecks"] == ["readback"]

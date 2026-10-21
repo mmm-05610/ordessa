@@ -4,7 +4,7 @@ from pathlib import Path
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
-CORE = ROOT / "packages/execution/agents/src/ordessa_execution_agents/harness"
+CORE = ROOT / "packages/execution/agents/src/ordessa_agents/harness"
 HARNESS_GROUP = ROOT / "plugins" / "harness"
 
 

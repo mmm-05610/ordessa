@@ -6,8 +6,8 @@ import pytest
 from ordessa_server.composition.runtime import build_runtime
 from ordessa_server.composition.runtime import StorageProviderMissingError
 from ordessa_server.composition.plugin_host import ResolvedContribution
-from ordessa_execution_agents.harness.definitions import RuntimeAdapterDescriptor, VersionRange
-from server_plugin_api import (
+from ordessa_agents.harness.definitions import RuntimeAdapterDescriptor, VersionRange
+from ordessa_server_plugin_api import (
     Contribution, ContributionBatch, ContributionDeclarationError,
     ContributionOwnerBusyError, ContributionPointSpec,
     ServerPluginDescriptor, ServerPluginRegistration,

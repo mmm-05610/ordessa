@@ -16,7 +16,7 @@ from __future__ import annotations
 import dataclasses
 
 import pytest
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, BindSecret, ContractError, ContentRef, FieldPath,
     Installation, IntentSet, IntentSource, InvokeAction, MountContent,
     RemoveOwnedContent, SetField, TargetDescriptor, TargetHandle,

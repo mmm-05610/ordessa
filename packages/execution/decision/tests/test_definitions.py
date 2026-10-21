@@ -1,7 +1,7 @@
 """F1.1 Question/Answer: choice/score/noul positives and bounded negatives."""
 import pytest
 
-from decision_runtime import DecisionAnswer, DecisionError, DecisionQuestion, PolicyRef
+from ordessa_decision import DecisionAnswer, DecisionError, DecisionQuestion, PolicyRef
 
 CHOICE = {"kind": "choice", "question_text": "Pick one", "bounded_state": {"src": "x"},
           "options": {"a": "First", "b": "Second"}}

@@ -2,7 +2,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 import pytest
 from ordessa_model_provider.catalog import ModelCatalogService
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 
 
 def catalog():

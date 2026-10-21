@@ -5,7 +5,7 @@ installs a meta-path sentinel that fires if any forbidden top-level
 module even reaches the import system; the other plants stub packages
 named `pacthold`, `ordessa_server` and `pacthold.harness_kit` first on
 `sys.path` — each stub records its own import to a marker file — and
-asserts no marker appears after importing `server_plugin_api`. The
+asserts no marker appears after importing `ordessa_server_plugin_api`. The
 second test also proves the recording mechanism itself works, so a
 future accidental import cannot pass by the stubs being unreachable.
 """
@@ -35,15 +35,15 @@ def test_importing_the_package_pulls_in_no_product_modules():
 
         sys.meta_path.insert(0, _ImportSentinel())
 
-        import server_plugin_api
-        import server_plugin_api.contributions
+        import ordessa_server_plugin_api
+        import ordessa_server_plugin_api.contributions
 
         forbidden_loaded = sorted(
             root for root in %r if any(
                 name == root or name.startswith(root + ".") for name in sys.modules))
         print(json.dumps({"forbidden_loaded": forbidden_loaded,
                           "violations": violations,
-                          "api_version": server_plugin_api.SERVER_PLUGIN_API_VERSION}))
+                          "api_version": ordessa_server_plugin_api.SERVER_PLUGIN_API_VERSION}))
     """ % (FORBIDDEN_ROOTS, FORBIDDEN_ROOTS))
     result = subprocess.run([sys.executable, "-c", code], capture_output=True,
                             text=True, timeout=60)
@@ -72,8 +72,8 @@ def test_planted_product_stubs_are_never_reached_by_the_import(tmp_path):
            + env_pth()}
     code = textwrap.dedent(f"""
         import json, os, sys
-        import server_plugin_api
-        import server_plugin_api.contributions
+        import ordessa_server_plugin_api
+        import ordessa_server_plugin_api.contributions
         print(json.dumps({{path: os.path.exists(path) for path in {recorded!r}}}))
     """)
     result = subprocess.run([sys.executable, "-c", code], capture_output=True,

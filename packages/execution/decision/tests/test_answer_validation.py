@@ -3,8 +3,8 @@ import asyncio
 
 import pytest
 
-from decision_runtime import DecisionAnswer, DecisionRunner, RulesOutcome
-from decision_runtime.definitions.values import digest_hex
+from ordessa_decision import DecisionAnswer, DecisionRunner, RulesOutcome
+from ordessa_decision.definitions.values import digest_hex
 
 
 class Engine:

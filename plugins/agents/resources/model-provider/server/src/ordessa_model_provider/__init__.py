@@ -9,7 +9,7 @@ provider/data-model.md``: seven presentation states and four eligibility words.
 
 Dependency direction (pinned by tests, spec FR-ARCH-3): this package depends
 on host generic vocabulary (``ordessa_server.*``, ``pacthold``,
-``server_plugin_api``) and on the optional port protocols in ``ports``. It never
+``ordessa_server_plugin_api``) and on the optional port protocols in ``ports``. It never
 imports Profile, Chat, the legacy ``ordessa_server_compat`` or host business
 modules.
 """

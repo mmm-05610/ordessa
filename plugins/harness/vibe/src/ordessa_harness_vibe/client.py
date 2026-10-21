@@ -4,7 +4,7 @@ The former direct ProcessChannel/AcpClient consumer is retired. This provider
 never starts a process, reads login state, owns a Unit/session ledger or answers
 permissions. Unsupported bootstrap/configuration is refused explicitly.
 """
-from ordessa_execution_agents.sdk import (HarnessDescriptor,HarnessError,PrepareContext,
+from ordessa_agents.sdk import (HarnessDescriptor,HarnessError,PrepareContext,
     ProfileContent,LaunchPlan)
 from .native_channel import compile_config,ConfigRefusal
 

@@ -4,8 +4,8 @@ import asyncio
 from dataclasses import replace
 from pathlib import Path
 import pytest
-from ordessa_execution_agents.sdk import BoundPath,PrepareContext,SessionBootstrap,HarnessError
-from ordessa_execution_agents.profiles import decode_content
+from ordessa_agents.sdk import BoundPath,PrepareContext,SessionBootstrap,HarnessError
+from ordessa_agents.profiles import decode_content
 from ordessa_harness_codex import factory
 
 PIN={'environmentNamespace':'test','definitionId':'codex','revision':'1'}
@@ -67,7 +67,7 @@ def test_all_runtime_imports_use_sdk_only_and_old_client_is_absent():
     for path in Path(module.__file__).parent.glob('*.py'):
         for node in ast.walk(ast.parse(path.read_text())):
             if isinstance(node,ast.ImportFrom) and (node.module or '').startswith('ordessa_'):
-                assert node.module=='ordessa_execution_agents.sdk'
+                assert node.module=='ordessa_agents.sdk'
 
 
 def test_factory_bindings_and_entrypoint_are_explicit():
@@ -79,7 +79,7 @@ def test_factory_bindings_and_entrypoint_are_explicit():
 
 def test_actual_profile_owner_calls_real_codex_validator_before_its_atomic_commit(tmp_path):
     from threading import RLock
-    from ordessa_execution_agents.profiles import ProfileService,SqliteProfileStore,ProfileValidationError
+    from ordessa_agents.profiles import ProfileService,SqliteProfileStore,ProfileValidationError
     from ordessa_infrastructure.security.fingerprints import HmacKeyRing
     from ordessa_infrastructure.encoding import canonical_bytes
     class Policy:

@@ -2,7 +2,7 @@
 import itertools,json,shutil,subprocess,sys
 from pathlib import Path
 import pytest
-from decision_runtime import check_summary,DecisionError,validate_job
+from ordessa_decision import check_summary,DecisionError,validate_job
 from ordessa_engineering.adapters.decision.client import select_review
 from ordessa_engineering.domain.reviews.judgement_policy import ReviewFacts,ReviewPolicy
 from ordessa_engineering.domain.reviews.library_judgements import ReviewVerdict

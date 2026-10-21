@@ -3,14 +3,14 @@ from threading import RLock
 
 import pytest
 
-from ordessa_execution_agents.harness.providers.registry import HarnessCatalog
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.harness.providers.registry import HarnessCatalog
+from ordessa_agents.profiles import (
     ProfileAccessRefused,
     ProfileChangeUnknown,
     ProfileService,
     ProfileStoreUnavailable,
 )
-from ordessa_execution_agents.profiles.management.compatibility import PROFILE_RECORDS
+from ordessa_agents.profiles.management.compatibility import PROFILE_RECORDS
 from ordessa_infrastructure.database.records import DomainStorePort
 from ordessa_units.admission.context import UnitAdmissionContext
 from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac

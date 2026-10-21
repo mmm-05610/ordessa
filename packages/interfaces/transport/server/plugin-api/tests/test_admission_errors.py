@@ -7,8 +7,8 @@ package stays zero-dependency — the classes are shape and message only.
 """
 from __future__ import annotations
 
-import server_plugin_api
-from server_plugin_api import (
+import ordessa_server_plugin_api
+from ordessa_server_plugin_api import (
     ContributionAccessError,
     ContributionAmbiguousError,
     ContributionOwnerBusyError,
@@ -32,8 +32,8 @@ NEW_EXPORTS = [
 
 def test_new_admission_errors_join_the_public_surface():
     for error in NEW_EXPORTS:
-        assert error.__name__ in server_plugin_api.__all__, error
-        assert getattr(server_plugin_api, error.__name__) is error
+        assert error.__name__ in ordessa_server_plugin_api.__all__, error
+        assert getattr(ordessa_server_plugin_api, error.__name__) is error
         assert issubclass(error, ServerPluginError)
 
 

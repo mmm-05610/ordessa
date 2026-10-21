@@ -3,7 +3,7 @@
 The native key registry remains first-hand configuration knowledge. It does not
 establish a command/protocol/login binding and cannot authorize a fake launch.
 """
-from ordessa_execution_agents.sdk import HarnessDescriptor,HarnessError,ProfileContent
+from ordessa_agents.sdk import HarnessDescriptor,HarnessError,ProfileContent
 
 
 class QoderHarnessProvider:

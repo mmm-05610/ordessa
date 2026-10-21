@@ -108,7 +108,7 @@ def test_seven_new_methods_registered_with_frozen_shapes(host, harnesses):
 
 
 def test_new_methods_are_single_owner_too(host, harnesses):
-    from server_plugin_api import (
+    from ordessa_server_plugin_api import (
         ServerMethodDescriptor, ServerPluginDescriptor, ServerPluginRegistration,
     )
     from ordessa_server.composition.plugin_host.host import DuplicateMethodError
@@ -147,7 +147,7 @@ def test_catalogue_returns_page(stack, harnesses, credentials):
 def test_catalogue_failure_is_typed_error_never_empty_page(stack, harnesses, credentials, monkeypatch):
     plugin = ModelProviderPluginShim(harnesses)
     handlers = plugin.activate_locally(stack, credentials)
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
 
     def broken_list(*a, **k):
         raise RuntimeError("store offline")
@@ -167,7 +167,7 @@ def test_save_provider_config_create_then_cas_conflict(stack, harnesses, credent
     revision = saved["providerModel"]
     assert revision["version"] == 1
     # CAS: a stale expectedVersion is a typed revision conflict with current.
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
     with pytest.raises(WireError) as excinfo:
         handlers["modelProvider.saveProviderConfig"]({
             "operationKey": "op-save-002", "expectedVersion": 99,
@@ -183,7 +183,7 @@ def test_save_provider_config_same_key_different_payload_refused(stack, harnesse
     handlers = plugin.activate_locally(stack, credentials)
     handlers["modelProvider.saveProviderConfig"](
         {"operationKey": "op-duplicate-key", "patch": wire_body()})
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
     with pytest.raises(WireError) as excinfo:
         handlers["modelProvider.saveProviderConfig"]({
             "operationKey": "op-duplicate-key",
@@ -235,7 +235,7 @@ def test_probe_provider_reads_saved_endpoint_read_only(
 
 
 def test_probe_provider_stale_version_and_archived_refusals(stack, harnesses, credentials):
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
 
     class UnreferencedPort:
         def references_of(self, provider_config_id):
@@ -287,7 +287,7 @@ def test_inspect_choice_without_port_is_unknown_never_supported(stack, harnesses
 
 
 def test_inspect_choice_unsupported_and_missing_facts(stack, harnesses, credentials):
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
 
     plugin = ModelProviderPluginShim(harnesses, harness_config_port=UnsupportPort())
     handlers = plugin.activate_locally(stack, credentials)
@@ -342,7 +342,7 @@ def test_query_reads_native_model_without_a_model_choice_history(stack, harnesse
 
 
 def test_choose_for_session_unsupported_selection_refused(stack, harnesses, credentials):
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
 
     plugin = ModelProviderPluginShim(harnesses, harness_config_port=UnsupportPort())
     handlers = plugin.activate_locally(stack, credentials)
@@ -357,7 +357,7 @@ def test_choose_for_session_unsupported_selection_refused(stack, harnesses, cred
 
 def test_choose_for_session_overlay_revision_without_port_fail_closed(
         stack, harnesses, credentials):
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
 
     plugin = ModelProviderPluginShim(harnesses, harness_config_port=ReadyPort())
     handlers = plugin.activate_locally(stack, credentials)

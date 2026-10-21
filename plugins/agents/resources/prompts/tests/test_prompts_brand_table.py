@@ -11,7 +11,7 @@ from ordessa_prompts.harness_adapters.capabilities import (
     UNSUPPORTED, all_brand_rows, statement_for,
 )
 
-TOML = "packages/execution/agents/src/ordessa_execution_agents/harness/providers/registry_declarations/harnesses.toml"
+TOML = "packages/execution/agents/src/ordessa_agents/harness/providers/registry_declarations/harnesses.toml"
 
 
 def test_every_brand_accounts_for_all_three_semantics():

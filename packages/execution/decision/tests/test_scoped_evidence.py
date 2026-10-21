@@ -5,9 +5,9 @@ import json
 from types import SimpleNamespace
 import pytest
 
-from decision_runtime.evidence import EvidenceScope,FilesystemEvidenceStore
-from decision_runtime.definitions.values import DecisionError,canonical_bytes
-from decision_runtime.capability import build_capability
+from ordessa_decision.evidence import EvidenceScope,FilesystemEvidenceStore
+from ordessa_decision.definitions.values import DecisionError,canonical_bytes
+from ordessa_decision.capability import build_capability
 from test_capability import settings,job
 
 
@@ -86,8 +86,8 @@ def test_exact_digest_validation_precedes_scope_or_path_io(tmp_path):
 
 
 def test_scope_revoked_during_await_never_writes_under_new_or_unbound_owner(tmp_path):
-    from decision_runtime.settings import DecisionsSettings
-    from decision_runtime.runner import DecisionRunner
+    from ordessa_decision.settings import DecisionsSettings
+    from ordessa_decision.runner import DecisionRunner
     from test_capability import Engine
     authority=Authority();alice=authority.issue('alice');calls=[];store=FilesystemEvidenceStore(tmp_path/'original')
     class Runner:

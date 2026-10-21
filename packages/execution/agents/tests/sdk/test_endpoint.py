@@ -1,11 +1,11 @@
 """Bound endpoint: six independent members, bounded event pages, no authority leakage."""
 import pytest
 
-from ordessa_execution_agents.sdk.endpoint import (
+from ordessa_agents.sdk.endpoint import (
     BoundEndpoint, EndpointValueError, ProcessObservation, ProtocolEvent,
     ProtocolEventPage, SendObservation,
 )
-from ordessa_execution_agents.sdk.instances import EndpointRef
+from ordessa_agents.sdk.instances import EndpointRef
 
 DIGEST = 'sha256:' + 'a' * 64
 

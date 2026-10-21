@@ -3,21 +3,134 @@ requires = ["setuptools>=61,<77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ordessa-execution-agents"
+name = "ordessa-agents"
 version = "0.1.0"
-description = "Sole Agent/Profile mechanism with specific catalog and owner ports"
+description = "Sole Agent/Profile mechanism, Harness catalog and the installed brand providers"
 requires-python = ">=3.12"
 dependencies = ["ordessa-infrastructure==0.1.0", "ordessa-interfaces-contracts==0.1.0", "agent-client-protocol==0.12.1", "tomli-w>=1.2.0,<2", "PyYAML>=6.0.3,<7"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7", "pytest-asyncio"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[project.entry-points."ordessa.harness_providers"]
+claude = "ordessa_harness_claude_code.client:factory"
+codex = "ordessa_harness_codex.provider:factory"
+copilot = "ordessa_harness_copilot.client:factory"
+dsh = "ordessa_harness_dsh:factory"
+gemini-cli = "ordessa_harness_gemini_cli:factory"
+goose = "ordessa_harness_goose:factory"
+grok-build = "ordessa_harness_grok_build:factory"
+hermes = "ordessa_harness_hermes.provider:factory"
+kilo = "ordessa_harness_kilo.provider:factory"
+kimi = "ordessa_harness_kimi.client:factory"
+opencode = "ordessa_harness_opencode:factory"
+pi = "ordessa_harness_pi.provider:factory"
+qoder = "ordessa_harness_qoder:factory"
+qwen = "ordessa_harness_qwen:factory"
+vibe = "ordessa_harness_vibe:factory"
+
+# One distribution, several package roots: the owner plus the brand providers kept
+# in plugins/harness/* (provider implementations stay in plugins; packaging keeps
+# them owned by the agents distribution).
+[tool.setuptools]
+packages = [
+    "ordessa_agents",
+    "ordessa_agents.bridges",
+    "ordessa_agents.capability",
+    "ordessa_agents.harness",
+    "ordessa_agents.harness.configuration",
+    "ordessa_agents.harness.configuration.compilation",
+    "ordessa_agents.harness.configuration.importers",
+    "ordessa_agents.harness.configuration.materialization",
+    "ordessa_agents.harness.configuration.validation",
+    "ordessa_agents.harness.contracts",
+    "ordessa_agents.harness.contracts.errors",
+    "ordessa_agents.harness.contracts.models",
+    "ordessa_agents.harness.contracts.ports",
+    "ordessa_agents.harness.contracts.schemas",
+    "ordessa_agents.harness.definitions",
+    "ordessa_agents.harness.protocols",
+    "ordessa_agents.harness.protocols.acp",
+    "ordessa_agents.harness.providers",
+    "ordessa_agents.harness.providers.declarations",
+    "ordessa_agents.harness.providers.registry",
+    "ordessa_agents.harness.providers.resolution",
+    "ordessa_agents.harness.providers.resolution.artifacts",
+    "ordessa_agents.harness.transport",
+    "ordessa_agents.instances",
+    "ordessa_agents.preparation",
+    "ordessa_agents.profiles",
+    "ordessa_agents.profiles.definitions",
+    "ordessa_agents.profiles.definitions.schemas",
+    "ordessa_agents.profiles.management",
+    "ordessa_agents.sdk",
+    "ordessa_harness_claude_code",
+    "ordessa_harness_codex",
+    "ordessa_harness_copilot",
+    "ordessa_harness_dsh",
+    "ordessa_harness_gemini_cli",
+    "ordessa_harness_goose",
+    "ordessa_harness_grok_build",
+    "ordessa_harness_hermes",
+    "ordessa_harness_kilo",
+    "ordessa_harness_kimi",
+    "ordessa_harness_opencode",
+    "ordessa_harness_pi",
+    "ordessa_harness_qoder",
+    "ordessa_harness_qwen",
+    "ordessa_harness_vibe",
+]
+
+[tool.setuptools.package-dir]
+"ordessa_agents" = "src/ordessa_agents"
+"ordessa_agents.bridges" = "src/ordessa_agents/bridges"
+"ordessa_agents.capability" = "src/ordessa_agents/capability"
+"ordessa_agents.harness" = "src/ordessa_agents/harness"
+"ordessa_agents.harness.configuration" = "src/ordessa_agents/harness/configuration"
+"ordessa_agents.harness.configuration.compilation" = "src/ordessa_agents/harness/configuration/compilation"
+"ordessa_agents.harness.configuration.importers" = "src/ordessa_agents/harness/configuration/importers"
+"ordessa_agents.harness.configuration.materialization" = "src/ordessa_agents/harness/configuration/materialization"
+"ordessa_agents.harness.configuration.validation" = "src/ordessa_agents/harness/configuration/validation"
+"ordessa_agents.harness.contracts" = "src/ordessa_agents/harness/contracts"
+"ordessa_agents.harness.contracts.errors" = "src/ordessa_agents/harness/contracts/errors"
+"ordessa_agents.harness.contracts.models" = "src/ordessa_agents/harness/contracts/models"
+"ordessa_agents.harness.contracts.ports" = "src/ordessa_agents/harness/contracts/ports"
+"ordessa_agents.harness.contracts.schemas" = "src/ordessa_agents/harness/contracts/schemas"
+"ordessa_agents.harness.definitions" = "src/ordessa_agents/harness/definitions"
+"ordessa_agents.harness.protocols" = "src/ordessa_agents/harness/protocols"
+"ordessa_agents.harness.protocols.acp" = "src/ordessa_agents/harness/protocols/acp"
+"ordessa_agents.harness.providers" = "src/ordessa_agents/harness/providers"
+"ordessa_agents.harness.providers.declarations" = "src/ordessa_agents/harness/providers/declarations"
+"ordessa_agents.harness.providers.registry" = "src/ordessa_agents/harness/providers/registry"
+"ordessa_agents.harness.providers.resolution" = "src/ordessa_agents/harness/providers/resolution"
+"ordessa_agents.harness.providers.resolution.artifacts" = "src/ordessa_agents/harness/providers/resolution/artifacts"
+"ordessa_agents.harness.transport" = "src/ordessa_agents/harness/transport"
+"ordessa_agents.instances" = "src/ordessa_agents/instances"
+"ordessa_agents.preparation" = "src/ordessa_agents/preparation"
+"ordessa_agents.profiles" = "src/ordessa_agents/profiles"
+"ordessa_agents.profiles.definitions" = "src/ordessa_agents/profiles/definitions"
+"ordessa_agents.profiles.definitions.schemas" = "src/ordessa_agents/profiles/definitions/schemas"
+"ordessa_agents.profiles.management" = "src/ordessa_agents/profiles/management"
+"ordessa_agents.sdk" = "src/ordessa_agents/sdk"
+"ordessa_harness_claude_code" = "../../../plugins/harness/claude-code/src/ordessa_harness_claude_code"
+"ordessa_harness_codex" = "../../../plugins/harness/codex/src/ordessa_harness_codex"
+"ordessa_harness_copilot" = "../../../plugins/harness/copilot/src/ordessa_harness_copilot"
+"ordessa_harness_dsh" = "../../../plugins/harness/dsh/src/ordessa_harness_dsh"
+"ordessa_harness_gemini_cli" = "../../../plugins/harness/gemini_cli/src/ordessa_harness_gemini_cli"
+"ordessa_harness_goose" = "../../../plugins/harness/goose/src/ordessa_harness_goose"
+"ordessa_harness_grok_build" = "../../../plugins/harness/grok-build/src/ordessa_harness_grok_build"
+"ordessa_harness_hermes" = "../../../plugins/harness/hermes/src/ordessa_harness_hermes"
+"ordessa_harness_kilo" = "../../../plugins/harness/kilo/src/ordessa_harness_kilo"
+"ordessa_harness_kimi" = "../../../plugins/harness/kimi/src/ordessa_harness_kimi"
+"ordessa_harness_opencode" = "../../../plugins/harness/opencode/src/ordessa_harness_opencode"
+"ordessa_harness_pi" = "../../../plugins/harness/pi/src/ordessa_harness_pi"
+"ordessa_harness_qoder" = "../../../plugins/harness/qoder/src/ordessa_harness_qoder"
+"ordessa_harness_qwen" = "../../../plugins/harness/qwen/src/ordessa_harness_qwen"
+"ordessa_harness_vibe" = "../../../plugins/harness/vibe/src/ordessa_harness_vibe"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 
 [tool.setuptools.package-data]
-ordessa_execution_agents = ["harness/definitions/ACP.md", "harness/py.typed", "harness/providers/resolution/_deployment/*.mjs", "harness/providers/resolution/_deployment/native-artifact-policy.mjs", "harness/protocols/acp.mjs", "harness/transport/executable_lookup.mjs", "harness/transport/launch_descriptor.mjs", "harness/transport/launch_resolution.mjs", "harness/transport/profile_claims.mjs", "harness/transport/profile_vocabulary.mjs", "harness/transport/vendor/harness_remote/LICENSE", "harness/transport/vendor/harness_remote/PATCHES.md", "harness/transport/vendor/harness_remote/SOURCE.json", "harness/transport/vendor/harness_remote/bridge/src/acp-client.js", "harness/transport/vendor/harness_remote/bridge/src/backward-line-scan.js", "harness/configuration/acp/bridge.mjs", "harness/configuration/acp/digest.mjs", "harness/configuration/acp/endpoint.mjs", "harness/configuration/acp/operation.mjs", "harness/configuration/acp/private_scope.mjs", "harness/configuration/acp/reader.mjs", "harness/configuration/acp/restoration.mjs", "profiles/README.md", "profiles/definitions/README.md", "profiles/management/README.md"]
+ordessa_agents = ["harness/definitions/ACP.md", "harness/py.typed", "harness/providers/resolution/_deployment/*.mjs", "harness/providers/resolution/_deployment/native-artifact-policy.mjs", "harness/protocols/acp.mjs", "harness/transport/executable_lookup.mjs", "harness/transport/launch_descriptor.mjs", "harness/transport/launch_resolution.mjs", "harness/transport/profile_claims.mjs", "harness/transport/profile_vocabulary.mjs", "harness/transport/vendor/harness_remote/LICENSE", "harness/transport/vendor/harness_remote/PATCHES.md", "harness/transport/vendor/harness_remote/SOURCE.json", "harness/transport/vendor/harness_remote/bridge/src/acp-client.js", "harness/transport/vendor/harness_remote/bridge/src/backward-line-scan.js", "harness/configuration/acp/bridge.mjs", "harness/configuration/acp/digest.mjs", "harness/configuration/acp/endpoint.mjs", "harness/configuration/acp/operation.mjs", "harness/configuration/acp/private_scope.mjs", "harness/configuration/acp/reader.mjs", "harness/configuration/acp/restoration.mjs", "profiles/README.md", "profiles/definitions/README.md", "profiles/management/README.md"]

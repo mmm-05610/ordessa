@@ -6,9 +6,9 @@ identities bind preserved original source bytes, never the current adapter.
 from dataclasses import dataclass
 from collections.abc import Mapping
 
-from decision_runtime.historical.models import (DecisionAnswer, DecisionQuestion,
+from ordessa_decision.historical.models import (DecisionAnswer, DecisionQuestion,
     DecisionRequest, DecisionResult, FlowRef, PolicyRef, RunLimits, RunManifest, TaskBrief)
-from decision_runtime.historical.values import digest
+from ordessa_decision.historical.values import digest
 from ...application.contracts.errors import ApplicationError
 
 FROZEN_CODE_DIGESTS = {

@@ -81,7 +81,7 @@ def exercise(output):
  import importlib,importlib.util,sys
  from contextlib import nullcontext
  from types import SimpleNamespace
- from ordessa_execution_agents.harness.providers.registry import (
+ from ordessa_agents.harness.providers.registry import (
   HarnessAdmission,HarnessCatalog,HarnessDefinitionDeclaration,HarnessDefinitionDescriptor)
  provider=getattr(importlib.import_module({module!r}),{class_name!r})(definition_ref={{'environmentNamespace':'fresh','definitionId':{('codex' if module == 'ordessa_harness_codex' else 'claude')!r},'revision':'1'}},implementation_digest='sha256:'+'a'*64)
  class Policy:
@@ -107,14 +107,14 @@ def exercise(output):
  assert admission.list()==()
  catalog.retire('selected',1)
  catalog.close()
- for forbidden in ('ordessa_server','pacthold','ordessa_agent_tools','claude_agent_sdk','server_plugin_api','ordessa_execution_api','ordessa_environment_api'):
+ for forbidden in ('ordessa_server','pacthold','ordessa_cli','claude_agent_sdk','ordessa_server_plugin_api','ordessa_execution_api','ordessa_environment_api'):
   assert importlib.util.find_spec(forbidden) is None,forbidden+' unexpectedly installed'
  for other in ('ordessa_harness_pi','ordessa_harness_codex','ordessa_harness_claude_code'):
   if other!={module!r}: assert other not in sys.modules,'unselected family imported'
  # Optional Server binding stays unavailable when its public contract is absent.
  wrapper=getattr(importlib.import_module({module!r}+'.server_plugin'),{class_name!r}.replace('RuntimeProvider','ServerPlugin'))(declaration)
  try: wrapper.descriptor()
- except ModuleNotFoundError as error: assert error.name=='server_plugin_api'
+ except ModuleNotFoundError as error: assert error.name=='ordessa_server_plugin_api'
  else: raise AssertionError('missing optional Server API silently accepted')
  ''')
     run('fresh isolated catalog '+module,[python,'-I','-c',script])

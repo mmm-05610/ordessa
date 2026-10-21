@@ -2,7 +2,7 @@
 
 The script drives one session process: create/acquire/export, Profile, Agent
 start/get/reconcile/stop, process transport release and Use release, then a
-clean exit. It uses the installed console (or ``-m ordessa_agent_tools``) and a
+clean exit. It uses the installed console (or ``-m ordessa_cli``) and a
 real Harness brand from the installed catalog. When available, the whole
 session runs in a network namespace with only loopback up, so the native
 handshake can be shown without external network access.
@@ -26,7 +26,7 @@ import time
 
 
 def _command(executable, state, *, module):
-    prefix = ([sys.executable, '-m', 'ordessa_agent_tools'] if module
+    prefix = ([sys.executable, '-m', 'ordessa_cli'] if module
               else [str(Path(executable).parent / 'ordessa')])
     return prefix + ['--state', str(state), 'session']
 

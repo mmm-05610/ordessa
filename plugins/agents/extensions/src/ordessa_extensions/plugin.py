@@ -1,7 +1,7 @@
 """`ExtensionsServerPlugin` — the `ordessa.extensions` Server plugin
 (016 EXT-1: 域骨架).
 
-Implements the `server_plugin_api.ServerPlugin` protocol and contributes:
+Implements the `ordessa_server_plugin_api.ServerPlugin` protocol and contributes:
 
 * the descriptor: id ``ordessa.extensions``, no declared requires-edge
   (the domain reads no other plugin's ports);
@@ -25,7 +25,7 @@ plugin selection is C0's integration job (api-requests).
 """
 from __future__ import annotations
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     WIRE_ERROR_FAMILIES_API_VERSION,
     WIRE_ERROR_FAMILIES_POINT_ID,
     Contribution,

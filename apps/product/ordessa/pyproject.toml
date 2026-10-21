@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa"
+version = "2.0.0a1"
+description = "Ordessa: one install for the Server, the single CLI and the lower-layer providers"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+dependencies = [
+    "ordessa-server==2.0.0a1",
+    "ordessa-server-product==2.0.0a1",
+    "ordessa-cli==0.1.0a3",
+    # agents carries the Harness catalog and every installed brand provider (H2)
+    "ordessa-agents==0.1.0",
+    "ordessa-environments[openshell]==0.1.0",
+    "ordessa-decision[jev]==0.3.0",
+]
+
+[project.optional-dependencies]
+# The retired / pending-redesign upper assembly; never a default dependency.
+upper = ["ordessa-units==0.1.0", "ordessa-engineering==0.1.0",
+         "ordessa-system-access-bindings==0.1.0"]
+
+[tool.setuptools]
+packages = []

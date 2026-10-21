@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from decision_runtime import CallPermit, DecisionError, ModelCallContext
+from ordessa_decision import CallPermit, DecisionError, ModelCallContext
 
 
 def context(deadline=None):

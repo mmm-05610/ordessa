@@ -27,7 +27,7 @@ from fastapi.testclient import TestClient
 
 from ordessa_server.composition.runtime import build_runtime
 from ordessa_interfaces.http import create_app
-from server_plugin_api.wire_errors import FAMILIES
+from ordessa_server_plugin_api.wire_errors import FAMILIES
 
 T002_BASELINE_METHOD_COUNT = 70  # AR-1/W-1 后 53；S-03 装配：providerModels 6 + modelProvider 7 + permissions 4
 # （旧注 “PermissionsBackendPlugin 17 方法” 是误记：17 是这三个面之和，

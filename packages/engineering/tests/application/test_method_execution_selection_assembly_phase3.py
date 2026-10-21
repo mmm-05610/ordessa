@@ -1,7 +1,7 @@
 """Stable public composition over original owners; external Unit is controlled."""
 import asyncio
 import pytest
-from decision_runtime import DecisionAnswer
+from ordessa_decision import DecisionAnswer
 from ordessa_engineering.adapters.execution_profiles import ProfileTaskInput
 from ordessa_engineering.adapters.profile_method import build_method_execution_selection
 from ordessa_engineering.application.contracts.errors import ApplicationError

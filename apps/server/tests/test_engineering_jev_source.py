@@ -12,8 +12,8 @@ import httpx2
 import pytest
 
 from test_method_review_bridge import publish
-from decision_runtime.definitions import DecisionQuestion, PolicyRef, ReadContext, digest
-from decision_runtime.evidence import FileEvidenceSink
+from ordessa_decision.definitions import DecisionQuestion, PolicyRef, ReadContext, digest
+from ordessa_decision.evidence import FileEvidenceSink
 from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings
 from ordessa_engineering.adapters.persistence.sqlite.engineering_library import EngineeringLibrary
 from ordessa_engineering.adapters.persistence.sqlite.unit_of_work import SQLiteUoWFactory

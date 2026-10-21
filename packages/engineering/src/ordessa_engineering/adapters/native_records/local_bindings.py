@@ -14,7 +14,7 @@ import hashlib
 from ordessa_infrastructure.encoding import canonical_bytes, decode_json
 from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_infrastructure.identifiers import RequestKey
-from ordessa_execution_agents.profiles import ProfileRevisionRef
+from ordessa_agents.profiles import ProfileRevisionRef
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.public import UnitServices, unit_services
 

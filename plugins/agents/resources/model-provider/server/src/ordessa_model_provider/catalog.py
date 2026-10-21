@@ -16,13 +16,13 @@ from __future__ import annotations
 import json
 from typing import Any, Mapping
 
-from server_plugin_api.internal_errors import ServerError, unavailable
+from ordessa_server_plugin_api.internal_errors import ServerError, unavailable
 from ordessa_model_provider.protocols import (
     normalize_model_facts, normalize_protocols, validate_endpoints,
 )
 from ordessa_model_provider.records import KEEP
 from ordessa_model_provider.ports import REFERENCE_STATE_UNKNOWN
-from server_plugin_api.record_encoding import canonical, digest, reject_sensitive_keys
+from ordessa_server_plugin_api.record_encoding import canonical, digest, reject_sensitive_keys
 
 
 class ModelCatalogService:

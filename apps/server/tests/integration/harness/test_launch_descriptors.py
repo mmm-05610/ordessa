@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from ordessa_execution_agents.harness.providers.declarations.loader import (
+from ordessa_agents.harness.providers.declarations.loader import (
     load_launch_descriptors,
     load_registry,
 )

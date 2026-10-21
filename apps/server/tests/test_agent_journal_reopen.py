@@ -19,15 +19,15 @@ import pytest
 from ordessa_units.public import AgentOwnerUnavailable
 from ordessa_units.assembly import UnitRunPermission
 from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
-from ordessa_execution_agents.profiles import ProfileService
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.profiles import ProfileService
+from ordessa_agents.harness.providers.registry import (
     HarnessDefinitionDeclaration,
     HarnessDefinitionDescriptor,
     HarnessInstallationObservation,
 )
 from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore
 from ordessa_environments_local import LocalEnvironmentResourceProvider
-from ordessa_execution_agents.harness.definitions import ApplicationTarget
+from ordessa_agents.harness.definitions import ApplicationTarget
 from ordessa_interfaces.system_access.access_control.authentication import AccessGrant
 from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_units.bindings.profile_admission import UnitProfileAdmission
@@ -68,7 +68,7 @@ async def _allow_controlled_prompt(_identity, _deadline):
 
 
 def _effect_write_guard_factory(unit_ref, operation_ref, input_digest, params):
-    from ordessa_execution_agents.harness.transport import EffectWriteGuard
+    from ordessa_agents.harness.transport import EffectWriteGuard
     return EffectWriteGuard(unit_ref, operation_ref, input_digest, params, _allow_controlled_prompt)
 
 
@@ -82,8 +82,8 @@ class _ControlledPiPreparation:
         self.model = _fixed_launch['model']
 
     def prepare(self, roots):
-        from ordessa_execution_agents.harness.transport import LaunchSpec
-        from ordessa_execution_agents.preparation import (
+        from ordessa_agents.harness.transport import LaunchSpec
+        from ordessa_agents.preparation import (
             ConfigurationResources, PreparedHarness, SessionBootstrap,
         )
         return PreparedHarness(
@@ -377,7 +377,7 @@ def test_reopened_journal_preserves_legacy_unknown_fence(product_case):
 
 def test_valid_reopen_admits_fresh_unit_preserving_real_acp_unknown_and_shared_use(product_case, monkeypatch):
     from ordessa_units.records.unit_records import UnitRecords
-    from ordessa_execution_agents.harness.transport import RequestTimeout
+    from ordessa_agents.harness.transport import RequestTimeout
 
     case = product_case
     first = _build(case)

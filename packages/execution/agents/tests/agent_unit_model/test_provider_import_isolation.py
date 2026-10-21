@@ -18,7 +18,7 @@ LEGACY_PREFIXES = (
     "pacthold.harness_kit.adapters",
     "pacthold.harness_kit.entrypoints",
 )
-UNIT_RECORDS = ROOT / "packages/execution/agents/src/ordessa_execution_agents/units/records/unit_records.py"
+UNIT_RECORDS = ROOT / "packages/execution/agents/src/ordessa_agents/units/records/unit_records.py"
 
 
 def probe(family: str, *, extra: str | None = None) -> subprocess.CompletedProcess[str]:
@@ -43,8 +43,8 @@ for name in {tuple(FAMILIES)!r}:
     if name != {family!r}:
         assert not any(module == name or module.startswith(name + ".")
                        for module in sys.modules), "forbidden family imported: " + name
-assert not any(module == "ordessa_agent_tools.native_clients"
-               or module.startswith("ordessa_agent_tools.native_clients.")
+assert not any(module == "ordessa_cli.native_clients"
+               or module.startswith("ordessa_cli.native_clients.")
                for module in sys.modules), "product native client imported"
 for prefix in {LEGACY_PREFIXES!r}:
     assert not any(module == prefix or module.startswith(prefix + ".")

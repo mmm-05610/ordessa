@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from test_agent_guarded_bootstrap import setup
 from ordessa_infrastructure.encoding import canonical_bytes
-from ordessa_execution_agents.sdk.interactions import InteractionService
+from ordessa_agents.sdk.interactions import InteractionService
 from ordessa_engineering.adapters.native_records.agent_execution import AgentExecutionConsumer
 from ordessa_engineering.adapters.persistence.sqlite.engineering_library import EngineeringLibrary
 from ordessa_engineering.adapters.persistence.sqlite.blob_store import SQLiteBlobStore
@@ -27,9 +27,9 @@ import asyncio,hashlib,json,sys
 from dataclasses import replace
 from pathlib import Path
 from ordessa_infrastructure.encoding import canonical_bytes,decode_json
-from ordessa_execution_agents.public import Records
-from ordessa_execution_agents.sdk.interactions import InteractionService,InteractionsRefused,TurnRef
-from ordessa_execution_agents.sdk.instances import AgentInstanceRef
+from ordessa_agents.public import Records
+from ordessa_agents.sdk.interactions import InteractionService,InteractionsRefused,TurnRef
+from ordessa_agents.sdk.instances import AgentInstanceRef
 from ordessa_engineering.adapters.native_records.agent_execution import AgentExecutionConsumer
 from ordessa_engineering.adapters.persistence.sqlite.engineering_library import EngineeringLibrary
 from ordessa_engineering.adapters.persistence.sqlite.blob_store import SQLiteBlobStore
@@ -147,7 +147,7 @@ def test_f2_actual_original_binding_cold_process_query_never_restores_send(tmp_p
                 text=True,capture_output=True,timeout=20)
             assert done.returncode==0,done.stdout+done.stderr
             facts=json.loads(done.stdout);assert facts['state']==state and facts['sendCount']==0
-            from ordessa_execution_agents.public import Records
+            from ordessa_agents.public import Records
             reopened=Records(tmp_path/'agent.sqlite')
             assert reopened._db.execute('SELECT count(*) FROM operations').fetchone()[0]==original_rows
             reopened._db.close()

@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs"
-import { COMMON_CAPABILITIES, COMMON_ACP_CAPABILITIES, ACP_PROMPT_SETTLE_MS } from "../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/transport/profile_vocabulary.mjs"
+import { COMMON_CAPABILITIES, COMMON_ACP_CAPABILITIES, ACP_PROMPT_SETTLE_MS } from "../../../../../../packages/execution/agents/src/ordessa_agents/harness/transport/profile_vocabulary.mjs"
 
 const profile = {
     id: "dsh",

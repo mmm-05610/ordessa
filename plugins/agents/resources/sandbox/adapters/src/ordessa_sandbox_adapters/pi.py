@@ -21,8 +21,8 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from ordessa_execution_agents.harness.definitions.contracts import Assessment
-from ordessa_execution_agents.harness.definitions.intents import TargetHandle
+from ordessa_agents.harness.definitions.contracts import Assessment
+from ordessa_agents.harness.definitions.intents import TargetHandle
 from ordessa_sandbox_api import NativeSandboxIntent, SandboxErrorCode, ToolCategory
 
 from .base import BaseSandboxAdapter

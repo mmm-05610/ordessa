@@ -1,11 +1,11 @@
 """Original host admission/retirement assertions on independent Harness roles."""
-from ordessa_execution_agents.harness.definitions.errors import CoreDTOError
-from ordessa_execution_agents.harness.providers.registry.errors import CatalogAdmissionRefused
-from ordessa_execution_agents.harness.providers.registry.errors import CatalogUnavailable
+from ordessa_agents.harness.definitions.errors import CoreDTOError
+from ordessa_agents.harness.providers.registry.errors import CatalogAdmissionRefused
+from ordessa_agents.harness.providers.registry.errors import CatalogUnavailable
 from ordessa_units.errors import UnitAdmissionRefused
 from dataclasses import dataclass
 import pytest
-from server_plugin_api import (SERVER_PLUGIN_API_VERSION,Contribution,ContributionBatch,
+from ordessa_server_plugin_api import (SERVER_PLUGIN_API_VERSION,Contribution,ContributionBatch,
     DuplicateHttpRouteError,DuplicateMethodError,HttpRouteDescriptor,ServerMethodDescriptor,
     ServerPluginDescriptor,ServerPluginRegistration)
 from ordessa_server.composition.unit_runtime import UnitRuntimeOwner

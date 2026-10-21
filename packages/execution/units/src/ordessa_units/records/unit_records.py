@@ -30,7 +30,7 @@ from typing import Mapping, Protocol
 from uuid import uuid4
 
 from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
-from ordessa_execution_agents.harness.definitions import ApplicationTarget, Unknown
+from ordessa_agents.harness.definitions import ApplicationTarget, Unknown
 from .operation_journal import OperationJournal, JournalError
 
 

@@ -23,8 +23,8 @@ from ordessa_engineering.domain.approvals.consent import (
     ApprovalGrant, AuthorizationIntent, ConversationNotice,
 )
 from ordessa_interfaces.system_access.contracts.refs import Scope
-from server_plugin_api import ServerMethodDescriptor
-from server_plugin_api.wire_errors import WireError
+from ordessa_server_plugin_api import ServerMethodDescriptor
+from ordessa_server_plugin_api.wire_errors import WireError
 
 from .engineering import EngineeringCommandAccess
 from ordessa_engineering.application.contracts.implementation_routes import (

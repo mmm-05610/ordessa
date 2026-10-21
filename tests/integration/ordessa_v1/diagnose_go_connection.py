@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import tempfile
 
-from ordessa_execution_agents.harness.transport.channel import LaunchSpec
+from ordessa_agents.harness.transport.channel import LaunchSpec
 from ordessa_server.composition.temporary_process_capability import ExistingOpenCodeInput
 
 

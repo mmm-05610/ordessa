@@ -14,8 +14,8 @@ from pathlib import Path
 import time
 
 import httpx2
-from decision_runtime.definitions import PolicyRef, ReadContext, digest, plain
-from decision_runtime.evidence import FileEvidenceSink
+from ordessa_decision.definitions import PolicyRef, ReadContext, digest, plain
+from ordessa_decision.evidence import FileEvidenceSink
 from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings
 from ordessa_server.composition.engineering_reviewer_source import (
     OriginalJevReviewerSource, encode_review_run,

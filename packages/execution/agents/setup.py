@@ -16,7 +16,7 @@ class NativeBuild(build_py):
         super().run()
         root = Path(self.build_lib)
         pattern = re.compile(r'''(["'])(?:\.\./)+infrastructure/src/ordessa_infrastructure/([^"']+)\1''')
-        for module in (root / 'ordessa_execution_agents').rglob('*'):
+        for module in (root / 'ordessa_agents').rglob('*'):
             if module.suffix not in ('.js', '.mjs'):
                 continue
             def relocate(match):

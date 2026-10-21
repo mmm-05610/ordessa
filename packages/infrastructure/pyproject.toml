@@ -12,7 +12,7 @@ dependencies = []
 where = ["src"]
 
 [tool.setuptools.package-data]
-ordessa_infrastructure = ["encoding/canonical_json.mjs"]
+ordessa_infrastructure = ["encoding/canonical_json.mjs", "layout/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,7 +1,7 @@
 # ordessa-harness-dsh
 
 Actual runtime replacement: `DshHarnessProvider` and `factory` are exposed via
-`ordessa.harness_providers`. Only `ordessa_execution_agents.sdk` is an Ordessa
+`ordessa.harness_providers`. Only `ordessa_agents.sdk` is an Ordessa
 runtime import. All original Unit RuntimeProvider, projection, lease/grant,
 termination ledger, direct ProcessChannel/client and server-plugin adapters are
 physically retired. No old class aliases, fallback or second instance owner.

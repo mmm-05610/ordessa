@@ -6,7 +6,7 @@ Historical evidence is never accepted as current Agent identity or authorization
 from pathlib import Path
 import sqlite3
 
-from ordessa_execution_agents.public import InteractionService
+from ordessa_agents.public import InteractionService
 
 
 class NativeEvidenceUnavailable(RuntimeError):

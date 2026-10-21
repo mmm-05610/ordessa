@@ -14,7 +14,7 @@ from agent_tools_fixtures.configuration_records import setup, opening, query, co
 from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_harness_codex.client import CodexAppServerClient
 from ordessa_units.records.unit_records import UnitRecordsRefused
-from ordessa_execution_agents.harness.transport import LaunchSpec, ProcessChannel, RequestTimeout, WriterLeaseRefused
+from ordessa_agents.harness.transport import LaunchSpec, ProcessChannel, RequestTimeout, WriterLeaseRefused
 
 
 @pytest.mark.parametrize('scenario', ['ack-only', 'receipt-lost', 'bind-then-fence'])

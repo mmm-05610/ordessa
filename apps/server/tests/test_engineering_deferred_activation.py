@@ -7,7 +7,7 @@ import pytest
 from ordessa_engineering.adapters.persistence.sqlite.engineering_library import EngineeringLibrary
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.application.api import EXECUTION_DISPATCH
-from ordessa_execution_agents.profiles import ProfileRevisionRef
+from ordessa_agents.profiles import ProfileRevisionRef
 from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority
 from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_server.composition.engineering import (

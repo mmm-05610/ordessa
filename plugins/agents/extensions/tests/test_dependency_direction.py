@@ -14,13 +14,13 @@ ALLOWED_TOP_LEVEL = {
     # published contracts (AGENTS.md rule 3: plugins import platform
     # contracts, never host internals); 032: the harness contract edge is a
     # dotted grant under the kernel root
-    "server_plugin_api", "ordessa_execution_agents.harness.definitions",
+    "ordessa_server_plugin_api", "ordessa_agents.harness.definitions",
     # own package
     "ordessa_extensions",
 }
 
 #: Dotted modules that stay allowed although their top-level root is forbidden.
-ALLOWED_MODULES = {"ordessa_execution_agents.harness.definitions"}
+ALLOWED_MODULES = {"ordessa_agents.harness.definitions"}
 
 FORBIDDEN_PREFIXES = (
     "ordessa_server", "ordessa_execution_api", "pacthold.harness_kit.", "ordessa_skills",

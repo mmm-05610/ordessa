@@ -354,7 +354,7 @@ class _CountingStream:
 
 def test_concurrent_pending_retry_serializes_real_plugin_host_shutdown(tmp_path, monkeypatch):
     """Concurrent Host retries do not repeat a live PluginHost disposal path."""
-    from server_plugin_api import (
+    from ordessa_server_plugin_api import (
         SERVER_PLUGIN_API_VERSION, ServerPluginDescriptor, ServerPluginRegistration,
     )
     from ordessa_server.composition.plugin_host import ServerPluginHost
@@ -471,7 +471,7 @@ def test_concurrent_pending_retry_serializes_real_plugin_host_shutdown(tmp_path,
 
 
 def test_original_cleanup_refuses_same_thread_recursive_disposal(tmp_path):
-    from server_plugin_api import SERVER_PLUGIN_API_VERSION, ServerPluginDescriptor, ServerPluginRegistration
+    from ordessa_server_plugin_api import SERVER_PLUGIN_API_VERSION, ServerPluginDescriptor, ServerPluginRegistration
     from ordessa_server.composition.plugin_host import ServerPluginHost
     from ordessa_server.composition.runtime import _FailedBuildCleanup
     root=tmp_path/'reentrant-original-cleanup'

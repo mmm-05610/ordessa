@@ -7,8 +7,8 @@ from hashlib import sha256
 import json
 
 import pytest
-from decision_runtime import DecisionAnswer
-from decision_runtime.historical import FileEvidenceReader, ReadContext
+from ordessa_decision import DecisionAnswer
+from ordessa_decision.historical import FileEvidenceReader, ReadContext
 from ordessa_infrastructure.encoding import canonical_bytes, decode_json
 from ordessa_engineering.adapters.decision.source_reviewer import DecisionReviewerSource
 from ordessa_engineering.application.contracts.errors import ApplicationError
@@ -300,7 +300,7 @@ def test_native_association_rejects_duplicate_misordered_missing_or_mismatched(t
             request, raw_ref, standard=standard) is not None
         vector, native = _frozen_historical_native(tmp_path/'history')
         from types import SimpleNamespace
-        from decision_runtime.historical.models import DecisionRequest, DecisionQuestion, PolicyRef
+        from ordessa_decision.historical.models import DecisionRequest, DecisionQuestion, PolicyRef
         from ordessa_engineering.adapters.decision.source_history import historical_answers
         historical_request = DecisionRequest.from_dict(vector['request'])
         questions = tuple(DecisionQuestion.from_dict(q) for q in vector['questions'])

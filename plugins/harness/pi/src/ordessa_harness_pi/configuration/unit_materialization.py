@@ -13,9 +13,9 @@ import math
 import posixpath
 import re
 
-from ordessa_execution_agents.preparation import PreparedAgent, ConfigurationResources
-from ordessa_execution_agents.profiles import decode_revision, encode_revision_ref, ProfileRevisionRef
-from ordessa_execution_agents.harness.definitions.model_compilation import RequestParams
+from ordessa_agents.preparation import PreparedAgent, ConfigurationResources
+from ordessa_agents.profiles import decode_revision, encode_revision_ref, ProfileRevisionRef
+from ordessa_agents.harness.definitions.model_compilation import RequestParams
 from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_harness_pi.acp_model_facts import render_pi_provider, translate_protocol
 from .initial import initial_model_params

@@ -23,7 +23,7 @@ import pytest
 from ordessa_units.errors import UnitGuaranteeUnavailable
 from pacthold.adapters.security.fingerprint import ProtectedFingerprintHmac
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
-from ordessa_execution_agents.harness.providers.registry.contributions import (
+from ordessa_agents.harness.providers.registry.contributions import (
     RUNTIME_METHODS,
     RUNTIME_PROVIDER_VERSION,
     AgentContributionSet,

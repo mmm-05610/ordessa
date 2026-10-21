@@ -8,7 +8,7 @@ import threading
 
 import pytest
 
-from ordessa_execution_agents.harness.transport import NDJSONTransport, TransportClosed, WriterLease, WriterLeaseRefused
+from ordessa_agents.harness.transport import NDJSONTransport, TransportClosed, WriterLease, WriterLeaseRefused
 
 PEER = 'import sys\nfor line in sys.stdin:\n sys.stdout.write(line);sys.stdout.flush()\n'
 

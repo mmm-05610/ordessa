@@ -13,7 +13,7 @@ from typing import Mapping
 from ordessa_units.definitions.admission_identity import AdmissionNamespace
 from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
 
-from ordessa_execution_agents.harness.definitions.configuration_providers import (
+from ordessa_agents.harness.definitions.configuration_providers import (
     ConfigurationContractError,
     ConfigurationProviderDescriptor,
     ConfigurationProviderPin,

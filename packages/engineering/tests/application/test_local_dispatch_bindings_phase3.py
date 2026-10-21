@@ -32,7 +32,7 @@ from ordessa_interfaces.system_access.contracts.refs import Scope as AccessScope
 from ordessa_system_access_bindings.engineering import EngineeringCommandAccess
 from ordessa_infrastructure.encoding import canonical_bytes
 from ordessa_infrastructure.encoding.immutable_json import safe_json
-from ordessa_execution_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
 
 
 @pytest.fixture(autouse=True)
@@ -55,7 +55,7 @@ def _make_live_owner(tmp_path, assembly_style):
     import test_local_owner as helpers
     from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore
     from ordessa_environments_local import LocalEnvironmentResourceProvider
-    from ordessa_execution_agents.profiles import ProfileService
+    from ordessa_agents.profiles import ProfileService
     from ordessa_units.admission.context import UnitAdmissionContext
     from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
     from ordessa_units.admission.material_registration import MaterialCatalog

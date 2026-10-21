@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-import ordessa_agent_tools.session as session_module
-from ordessa_agent_tools.composition.state import LocalState
+import ordessa_cli.session as session_module
+from ordessa_cli.composition.state import LocalState
 
 
 class Domain:

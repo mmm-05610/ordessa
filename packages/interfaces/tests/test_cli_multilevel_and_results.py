@@ -27,7 +27,7 @@ def _capabilities(calls):
                        'type': 'json-file'},
                       {'name': 'force', 'flags': ('--force',), 'type': 'boolean'})}),)
     profiles = (OperationDescriptor(
-        'profiles.list', {'type': 'object', 'properties': {
+        'agents.profiles.list', {'type': 'object', 'properties': {
             'includeArchived': {'type': 'boolean'}},
             'additionalProperties': False}, {'type': 'object'},
         cli={'command': 'agents profiles', 'operation': 'list',
@@ -96,7 +96,7 @@ def test_help_and_list_need_no_host_or_state():
     assert code == 0 and 'agents' in output and 'profiles' in output and calls == []
     code, output, _ = _run(['list', '--json'], metadata=_metadata(calls))
     assert code == 0 and {item['id'] for item in json.loads(output)['data']['operations']} == {
-        'agents.start', 'profiles.list'}
+        'agents.start', 'agents.profiles.list'}
     assert calls == []
 
 

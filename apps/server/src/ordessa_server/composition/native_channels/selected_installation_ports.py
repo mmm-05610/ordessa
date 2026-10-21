@@ -1,7 +1,7 @@
 """Explicit selected installation ports; caller supplies the same captured catalog."""
 from functools import partial
 from ..harness_catalog import CapturedHarnessCatalog
-from ordessa_execution_agents.harness.providers.declarations.capability_claims import capability_claims
+from ordessa_agents.harness.providers.declarations.capability_claims import capability_claims
 
 def captured_installation_recipes(catalog: CapturedHarnessCatalog, *, build_files_for):
     if type(catalog) is not CapturedHarnessCatalog:

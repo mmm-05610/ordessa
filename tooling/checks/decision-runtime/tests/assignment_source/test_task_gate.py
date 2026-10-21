@@ -3,8 +3,8 @@ import asyncio
 from dataclasses import replace
 import time
 import pytest
-from decision_runtime.definitions import *
-from decision_runtime.runtime import RunContext, RuntimeFailure, BudgetExhausted
+from ordessa_decision.definitions import *
+from ordessa_decision.runtime import RunContext, RuntimeFailure, BudgetExhausted
 from assignment_source.task_gate import *
 
 FACTS = {'source_ref':'test-owner','source_version':'v1','evidence_refs':['evidence:readonly'],

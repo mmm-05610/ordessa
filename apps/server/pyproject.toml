@@ -19,15 +19,11 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = ["ordessa-infrastructure==0.1.0",
-    "ordessa-execution-agents==0.1.0",
-    "ordessa-units==0.1.0",
+    "ordessa-agents==0.1.0",
     "ordessa-environments==0.1.0",
     "ordessa-server-plugin-api>=0.1.0,<1",
-    "ordessa-interfaces==0.1.0", "ordessa-interfaces-contracts==0.1.0", "ordessa-environments-local==0.1.0",
-    "ordessa-system-access-bindings==0.1.0",
-    "ordessa-engineering==0.1.0",
-    "decision-runtime==0.2.0",
-    "ordessa-harness-pi==0.1.0a1",
+    "ordessa-interfaces==0.1.0", "ordessa-interfaces-contracts==0.1.0", 
+    "ordessa-decision==0.3.0",
     "SecretStorage==3.5.0; sys_platform == 'linux'",
     "fastapi>=0.115,<1",
     "uvicorn>=0.30,<1",
@@ -36,9 +32,13 @@ dependencies = ["ordessa-infrastructure==0.1.0",
 ]
 
 [project.optional-dependencies]
+# The retired / pending-redesign upper assembly. It is NOT part of the lower
+# closure: nothing here may add a consumer. Deleted with U-01/U-02.
+upper = ["ordessa-units==0.1.0", "ordessa-engineering==0.1.0",
+         "ordessa-system-access-bindings==0.1.0"]
 dev = ["pytest>=7", "httpx>=0.28", "pytest-asyncio"]
-agents = ["ordessa-execution-agents==0.1.0"]
-decision = ["ordessa-execution-agents==0.1.0", "decision-runtime==0.2.0"]
+agents = ["ordessa-agents==0.1.0"]
+decision = ["ordessa-agents==0.1.0", "ordessa-decision==0.3.0"]
 
 [project.scripts]
 ordessa-server = "ordessa_server.__main__:main"
@@ -51,4 +51,4 @@ asyncio_mode = "auto"
 where = ["src"]
 
 [tool.setuptools.package-data]
-ordessa_server = ["bootstrap/*.json", "bootstrap/migrations/agent_box_legacy/*.sql", "bootstrap/migrations/historical_core/*.sql", "composition/bridges/subagent_stdio.mjs", "composition/native_channels/access_entry.mjs", "composition/native_channels/controlled-peers.mjs", "composition/native_channels/launch_catalog.mjs", "composition/native_channels/launch_policy.mjs", "composition/native_channels/native_server_plan.mjs", "composition/native_channels/selected_launch_ports.mjs"]
+ordessa_server = ["bootstrap/migrations/agent_box_legacy/*.sql", "bootstrap/migrations/historical_core/*.sql", "composition/bridges/subagent_stdio.mjs", "composition/native_channels/access_entry.mjs", "composition/native_channels/controlled-peers.mjs", "composition/native_channels/launch_catalog.mjs", "composition/native_channels/launch_policy.mjs", "composition/native_channels/native_server_plan.mjs", "composition/native_channels/selected_launch_ports.mjs"]

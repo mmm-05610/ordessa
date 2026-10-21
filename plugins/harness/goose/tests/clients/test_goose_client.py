@@ -12,8 +12,8 @@ import textwrap
 
 import pytest
 
-from ordessa_execution_agents.harness.transport.channel import LaunchSpec, ProcessChannel
-from ordessa_execution_agents.harness.protocols.acp import AcpRemoteError
+from ordessa_agents.harness.transport.channel import LaunchSpec, ProcessChannel
+from ordessa_agents.harness.protocols.acp import AcpRemoteError
 from ordessa_harness_goose.client import GooseClient
 
 PEER = textwrap.dedent(

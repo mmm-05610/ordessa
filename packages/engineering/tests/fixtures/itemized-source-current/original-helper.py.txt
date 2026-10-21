@@ -12,7 +12,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from decision_runtime import DecisionAnswer, DecisionServices, FileEvidenceSink, PolicyRef, ReadContext
+from ordessa_decision import DecisionAnswer, DecisionServices, FileEvidenceSink, PolicyRef, ReadContext
 from ordessa_infrastructure.encoding import canonical_bytes, decode_json
 from ordessa_engineering.adapters.filesystem.project_sources import ProjectSourceMaterials
 from ordessa_engineering.adapters.filesystem.resource_reader import FileResourceReader

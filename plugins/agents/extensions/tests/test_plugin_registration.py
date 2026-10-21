@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import pytest
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     Contribution, ServerPluginContext, ServerPluginDescriptor,
 )
 
@@ -81,7 +81,7 @@ def test_wire_methods_round_trip_through_the_real_handlers():
     revoked = methods["extensions.approvals.revoke"].handler(
         {"requestId": "r3", "hookId": "wired"})
     assert revoked["record"]["state"] == "revoked"
-    from server_plugin_api import ServerError
+    from ordessa_server_plugin_api import ServerError
     with pytest.raises(ServerError) as excinfo:
         methods["extensions.approvals.revoke"].handler(
             {"requestId": "r4", "hookId": "ghost"})

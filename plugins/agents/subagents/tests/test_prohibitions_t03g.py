@@ -68,7 +68,7 @@ if str(SRC_DIR) not in sys.path:  # this file owns no conftest.py
 
 #: The published contract vocabulary every FR09 guard below is driven through
 #: (SR-1b: this package emits C0's intents and nothing else).
-from ordessa_execution_agents.harness.definitions import (  # noqa: E402  (path set just above)
+from ordessa_agents.harness.definitions import (  # noqa: E402  (path set just above)
     AdapterContext, BindSecret, ContentRef, ContractError, FieldClaim,
     FieldPath, Installation, IntentSet, IntentSource, InvokeAction,
     MountContent, RemoveOwnedContent, ResetField, SetField, TargetDescriptor,
@@ -650,7 +650,7 @@ def _module_binding_map(tree: ast.Module) -> dict[int, str]:
     return owners
 
 
-HARNESS_CONTRACT_EDGE = "ordessa_execution_agents.harness.definitions"
+HARNESS_CONTRACT_EDGE = "ordessa_agents.harness.definitions"
 
 
 def _harness_contract_edge(module: str) -> bool:

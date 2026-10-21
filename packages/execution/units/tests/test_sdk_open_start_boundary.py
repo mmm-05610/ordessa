@@ -248,7 +248,7 @@ class _OpenTrace:
         parts = Path(filename).parts
         for root in (
             "ordessa_units", "ordessa_environments", "ordessa_environments_local",
-            "ordessa_execution_agents", "acp",
+            "ordessa_agents", "acp",
         ):
             try:
                 index = parts.index(root)

@@ -7,13 +7,13 @@ import json
 
 from ordessa_units.errors import UnitGuaranteeUnavailable, UnitIdentityMismatch
 
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     ProfileService, Profile, ProfileRevision, ProfileRevisionRef, ProfileContent,
     ConfigurationDeclaration, ProfileNotFound, ProfileRevisionConflict, ProfileValidationError,
 )
-from ordessa_execution_agents.profiles.definitions.validation import AGENT_CONTRACT_VERSION
-from ordessa_execution_agents.profiles.definitions.schemas.profile_wire import profile_wire_sections
-from ordessa_execution_agents.harness.contracts.schemas.wire_access import access_wire_sections
+from ordessa_agents.profiles.definitions.validation import AGENT_CONTRACT_VERSION
+from ordessa_agents.profiles.definitions.schemas.profile_wire import profile_wire_sections
+from ordessa_agents.harness.contracts.schemas.wire_access import access_wire_sections
 from ordessa_units.bindings.wire import bindings_wire_sections
 from ordessa_units.configuration.wire import configuration_wire_sections
 from ordessa_units.lifecycle.wire import lifecycle_wire_sections
@@ -24,7 +24,7 @@ from ordessa_units.bindings.publication import NodePublication, encode_node_ref,
 from ordessa_units.bindings.profile_admission import UnitProfileAdmission
 from ordessa_units.admission.operations import AgentOperations, AgentUnresolvedSnapshot, OperationNotFound
 from ordessa_units.configuration.service import AgentConfiguration
-from ordessa_execution_agents.harness.providers.registry.catalog import AgentProviders
+from ordessa_agents.harness.providers.registry.catalog import AgentProviders
 from ordessa_units.configuration.offers import AgentConfigurationOffers
 
 
@@ -74,7 +74,7 @@ def wire_schema_digest(version=AGENT_CONTRACT_VERSION) -> str:
 from ordessa_units.admission.material_contracts import (
     AdmittedResourceProviderMetadata, AdmittedMaterialProviderMetadata,
 )
-from ordessa_execution_agents.harness.definitions.configuration_providers import (
+from ordessa_agents.harness.definitions.configuration_providers import (
     CONFIGURATION_PROVIDER_VERSION, CONFIGURATION_METHODS, ConfigurationRoute,
     ConfigurationProviderDescriptor, ConfigurationProviderPin,
     AdmittedConfigurationProviderMetadata,
@@ -98,7 +98,7 @@ from ordessa_units.bindings.material_operations import (
     material_operation_facts, material_reservation_usages,
 )
 from ordessa_units.admission.owner_ports import AgentOwnerPorts, AgentProviderView
-from ordessa_execution_agents.harness.transport import EffectWriteGuard, EffectWriteRefused
+from ordessa_agents.harness.transport import EffectWriteGuard, EffectWriteRefused
 from ordessa_units.channels.contracts import (
     ManagedInputOutcome, WorkspaceExecutionEvidence, WorkspaceExecutionPort,
     plain_json_mapping,
@@ -288,7 +288,7 @@ __all__ += ["ManagedInputReservations", "CapturedInputRef", "CapturedInputEviden
             "NativeInputStatePort", "FirstInputObservation", "FirstInputObservationPort"]
 __all__ += ["ManagedInputOutcome", "WorkspaceExecutionEvidence", "WorkspaceExecutionPort",
             "plain_json_mapping"]
-from ordessa_execution_agents.harness.providers.registry.contributions import RuntimeProvider, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION, PURE_READ_METHODS
+from ordessa_agents.harness.providers.registry.contributions import RuntimeProvider, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION, PURE_READ_METHODS
 __all__ += ["RuntimeProvider", "RuntimeProviderDescriptor", "RUNTIME_PROVIDER_VERSION", "PURE_READ_METHODS"]
 from ordessa_units.configuration.contracts import (
     CONFIGURATION_CONTRACT_VERSION, ApplicationPolicy, ConfigurationChangeRequest,

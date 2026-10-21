@@ -71,7 +71,7 @@ from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
 from ordessa_units.admission.material_admission import MaterialAdmission
 from ordessa_units.admission.material_registration import MaterialCatalog
 from ordessa_units.definitions.materials import ReconcileSupport, ResourceProviderDescriptor
-from ordessa_execution_agents.harness.providers.registry import HarnessCatalog
+from ordessa_agents.harness.providers.registry import HarnessCatalog
 
 _ENV = "env"
 _PRINCIPAL = "principal"

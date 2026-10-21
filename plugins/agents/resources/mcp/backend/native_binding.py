@@ -3,7 +3,7 @@
 Everything that crosses between the MCP domain DTOs
 (:mod:`backend.native_intents`, :mod:`backend.resolve` snapshots) and the
 published Harness C2/C4 contract types
-(``ordessa_execution_agents.harness.definitions``, plugins/harness/api) happens here and nowhere
+(``ordessa_agents.harness.definitions``, plugins/harness/api) happens here and nowhere
 else: ``native_intents`` stays pure-domain and unit-testable on its own,
 ``backend/service.py`` consumes the C4 port through the converters below,
 and ``adapters/codex.py`` / ``adapters/claude.py`` expose the real
@@ -49,7 +49,7 @@ refusal, not guesswork), and the submission permit itself (the C4 ``plan``
 surface takes no permit; presence is checked here, verification and spend
 stay with the harness ``apply`` ``PermitVerifier``).
 
-Import boundary: this module imports ``ordessa_execution_agents.harness.definitions`` (the published
+Import boundary: this module imports ``ordessa_agents.harness.definitions`` (the published
 contract) and the MCP domain only — never ``adapters/*`` (outside the
 installed ``backend`` package) and never host internals. The brand-side
 pure verify function is injected by the adapter factories in
@@ -61,7 +61,7 @@ import json
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping, Optional, Tuple
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, AdapterRefusal, ApplicationTarget, Assessment,
     ConfigurationAdapterDescriptor, ContractError, DesiredFragment, ErrorCode,
     FieldClaim, FieldPath, IntentSet, LaunchRequest, Match, Mismatch,
@@ -69,7 +69,7 @@ from ordessa_execution_agents.harness.definitions import (
     TargetDescriptor, TargetHandle, Unknown, ValueSchema, VerificationUnknown,
     VersionRange, validate_json,
 )
-from ordessa_execution_agents.harness.definitions.schema import looks_secret_name
+from ordessa_agents.harness.definitions.schema import looks_secret_name
 
 from .errors import (
     APPLICATION_PORT_ABSENT as _APPLICATION_PORT_ABSENT,
@@ -533,7 +533,7 @@ def compile_intent_set(brand, context: AdapterContext, desired: Any) -> Any:
       name the exact slot (the C3 merge admits BindSecret only there);
       without that surface the compile refuses typed — it never degrades
       into a plaintext write (t04-adapters.md §3 G2 hard clause)."""
-    from ordessa_execution_agents.harness.definitions import BindSecret, IntentSource
+    from ordessa_agents.harness.definitions import BindSecret, IntentSource
 
     if desired is None:
         # DesiredFragment operation="reset" arrives with no value; deleting

@@ -3,25 +3,39 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "decision-runtime"
-version = "0.2.0"
-description = "Owned decision core: decision-job/1, rules/ask runner, evidence"
+name = "ordessa-decision"
+version = "0.3.0"
+description = "Owned decision core (decision-job/1) plus its bounded rule/ask engines"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["ordessa-interfaces-contracts==0.1.0"]
+dependencies = ["ordessa-interfaces-contracts==0.1.0", "cel-python>=0.5.0"]
 
 [project.entry-points."ordessa.capabilities"]
-decisions = "decision_runtime.capability:factory"
+decisions = "ordessa_decision.capability:factory"
+
+[project.entry-points."ordessa.decision.rules"]
+cel = "ordessa_decision_rules_cel.engine:build"
 
 [project.optional-dependencies]
+# Jev's provider stack is heavier and only needed when that engine is selected.
+jev = ["typesafe-sdk==0.7.2", "httpx2==2.13.1", "pydantic==2.13.5"]
 dev = ["pytest>=7", "pytest-asyncio"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["decision_runtime*"]
+# One distribution, several package roots: the runtime plus the engines kept in
+# plugins/decision/* (provider implementations stay in plugins; packaging keeps
+# them owned by the decision distribution).
+[tool.setuptools]
+packages = ["ordessa_decision", "ordessa_decision.definitions", "ordessa_decision.historical",
+    "ordessa_decision_rules_cel", "ordessa_decision_jev"]
 
+[tool.setuptools.package-dir]
+"ordessa_decision" = "src/ordessa_decision"
+"ordessa_decision.definitions" = "src/ordessa_decision/definitions"
+"ordessa_decision.historical" = "src/ordessa_decision/historical"
+"ordessa_decision_rules_cel" = "../../../plugins/decision/rules-cel/src/ordessa_decision_rules_cel"
+"ordessa_decision_jev" = "../../../plugins/decision/jev/src/ordessa_decision_jev"
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "../../../plugins/decision/rules-cel/tests", "../../../plugins/decision/jev/tests"]
 pythonpath = ["src"]
 asyncio_mode = "auto"

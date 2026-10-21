@@ -92,7 +92,7 @@ def test_source_authority_is_checked_before_the_record_barrier_and_native_bytes(
     from types import SimpleNamespace
     from unittest.mock import AsyncMock, MagicMock
     from ordessa_environments import ProcessHandle
-    from ordessa_execution_agents.harness.transport import EffectWriteGuard
+    from ordessa_agents.harness.transport import EffectWriteGuard
     from ordessa_units.sessions.environment_channel import EnvironmentProcessChannel
 
     attestor = 'engineering.conversation.attest'
@@ -663,7 +663,7 @@ def test_pending_token_cannot_be_consumed_after_admission_ends():
 
 def test_original_effect_write_guard_cross_task_cleanup_clears_only_delegated_lease():
     """Receive the original SDK hold's wait_for/create_task cleanup contexts."""
-    from ordessa_execution_agents.harness.transport import EffectWriteGuard
+    from ordessa_agents.harness.transport import EffectWriteGuard
 
     authority, caller, access = _access()
     handoffs: Queue = Queue()

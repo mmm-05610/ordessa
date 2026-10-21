@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from ordessa_agent_tools.session import Interrupt, _prompt_instance_argument, _read_reference
+from ordessa_cli.session import Interrupt, _prompt_instance_argument, _read_reference
 
 
 REFERENCE = {'schemaVersion': 'agent-instance/1', 'namespace': 'local-test',

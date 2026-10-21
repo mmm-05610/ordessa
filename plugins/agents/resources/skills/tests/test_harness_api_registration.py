@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapter,
     ConfigurationCapabilities, ContractError, ErrorCode, FieldClaim,
     Installation, IntentSet, Match, Mismatch, MountContent, TargetDescriptor,
@@ -35,7 +35,7 @@ from ordessa_server.composition.configuration.contributions import CONFIGURATION
 from ordessa_server.composition.configuration.contributions import HarnessContributionError
 from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
 from ordessa_server.composition.configuration.contributions import POINT_API_VERSION as PUBLISHED_POINT_API_VERSION
-from server_plugin_api import Contribution
+from ordessa_server_plugin_api import Contribution
 
 from ordessa_skills.harness_adapters import codex as codex_module
 from ordessa_skills.harness_adapters import contribution as V
@@ -128,7 +128,7 @@ def _plugin_rows(tmp_path):
     point (`contribute_harness_adapters=True`, the default): three adapter
     rows on the open point plus the error-family row."""
     from ordessa_server.bootstrap.storage.product_database import Database
-    from server_plugin_api import ServerPluginContext
+    from ordessa_server_plugin_api import ServerPluginContext
 
     from ordessa_skills.plugin import SkillsServerPlugin
     context = ServerPluginContext(
@@ -166,7 +166,7 @@ def test_the_real_host_publishes_the_rows_through_the_harness_handler():
     descriptors."""
     from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
     from ordessa_server.composition.plugin_host import ServerPluginHost
-    from server_plugin_api import (
+    from ordessa_server_plugin_api import (
         Contribution, ContributionBatch, ServerPluginDescriptor,
         ServerPluginRegistration,
     )
@@ -228,7 +228,7 @@ def test_an_unbound_point_refuses_the_batch_fail_closed(tmp_path):
     never declared/binds is a typed activation failure, not a drop. A bare
     `ServerPluginHost` without the point is that state."""
     from ordessa_server.composition.plugin_host import ServerPluginHost
-    from server_plugin_api import (
+    from ordessa_server_plugin_api import (
         ContributionPointUnboundError, ServerPluginDescriptor,
         ServerPluginRegistration,
     )
@@ -245,7 +245,7 @@ def test_an_unbound_point_refuses_the_batch_fail_closed(tmp_path):
             return ServerPluginRegistration(contributions=registration_rows)
 
     def _plugin_rows_batch():
-        from server_plugin_api import Contribution, ContributionBatch
+        from ordessa_server_plugin_api import Contribution, ContributionBatch
         return ContributionBatch(
             tuple(Contribution(point_id=V.CONFIGURATION_POINT,
                                api_version=V.POINT_API_VERSION,
@@ -261,7 +261,7 @@ def test_an_unbound_point_refuses_the_batch_fail_closed(tmp_path):
 
 
 def _stage_and_commit(registry, payload, owner):
-    from server_plugin_api import ContributionBatch, stage_contributions
+    from ordessa_server_plugin_api import ContributionBatch, stage_contributions
     contribution = Contribution(point_id=V.CONFIGURATION_POINT,
                                 api_version="v1", payload=payload)
     staged = stage_contributions(
@@ -417,7 +417,7 @@ def test_load_or_invocation_events_stay_unknown_for_every_brand():
 
 
 def test_inspected_capabilities_never_offer_an_unknown_cell():
-    from ordessa_execution_agents.harness.definitions import ApplicationTarget
+    from ordessa_agents.harness.definitions import ApplicationTarget
     target = ApplicationTarget(server_id="s", session_id="sess",
                                channel_id="ch", runtime_generation=1)
     for adapter in ADAPTERS:

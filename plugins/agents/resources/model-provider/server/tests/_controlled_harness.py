@@ -31,17 +31,17 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from uuid import uuid4
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, ApplicationTarget, Installation, TargetDescriptor,
     TargetHandle, VersionRange,
 )
 from ordessa_units.records.operation_journal import NativeActivationReceipt
-from ordessa_execution_agents.harness.contracts.models.application import NativeReadback
+from ordessa_agents.harness.contracts.models.application import NativeReadback
 from ordessa_units.records.operation_journal import OperationJournal
-from ordessa_execution_agents.harness.contracts.models.application import RuntimeSnapshot
-from ordessa_execution_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
+from ordessa_agents.harness.contracts.models.application import RuntimeSnapshot
+from ordessa_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
 
-from ordessa_execution_agents.harness.configuration.compilation.model_choice import ENTRY
+from ordessa_agents.harness.configuration.compilation.model_choice import ENTRY
 def brand_c2(brand):
     # Controlled composition selects the independent public brand port explicitly.
     import importlib
@@ -59,11 +59,11 @@ class SelectedBrandC2Plugin:
         self.brand = brand
 
     def descriptor(self):
-        from server_plugin_api import ServerPluginDescriptor
+        from ordessa_server_plugin_api import ServerPluginDescriptor
         return ServerPluginDescriptor(c2_owner(self.brand), 'Controlled independent C2 admission', '1')
 
     def build(self, context):
-        from server_plugin_api import Contribution, ContributionBatch, ServerPluginRegistration
+        from ordessa_server_plugin_api import Contribution, ContributionBatch, ServerPluginRegistration
         return ServerPluginRegistration(contributions=ContributionBatch((
             Contribution('harness.configuration-adapters', 'v1', brand_c2(self.brand).configuration_adapter()),
         )))

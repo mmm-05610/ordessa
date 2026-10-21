@@ -5,7 +5,7 @@ from pathlib import Path
 
 import httpx2
 import pytest
-from decision_runtime.definitions import digest
+from ordessa_decision.definitions import digest
 
 SOURCE = Path(__file__).resolve().parents[4] / 'tooling/checks/decision-runtime/evaluation'/'edge_flow_probe.py'
 SPEC = importlib.util.spec_from_file_location('decision_edge_flow_probe',SOURCE)

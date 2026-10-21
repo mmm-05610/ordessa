@@ -1,6 +1,6 @@
 """`SkillsServerPlugin` — the `ordessa.skills` Server plugin (requirement: §G1 slice).
 
-Implements the `server_plugin_api.ServerPlugin` protocol and contributes:
+Implements the `ordessa_server_plugin_api.ServerPlugin` protocol and contributes:
 
 * the descriptor: id ``ordessa.skills``, ``requires=("ordessa.workspace",)``
   — the declared edge is the access grant for the `workspace.records` port,
@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     WIRE_ERROR_FAMILIES_API_VERSION,
     WIRE_ERROR_FAMILIES_POINT_ID,
     Contribution,
@@ -60,7 +60,7 @@ class WorkspaceRegistryLookup:
     ``WORKSPACE_NOT_FOUND`` for an unknown id, while the domain port answers
     `None` and the domain turns that into the typed ``WORKSPACE_UNKNOWN``
     refusal (G07). The adapter duck-types the `code` attribute instead of
-    importing `server_plugin_api.internal_errors` — this package's purity pin
+    importing `ordessa_server_plugin_api.internal_errors` — this package's purity pin
     (tests/test_dependency_direction.py) forbids the host import, and the
     mismatch is recorded in the C0 integration report. Any other exception
     propagates unchanged: an outage is never flattened into "unknown id".
@@ -102,7 +102,7 @@ class SkillsServerPlugin:
         #: `PolicyRepository`, or any callable returning the ceilings in
         #: force). It arrives HERE rather than through `context.ports`
         #: because the host grants another plugin's ports only along a
-        #: declared dependency (server_plugin_api/contract.py:258-270) and
+        #: declared dependency (ordessa_server_plugin_api/contract.py:258-270) and
         #: Skills must not hard-require permissions
         #: (contracts.md 可选注册不能反转依赖); `ports` is still consulted
         #: first when a composition does declare the edge. Wiring this

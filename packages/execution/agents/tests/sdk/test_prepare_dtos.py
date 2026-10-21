@@ -7,12 +7,12 @@ import hashlib
 
 import pytest
 
-from ordessa_execution_agents.sdk.prepare import (
+from ordessa_agents.sdk.prepare import (
     BoundPath, ConfigurationArtifact, CredentialRef, EndpointError, LaunchObservation,
     LaunchPlan, MaterialRef, PreparedConfigurationRef, PrepareValueError, SecretBinding,
     SessionBootstrap, canonical_digest, canonical_json, validate_launch_observation,
 )
-from ordessa_execution_agents.sdk.instances import EndpointRef
+from ordessa_agents.sdk.instances import EndpointRef
 
 
 def _path(relative='config/app.json'):

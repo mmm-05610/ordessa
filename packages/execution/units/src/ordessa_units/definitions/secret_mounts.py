@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
-from ordessa_execution_agents.harness.definitions import CredentialRefV1
+from ordessa_agents.harness.definitions import CredentialRefV1
 
 
 @dataclass(frozen=True)

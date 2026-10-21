@@ -8,8 +8,8 @@ the runner can record it faithfully.
 """
 from __future__ import annotations
 
-from decision_runtime.definitions.models import RulesOutcome
-from decision_runtime.definitions.values import DecisionError, plain
+from ordessa_decision.definitions.models import RulesOutcome
+from ordessa_decision.definitions.values import DecisionError, plain
 
 ENGINE_ID = "cel"
 _MAX_CHECKS = 64

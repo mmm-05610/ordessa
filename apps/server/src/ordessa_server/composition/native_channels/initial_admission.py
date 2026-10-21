@@ -1,5 +1,5 @@
 """Initial channel admission against the existing registry and session owner."""
-from ordessa_execution_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
+from ordessa_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
 
 
 def initial_channel(registry, connection_id, *, empty=True):

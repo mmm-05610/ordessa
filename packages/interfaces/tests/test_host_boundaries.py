@@ -24,7 +24,7 @@ GENERIC = (
 )
 FORBIDDEN = (
     'ordessa_environments', 'ordessa_engineering', 'ordessa_server',
-    'ordessa_execution_agents', 'ordessa_units', 'plugins',
+    'ordessa_agents', 'ordessa_units', 'plugins',
 )
 
 

@@ -35,7 +35,7 @@ def _import_roots(path: Path) -> set[str]:
 
 
 # Actual production owners, all witnessed before scanning.
-KIT_SRC = REPO_ROOT / "packages/execution/agents/src/ordessa_execution_agents/harness"
+KIT_SRC = REPO_ROOT / "packages/execution/agents/src/ordessa_agents/harness"
 RECORDS_SRC = REPO_ROOT / "packages/execution/units/src/ordessa_units/records"
 BINDING_SRC = REPO_ROOT / "apps/server/src/ordessa_server/composition/configuration"
 SDK_SRC = KIT_SRC / "definitions"
@@ -63,7 +63,7 @@ def test_api_dto_modules_stay_host_and_implementation_free():
     # These exact shared references remain pending their real owner transfer.
     # They do not permit the old Harness API, host, or implementation imports.
     shared_references = {
-        "ordessa_execution_agents.harness.definitions.activation",
+        "ordessa_agents.harness.definitions.activation",
         "ordessa_infrastructure.encoding.immutable_json",
     }
     files = sorted(SDK_SRC.rglob("*.py"))
@@ -73,8 +73,8 @@ def test_api_dto_modules_stay_host_and_implementation_free():
         assert "pacthold.harness_kit" not in roots, file
         names = _import_names(file)
         assert all(name.split(".")[0] in allowed
-                   or name == "ordessa_execution_agents.harness.definitions"
-                   or name.startswith("ordessa_execution_agents.harness.definitions.")
+                   or name == "ordessa_agents.harness.definitions"
+                   or name.startswith("ordessa_agents.harness.definitions.")
                    or name in shared_references for name in names), (file, sorted(names))
 
 
@@ -82,8 +82,8 @@ def _native_evidence_imports_allowed(names):
     allowed = {"__future__", "dataclasses", "datetime", "hashlib", "json", "re",
                "typing"}
     return all(name.split(".")[0] in allowed
-               or name == "ordessa_execution_agents.harness.definitions"
-               or name.startswith("ordessa_execution_agents.harness.definitions.")
+               or name == "ordessa_agents.harness.definitions"
+               or name.startswith("ordessa_agents.harness.definitions.")
                or name == "ordessa_units.records"
                or name.startswith("ordessa_units.records.")
                for name in names)
@@ -94,12 +94,12 @@ def test_execution_import_permission_is_limited_to_records(tmp_path):
     for module, permitted in (
         ("ordessa_units.records", True),
         ("ordessa_units.records.operation_journal", True),
-        ("ordessa_execution_agents.public", False),
-        ("ordessa_execution_agents.units.lifecycle.service", False),
+        ("ordessa_agents.public", False),
+        ("ordessa_agents.units.lifecycle.service", False),
         ("ordessa_units.records_alias", False),
-        ("ordessa_execution_agents.harness.definitions", True),
-        ("ordessa_execution_agents.harness.definitions.native_evidence", True),
-        ("ordessa_execution_agents.harness.definitions_alias", False),
+        ("ordessa_agents.harness.definitions", True),
+        ("ordessa_agents.harness.definitions.native_evidence", True),
+        ("ordessa_agents.harness.definitions_alias", False),
         ("ordessa_execution_api.harness", False),
         ("ordessa_execution_api.harness_alias", False),
         ("ordessa_execution_api.environment", False),
@@ -121,7 +121,7 @@ def test_native_evidence_modules_import_only_within_the_harness_boundary():
     for file in files:
         roots = _import_roots(file)
         assert _native_evidence_imports_allowed(_import_names(file)), file
-        assert not {"ordessa_server", "ordessa_permissions", "server_plugin_api"} & roots, file
+        assert not {"ordessa_server", "ordessa_permissions", "ordessa_server_plugin_api"} & roots, file
 
 
 def test_native_evidence_has_one_reader_and_no_production_stand_in():

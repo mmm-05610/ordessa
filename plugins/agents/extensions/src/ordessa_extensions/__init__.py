@@ -13,8 +13,8 @@ Hard boundaries (all pinned in tests):
 * pure domain — no process spawn, no HOME write, no network, no import of
   `ordessa_server`, `pacthold.harness_kit` internals or any desktop host
   (AGENTS.md rule 3; only the published
-  `ordessa_execution_agents.harness.definitions` and
-  `server_plugin_api` vocabularies are consumed — the domain uses no
+  `ordessa_agents.harness.definitions` and
+  `ordessa_server_plugin_api` vocabularies are consumed — the domain uses no
   pacthold surface at all);
 * an unapproved hook definition is NEVER loaded (fail closed — EXT-3);
 * observational placement only: nothing in this domain may promise that a

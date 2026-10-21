@@ -10,7 +10,7 @@ fact - and each test below fails on exactly that.
 from __future__ import annotations
 
 import pytest
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 
 from ordessa_model_provider.protocols import (
     CANONICAL_PROTOCOLS, normalize_model_facts, normalize_protocol,

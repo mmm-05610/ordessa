@@ -4,7 +4,7 @@ import threading
 import time
 
 import pytest
-from decision_runtime import CallPermit, DecisionError
+from ordessa_decision import CallPermit, DecisionError
 
 
 def permit():
@@ -65,7 +65,7 @@ def test_copied_task_or_thread_cannot_consume_guarded_permit():
 
 def test_guard_elapsed_deadline_refuses_before_consumption_and_physical_call(monkeypatch):
     ticks = [1.0]
-    monkeypatch.setattr('decision_runtime.ports.time.monotonic', lambda: ticks[0])
+    monkeypatch.setattr('ordessa_decision.ports.time.monotonic', lambda: ticks[0])
     value = CallPermit('run', 'question', 'settings', 2.0)
     physical = []
     value.bind_claim_guard(lambda: ticks.__setitem__(0, 3.0))
@@ -130,10 +130,10 @@ def test_async_context_manager_is_not_an_admission_span():
 def test_guard_exit_uncertainty_is_durable_unknown_without_second_attempt(tmp_path):
     from contextlib import contextmanager
     from types import SimpleNamespace
-    from decision_runtime import DecisionRunner, FilesystemEvidenceStore
-    from decision_runtime.capability import build_capability
-    from decision_runtime.evidence import EvidenceScope
-    from decision_runtime.settings import DecisionsSettings
+    from ordessa_decision import DecisionRunner, FilesystemEvidenceStore
+    from ordessa_decision.capability import build_capability
+    from ordessa_decision.evidence import EvidenceScope
+    from ordessa_decision.settings import DecisionsSettings
     class Provider:
         binding_ref = 'controlled-guard-exit'
         settings_digest = 'settings'
@@ -171,7 +171,7 @@ def test_guard_exit_uncertainty_is_durable_unknown_without_second_attempt(tmp_pa
 @pytest.mark.parametrize('failure', ['deadline', 'awaitable-admission', 'awaitable-exit'])
 def test_guard_cannot_suppress_refusal_or_return_async_exit(monkeypatch, failure):
     ticks = [1.0]
-    monkeypatch.setattr('decision_runtime.ports.time.monotonic', lambda: ticks[0])
+    monkeypatch.setattr('ordessa_decision.ports.time.monotonic', lambda: ticks[0])
     value = CallPermit('run', 'question', 'settings', 2.0)
     physical = []
     async def asynchronous(): pass

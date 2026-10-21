@@ -1,5 +1,5 @@
 """Thin public binding contract checks, real temporary SQLite, no HTTP claim."""
-from ordessa_execution_agents.profiles import ProfileChangeUnknown
+from ordessa_agents.profiles import ProfileChangeUnknown
 
 from ordessa_units.admission.material_admission import material_registration_snapshot as _test_resource_snapshot
 import json
@@ -10,7 +10,7 @@ from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from pacthold.public import Environment
 from ordessa_units.public import wire_contract, wire_schema_digest
 from ordessa_system_access_bindings import agent_core_methods
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 class Policy:
     allowed = True

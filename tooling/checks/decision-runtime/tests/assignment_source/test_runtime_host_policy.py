@@ -3,8 +3,8 @@ from dataclasses import replace
 
 import pytest
 
-from decision_runtime.definitions import ObservationBatch, plain
-from decision_runtime.runtime import run_decision
+from ordessa_decision.definitions import ObservationBatch, plain
+from ordessa_decision.runtime import run_decision
 from assignment_source.offline import offline_case
 from assignment_source.build import build_assignment_flow
 

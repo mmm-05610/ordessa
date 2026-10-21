@@ -9,8 +9,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from ordessa_environments import ProcessHandle, ProcessWaitTimeout
-from ordessa_execution_agents.harness.protocols.acp import AcpRemoteError
-from ordessa_execution_agents.harness.transport import (
+from ordessa_agents.harness.protocols.acp import AcpRemoteError
+from ordessa_agents.harness.transport import (
     ChannelClosed,
     EffectWriteGuard,
     LostReceipt,

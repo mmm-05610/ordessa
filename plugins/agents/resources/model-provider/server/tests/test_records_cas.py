@@ -9,7 +9,7 @@ physically deleting a row the history still points at.
 from __future__ import annotations
 
 import pytest
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 
 from ordessa_model_provider.records import ProviderModelRecords
 

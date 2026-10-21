@@ -30,7 +30,7 @@ class RecordedDispatchExecution:
     """One original Agent source and the same original Engineering BlobStore."""
     def __init__(self,source,blobs,*,send_invocation_resolver,read_invocation_resolver,
                  query_factory,endpoint_resolver):
-        from ordessa_execution_agents.public import InteractionService
+        from ordessa_agents.public import InteractionService
         if (type(source) is not InteractionService or endpoint_resolver is not source.endpoint_resolver
                 or not callable(getattr(endpoint_resolver,'resolve',None))
                 or any(not callable(value) for value in
@@ -42,7 +42,7 @@ class RecordedDispatchExecution:
         self.read_invocation_resolver=read_invocation_resolver;self.query_factory=query_factory
 
     def freeze_input(self,agent_ref,params):
-        from ordessa_execution_agents.sdk.instances import AgentInstanceRef
+        from ordessa_agents.sdk.instances import AgentInstanceRef
         raw_ref=agent_instance_ref_bytes(agent_ref)
         if not isinstance(params,Mapping):raise ApplicationError('RECORDED_DISPATCH_INPUT_INVALID')
         value=_plain(params);_reject_callbacks(value);raw=canonical_bytes(value,profile=LIBRARY_JSON_PROFILE)
@@ -52,7 +52,7 @@ class RecordedDispatchExecution:
 
     @asynccontextmanager
     async def prepared_dispatch(self,context,agent_ref,params,*,request_id,engineering_attempt_ref,preparation_wait=None):
-        from ordessa_execution_agents.sdk.endpoint import BoundEndpoint
+        from ordessa_agents.sdk.endpoint import BoundEndpoint
         raw,_=self.freeze_input(agent_ref,params)
         send=self.send_invocation_resolver(context,agent_ref)
         read=self.read_invocation_resolver(context,agent_ref)
@@ -61,7 +61,7 @@ class RecordedDispatchExecution:
                 engineering_attempt_ref=engineering_attempt_ref,send_invocation=send,read_invocation=read) as prepared:
             # Required original physical port is checked before business debits.
             # Resolve only this existing endpoint; never acquire/launch/rebind.
-            from ordessa_execution_agents.sdk.interactions import BindingProvenance
+            from ordessa_agents.sdk.interactions import BindingProvenance
             provenance=BindingProvenance.decode(decode_json(prepared.provenance_bytes))
             from contextlib import nullcontext
             with (preparation_wait() if preparation_wait is not None else nullcontext()):
@@ -74,7 +74,7 @@ class RecordedDispatchExecution:
 
     async def send(self,binding,flow,context,dispatch,*,timeout=60):
         from .agent_effect_write import EngineeringAgentEffectHandoff
-        from ordessa_execution_agents.sdk.instances import AgentInstanceRef
+        from ordessa_agents.sdk.instances import AgentInstanceRef
         if (type(flow) is not _OriginalAgentFlow or flow.context is not context
                 or type(timeout) not in (int,float) or not math.isfinite(timeout) or not 0<timeout<=60):
             raise ApplicationError('DISPATCH_EFFECT_HANDOFF_BINDING_INVALID')

@@ -9,7 +9,7 @@ from ordessa_units.public import encode_node_ref, wire_contract
 from pacthold.public import Environment
 from ordessa_infrastructure.encoding.immutable_json import safe_json
 from ordessa_system_access_bindings import agent_core_methods
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 
 def methods(parts):

@@ -20,7 +20,7 @@
 
 ### 布局
 - `server/pyproject.toml`：dist `ordessa-model-provider`，import 包 `ordessa_model_provider`，src 布局；
-  依赖按本树实况（`.venv` 已装 `server_plugin_api`/`ordessa_server` editable）。
+  依赖按本树实况（`.venv` 已装 `ordessa_server_plugin_api`/`ordessa_server` editable）。
 - 每个迁移文件头：`# migrated from plugins/model-provider@9305563...`；逻辑增量用普通注释写约束。
 - `server/MIGRATION.md`：逐文件来源表 + 增量清单。
 

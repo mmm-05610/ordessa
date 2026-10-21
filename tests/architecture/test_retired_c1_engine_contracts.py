@@ -42,16 +42,16 @@ def test_old_execution_state_machine_exports_are_absent():
 def test_adopted_provider_definitions_have_one_real_owner():
     assert not (ROOT / 'packages/interfaces/execution/c1-api/src/ordessa_execution_api/agents').exists()
     assert absent('ordessa_execution_api.agents')
-    from ordessa_execution_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor
-    from ordessa_execution_agents.harness.definitions.configuration_providers import ConfigurationRoute
-    assert RuntimeProviderDescriptor.__module__ == 'ordessa_execution_agents.harness.definitions.runtime_providers'
-    assert ConfigurationRoute.__module__ == 'ordessa_execution_agents.harness.definitions.configuration_providers'
+    from ordessa_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor
+    from ordessa_agents.harness.definitions.configuration_providers import ConfigurationRoute
+    assert RuntimeProviderDescriptor.__module__ == 'ordessa_agents.harness.definitions.runtime_providers'
+    assert ConfigurationRoute.__module__ == 'ordessa_agents.harness.definitions.configuration_providers'
 
 
 def test_harness_declarations_and_native_evidence_have_one_real_owner():
     assert not (ROOT / 'packages/interfaces/execution/c1-api/src/ordessa_execution_api/harness').exists()
     assert absent('ordessa_execution_api.harness')
-    from ordessa_execution_agents.harness.definitions import LaunchRequest, NativeEvidence
-    assert LaunchRequest.__module__ == 'ordessa_execution_agents.harness.definitions.contracts'
-    assert NativeEvidence.__module__ == 'ordessa_execution_agents.harness.definitions.native_evidence'
-    assert (ROOT / 'packages/execution/agents/src/ordessa_execution_agents/harness/definitions/ACP.md').is_file()
+    from ordessa_agents.harness.definitions import LaunchRequest, NativeEvidence
+    assert LaunchRequest.__module__ == 'ordessa_agents.harness.definitions.contracts'
+    assert NativeEvidence.__module__ == 'ordessa_agents.harness.definitions.native_evidence'
+    assert (ROOT / 'packages/execution/agents/src/ordessa_agents/harness/definitions/ACP.md').is_file()

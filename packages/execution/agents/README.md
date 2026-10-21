@@ -1,7 +1,7 @@
 # Agent execution mechanism
 
-The sole Agent/Profile mechanism is `ordessa_execution_agents`; its public
-Profile surface is `ordessa_execution_agents.public`. Profile and Harness
+The sole Agent/Profile mechanism is `ordessa_agents`; its public
+Profile surface is `ordessa_agents.public`. Profile and Harness
 mechanism modules live in this distribution; Unit composition and run records
 live in `ordessa_units`. Pacthold retains the original Environment, Store,
 CoreRegistry and SDK admission descriptor types; execution services use those
@@ -14,6 +14,12 @@ environment process channel that binds an environment `ProcessHandle` to this
 package's `ProcessChannel` contract lives at
 `ordessa_units.sessions.environment_channel`; only the Unit composition layer
 knows both owners.
+
+`ordessa_agents.bridges.environment_endpoints` is the agents-owned bridge to
+externally bound environment endpoint capabilities. It names no environment
+owner: the caller injects the owner-specific process-request factory and the
+owner's refusal exception class, and the bridge raises that class for every
+refusal of its own.
 
 `OperationJournal` and `UnitRecords` now live at
 `ordessa_units.records` in the `ordessa_units` distribution. The

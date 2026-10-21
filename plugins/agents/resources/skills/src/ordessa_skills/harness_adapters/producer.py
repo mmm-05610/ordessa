@@ -70,7 +70,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from ordessa_skills.resource_contracts import AgentSkillV1
-from ordessa_execution_agents.harness.providers.resolution.source_declaration import declare_source
+from ordessa_agents.harness.providers.resolution.source_declaration import declare_source
 
 from ..api.errors import AssetDomainError
 from ..assignments.snapshot import SkillSnapshot, assert_apply_eligible

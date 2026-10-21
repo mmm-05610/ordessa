@@ -1,0 +1,43 @@
+{
+  "python": "/tmp/closure-20261021/venv/bin/python",
+  "ordessa": "/tmp/closure-20261021/venv/bin/ordessa",
+  "pipCheck": {
+    "returncode": 0,
+    "stdout": "No broken requirements found.\n",
+    "stderr": ""
+  },
+  "selected": [
+    "decision-runtime",
+    "ordessa-agent-tools",
+    "ordessa-decision-rules-cel",
+    "ordessa-environments",
+    "ordessa-environments-local",
+    "ordessa-execution-agents",
+    "ordessa-harness-kilo",
+    "ordessa-harness-pi",
+    "ordessa-infrastructure",
+    "ordessa-interfaces",
+    "ordessa-interfaces-contracts",
+    "ordessa-server",
+    "ordessa-server-plugin-api",
+    "ordessa-server-product",
+    "ordessa-system-access-client"
+  ],
+  "wheels": [
+    "decision_runtime-0.2.0-py3-none-any.whl",
+    "ordessa_agent_tools-0.1.0a3-py3-none-any.whl",
+    "ordessa_decision_rules_cel-0.1.0-py3-none-any.whl",
+    "ordessa_environments-0.1.0-py3-none-any.whl",
+    "ordessa_environments_local-0.1.0-py3-none-any.whl",
+    "ordessa_execution_agents-0.1.0-py3-none-any.whl",
+    "ordessa_harness_kilo-0.1.0a1-py3-none-any.whl",
+    "ordessa_harness_pi-0.1.0a1-py3-none-any.whl",
+    "ordessa_infrastructure-0.1.0-py3-none-any.whl",
+    "ordessa_interfaces-0.1.0-py3-none-any.whl",
+    "ordessa_interfaces_contracts-0.1.0-py3-none-any.whl",
+    "ordessa_server-2.0.0a1-py3-none-any.whl",
+    "ordessa_server_plugin_api-0.1.0-py3-none-any.whl",
+    "ordessa_server_product-2.0.0a1-py3-none-any.whl",
+    "ordessa_system_access_client-0.1.0-py3-none-any.whl"
+  ]
+}

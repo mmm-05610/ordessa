@@ -23,7 +23,7 @@ from ordessa_units.errors import UnitGuaranteeUnavailable, UnitOperationUnknown
 from ordessa_units.definitions.operations import node_holder
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from ordessa_units.channels import reservations as input_contracts
-from ordessa_execution_agents import public as agent_public
+from ordessa_agents import public as agent_public
 from ordessa_units.admission.invocation import InvocationIssuer
 from ordessa_units.channels.reservations import (
     CapturedInputEvidence,

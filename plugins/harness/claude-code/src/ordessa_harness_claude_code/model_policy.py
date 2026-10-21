@@ -6,13 +6,13 @@ permission, journal or direct configuration writer.
 """
 import json
 import subprocess
-from ordessa_execution_agents.sdk import NativeModelLaunchRefused
-from ordessa_execution_agents.sdk import build_initial_model_params
-from ordessa_execution_agents.sdk import Installation, ConfigurationAdapterDescriptor, FieldClaim, VersionRange
-from ordessa_execution_agents.sdk import (
+from ordessa_agents.sdk import NativeModelLaunchRefused
+from ordessa_agents.sdk import build_initial_model_params
+from ordessa_agents.sdk import Installation, ConfigurationAdapterDescriptor, FieldClaim, VersionRange
+from ordessa_agents.sdk import (
     FACET_ID, FACET_SCHEMA_VERSION, ENTRY, ENV_HANDLE_SUFFIX, choice_payload_schema, native_version_range)
-from ordessa_execution_agents.sdk import installed_verifier
-from ordessa_execution_agents.sdk import canonical_text
+from ordessa_agents.sdk import installed_verifier
+from ordessa_agents.sdk import canonical_text
 from .acp_artifact_declarations import artifact_declaration
 from . import acp_model_facts as facts
 

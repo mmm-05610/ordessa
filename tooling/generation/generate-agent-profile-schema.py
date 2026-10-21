@@ -2,7 +2,7 @@
 """Generate the exact current Profile value-format mirror, no runtime /3 ABI."""
 import json
 from pathlib import Path
-from ordessa_execution_agents.sdk.contract_catalog import profile_contract
+from ordessa_agents.sdk.contract_catalog import profile_contract
 ROOT=Path(__file__).resolve().parents[2]
 OUTPUT=ROOT/'plugins/agents/profiles/ui/api/src/schema-mirror.ts'
 

@@ -411,7 +411,7 @@ class SkillsService:
         """The observation itself (`native_discovery.observe_native_skills`)
         is real and bounded — but the *authorized guest/instance root* it
         may read has no plugin-queryable published seam: the merged
-        harness-api (`ordessa_execution_agents.harness.definitions`, d3f026904e) hands target
+        harness-api (`ordessa_agents.harness.definitions`, d3f026904e) hands target
         handles to the ADAPTER at apply time only, and exposes no read
         port for this composition (api-requests.md §G2's read half stays
         open; the wire availability predicate cites it). Refusing with a

@@ -1,7 +1,7 @@
 """Product-selected catalogs and original Unit store close ordering."""
 from threading import RLock
 from ordessa_units.errors import UnitGuaranteeUnavailable
-from ordessa_execution_agents.harness.providers.registry import HarnessCatalog
+from ordessa_agents.harness.providers.registry import HarnessCatalog
 from ordessa_units.admission.context import UnitAdmissionContext
 from ordessa_units.admission.material_registration import MaterialCatalog
 

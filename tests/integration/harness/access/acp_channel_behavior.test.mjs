@@ -22,7 +22,7 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 import test from "node:test"
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..")
-const bridgeSrc = fileURLToPath(new URL("../../../../packages/execution/agents/src/ordessa_execution_agents/harness/transport/vendor/harness_remote/bridge/src", import.meta.url))
+const bridgeSrc = fileURLToPath(new URL("../../../../packages/execution/agents/src/ordessa_agents/harness/transport/vendor/harness_remote/bridge/src", import.meta.url))
 const { AcpClient } = await import(`${pathToFileURL(path.join(bridgeSrc, "acp-client.js")).href}`)
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))

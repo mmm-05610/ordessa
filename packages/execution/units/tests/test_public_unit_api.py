@@ -13,12 +13,12 @@ import pytest
 
 from test_unit_instance import Authority, Preparation, Provider
 from test_unit_manager import DistinctScopes
-from ordessa_execution_agents.harness.definitions.runtime_providers import (
+from ordessa_agents.harness.definitions.runtime_providers import (
     RUNTIME_PROVIDER_VERSION,
     RuntimeProviderDescriptor,
 )
-from ordessa_execution_agents.preparation import ConfigurationResources
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.preparation import ConfigurationResources
+from ordessa_agents.profiles import (
     ProfileRevisionRef,
     canonical_content,
     content_digest,

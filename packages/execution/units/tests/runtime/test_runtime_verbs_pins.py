@@ -28,7 +28,7 @@ import pytest
 
 from ordessa_environments.definitions.runtime_resources import IsolatedProcessSpec
 from ordessa_environments.definitions.runtime_ports import COMPENSATION_CAPABILITY, RuntimeHost, Sandbox, TERMINATE_TRANSPORT_KIND
-from server_plugin_api.runtime_carrier import _TRANSPORT_OPERATION_TYPE
+from ordessa_server_plugin_api.runtime_carrier import _TRANSPORT_OPERATION_TYPE
 from ordessa_units.assembly.runtime.coordinator import RuntimeCompositionCoordinator
 
 

@@ -1,7 +1,7 @@
 """Acceptance tests for the in-process ``ordessa environments`` CLI.
 
 Every test runs the real CLI as a child process (``python -m
-ordessa_agent_tools``) with the current interpreter and PYTHONPATH, against a
+ordessa_cli``) with the current interpreter and PYTHONPATH, against a
 ``tmp_path`` state directory and the real Local provider. There are no
 mocks: real subprocesses, a real SQLite registry and real local files.
 
@@ -50,7 +50,7 @@ FORBIDDEN_OWNER_IMPORTS = (
     "ordessa_environments",
     "ordessa_environments_local",
     "ordessa_engineering",
-    "ordessa_execution_agents",
+    "ordessa_agents",
 )
 
 
@@ -74,7 +74,7 @@ def run_cli(state, *args, stdin=None, expect=None, env_overrides=None):
     env = _child_env()
     if env_overrides:
         env.update(env_overrides)
-    command = [PYTHON, "-m", "ordessa_agent_tools"]
+    command = [PYTHON, "-m", "ordessa_cli"]
     if state is not None:
         command += ["--state", str(state)]
     command += list(args)
@@ -532,7 +532,7 @@ def test_channels_operations_queries_do_not_import_owner_implementations():
 
 
 def test_application_assembly_is_the_owner_importer():
-    assembly = FIX / "apps/cli/src/ordessa_agent_tools/composition/environments.py"
+    assembly = FIX / "apps/cli/src/ordessa_cli/composition/environments.py"
     modules = imported_modules(assembly)
     assert "ordessa_environments" in modules
     assert "ordessa_environments_local" in modules
@@ -591,6 +591,6 @@ def test_capability_adapter_only_needs_the_managed_report(tmp_path):
 
 def test_console_script_entry_point_is_declared_once():
     cli = tomllib.loads((FIX / "apps/cli/pyproject.toml").read_text(encoding="utf-8"))
-    assert cli["project"]["scripts"]["ordessa"] == "ordessa_agent_tools.cli:main"
+    assert cli["project"]["scripts"]["ordessa"] == "ordessa_cli.cli:main"
     server = tomllib.loads((FIX / "apps/server/pyproject.toml").read_text(encoding="utf-8"))
     assert "ordessa" not in server["project"].get("scripts", {})

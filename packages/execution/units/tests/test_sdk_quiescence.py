@@ -4,7 +4,7 @@ import threading
 
 import pytest
 from acp.exceptions import RequestError
-from ordessa_execution_agents.harness.transport import WriterLeaseRefused
+from ordessa_agents.harness.transport import WriterLeaseRefused
 
 from ordessa_units.sessions.sdk_client import SdkAcpClient, _ManagedTransport
 

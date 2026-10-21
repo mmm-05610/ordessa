@@ -15,7 +15,7 @@ from test_provider import fixture, UNIT, DEFINITION, DIGEST, CONFIGURATION_CALLS
 from ordessa_harness_dsh import DshRuntimeProvider, DshCapabilityUnsupported
 from ordessa_harness_dsh.acp_model_configuration import ADAPTER_ID, DSH_MODEL_KIND, DshAdapter
 from ordessa_harness_dsh.acp_model_facts import DIALECT, NATIVE_TARGET, RANGE_STRINGS
-from ordessa_execution_agents.harness.definitions.model_compilation import (
+from ordessa_agents.harness.definitions.model_compilation import (
     AdapterContext, ChoiceRequest, Refusal, TargetHandle, Verdict, Assessment,
 )
 

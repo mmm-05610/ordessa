@@ -2,11 +2,11 @@
 from dataclasses import asdict, dataclass
 from hashlib import sha256
 
-from decision_runtime import DecisionAnswer, DecisionRunner, FilesystemEvidenceStore, RulesOutcome
-from decision_runtime.capability import build_capability
-from decision_runtime.evidence import EvidenceScope
-from decision_runtime.settings import DecisionsSettings
-from decision_runtime.definitions.values import canonical_bytes, MAX_JOB_DOCUMENT_BYTES
+from ordessa_decision import DecisionAnswer, DecisionRunner, FilesystemEvidenceStore, RulesOutcome
+from ordessa_decision.capability import build_capability
+from ordessa_decision.evidence import EvidenceScope
+from ordessa_decision.settings import DecisionsSettings
+from ordessa_decision.definitions.values import canonical_bytes, MAX_JOB_DOCUMENT_BYTES
 
 from ...application.contracts.errors import ApplicationError
 from .job_evidence import OriginalReviewJobEvidence
@@ -147,8 +147,8 @@ class SourceReviewJobServices:
             self._context(context, request.request_id))
 
     async def read_history(self, run_id):
-        from decision_runtime.historical.reader import FileEvidenceReader
-        from decision_runtime.historical.context import ReadContext
+        from ordessa_decision.historical.reader import FileEvidenceReader
+        from ordessa_decision.historical.context import ReadContext
         if (type(self.historical_reader) is not FileEvidenceReader
                 or type(self.historical_read_context) is not ReadContext):
             raise ApplicationError('REVIEW_SOURCE_UNAVAILABLE')

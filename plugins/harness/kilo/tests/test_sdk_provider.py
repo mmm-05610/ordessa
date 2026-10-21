@@ -5,8 +5,8 @@ import json
 from dataclasses import replace
 from pathlib import Path
 import pytest
-from ordessa_execution_agents.sdk import BoundPath,PrepareContext,PreparedConfigurationRef,SessionBootstrap,HarnessError
-from ordessa_execution_agents.profiles import decode_content
+from ordessa_agents.sdk import BoundPath,PrepareContext,PreparedConfigurationRef,SessionBootstrap,HarnessError
+from ordessa_agents.profiles import decode_content
 from ordessa_harness_kilo import factory
 PIN={'environmentNamespace':'test','definitionId':'kilo','revision':'1'}
 DIGEST='sha256:'+'a'*64
@@ -70,7 +70,7 @@ def test_sdk_only_runtime_imports_and_entrypoint():
     for path in Path(module.__file__).parent.glob('*.py'):
         for node in ast.walk(ast.parse(path.read_text())):
             if isinstance(node,ast.ImportFrom) and (node.module or '').startswith('ordessa_'):
-                assert node.module=='ordessa_execution_agents.sdk'
+                assert node.module=='ordessa_agents.sdk'
     metadata=tomllib.loads((Path(__file__).parents[1]/'pyproject.toml').read_text())
     assert metadata['project']['entry-points']['ordessa.harness_providers']['kilo']=='ordessa_harness_kilo.provider:factory'
     with pytest.raises(HarnessError,match='HARNESS_BINDINGS_INVALID'):factory.build({})
@@ -88,7 +88,7 @@ def test_native_config_rejects_literal_credentials_and_auto_update():
 
 def test_actual_profile_owner_calls_real_kilo_validator_before_its_atomic_commit(tmp_path):
     from threading import RLock
-    from ordessa_execution_agents.profiles import ProfileService,SqliteProfileStore,ProfileValidationError
+    from ordessa_agents.profiles import ProfileService,SqliteProfileStore,ProfileValidationError
     from ordessa_infrastructure.security.fingerprints import HmacKeyRing
     from ordessa_infrastructure.encoding import canonical_bytes
     class Policy:

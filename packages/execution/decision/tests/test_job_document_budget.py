@@ -1,9 +1,9 @@
 """Explicit document allocation is independent of step/model budgets."""
 from dataclasses import replace
 import pytest
-from decision_runtime import DecisionError
-from decision_runtime.definitions.values import job_document_bound, MAX_JOB_DOCUMENT_BYTES
-from decision_runtime.settings import DecisionsSettings
+from ordessa_decision import DecisionError
+from ordessa_decision.definitions.values import job_document_bound, MAX_JOB_DOCUMENT_BYTES
+from ordessa_decision.settings import DecisionsSettings
 from test_capability import settings
 
 

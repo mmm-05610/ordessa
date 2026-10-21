@@ -10,15 +10,15 @@ import tempfile
 import threading
 
 from ordessa_environments import EnvironmentRefused
-from ordessa_execution_agents.sdk.instances import AgentInstanceRef
-from ordessa_execution_agents.sdk.prepare import canonical_digest
+from ordessa_agents.sdk.instances import AgentInstanceRef
+from ordessa_agents.sdk.prepare import canonical_digest
 from endpoint_fixture import LocalEndpointFixture
 
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--receipt');args=parser.parse_args()
     try:
-        from ordessa_execution_agents.sdk.interactions import TurnRef, WriteBinding, GuardedSendObservation
+        from ordessa_agents.sdk.interactions import TurnRef, WriteBinding, GuardedSendObservation
     except ImportError:
         report={'status':'BLOCKED','reason':'F1.2 interaction DTOs absent','physicalEffects':0}
     else:

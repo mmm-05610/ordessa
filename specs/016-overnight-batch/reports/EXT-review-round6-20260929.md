@@ -8,6 +8,6 @@
 
 **二、fake green 迹象**
 
-无删断言、空测试或谎报：第五轮三项修复各有真实对应测试（assess 身份闸 `test_assess_foreign_identity_...`、restore 形状 8 例且断言原子性 `fresh.records() == ()`、expected 分支 5 组正反例），`test_dependency_direction` 还带守卫自检。两处偏弱但非造假：`test_brand_table` 的 citation 正则校验是循环断言（`HookCapabilityFact.__post_init__` 在 import 期已强制，测试重实现同一规则）；`test_error_families` 的合法 family 集合是硬编码副本而非取自 `server_plugin_api.FAMILIES`，契约漂移测不出来。
+无删断言、空测试或谎报：第五轮三项修复各有真实对应测试（assess 身份闸 `test_assess_foreign_identity_...`、restore 形状 8 例且断言原子性 `fresh.records() == ()`、expected 分支 5 组正反例），`test_dependency_direction` 还带守卫自检。两处偏弱但非造假：`test_brand_table` 的 citation 正则校验是循环断言（`HookCapabilityFact.__post_init__` 在 import 期已强制，测试重实现同一规则）；`test_error_families` 的合法 family 集合是硬编码副本而非取自 `ordessa_server_plugin_api.FAMILIES`，契约漂移测不出来。
 
 **三、结论：有保留**（写入面干净——纯域、零路径/HOME/网络触碰；问题集中在 verify 证据来源与 restore/评级两处"声称强于机制"）。

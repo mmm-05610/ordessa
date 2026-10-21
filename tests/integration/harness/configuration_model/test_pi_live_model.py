@@ -2,8 +2,8 @@
 from dataclasses import replace
 import json
 import pytest
-from ordessa_execution_agents.harness.definitions import ApplicationTarget, AdapterRefusal, IntentSource, InvokeAction
-from ordessa_execution_agents.harness.definitions.native_channels import NativeSessionObservation
+from ordessa_agents.harness.definitions import ApplicationTarget, AdapterRefusal, IntentSource, InvokeAction
+from ordessa_agents.harness.definitions.native_channels import NativeSessionObservation
 from ordessa_server.composition.native_channels.profile_owner import ProfileConfigurationSnapshot
 
 

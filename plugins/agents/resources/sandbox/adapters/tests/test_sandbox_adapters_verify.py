@@ -20,7 +20,7 @@ Two things the §C4 rules still require and this file keeps proving:
 """
 from _sandbox_adapters_helpers import effect_observation
 
-from ordessa_execution_agents.harness.definitions.contracts import Match, Mismatch, VerificationUnknown
+from ordessa_agents.harness.definitions.contracts import Match, Mismatch, VerificationUnknown
 from ordessa_sandbox_api import SandboxErrorCode, ToolCategory
 from ordessa_sandbox_api.wire_family import wire_family_for
 from ordessa_sandbox_adapters import CodexSandboxAdapter, sandbox_code_of

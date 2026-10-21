@@ -11,8 +11,8 @@ PACTHOLD_ROOT = ROOT / 'packages/execution/kernel'
 def test_default_and_agents_imports_load_no_decision_framework():
     script = (
         "import sys\n"
-        "import pacthold, pacthold.public, ordessa_execution_agents.public\n"
-        "assert 'decision_runtime' not in sys.modules\n"
+        "import pacthold, pacthold.public, ordessa_agents.public\n"
+        "assert 'ordessa_decision' not in sys.modules\n"
         "assert 'pacthold.decision' not in sys.modules\n"
         "assert 'pydantic_graph' not in sys.modules\n"
         "assert 'typesafe_sdk' not in sys.modules\n"
@@ -27,7 +27,7 @@ def test_default_and_agents_imports_load_no_decision_framework():
 def test_neutral_runtime_import_does_not_pull_pacthold_or_jev_sdk():
     script = (
         f"import sys; sys.path.insert(0, {str(RUNTIME_SRC)!r})\n"
-        "import decision_runtime\n"
+        "import ordessa_decision\n"
         "assert not any(name == 'pacthold' or name.startswith('pacthold.') for name in sys.modules)\n"
         "assert 'typesafe_sdk' not in sys.modules\n"
         "print('neutral-runtime-without-host-or-jev')\n"
@@ -43,13 +43,13 @@ def test_jev_provider_import_is_exclusive_to_the_optional_dependency():
     # retired path must fail precisely, regardless of whether Jev is installed.
     probe = (
         f"import importlib, sys; sys.path.insert(0, {str(RUNTIME_SRC)!r})\n"
-        "import decision_runtime\n"
+        "import ordessa_decision\n"
         "assert 'typesafe_sdk' not in sys.modules\n"
-        "for name in ('decision_runtime.providers', 'decision_runtime.providers.jev'):\n"
+        "for name in ('ordessa_decision.providers', 'ordessa_decision.providers.jev'):\n"
         "    try:\n"
         "        importlib.import_module(name)\n"
         "    except ModuleNotFoundError as error:\n"
-        "        assert error.name in (name, 'decision_runtime.providers'), (name, error.name)\n"
+        "        assert error.name in (name, 'ordessa_decision.providers'), (name, error.name)\n"
         "    else:\n"
         "        raise AssertionError('retired provider path imported: ' + name)\n"
         "print('retired-provider-paths-unavailable')\n"

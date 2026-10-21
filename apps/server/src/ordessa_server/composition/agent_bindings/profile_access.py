@@ -2,7 +2,7 @@
 from contextlib import contextmanager
 from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority,VerifiedPrincipal,AccessError
 from ordessa_interfaces.system_access.contracts.refs import Scope
-from ordessa_execution_agents.profiles import ProfileAccessRefused
+from ordessa_agents.profiles import ProfileAccessRefused
 
 
 class OriginalProfileAccess:
@@ -22,7 +22,7 @@ class OriginalProfileAccess:
                 raise ProfileAccessRefused('Profile principal mapping mismatch')
             scope=self.scope_for_service(service)
             if type(scope) is not Scope:raise ProfileAccessRefused('Profile scope mapping unavailable')
-            if not operation.startswith('profiles.'):raise ProfileAccessRefused('foreign operation')
+            if not operation.startswith('agents.profiles.'):raise ProfileAccessRefused('foreign operation')
             with self.authority.guard(caller,scope,operation):yield
         except AccessError:
             raise ProfileAccessRefused('current original authority refused') from None

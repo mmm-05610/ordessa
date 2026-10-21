@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-HARNESS_SRC = Path(__file__).resolve().parents[2] / 'packages/execution/agents' / "src" / "ordessa_execution_agents" / "harness"
+HARNESS_SRC = Path(__file__).resolve().parents[2] / 'packages/execution/agents' / "src" / "ordessa_agents" / "harness"
 FORBIDDEN = (
     "pacthold." + "launch",
     "pacthold.work_core." + "providers.resources",

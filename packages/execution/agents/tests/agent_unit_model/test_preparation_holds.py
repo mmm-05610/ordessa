@@ -6,7 +6,7 @@ import pytest
 from ordessa_units.bindings.publication import NodePublication, IDENTITIES
 from pacthold.public import Environment, InstallationRecord
 from agent_tools_fixtures.node_publication import Provider
-from ordessa_execution_agents.harness.providers.registry.contributions import AgentContributionSet
+from ordessa_agents.harness.providers.registry.contributions import AgentContributionSet
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.errors import UnitIdentityMismatch, UnitAdmissionRefused
 from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, operation_holder

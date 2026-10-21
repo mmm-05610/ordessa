@@ -4,7 +4,7 @@ Engineering owns ReviewPolicy and its interpretation. Decision owns bounded job
 execution and summary evidence. This adapter issues no approvals or grants.
 """
 from typing import Any
-from decision_runtime import DecisionRunner,RulesOutcome,DecisionError,check_summary
+from ordessa_decision import DecisionRunner,RulesOutcome,DecisionError,check_summary
 from ordessa_engineering.domain.common.outcomes.library_failures import EngineeringError
 from ordessa_engineering.domain.reviews.library_judgements import ReviewVerdict
 from ordessa_engineering.domain.reviews.judgement_policy import ReviewFacts,ReviewPolicy

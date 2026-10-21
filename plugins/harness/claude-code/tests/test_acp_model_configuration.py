@@ -1,7 +1,7 @@
 """Pure historical ACP model compilation; no SDK/native/model calls."""
 from dataclasses import replace
 import pytest
-from ordessa_execution_agents.harness.definitions.model_compilation import (
+from ordessa_agents.harness.definitions.model_compilation import (
     AdapterContext, BindSecret, ChoiceRequest, CompileIntent, Refusal, TargetHandle)
 from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
 

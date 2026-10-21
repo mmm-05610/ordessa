@@ -1,4 +1,4 @@
-import { findExecutable } from "../../packages/execution/agents/src/ordessa_execution_agents/harness/transport/executable_lookup.mjs"
+import { findExecutable } from "../../packages/execution/agents/src/ordessa_agents/harness/transport/executable_lookup.mjs"
 import { randomBytes } from "node:crypto"
 import fs from "node:fs"
 import net from "node:net"

@@ -121,7 +121,7 @@ def test_contract_source_imports_only_stdlib_and_its_infrastructure_identity():
             roots.add((node.module or "").split(".", 1)[0])
     assert roots <= sys.stdlib_module_names | {"ordessa_infrastructure"}
     assert not roots.intersection(
-        {"ordessa_execution_api", "ordessa_execution_agents", "ordessa_units", "pacthold", "ordessa_server"}
+        {"ordessa_execution_api", "ordessa_agents", "ordessa_units", "pacthold", "ordessa_server"}
     )
 
 
@@ -132,7 +132,7 @@ def test_import_is_io_free_and_does_not_probe_execution_or_store_callbacks():
         import datetime, uuid
 
         forbidden_owners = {
-            'ordessa_execution_api', 'ordessa_execution_agents',
+            'ordessa_execution_api', 'ordessa_agents',
             'ordessa_units', 'pacthold', 'ordessa_server',
         }
         class BlockOwners(importlib.abc.MetaPathFinder):

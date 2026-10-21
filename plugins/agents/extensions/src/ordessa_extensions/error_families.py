@@ -1,7 +1,7 @@
 """The Extensions domain's published wire-refusal seam.
 
 Same discipline as the Skills family table: domain codes → the closed
-families of `server_plugin_api.FAMILIES`, contributed through the open
+families of `ordessa_server_plugin_api.FAMILIES`, contributed through the open
 `wire.error-families` point so a client sees a truthful family with the
 domain code as `internalCode`, never the generic exception-class
 fall-through.
@@ -11,10 +11,10 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import Any
 
-from server_plugin_api import ServerError
+from ordessa_server_plugin_api import ServerError
 
 #: The code -> family mapping contributed to
-#: ``server_plugin_api.WIRE_ERROR_FAMILIES_POINT_ID``.
+#: ``ordessa_server_plugin_api.WIRE_ERROR_FAMILIES_POINT_ID``.
 EXTENSIONS_ERROR_FAMILIES = MappingProxyType({
     # -- request shape/value refusals ------------------------------------
     "INVALID_REQUEST": "INVALID_REQUEST",

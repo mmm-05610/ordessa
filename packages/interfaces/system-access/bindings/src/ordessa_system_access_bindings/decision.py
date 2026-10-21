@@ -7,14 +7,14 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from collections.abc import Mapping
 
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     ProfileService, decode_revision_ref, encode_content, encode_profile, encode_revision_ref,
 )
-from ordessa_execution_agents.harness.providers.catalog import HarnessCatalog
+from ordessa_agents.harness.providers.catalog import HarnessCatalog
 from ordessa_units.configuration.proposal_input import OwnerProposalInput
-from decision_runtime.historical.context import ReadContext
-from decision_runtime.historical.values import ContractError, freeze, plain, digest, name
-from decision_runtime.historical.models import (
+from ordessa_decision.historical.context import ReadContext
+from ordessa_decision.historical.values import ContractError, freeze, plain, digest, name
+from ordessa_decision.historical.models import (
     ExternalRef, VersionedObservation, ObservationBatch, ObligationResult,
     ValidationReceipt, validate_ready,
 )

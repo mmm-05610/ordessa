@@ -7,8 +7,8 @@ import asyncio
 
 import pytest
 from dataclasses import replace
-from decision_runtime import DecisionError, DecisionAnswer, FilesystemEvidenceStore
-from decision_runtime.evidence import EvidenceScope
+from ordessa_decision import DecisionError, DecisionAnswer, FilesystemEvidenceStore
+from ordessa_decision.evidence import EvidenceScope
 from ordessa_engineering.adapters.decision.source_job import SourceReviewJobServices
 from ordessa_engineering.adapters.execution_profiles import ProfileTaskInput
 from ordessa_engineering.adapters.profile_flow import run_method_profile_selection, ProfileSelectionServices
@@ -69,7 +69,7 @@ def test_public_method_profile_flow_preserves_native_results_and_refuses_without
         scope = EvidenceScope('principal', 'controlled-profile-flow')
         refs = (policy,)
         if case == 'wrong-policy':
-            from decision_runtime import PolicyRef
+            from ordessa_decision import PolicyRef
             refs = (PolicyRef('different', '1', 'sha256:'+'c'*64),)
         jobs = SourceReviewJobServices(provider, owner, lambda ctx: ctx, lambda *_: scope,
             lambda ctx, request_id: replace(ctx, request_id=request_id))

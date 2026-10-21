@@ -1,7 +1,7 @@
 {
   "implementation": {
     "decision_contract_version": "decision-job/1",
-    "decision_runtime": {
+    "ordessa_decision": {
       "__init__.py": "sha256:bc29cf81367d95e24900db93ec3f92a74119e486003c785ba9b159b2b784281f",
       "capability.py": "sha256:b3bdc10b865abf307659f56dfaeb3f05adb2fb63229385b72c51503a969c9f7f",
       "definitions/__init__.py": "sha256:386703e8a5e2e7ce3618dfa5c11022cf3fe6cbc3ba91a7a9eea67db4d811787a",
@@ -24,7 +24,7 @@
       "runtime/manager.py": "sha256:0248cd2e2246a76de6d6547e155d569d1b81c18feecfe7ce99c002544419b0c9",
       "settings.py": "sha256:caa90f27fce9e32efa248a8a376898098eaf8320c09de6a67da978d7deebd12c"
     },
-    "decision_runtime_version": "0.2.0",
+    "ordessa_decision_version": "0.2.0",
     "engineering": {
       "__init__.py": "sha256:f4b3b6a968f581d043eb0fc14298bd1b9f33959057d18f68b3fc2b16e2c68fe2",
       "adapters/__init__.py": "sha256:9dd668c167f939d8be25685915baaadf981855e80de5641618bec0c3f76a856e",

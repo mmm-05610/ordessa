@@ -149,7 +149,7 @@ def test_the_port_results_are_the_published_api_unions() -> None:
 
 # --- dependency direction ------------------------------------------------------
 
-_BLOCKED = ("ordessa_permissions_backend", "server_plugin_api", "pacthold",
+_BLOCKED = ("ordessa_permissions_backend", "ordessa_server_plugin_api", "pacthold",
             "ordessa_server", "pacthold.harness_kit")
 
 

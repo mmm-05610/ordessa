@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { createInterface } from 'node:readline'
 import { createServer } from 'node:http'
-import { configurationDigest } from '../../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/digest.mjs'
+import { configurationDigest } from '../../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/digest.mjs'
 
 // Default: registration only. --restore-no-model uses an isolated synthetic
 // provider and one empty native session; it never permits inference or prompt.

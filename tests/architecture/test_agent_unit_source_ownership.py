@@ -16,7 +16,7 @@ def product_imports(source):
         if isinstance(node, ast.Import): names = [item.name for item in node.names]
         elif isinstance(node, ast.ImportFrom): names = [node.module or '']
         else: continue
-        found.extend(name for name in names if name == 'ordessa_agent_tools' or name.startswith('ordessa_agent_tools.'))
+        found.extend(name for name in names if name == 'ordessa_cli' or name.startswith('ordessa_cli.'))
     return found
 
 
@@ -37,12 +37,12 @@ def test_independent_family_has_protocol_and_provider_without_product_dependency
     assert files
     for path in files:
         assert not product_imports(path.read_text()), path
-    old = ROOT / 'products/agent-tools/src/ordessa_agent_tools/native_clients' / (family.replace('-', '_') + '.py')
+    old = ROOT / 'products/agent-tools/src/ordessa_cli/native_clients' / (family.replace('-', '_') + '.py')
     assert not old.exists(), 'Migrated native protocol must not remain in the CLI product'
 
 
-@pytest.mark.parametrize('source', ['import ordessa_agent_tools', 'from ordessa_agent_tools.native_clients._transport import Message',
-    'import ordessa_agent_tools.native_clients.codex as codex'])
+@pytest.mark.parametrize('source', ['import ordessa_cli', 'from ordessa_cli.native_clients._transport import Message',
+    'import ordessa_cli.native_clients.codex as codex'])
 def test_planted_product_dependency_is_detected(source):
     assert product_imports(source)
 
@@ -63,14 +63,14 @@ def test_remaining_staged_families_and_shared_transports_still_present():
     assert set(brand_clients) >= {'copilot', 'gemini-cli', 'goose', 'kimi', 'opencode', 'qwen', 'vibe'}
     for path in brand_clients.values():
         assert path.is_file() and path.stat().st_size > 0
-    protocols = ROOT / 'packages/execution/agents/src/ordessa_execution_agents/harness/protocols/acp'
+    protocols = ROOT / 'packages/execution/agents/src/ordessa_agents/harness/protocols/acp'
     acp_protocol = protocols / '__init__.py'
     assert acp_protocol.is_file() and acp_protocol.stat().st_size > 0
-    transport = ROOT / 'packages/execution/agents/src/ordessa_execution_agents/harness/transport'
+    transport = ROOT / 'packages/execution/agents/src/ordessa_agents/harness/transport'
     for name in ('http.py', 'channel.py'):
         path = transport / name
         assert path.is_file() and path.stat().st_size > 0
-    retired = ROOT / 'products/agent-tools/src/ordessa_agent_tools/native_clients'
+    retired = ROOT / 'products/agent-tools/src/ordessa_cli/native_clients'
     assert not retired.exists(), 'staged client and transport implementations must have one owner'
 
 
@@ -137,7 +137,7 @@ def test_claude_model_compiler_and_compilation_contracts_have_one_owner():
     assert (independent / 'acp_model_facts.py').is_file()
     assert not (ROOT / 'packages/execution/kernel/src/pacthold/BRANDDIR_claude/configuration/model.py').exists()
     assert not (ROOT / 'packages/execution/kernel/src/pacthold/harness_kit/configuration/model/types.py').exists()
-    contracts = ROOT / 'packages/execution/agents/src/ordessa_execution_agents/harness/definitions/model_compilation.py'
+    contracts = ROOT / 'packages/execution/agents/src/ordessa_agents/harness/definitions/model_compilation.py'
     assert contracts.is_file()
     for path in (independent / 'acp_model_configuration.py', independent / 'acp_model_facts.py', contracts):
         source = path.read_text()
@@ -168,8 +168,8 @@ def test_pi_model_compiler_and_facts_have_one_independent_owner():
 def test_deployment_records_have_one_independent_source_owner():
     source = ROOT / 'packages/execution/units/src/ordessa_units/records'
     assert not (ROOT / 'plugins/harness/records').exists()
-    assert not (ROOT / 'packages/execution/agents/src/ordessa_execution_agents/harness/records').exists()
-    assert not (ROOT / 'packages/execution/agents/src/ordessa_execution_agents/units/records').exists()
+    assert not (ROOT / 'packages/execution/agents/src/ordessa_agents/harness/records').exists()
+    assert not (ROOT / 'packages/execution/agents/src/ordessa_agents/units/records').exists()
     for name in ('operation_journal.py', 'unit_records.py'):
         assert not (ROOT / 'packages/execution/kernel/src/pacthold/harness_kit/application' / name).exists()
         path = source / name

@@ -76,7 +76,7 @@ $ PYTHONPATH=plugins/assets/lsp/api/src:plugins/assets/lsp/adapters/src:plugins/
 构成（逐文件计数，`pytest --collect-only` 可复核）：api 13（定义模型正反例/
 转录字节稳定）+ adapters 29（探测 4、C2 形制+callable+品牌门 16、golden/
 反例 5、两会话 2、依赖方向 2）。测试环境说明：
-合同 dist（ordessa_harness_api/server_plugin_api）来自主仓 .venv 的 editable
+合同 dist（ordessa_harness_api/ordessa_server_plugin_api）来自主仓 .venv 的 editable
 安装，与 son 分支携带的同源同内容；harnesses.toml 的 pin 以**本树 file-relative
 路径实测**（`_lsp_helpers.HARNESSES_TOML`），不跨树。
 
@@ -102,7 +102,7 @@ $ PYTHONPATH=plugins/assets/lsp/api/src:plugins/assets/lsp/adapters/src:plugins/
 
 ## 4. 复用与自建清单（红线 7）
 
-**复用**：C2 点与合同词汇（ordessa_harness_api，零改动）；server_plugin_api
+**复用**：C2 点与合同词汇（ordessa_harness_api，零改动）；ordessa_server_plugin_api
 贡献形态；sandbox adapters 的绑定形制（pins 实测法/闭合 schema/callable
 三答——只仿不 import）；harnesses.toml 实测 pin；source-index.json 与
 harnesses.md 的存量证据面。**自建**：定义模型与规范转录（域本无）、探测器

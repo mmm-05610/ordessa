@@ -6,11 +6,11 @@ import pytest
 from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.definitions.admission_identity import AgentNodeRef
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.providers.registry import (
     HarnessCatalog, HarnessDefinitionDescriptor, HarnessDefinitionDeclaration,
     HarnessInstallationObservation,
 )
-from ordessa_execution_agents.harness.providers.registry.catalog import AgentProviders
+from ordessa_agents.harness.providers.registry.catalog import AgentProviders
 from ordessa_units.admission.context import UnitAdmissionContext
 from ordessa_units.admission.material_registration import MaterialCatalog
 from ordessa_units.admission.invocation import InvocationIssuer

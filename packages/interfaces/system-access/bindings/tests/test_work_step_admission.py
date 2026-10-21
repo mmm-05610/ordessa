@@ -12,7 +12,7 @@ from ordessa_interfaces.system_access.access_control.authentication import (
     InstanceAccessAuthority,
 )
 from ordessa_interfaces.system_access.contracts.refs import Scope
-from ordessa_execution_agents.profiles import ProfileRevisionRef
+from ordessa_agents.profiles import ProfileRevisionRef
 from ordessa_units.assembly import UnitRunPermission
 from ordessa_units.admission.invocation import InvocationAuthorityRefused
 from ordessa_system_access_bindings.engineering import EngineeringCommandAccess

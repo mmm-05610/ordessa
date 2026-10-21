@@ -13,7 +13,7 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--write',action='store_true')
     options=parser.parse_args(argv)
-    from ordessa_execution_agents.sdk.contract_catalog import contract_catalog,contract_catalog_digest
+    from ordessa_agents.sdk.contract_catalog import contract_catalog,contract_catalog_digest
     mirror=Path(__file__).resolve().parents[2]/'packages/interfaces/transport/client/python/src/ordessa_system_access_client/sdk-contract-catalog.json'
     expected={'schema':contract_catalog(),'schemaDigest':contract_catalog_digest()}
     if options.write:mirror.write_text(json.dumps(expected,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')

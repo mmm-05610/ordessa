@@ -4,7 +4,7 @@ import os
 import pytest
 
 from ordessa_server.composition.root_ownership import DataRootOwner, DataRootPathUnsafeError
-from server_plugin_api import RootOwnershipError
+from ordessa_server_plugin_api import RootOwnershipError
 
 
 def _binding(owner, root):

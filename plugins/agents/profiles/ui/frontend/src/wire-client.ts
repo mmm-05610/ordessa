@@ -111,7 +111,7 @@ function mirrorMismatch(capabilities: unknown, mirror: AgentProfileCatalogSchema
       || !supportedMethods.every(item => typeof item === 'string'))
     return 'capability support facts were malformed'
   const requiredMethods = [
-    'profiles.capabilities', 'profiles.list', 'profiles.readEntry', 'profiles.read',
+    'agents.profiles.capabilities', 'agents.profiles.list', 'agents.profiles.readEntry', 'agents.profiles.read',
   ]
   if (!requiredMethods.every(method => supportedMethods.includes(method)))
     return 'core did not advertise every required read method'
@@ -136,7 +136,7 @@ export function createWireClient(
 
   const verifiedCapabilities = async (): Promise<CoreResult<AgentProfileCatalogCapabilities>> => {
     if (!mirror) return unavailable('profile-json/1 schema mirror has not been generated')
-    const response = await raw('profiles.capabilities', {})
+    const response = await raw('agents.profiles.capabilities', {})
     if (response.kind !== 'ok') return response
     const mismatch = mirrorMismatch(response.value, mirror)
     if (mismatch) return unavailable(mismatch)
@@ -149,7 +149,7 @@ export function createWireClient(
       if (typeof includeArchived !== 'boolean') return unavailable('includeArchived must be boolean')
       const gate = await verifiedCapabilities()
       if (gate.kind !== 'ok') return gate
-      const result = await raw('profiles.list', { includeArchived })
+      const result = await raw('agents.profiles.list', { includeArchived })
       if (result.kind !== 'ok') return result
       if (!isRecord(result.value) || Object.keys(result.value).sort().join(',') !== 'entries'
           || !Array.isArray(result.value.entries)) return { kind: 'unknown', reason: 'profile list response was malformed' }
@@ -161,7 +161,7 @@ export function createWireClient(
       if (typeof profileId !== 'string' || !profileId) return unavailable('profileId must be nonempty')
       const gate = await verifiedCapabilities()
       if (gate.kind !== 'ok') return gate
-      const result = await raw('profiles.readEntry', { profileId })
+      const result = await raw('agents.profiles.readEntry', { profileId })
       if (result.kind !== 'ok') return result
       const entry = parseEntry(result.value, gate.value.environmentNamespace)
       return entry ? { kind: 'ok', value: entry } : { kind: 'unknown', reason: 'profile entry response was malformed' }
@@ -174,7 +174,7 @@ export function createWireClient(
       if (parsed.environmentNamespace !== gate.value.environmentNamespace) {
         return { kind: 'unknown', reason: 'ProfileRef belongs to another environment namespace' }
       }
-      const result = await raw('profiles.read', { profileRef: parsed })
+      const result = await raw('agents.profiles.read', { profileRef: parsed })
       if (result.kind !== 'ok') return result
       const manifest = parseManifest(result.value, parsed)
       return manifest ? { kind: 'ok', value: manifest } : { kind: 'unknown', reason: 'exact manifest response was malformed' }

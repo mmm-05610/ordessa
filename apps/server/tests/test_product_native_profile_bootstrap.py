@@ -7,7 +7,7 @@ import time
 
 import pytest
 
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.providers.registry import (
     HarnessDefinitionDeclaration,
     HarnessDefinitionDescriptor,
 )
@@ -15,7 +15,7 @@ from ordessa_environments import (
     EnvironmentManager, EnvironmentRefused, SQLiteEnvironmentStore,
 )
 from ordessa_environments_local import LocalEnvironmentResourceProvider
-from ordessa_execution_agents.profiles import ProfileService
+from ordessa_agents.profiles import ProfileService
 from ordessa_interfaces.system_access.access_control import AccessError, AccessGrant
 from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority
 from ordessa_interfaces.system_access.contracts.refs import Scope

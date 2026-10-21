@@ -1,5 +1,5 @@
 """Real core/Profile/SQLite coordination with controlled owner receipts only."""
-from ordessa_execution_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
 from dataclasses import replace
 from pathlib import Path
 import sys
@@ -16,8 +16,8 @@ from ordessa_units.bindings.assembly import AgentAssembly, PreparationContext, P
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import InvocationIssuer
 from ordessa_units.bindings.publication import NodePublication, NodePublicationEvidence, decode_node_ref
-from ordessa_execution_agents.profiles.management.service import ProfileService
-from ordessa_execution_agents.harness.providers.registry.contributions import AgentContributionSet, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS
+from ordessa_agents.profiles.management.service import ProfileService
+from ordessa_agents.harness.providers.registry.contributions import AgentContributionSet, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.errors import UnitIdentityMismatch, UnitAdmissionRefused, UnitGuaranteeUnavailable
 from ordessa_units.definitions.operations import UsageMutation, operation_holder

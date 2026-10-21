@@ -6,7 +6,7 @@ import pytest
 from ordessa_units.errors import UnitGuaranteeUnavailable
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.definitions.operations import OperationIntent, StepIntent
-from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessCatalog
+from ordessa_agents.harness.providers.registry.definition_admission import HarnessCatalog
 from ordessa_units.admission.context import UnitAdmissionContext
 from ordessa_units.admission.material_registration import MaterialCatalog
 from ordessa_units.admission.generation import (

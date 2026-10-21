@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from server_plugin_api import ServerMethodDescriptor
+from ordessa_server_plugin_api import ServerMethodDescriptor
 
 from .approval import ApprovalError, ApprovalLedger
 from .error_families import to_server_error

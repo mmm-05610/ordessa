@@ -17,12 +17,12 @@ classifiers = [
 ]
 # Same third-party closure the platform's own contributor fixture declares:
 # the domain api, the Server plugin public types, and the Harness C2
-# descriptive vocabulary (ordessa_execution_agents.harness.definitions). No host code, no
+# descriptive vocabulary (ordessa_agents.harness.definitions). No host code, no
 # pacthold.harness_kit package import, no model-provider import (只仿不 import).
 dependencies = [
     "ordessa-lsp-api",
     "ordessa-server-plugin-api",
-    "ordessa-execution-agents==0.1.0",
+    "ordessa-agents==0.1.0",
 ]
 keywords = ["ordessa", "lsp", "formatter", "adapter", "facet", "probe"]
 

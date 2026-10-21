@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from decision_runtime import DecisionError, FilesystemEvidenceStore
+from ordessa_decision import DecisionError, FilesystemEvidenceStore
 
 SUMMARY = {"job_digest": "a" * 64, "usage": {"step": {"status": "unknown"}}}
 
@@ -12,7 +12,7 @@ SUMMARY = {"job_digest": "a" * 64, "usage": {"step": {"status": "unknown"}}}
 def test_durable_read_across_processes(tmp_path):
     root = tmp_path / "evidence"
     ref = FilesystemEvidenceStore(root).put(SUMMARY)
-    code = ("import sys; from decision_runtime import FilesystemEvidenceStore; "
+    code = ("import sys; from ordessa_decision import FilesystemEvidenceStore; "
             f"s=FilesystemEvidenceStore({str(root)!r}).get({ref.digest!r}); "
             "print(s['job_digest'])")
     finished = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)

@@ -1,8 +1,8 @@
 import json
 
 import pytest
-from ordessa_execution_agents.harness.definitions import AdapterRefusal, InvokeAction, IntentSource
-from ordessa_execution_agents.harness.definitions.native_channels import NativeConfigurationObservation, NativeSessionObservation
+from ordessa_agents.harness.definitions import AdapterRefusal, InvokeAction, IntentSource
+from ordessa_agents.harness.definitions.native_channels import NativeConfigurationObservation, NativeSessionObservation
 from ordessa_harness_codex.configuration.initial import initial_model_params as codex_initial
 from ordessa_harness_claude_code.configuration.initial import initial_model_params as claude_initial
 from ordessa_harness_codex.configuration.live_model import compile_live_model

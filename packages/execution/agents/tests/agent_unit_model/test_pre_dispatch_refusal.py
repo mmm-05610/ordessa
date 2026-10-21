@@ -5,7 +5,7 @@ temporary SQLite operation ledger. Provider callbacks are controlled contract
 fixtures; no native process or model is involved.
 """
 from __future__ import annotations
-from ordessa_execution_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
 
 from dataclasses import replace
 import hashlib

@@ -147,7 +147,7 @@ def _validate_managed(unit, operation, params, binding):
     from ordessa_units.channels.acp_input import ManagedAcpCapture, BINDING_VERSION, operation_reference
     from ordessa_units.channels.reservations import CapturedInputRef
     from ordessa_units.channels.contracts import EXECUTION_EVIDENCE_VERSION
-    from ordessa_execution_agents.profiles import decode_revision_ref
+    from ordessa_agents.profiles import decode_revision_ref
     try:
         fields = {'contractVersion', 'request', 'capturedInputRef', 'contentDigest', 'unitRef',
                   'nodeRef', 'providerRef', 'managementEpoch', 'profileRevision',

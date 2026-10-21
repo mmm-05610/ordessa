@@ -1,5 +1,5 @@
 import pytest
-from ordessa_execution_agents.harness.definitions import NativeProfileRef, NativeCredentialRef
+from ordessa_agents.harness.definitions import NativeProfileRef, NativeCredentialRef
 from ordessa_harness_opencode.profiles import OpenCodeProfileRef, OpenCodeContinuationResourceProvider
 
 
@@ -18,7 +18,7 @@ def test_continuation_rejects_other_native_locator_kinds():
 
 
 def test_continuation_resolves_original_contract_from_actual_brand_owner():
-    from ordessa_execution_agents.harness.definitions import NativeContinuationRef
+    from ordessa_agents.harness.definitions import NativeContinuationRef
     from ordessa_harness_opencode import OpenCodeContinuationV1
     provider = OpenCodeContinuationResourceProvider()
     resolved = provider.resolve(OpenCodeContinuationV1.contract_id,

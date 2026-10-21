@@ -10,7 +10,7 @@ from typing import Annotated
 
 from fastapi import Header
 
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 
 
 def idempotency_key(

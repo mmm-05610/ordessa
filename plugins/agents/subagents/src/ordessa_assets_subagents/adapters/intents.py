@@ -6,7 +6,7 @@ vocabulary (``TargetSlot`` / Q3 ``MountContent`` / ``SetRebuildClassOption`` /
 historical checkpoint ``codex/011-harness-api-ready``, so two vocabularies
 cannot both survive integration: the old types are **deleted**, and every
 artefact this package produces is an
-``ordessa_execution_agents.harness.definitions`` DTO. Nothing here is a public
+``ordessa_agents.harness.definitions`` DTO. Nothing here is a public
 cross-tree shape — the public shape belongs to the Execution definitions
 package. The earlier `ordessa_execution_api.harness` name is historical, not a
 current import route.
@@ -33,11 +33,11 @@ What stays (deliberately stricter than the contract, per
   invented;
 * the owner question (§C3 「注册 owner 由宿主授予」) is structural, not
   conventional: `IntentSource` has no owner field at all
-  (`packages/execution/agents/src/ordessa_execution_agents/harness/definitions/intents.py:17-25`), the owner is stamped by the
+  (`packages/execution/agents/src/ordessa_agents/harness/definitions/intents.py:17-25`), the owner is stamped by the
   Server carrier (`apps/server/src/ordessa_server/composition/configuration/application.py:347`
   `AuthorizedIntents(owner, …)`) and the merge authority *rejects* any
   intent whose source facet/item/version differs from the host-authorized
-  submission (`packages/execution/agents/src/ordessa_execution_agents/harness/configuration/materialization/intent_merge.py:164-173`).
+  submission (`packages/execution/agents/src/ordessa_agents/harness/configuration/materialization/intent_merge.py:164-173`).
   :func:`compile_all` therefore accepts a host-injected ``IntentSource`` and
   never constructs one: it validates the injected source's type exactly,
   refuses foreign facets, and stamps that same object on every intent.
@@ -56,11 +56,11 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping, Sequence
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, BindSecret, ContentRef, FieldPath, IntentSet, IntentSource,
     InvokeAction, MountContent, RemoveOwnedContent, TargetHandle,
 )
-from ordessa_execution_agents.harness.definitions.schema import looks_secret_name
+from ordessa_agents.harness.definitions.schema import looks_secret_name
 
 from .. import decoder, digest, errors, limits
 
@@ -125,7 +125,7 @@ def safe_field_path(segments: Sequence[str]) -> FieldPath:
     """A `FieldPath` no segment of which is path-, `~`- or shell-shaped.
 
     The real `FieldPath` already refuses `""`, `"."`, `".."`, `/` and `\\`
-    (`packages/execution/agents/src/ordessa_execution_agents/harness/definitions/intents.py:42-50`); this wrapper adds Q3's stricter
+    (`packages/execution/agents/src/ordessa_agents/harness/definitions/intents.py:42-50`); this wrapper adds Q3's stricter
     per-segment grammar so nothing like `"~/.claude"` can ride through as a
     single dot-containing segment.
     """
@@ -353,7 +353,7 @@ def build_invoke_action(source: IntentSource, *, native_name: str,
     """A real `InvokeAction`, constructible only WITH invokable-fact evidence.
 
     `expected_observation` (the contract's "what must be seen to confirm"
-    field, `packages/execution/agents/src/ordessa_execution_agents/harness/definitions/intents.py:169-193`) carries the joined
+    field, `packages/execution/agents/src/ordessa_agents/harness/definitions/intents.py:169-193`) carries the joined
     evidence references; an empty or non-tuple evidence is a refusal, because
     G17 forbids an invocation action without a proven control entry. The host
     merge additionally demands an explicit action grant
@@ -395,7 +395,7 @@ def build_rebuild_class_option(option_key: Any, value: Any = None) -> Any:
     them forces a Query rebuild), so an in-place option intent must not exist.
     The real vocabulary's only option-shaped intent is `SetField` — which
     targets a structured FILE and is applied by regenerating it, with no
-    rebuild-class semantics in `ordessa_execution_agents.harness.definitions` — so mapping
+    rebuild-class semantics in `ordessa_agents.harness.definitions` — so mapping
     `agents` onto it would silently claim a hot-applyable file field and
     exceed Q3's directory-only claims. Per the task's gap rule this stays a
     refusal with a named gap (SR-3b-2 asks C0 for either a typed rebuild-class
@@ -418,7 +418,7 @@ def scan_credential_bearing_fields(item: "ManagedItem") -> None:
     This keeps the existing refusal (a mere declaration is not a host grant —
     never auto-converted into `BindSecret`) and names the credential key,
     reusing the published contract's own classifier
-    (`ordessa_execution_agents.harness.definitions.schema.looks_secret_name`) on top of Q3's
+    (`ordessa_agents.harness.definitions.schema.looks_secret_name`) on top of Q3's
     decoder-side credential grammar.
     """
     revision = item.revision
@@ -465,7 +465,7 @@ def discovery_diagnostics(native_names: frozenset[str] | None) -> tuple[str, ...
     """Compile-time diagnostics, kept OUT of the intent set on purpose.
 
     The real `IntentSet` carries no diagnostics field
-    (`packages/execution/agents/src/ordessa_execution_agents/harness/definitions/intents.py:199-208`), so Q3's 「native discovery unknown」 note is exposed
+    (`packages/execution/agents/src/ordessa_agents/harness/definitions/intents.py:199-208`), so Q3's 「native discovery unknown」 note is exposed
     through this pure helper for the caller's own record, and the absence of
     a diagnostics channel is registered as a seam observation (SR gap list).
     """
@@ -493,7 +493,7 @@ def compile_all(
     """Compile the *complete* managed collection into a REAL `IntentSet`.
 
     Targets and ownership are injected, never invented: `context` is the
-    host-granted :class:`ordessa_execution_agents.harness.definitions.AdapterContext` (the mount
+    host-granted :class:`ordessa_agents.harness.definitions.AdapterContext` (the mount
     targets are the server-issued `TargetHandle`s inside it) and `source` is
     the host-injected :class:`IntentSource` stamped unchanged on every
     intent. Every shared guard — context/source admission, caps, name

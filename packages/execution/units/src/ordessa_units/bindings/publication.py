@@ -17,7 +17,7 @@ here. Provider activation generation never allocates nodes.
 There is no node state machine, configuration value or native-session ledger.
 """
 from __future__ import annotations
-from ordessa_execution_agents.profiles.definitions.codec import decode_revision_ref
+from ordessa_agents.profiles.definitions.codec import decode_revision_ref
 
 from dataclasses import dataclass
 import hashlib
@@ -168,7 +168,7 @@ class NodePublication:
             if type(intent) is not OperationIntent:
                 raise UnitIdentityMismatch("node reservation requires a frozen operation intent")
             ref = decode_node_ref(intent.node_ref)
-            from ordessa_execution_agents.profiles.definitions.models import ProfileRevisionRef
+            from ordessa_agents.profiles.definitions.models import ProfileRevisionRef
             try:
                 profile = decode_revision_ref(json.loads(safe_json(intent.profile_snapshot_ref)))
             except (ValueError, TypeError):
@@ -188,7 +188,7 @@ class NodePublication:
             # Only a NEW reservation can acquire a durable provider hold. The
             # active-pin check is inside the Environment admission lock and
             # therefore ordered with the exact activation retirement cut.
-            from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessAdmission
+            from ordessa_agents.harness.providers.registry.definition_admission import HarnessAdmission
             admitted_pins = {safe_json(item.provider_ref)
                              for item in HarnessAdmission(env).list()}
             if any(safe_json(step.pinned_provider_ref) not in admitted_pins
@@ -235,7 +235,7 @@ class NodePublication:
         if (not isinstance(binding["harnessDefinitionRef"], Mapping)
                 or binding["harnessDefinitionRef"].get("environmentNamespace") != ref.environment):
             raise UnitIdentityMismatch("Harness definition is unscoped")
-        from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessAdmission
+        from ordessa_agents.harness.providers.registry.definition_admission import HarnessAdmission
         admitted = HarnessAdmission(self._environment).describe(binding["harnessDefinitionRef"])
         if not _same_reference(admitted.provider_ref, evidence.provider_ref):
             raise UnitIdentityMismatch("owner provider activation differs from currently admitted provider")

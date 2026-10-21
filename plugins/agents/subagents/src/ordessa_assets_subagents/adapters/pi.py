@@ -41,7 +41,7 @@ from __future__ import annotations
 import re
 from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ConfigurationAdapterDescriptor, IntentSet, ValueSchema, VersionRange,
 )
 

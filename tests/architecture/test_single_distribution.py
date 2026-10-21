@@ -1,4 +1,4 @@
-"""One distribution, one importable package: `ordessa-execution-agents` / `ordessa_execution_agents.harness`.
+"""One distribution, one importable package: `ordessa-execution-agents` / `ordessa_agents.harness`.
 
 History: the old repository consolidated several distributions behind
 import-only alias packages (`agent_box_harnesses`, `agent_box_harness_dsh`,
@@ -24,8 +24,8 @@ def test_every_module_is_canonical_no_alias_machinery_is_present():
     script = '''
 import importlib
 from pathlib import Path
-import ordessa_execution_agents.harness
-root = Path(ordessa_execution_agents.harness.__file__).parent
+import ordessa_agents.harness
+root = Path(ordessa_agents.harness.__file__).parent
 names = []
 sources = sorted(root.rglob("*.py"))
 assert sources, "actual Agents source must be nonempty"
@@ -38,8 +38,8 @@ for source in sources:
         continue
     names.append(".".join(parts))
 for suffix in sorted(names):
-    module = importlib.import_module("ordessa_execution_agents.harness." + suffix)
-    assert module.__spec__.name == "ordessa_execution_agents.harness." + suffix, (suffix, module.__spec__)
+    module = importlib.import_module("ordessa_agents.harness." + suffix)
+    assert module.__spec__.name == "ordessa_agents.harness." + suffix, (suffix, module.__spec__)
 import sys
 for legacy in ("pacthold.harness_kit", "agent_box_harnesses", "agent_box_harness", "agent_box_harness_dsh",
                "agent_box_harness_qwen", "agent_box_harness_kilo"):
@@ -59,7 +59,7 @@ print("all modules canonical; retired aliases absent")
 
 def test_unknown_module_is_not_silently_created():
     with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("ordessa_execution_agents.harness.not_a_real_module")
+        importlib.import_module("ordessa_agents.harness.not_a_real_module")
 
 
 def test_shared_adapter_exports_are_preserved():

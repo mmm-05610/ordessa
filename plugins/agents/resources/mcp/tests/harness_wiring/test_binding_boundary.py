@@ -3,7 +3,7 @@
 native_binding.py is the Q4-domain <-> harness-api conversion point and
 must itself obey the import boundaries it converts across:
 
-* it may import ``ordessa_execution_agents.harness.definitions`` (the published contract) and the
+* it may import ``ordessa_agents.harness.definitions`` (the published contract) and the
   MCP domain — never ``pacthold.harness_kit`` (the harness implementation),
   never ``ordessa_server``/host internals, never ``adapters`` (outside the
   installed backend package);
@@ -37,9 +37,9 @@ if str(ADAPTER_ROOT) not in __import__("sys").path:
 ADAPTER_FILES = ["adapters/codex.py", "adapters/claude.py"]
 
 FORBIDDEN_IMPORT_ROOTS = {
-    "pacthold.harness_kit",  # NOT ordessa_execution_agents.harness.definitions (the published contract)
+    "pacthold.harness_kit",  # NOT ordessa_agents.harness.definitions (the published contract)
     "ordessa_server", "ordessa_server_product", "ordessa_server_compat",
-    "pacthold", "pacthold_runtime_compat", "adapters", "server_plugin_api",
+    "pacthold", "pacthold_runtime_compat", "adapters", "ordessa_server_plugin_api",
     "os", "pathlib", "socket", "subprocess", "tempfile", "io", "shutil",
     "fcntl", "asyncio", "threading", "multiprocessing", "signal",
 }
@@ -49,7 +49,7 @@ FORBIDDEN_CALLS = {"open", "exec", "eval", "spawn", "system"}
 
 
 def _bad_module(module: str) -> bool:
-    if module == "ordessa_execution_agents.harness.definitions" or module.startswith("pacthold.harness_contracts."):
+    if module == "ordessa_agents.harness.definitions" or module.startswith("pacthold.harness_contracts."):
         return False
     head = module.split(".")[0]
     return head in FORBIDDEN_IMPORT_ROOTS
@@ -101,7 +101,7 @@ def test_full_chain_runs_under_primitive_seals(monkeypatch):
     returns a real API object under the seal)."""
     from adapters import claude as claude_mod, codex as codex_mod
     from backend.native_intents import NativeObservation, ObservedServer
-    from ordessa_execution_agents.harness.definitions import Match
+    from ordessa_agents.harness.definitions import Match
 
     class Blocked(RuntimeError):
         pass

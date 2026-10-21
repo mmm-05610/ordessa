@@ -1,7 +1,7 @@
 """External sample #1 — a fourth controlled Agent with a different protocol.
 
 A minimal third-party participant composed only through the public
-`server_plugin_api` contract. Unlike the three brands (codex/pi/claude-code,
+`ordessa_server_plugin_api` contract. Unlike the three brands (codex/pi/claude-code,
 which speak ACP), this sample speaks its own interaction schema
 ``sample-agent/1`` and declares, honestly and in typed form, that reliable
 submissions are **unsupported**: it carries no protected fingerprint and no
@@ -27,7 +27,7 @@ import hashlib
 import json
 from typing import Any, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ServerMethodDescriptor,
     ServerPluginContext,
     ServerPluginDescriptor,

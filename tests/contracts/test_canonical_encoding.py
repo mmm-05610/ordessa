@@ -3,8 +3,8 @@ import pytest
 
 from ordessa_infrastructure.encoding.canonical_json import canonical_bytes, decode_json
 from ordessa_infrastructure.encoding.digests import sha256
-from ordessa_execution_agents.profiles import canonical_content as profile_canonical
-from ordessa_execution_agents.profiles import (canonical_content, content_digest as profile_digest,
+from ordessa_agents.profiles import canonical_content as profile_canonical
+from ordessa_agents.profiles import (canonical_content, content_digest as profile_digest,
     decode_content, encode_content)
 
 

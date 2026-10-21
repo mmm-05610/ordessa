@@ -6,8 +6,8 @@ this adapter creates no principal, grant, journal or persistent domain owner.
 from contextlib import contextmanager
 from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority,VerifiedPrincipal
 from ordessa_interfaces.system_access.contracts.refs import Scope
-from ordessa_execution_agents.sdk.native_contracts import NativeWriteBinding,NativeOperationRef
-from ordessa_execution_agents.sdk.interactions import InteractionsRefused
+from ordessa_agents.sdk.native_contracts import NativeWriteBinding,NativeOperationRef
+from ordessa_agents.sdk.interactions import InteractionsRefused
 
 NATIVE_CAPABILITIES={'apply':'agents.configuration.apply','query':'agents.configuration.query'}
 NATIVE_READ='agents.operations.read'

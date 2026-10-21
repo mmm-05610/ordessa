@@ -1,7 +1,7 @@
 """Carrier version grammar accepts exact independent owner contracts."""
 import pytest
-from server_plugin_api import Contribution,ContributionPointSpec,ServerContributionHandler
-from server_plugin_api.errors import ContributionDeclarationError
+from ordessa_server_plugin_api import Contribution,ContributionPointSpec,ServerContributionHandler
+from ordessa_server_plugin_api.errors import ContributionDeclarationError
 
 class Handler(ServerContributionHandler):
     def stage(self,*args): pass

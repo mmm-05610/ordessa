@@ -24,7 +24,7 @@ from .runs import (
     channel_run_view, end_run_failed, end_run_released, open_run,
 )
 from ordessa_infrastructure.identifiers import opaque_id
-from ordessa_execution_agents.harness.definitions.native_channels import (
+from ordessa_agents.harness.definitions.native_channels import (
     NativeSessionObservation, NativeConfigurationUnavailable,
     NativeConfigurationRefused, NativeConfigurationObservation,
 )
