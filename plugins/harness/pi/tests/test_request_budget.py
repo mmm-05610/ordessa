@@ -1,7 +1,16 @@
 """Isolated contract tests for the Pi request-budget extension; no model/runtime calls."""
 from pathlib import Path
 import json
+import os
 import subprocess
+
+#: One case verifies the *installed* Pi `pi-ai` package (not a fixture). The test
+#: therefore needs the host Pi installation; elsewhere it skips explicitly instead
+#: of pretending the package exists. Override with ORDESSA_PI_AI_OPENAI_COMPLETIONS.
+HOST_PI_AI_COMPLETIONS = Path(os.environ.get(
+    'ORDESSA_PI_AI_OPENAI_COMPLETIONS',
+    '/home/maoqh/.pi/agent/install/releases/0.86.1/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js'))
+_HOST_URI = 'file:///home/maoqh/.pi/agent/install/releases/0.86.1/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js'
 
 
 EXTENSION = Path(__file__).parents[1] / "src/ordessa_harness_pi/acp/request-budget.mjs"
@@ -9,6 +18,11 @@ IMPORT = json.dumps(EXTENSION.as_uri())
 
 
 def run_node(body: str) -> None:
+    if _HOST_URI in body:
+        if not HOST_PI_AI_COMPLETIONS.is_file():
+            import pytest
+            pytest.skip('requires the host Pi installation (pi-ai package)')
+        body = body.replace(_HOST_URI, HOST_PI_AI_COMPLETIONS.as_uri())
     source = f"""
 import assert from 'node:assert/strict'
 import {{ createBudgetedFetch, createBudgetedStreamSimple, announceReady }} from {IMPORT}
