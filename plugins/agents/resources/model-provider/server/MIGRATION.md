@@ -67,7 +67,7 @@
 ## foundation@8844c475bc 消费适配（2026-09-28，固定 SHA merge 后）
 
 foundation 将产品 Database facade 迁至 `plugins/runtime-compat`（010 FR-011）、参数形状助手迁至
-`server_plugin_api.wire_shape` + `ordessa_server_compat.wire_validators`（T014-S2c，宿主
+`ordessa_server_plugin_api.wire_shape` + `ordessa_server_compat.wire_validators`（T014-S2c，宿主
 handlers.py 文档字符串指定）。本包最小机械适配（先红 2 collection errors + 2 boundary 红，后绿 137）：
 
 1. `tests/conftest.py`、profile-contribution `tests/conftest.py`：`Database` 改自

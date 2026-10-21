@@ -15,13 +15,13 @@ import subprocess
 
 import pytest
 
-from ordessa_execution_agents.capability.harness import (
+from ordessa_agents.capability.harness import (
     CAPABILITY_ID,
     build_harness_capability,
     descriptor,
 )
-from ordessa_execution_agents.harness.providers.catalog import HarnessCatalog
-from ordessa_execution_agents.sdk.harness import HarnessDescriptor, HarnessError
+from ordessa_agents.harness.providers.catalog import HarnessCatalog
+from ordessa_agents.sdk.harness import HarnessDescriptor, HarnessError
 from ordessa_interfaces_contracts import (
     canonical_json,
     compute_descriptor_digest,

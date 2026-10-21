@@ -7,8 +7,8 @@ poisons the side-effect entry points and then drives assess/compile/verify.
 
 Allowed imports: the standard library (minus the forbidden set), the consumed
 contracts (``ordessa_sandbox_api``, ``ordessa_sandbox_backend``,
-``server_plugin_api`` and — since the foundation checkpoint, for the C2
-descriptive edge only — ``ordessa_execution_agents.harness.definitions``) and this package. No host,
+``ordessa_server_plugin_api`` and — since the foundation checkpoint, for the C2
+descriptive edge only — ``ordessa_agents.harness.definitions``) and this package. No host,
 no harness CODE, no compat, no Permissions, no storage. There is NO apply
 path anywhere: a refusal is a value and a compile writes no file.
 
@@ -35,8 +35,8 @@ FORBIDDEN_PRODUCT_ROOTS = {"ordessa_server", "ordessa_server_compat",
                            "pacthold.harness_kit", "pacthold", "ordessa_workspace",
                            "fastapi", "pydantic", "httpx", "uvicorn"}
 ALLOWED_NON_STDLIB = {"ordessa_sandbox_api", "ordessa_sandbox_backend",
-                      "server_plugin_api", "ordessa_sandbox_adapters",
-                      "ordessa_execution_agents.harness.definitions", "__future__"}
+                      "ordessa_server_plugin_api", "ordessa_sandbox_adapters",
+                      "ordessa_agents.harness.definitions", "__future__"}
 FORBIDDEN_ATTR_CALLS = {"expanduser", "system", "popen", "execv", "execve",
                         "spawn", "spawnl", "spawnv",
                         "urlopen", "startfile", "kill", "mkdir", "rmdir",
@@ -68,7 +68,7 @@ def test_every_module_exists_and_is_valid_python():
         ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
 
-HARNESS_DEFINITIONS_EDGE = "ordessa_execution_agents.harness.definitions"
+HARNESS_DEFINITIONS_EDGE = "ordessa_agents.harness.definitions"
 
 
 def test_no_forbidden_import():

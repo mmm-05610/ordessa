@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import importlib.util
 
-import decision_runtime as d
+import ordessa_decision as d
 
 # Exact intentional surface: the four group entries plus the real API names.
 EXPECTED = {
@@ -57,21 +57,21 @@ def test_every_exported_name_resolves():
 
 
 def test_public_api_compatibility_for_real_consumer_import_forms():
-    # `from decision_runtime.definitions import *`
+    # `from ordessa_decision.definitions import *`
     ns: dict = {}
-    exec('from decision_runtime.definitions import *', ns)  # noqa: S102 - explicit star surface
+    exec('from ordessa_decision.definitions import *', ns)  # noqa: S102 - explicit star surface
     for name in ('DecisionRequest', 'DecisionResult', 'TaskBrief', 'PolicyRef',
                  'DecisionQuestion', 'DecisionAnswer', 'ReadContext', 'CallPermit',
                  'ContractError', 'canonical', 'digest', 'freeze', 'plain', 'json_schema'):
         assert name in ns, name
     # explicit owner submodule imports
-    from decision_runtime.definitions.errors import BudgetExhausted, EvidenceUnknown  # noqa: F401
-    from decision_runtime.definitions.models import DecisionRequest  # noqa: F401
-    from decision_runtime.definitions.ports import ModelCallContext  # noqa: F401
-    from decision_runtime.definitions.values import canonical  # noqa: F401
-    from decision_runtime.runtime import run_decision  # noqa: F401
-    from decision_runtime.validation import construct, decode_request  # noqa: F401
-    from decision_runtime.evidence import EvidenceError, FileEvidenceSink  # noqa: F401
+    from ordessa_decision.definitions.errors import BudgetExhausted, EvidenceUnknown  # noqa: F401
+    from ordessa_decision.definitions.models import DecisionRequest  # noqa: F401
+    from ordessa_decision.definitions.ports import ModelCallContext  # noqa: F401
+    from ordessa_decision.definitions.values import canonical  # noqa: F401
+    from ordessa_decision.runtime import run_decision  # noqa: F401
+    from ordessa_decision.validation import construct, decode_request  # noqa: F401
+    from ordessa_decision.evidence import EvidenceError, FileEvidenceSink  # noqa: F401
     assert callable(decode_request) and callable(construct) and callable(run_decision)
 
 
@@ -88,4 +88,4 @@ def test_group_entries_expose_their_owner_names():
 
 
 def test_retired_contracts_path_is_absent():
-    assert importlib.util.find_spec('decision_runtime.contracts') is None
+    assert importlib.util.find_spec('ordessa_decision.contracts') is None

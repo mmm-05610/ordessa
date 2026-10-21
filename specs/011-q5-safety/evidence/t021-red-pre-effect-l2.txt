@@ -14,21 +14,21 @@ any test or module was written):
 (a) `AcpPermitAuthority.authorize_permission(connection, request, decision) -> bool`
     (acp_admission.py:39-42,204) is answered with a plain bool and the fence
     requires `is True`. No host type is involved, so a plugin CAN be that
-    verifier with only `server_plugin_api` imported. -> implemented in src.
+    verifier with only `ordessa_server_plugin_api` imported. -> implemented in src.
 (b) `authorize_submission` CANNOT be satisfied from a plugin:
     * acp_admission.py:134 rejects the permit unless
       `isinstance(bound, BoundAdmission)`, and `BoundAdmission` is declared in
       the host module itself (acp_admission.py:27-36);
     * it is NOT published by the public contract:
-      `packages/server-plugin-api/src/server_plugin_api/acp_admission.py` declares
+      `packages/server-plugin-api/src/ordessa_server_plugin_api/acp_admission.py` declares
       only AcpChannelBinding / AcpAttachmentReference / AcpSubmissionRequest /
       AcpPermissionDecision / AcpAdmissionResult / AcpAdmissionPort, and
       `__init__.py:26-28,116-117` re-exports just ACP_ADMISSION_PORT(+VERSION)
-      and those DTOs. Measured: hasattr(server_plugin_api,"BoundAdmission")=False,
+      and those DTOs. Measured: hasattr(ordessa_server_plugin_api,"BoundAdmission")=False,
       "AcpPermitAuthority"=False, "AcpAdmissionRefused"=False.
     * importing it is forbidden in this package, not merely discouraged:
       tests/test_backend_dependency_direction.py ALLOWED_ROOTS =
-      {__future__, ordessa_permissions_api, server_plugin_api} and its
+      {__future__, ordessa_permissions_api, ordessa_server_plugin_api} and its
       FORBIDDEN_ROOTS scan rejects even the literal text in src/.
     * the permit's `input_digest` must equal the host's private canonicalisation
       (`_digest`/`prompt_input`, acp_admission.py:63-90, computed at :120); no

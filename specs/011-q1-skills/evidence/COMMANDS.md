@@ -50,7 +50,7 @@ Every `EXIT=` below was echoed immediately after the command itself
 
 7. Import-origin proof (cwd OUTSIDE the repo = /tmp/q1-run):
    /tmp/q1-isolated-venv/bin/python -c "import ordessa_skills,
-     pacthold_runtime_compat, server_plugin_api, ordessa_workspace,
+     pacthold_runtime_compat, ordessa_server_plugin_api, ordessa_workspace,
      ordessa_server; print(ordessa_skills.__file__)"
    -> EXIT=0  prints
    /tmp/q1-isolated-venv/lib/python3.12/site-packages/ordessa_skills/__init__.py

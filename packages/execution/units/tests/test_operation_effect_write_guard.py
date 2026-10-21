@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, AsyncMock
 
 import pytest
 from ordessa_environments import ProcessHandle
-from ordessa_execution_agents.harness.transport import EffectWriteGuard, EffectWriteRefused, WriterLeaseRefused, ChannelClosed
+from ordessa_agents.harness.transport import EffectWriteGuard, EffectWriteRefused, WriterLeaseRefused, ChannelClosed
 from ordessa_units.sessions.environment_channel import EnvironmentProcessChannel
 
 

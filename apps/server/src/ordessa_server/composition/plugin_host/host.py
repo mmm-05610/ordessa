@@ -2,7 +2,7 @@
 
 The registry here is the one dispatch truth for wire/1: every method's shape,
 handler, availability predicate and owner travel as one atomic descriptor
-(`server_plugin_api.ServerMethodDescriptor`). `WireService.dispatch` and
+(`ordessa_server_plugin_api.ServerMethodDescriptor`). `WireService.dispatch` and
 `WireService.hello` read only from this registry — there is no second method
 table anywhere in the Server.
 
@@ -82,7 +82,7 @@ from functools import wraps
 from threading import RLock
 from typing import Any, Iterable, Iterator, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     SERVER_PLUGIN_API_VERSION,
     AbsentContribution,
     CleanupError,

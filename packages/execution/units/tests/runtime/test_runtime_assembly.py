@@ -6,7 +6,7 @@ import pytest
 
 from ordessa_units.assembly.runtime.assembler import assemble_runtime_composition
 from ordessa_units.assembly.runtime.coordinator import ResolvedComposition
-from ordessa_execution_agents.harness.definitions.command_projection import HarnessCommandSpec
+from ordessa_agents.harness.definitions.command_projection import HarnessCommandSpec
 from ordessa_environments.composition import RuntimePreparationRejected
 from ordessa_environments.definitions.runtime_resources import (
     RuntimeHostRef,
@@ -23,7 +23,7 @@ def _request(*values):
 
 
 def _source(tmp_path):
-    from ordessa_execution_agents.harness.providers.resolution.source_declaration import declare_source
+    from ordessa_agents.harness.providers.resolution.source_declaration import declare_source
     source = tmp_path / "source"
     source.write_bytes(b"controlled source")
     return source, declare_source("workspace", source, "/workspace", access="rw")
@@ -32,7 +32,7 @@ def _source(tmp_path):
 @pytest.mark.parametrize("kind", ["cwd", "overlap", "drift"])
 def test_actual_assembler_checks_entire_plan_before_registration(tmp_path, kind):
     from dataclasses import replace
-    from ordessa_execution_agents.harness.providers.resolution.source_declaration import declare_source
+    from ordessa_agents.harness.providers.resolution.source_declaration import declare_source
     affinity = "controlled:linux:amd64"
     host = RuntimeHostRef("controlled", "h", "hd", affinity)
     sandbox = SandboxRef("controlled", "s", "sd", affinity)

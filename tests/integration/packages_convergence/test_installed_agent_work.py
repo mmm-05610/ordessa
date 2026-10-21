@@ -14,8 +14,8 @@ ROOT = Path(__file__).resolve().parents[3]
 def test_installed_product_and_agent_work_use_current_wheel_owners(tmp_path):
     from installed_server_fixture import build_installed_server
     python, console, env, packaging = build_installed_server(ROOT, tmp_path,
-        extra_projects=('ordessa-server-product', 'ordessa-harness-gemini-cli'))
-    assert {'ordessa-server-product','ordessa-harness-gemini-cli'} <= set(packaging['selectedProjects'])
+        extra_projects=('ordessa-server-product',))
+    assert {'ordessa-server-product'} <= set(packaging['selectedProjects'])
     assert_installed_agent_work(tmp_path, python, env)
 
 
@@ -53,5 +53,5 @@ if __name__=='__main__': raise SystemExit(main())
                    'ordessa_server.composition.engineering_agent_work_assembly',
                    'ordessa_system_access_bindings.engineering',
                    'ordessa_engineering.adapters.native_records.agent_recorded_dispatch',
-                   'ordessa_execution_agents.sdk.manager', 'ordessa_harness_gemini_cli'):
+                   'ordessa_agents.sdk.manager', 'ordessa_harness_gemini_cli'):
         assert module in origins['origins'],module

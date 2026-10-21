@@ -131,7 +131,7 @@ def test_the_ssh_connector_rows_answer_only_where_the_connector_is_composed(tmp_
     """Family rows moved with the CONSTRUCTION: without the workspace plugin
     in the round both codes fall through typed; the module-level lookup is
     static-only for both worlds."""
-    from server_plugin_api import family_for as static_family_for
+    from ordessa_server_plugin_api import family_for as static_family_for
 
     bare = build_runtime(tmp_path / "bare", server_plugins=())
     try:

@@ -11,7 +11,7 @@ from .peers import (
 from ordessa_units.assembly.runtime.coordinator import (
     CompositionExecution, ResolvedComposition, RuntimeCompositionCoordinator,
 )
-from ordessa_execution_agents.harness.definitions.command_projection import HarnessCommandSpec
+from ordessa_agents.harness.definitions.command_projection import HarnessCommandSpec
 from ordessa_environments.composition import MountPlan, RuntimeBinding, RuntimeBundle, StartAmbiguous
 from ordessa_environments.definitions.runtime_resources import RuntimeHostRef, SandboxRef
 

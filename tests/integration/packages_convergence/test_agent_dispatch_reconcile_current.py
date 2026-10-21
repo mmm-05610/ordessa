@@ -24,8 +24,8 @@ from test_method_work import env, seed_historical_run
 from test_implementation_dispatch import _fixture_records
 from test_agent_guarded_bootstrap import setup
 from ordessa_infrastructure.encoding import canonical_bytes
-from ordessa_execution_agents.public import InteractionService
-from ordessa_execution_agents.sdk.interactions import InteractionsRefused
+from ordessa_agents.public import InteractionService
+from ordessa_agents.sdk.interactions import InteractionsRefused
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.adapters.filesystem.resource_reader import FileResourceReader
 from ordessa_engineering.adapters.native_records.agent_recorded_dispatch import RecordedDispatchExecution

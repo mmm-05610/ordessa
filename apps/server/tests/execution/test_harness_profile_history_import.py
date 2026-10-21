@@ -12,7 +12,7 @@ import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_infrastructure.database.records import DomainWrite, DomainRevisionConflict
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     HistoricalProfileIdentityMismatch, ProfileAccessRefused, ProfileRevisionRef,
     ProfileRevisionConflict,
     ProfileValidationError, encode_content,
@@ -362,7 +362,7 @@ def test_list_invalid_harness_id_refuses_before_directory_observation(tmp_path, 
 
 
 # Historical projection is a read-only view of the same admitted modern revision.
-from ordessa_execution_agents.profiles import ProfileNotFound
+from ordessa_agents.profiles import ProfileNotFound
 from ordessa_server.bootstrap.migrations.harness_profile_projection import (
     HistoricalHarnessRef, read_imported_historical_revision,
     select_current_imported_historical, read_captured_historical,

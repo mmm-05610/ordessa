@@ -9,7 +9,7 @@
 **首要认知（F2）**: api-requests.md 的冻结文本已过时——REQ-Z3-1/2 的目标面已在 main：
 - C2 注册点：`plugins/harness/src/ordessa_harness/contributions.py:21` `CONFIGURATION_POINT = "harness.configuration-adapters"`，重复 adapter_id 拒绝 :187-190；类型 `plugins/harness/api/src/ordessa_harness_api/contracts.py`（ConfigurationAdapter/Descriptor/AdapterContext/Assessment/Match/Mismatch/VerificationUnknown）+ `intents.py`。
 - C4：`plugins/harness/src/ordessa_harness/application/configuration_service.py:150` `ConfigurationApplicationService`（apply(plan_id, operation_key, submission_permit)；ctor 强制注入 permits/journal，无默认 permit）；permit 机制 `apps/server/src/ordessa_server/acp_admission.py:94-140`（volatile fence、AUTHORIZATION_REFUSED）。
-- error families：`packages/server-plugin-api/src/server_plugin_api/contributions.py:74` `WIRE_ERROR_FAMILIES_POINT_ID`，插件可自贡献（REQ-Z3-7 由本包自己解决，不走接缝）。
+- error families：`packages/server-plugin-api/src/ordessa_server_plugin_api/contributions.py:74` `WIRE_ERROR_FAMILIES_POINT_ID`，插件可自贡献（REQ-Z3-7 由本包自己解决，不走接缝）。
 **以树内实测符号为准，api-requests 文本只当历史背景。**
 
 ## 写入面（只许这些）

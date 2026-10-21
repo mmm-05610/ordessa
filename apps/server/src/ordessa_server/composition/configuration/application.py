@@ -3,10 +3,10 @@
 No C4 plan/permit/journal or live configuration executor is composed here.
 Profile intent is not proof that a running native process applied those values.
 """
-from ordessa_execution_agents.public import ProfileService,HarnessCatalog
-from ordessa_execution_agents.profiles import encode_revision
+from ordessa_agents.public import ProfileService,HarnessCatalog
+from ordessa_agents.profiles import encode_revision
 from .native_evidence import AgentNativeEvidenceReader,NativeEvidenceUnavailable
-from ordessa_execution_agents.sdk.native_contracts import METHODS
+from ordessa_agents.sdk.native_contracts import METHODS
 
 
 class AgentConfigurationReadService:

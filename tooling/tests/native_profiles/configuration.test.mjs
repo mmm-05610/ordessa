@@ -2,8 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import {nativeConfigurationReader,nativeProfileBridge} from "../support/native_profile_ports.mjs"
-import { configurationDigest } from "../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/digest.mjs"
-import { configurationOperations } from "../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/operation.mjs"
+import { configurationDigest } from "../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/digest.mjs"
+import { configurationOperations } from "../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/operation.mjs"
 
 test('managed Codex rejects external provider effects without blocking internal read-only preparation', async () => {
   const previous = process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR

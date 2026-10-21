@@ -11,7 +11,7 @@ Profile backend plugin:
   calls the Agent Profile Catalog wire methods and validates the published schema
   mirror before accepting catalog responses.
 
-The Profile state authority remains `ordessa_execution_agents` in
+The Profile state authority remains `ordessa_agents` in
 `packages/execution/agents`; these UI packages are consumers. The default Desktop
 manifest is `apps/desktop/packaging/product/extensions.json`. Extension ids and wire
 method names remain stable.

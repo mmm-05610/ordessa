@@ -5,7 +5,7 @@ Native config/material bytes are prepared and verified by the external owner.
 """
 import json
 import re
-from ordessa_execution_agents.sdk import HarnessDescriptor,HarnessError,PrepareContext,ProfileContent,LaunchPlan,BoundPath
+from ordessa_agents.sdk import HarnessDescriptor,HarnessError,PrepareContext,ProfileContent,LaunchPlan,BoundPath
 
 
 class KiloHarnessProvider:

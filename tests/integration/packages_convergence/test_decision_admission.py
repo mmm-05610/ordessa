@@ -3,9 +3,9 @@ import asyncio
 from dataclasses import dataclass
 from types import SimpleNamespace
 
-from decision_runtime import DecisionRunner, FilesystemEvidenceStore, RulesOutcome
-from decision_runtime.settings import DecisionsSettings
-from decision_runtime.evidence import EvidenceScope
+from ordessa_decision import DecisionRunner, FilesystemEvidenceStore, RulesOutcome
+from ordessa_decision.settings import DecisionsSettings
+from ordessa_decision.evidence import EvidenceScope
 from ordessa_interfaces.system_access import RequestContext
 from ordessa_server.composition.packages_convergence import build_packages_host
 
@@ -74,7 +74,7 @@ def setup(root,*,policy=True):
     bindings={'services':{'decisions':settings},'invocation_resolver':authority.resolve,
         'evidence_scope_resolver':lambda invocation,operation:EvidenceScope('principal',invocation.subject)}
     if policy:bindings['decision_access']=authority
-    entry=SimpleNamespace(name='decisions',module='decision_runtime.capability',attr='factory')
+    entry=SimpleNamespace(name='decisions',module='ordessa_decision.capability',attr='factory')
     host=build_packages_host(allowlist=('decisions',),bindings_by_capability={'decisions':bindings},entry_points=(entry,))
     return host,authority,store
 

@@ -17,7 +17,7 @@ import time
 from types import SimpleNamespace
 
 import httpx2
-from decision_runtime.definitions import (TaskBrief, RunLimits, DecisionRequest,
+from ordessa_decision.definitions import (TaskBrief, RunLimits, DecisionRequest,
     DecisionServices, ReadContext, ProposalCandidateBatch, ValidationReceipt,
     ObligationResult, ExternalRef, FlowRef, digest, plain, freeze)
 from assignment_source.offline import offline_case, OfflineCandidates
@@ -26,8 +26,8 @@ from assignment_source.task_gate import compile_task_gate
 from assignment_source.selection import validate_policy
 from assignment_source.proposals import check_proposal_basis
 from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings
-from decision_runtime.evidence import FileEvidenceSink
-from decision_runtime.runtime import run_decision, reviewed_code_digest, flow_digest
+from ordessa_decision.evidence import FileEvidenceSink
+from ordessa_decision.runtime import run_decision, reviewed_code_digest, flow_digest
 
 _spec = importlib.util.spec_from_file_location('reference_probe_live_helpers', Path(__file__).with_name('live_acceptance.py'))
 live = importlib.util.module_from_spec(_spec)

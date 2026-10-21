@@ -44,7 +44,7 @@ def build_controlled_server_runtime(root: Path):
     from ordessa_server.composition.configuration.contributions import (
         CONFIGURATION_POINT, POINT_API_VERSION, HarnessContributionRegistry,
     )
-    from server_plugin_api import ContributionPointSpec, ServerPluginSelection
+    from ordessa_server_plugin_api import ContributionPointSpec, ServerPluginSelection
 
     product = create_host_product_composition()
     registry = HarnessContributionRegistry()
@@ -172,7 +172,7 @@ def target_handle(handle_id: str = "codex-config-toml", generation: int = 1):
     after the harness-api checkpoint: this package never turns a path or a bare
     string into a handle and never invents a generation.
     """
-    from ordessa_execution_agents.harness.definitions import TargetHandle
+    from ordessa_agents.harness.definitions import TargetHandle
     return TargetHandle(handle_id, generation)
 
 

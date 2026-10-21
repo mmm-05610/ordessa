@@ -12,7 +12,7 @@ from agent_tools_fixtures.configuration_records import DIGEST, NATIVE_DIGEST, Ev
 from ordessa_infrastructure.encoding.immutable_json import safe_json
 
 from agent_tools_fixtures.unit_records import parts, reserve, begin, PROVIDER, NODE
-from ordessa_execution_agents.units.records.unit_records import (
+from ordessa_agents.units.records.unit_records import (
     UnitRecords, UnitRecordsRefused, ConfigurationRecordTicket,
 )
 
@@ -245,7 +245,7 @@ def test_configuration_journal_consumes_real_core_claim_and_queries_same_origina
 
 @pytest.mark.parametrize('revoke', ['authority','activation','directory','epoch'])
 def test_configuration_journal_rejects_real_revoked_core_context_before_reservation(tmp_path, revoke):
-    from ordessa_execution_agents.units.admission.invocation import InvocationAuthorityRefused
+    from ordessa_agents.units.admission.invocation import InvocationAuthorityRefused
     p, unit, store, request, issuer, authority, current, issued = real_core_parts(tmp_path)
     try:
         invocation = issued('configuration')

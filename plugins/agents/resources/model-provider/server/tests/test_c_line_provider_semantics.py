@@ -16,7 +16,7 @@ import socket
 from pathlib import Path
 
 import pytest
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 from ordessa_server.composition.plugin_host.host import ServerPluginHost
 
 from ordessa_model_provider import probe as probe_module
@@ -394,16 +394,16 @@ def test_c21_configuration_application_goes_only_through_the_harness_capability(
     """C21: the one route to native configuration is the published Harness
     application contract. A private Harness module would be a second,
     uncoordinated route."""
-    #: 032: the published capability contract is ordessa_execution_agents.harness.definitions; the
+    #: 032: the published capability contract is ordessa_agents.harness.definitions; the
     #: kernel's harness_kit internals and the product assembly stay private.
-    capability = "ordessa_execution_agents.harness.definitions"
+    capability = "ordessa_agents.harness.definitions"
     importers = {}
     for path in sorted(SRC.glob("*.py")):
         modules = _imports_of(path)
         legacy = {m for m in modules
                   if m.split(".")[0] in {"pacthold", "ordessa_execution_api"}}
         assert not legacy, f"{path.name} imports a retired Harness/kernel path: {legacy}"
-        execution = {m for m in modules if m.split(".")[0] == "ordessa_execution_agents"}
+        execution = {m for m in modules if m.split(".")[0] == "ordessa_agents"}
         accepted = {m for m in execution
                     if m == capability or m.startswith(capability + ".")}
         private = execution - accepted
@@ -424,8 +424,8 @@ def test_c21_the_import_analyser_discriminates_a_private_harness_import(tmp_path
     modules = _imports_of(offender)
     assert modules == {"pacthold.harness_kit.registry.loader"}
     assert any(m.split(".")[0] == "pacthold"
-               and not (m == "ordessa_execution_agents.harness.definitions"
-                        or m.startswith("ordessa_execution_agents.harness.definitions.")) for m in modules)
+               and not (m == "ordessa_agents.harness.definitions"
+                        or m.startswith("ordessa_agents.harness.definitions.")) for m in modules)
 
 
 def test_c21_model_provider_owns_no_process_or_session_coordination_surface():
@@ -510,7 +510,7 @@ class FakeCredentialsLike:
 
     def get(self, credential_id, kind=None):
         if credential_id != "cred-1":
-            from server_plugin_api.internal_errors import ServerError
+            from ordessa_server_plugin_api.internal_errors import ServerError
             raise ServerError("CREDENTIAL_NOT_FOUND", "Credential was not found",
                               status=404)
         return {"id": "cred-1", "kind": kind or "api_key",

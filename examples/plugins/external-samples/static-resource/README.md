@@ -92,7 +92,7 @@ composition.
 packages), so this sample's `pyproject.toml` declares only
 `ordessa-server-plugin-api` (runtime) and `pytest` (dev). The access test
 imports `ordessa_server` from the venv's existing editable install
-(`apps/server`) and `server_plugin_api` from the venv's editable install
+(`apps/server`) and `ordessa_server_plugin_api` from the venv's editable install
 (`packages/backend/server-plugin-api`); installing the full product stack as
 a dependency of a sample would contradict the sample's own premise (it must
 install without Server/Harness/Profile). Run:

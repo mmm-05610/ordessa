@@ -5,7 +5,7 @@ import re
 import sqlite3
 import unicodedata
 
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 _IDENTITY = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}\Z')
 _CREDENTIAL = re.compile(r'credential_[0-9a-f]{32}\Z')

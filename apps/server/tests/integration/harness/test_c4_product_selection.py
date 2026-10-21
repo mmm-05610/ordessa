@@ -7,9 +7,9 @@ import pytest
 
 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
 from ordessa_units.records.operation_journal import OperationJournal
-from ordessa_execution_agents.harness.contracts.models.application import RuntimeSnapshot
-from ordessa_execution_agents.harness.configuration.materialization import MergeAuthority
-from ordessa_execution_agents.harness.definitions import AdapterContext, ApplicationTarget, DesiredFragment, Installation
+from ordessa_agents.harness.contracts.models.application import RuntimeSnapshot
+from ordessa_agents.harness.configuration.materialization import MergeAuthority
+from ordessa_agents.harness.definitions import AdapterContext, ApplicationTarget, DesiredFragment, Installation
 from ordessa_server.composition.runtime import build_runtime
 
 

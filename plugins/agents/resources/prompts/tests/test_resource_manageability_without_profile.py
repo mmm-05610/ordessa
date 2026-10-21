@@ -6,7 +6,7 @@ session, or Agent state, typed refusal when Profile-scoped writes are absent,
 and refusal of forged DataArea namespaces before filesystem effects.
 
 Cross-domain imports are the published packages only (`pacthold`,
-`server_plugin_api`).
+`ordessa_server_plugin_api`).
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from pacthold.adapters.filesystem.data_area import DataAreaError, FileDataAreaAd
 from ordessa_prompts.api import PromptError, body_digest
 from ordessa_prompts.plugin import DATA_DIR_NAME, PLUGIN_ID, PromptsServerPlugin
 
-from server_plugin_api import ServerPluginContext
+from ordessa_server_plugin_api import ServerPluginContext
 
 REQUEST = {"requestId": "req-t007-11-1"}
 

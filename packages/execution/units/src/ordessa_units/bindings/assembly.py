@@ -5,7 +5,7 @@ owner receipts. They do not dispatch, choose providers, allocate core identity
 or replace the operation ledger. Native plans remain private and ephemeral.
 """
 from __future__ import annotations
-from ordessa_execution_agents.profiles.definitions.codec import decode_revision_ref, encode_content, encode_revision_ref
+from ordessa_agents.profiles.definitions.codec import decode_revision_ref, encode_content, encode_revision_ref
 
 from dataclasses import dataclass, field
 import hashlib
@@ -17,9 +17,9 @@ from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch
 from ordessa_units.definitions.operations import OperationIntent, StepIntent, UsageMutation, OperationRevisionConflict, operation_holder, node_holder
 from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
-from ordessa_execution_agents.profiles.definitions.models import ProfileRevision, ProfileRevisionRef
-from ordessa_execution_agents.profiles.definitions.codec import decode_content
-from ordessa_execution_agents.profiles.definitions.validation import ProfileValidationError, canonical_content
+from ordessa_agents.profiles.definitions.models import ProfileRevision, ProfileRevisionRef
+from ordessa_agents.profiles.definitions.codec import decode_content
+from ordessa_agents.profiles.definitions.validation import ProfileValidationError, canonical_content
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import InvocationIssuer
 from ordessa_units.bindings.publication import decode_node_ref, _safe_projection, _same_reference
@@ -116,7 +116,7 @@ class AgentAssembly:
                     is self._issuer)
 
     def _admitted(self, definition_ref):
-        from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessAdmission
+        from ordessa_agents.harness.providers.registry.definition_admission import HarnessAdmission
         if not self._manager_bound():
             raise UnitGuaranteeUnavailable("original Unit Manager preparation owner required")
         return HarnessAdmission(self._environment).describe(definition_ref)

@@ -4,9 +4,9 @@ from threading import Barrier, RLock
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
-from ordessa_execution_agents.harness.definitions.errors import CoreDTOError
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.definitions.activation import HarnessActivationRef
+from ordessa_agents.harness.definitions.errors import CoreDTOError
+from ordessa_agents.harness.providers.registry import (
     CatalogAdmissionRefused,
     HarnessAdmission,
     HarnessCatalog,

@@ -26,7 +26,7 @@ from typing import Any, Callable
 from uuid import uuid4
 from threading import RLock
 
-from server_plugin_api import OwnedRootBinding, RootOwnershipError
+from ordessa_server_plugin_api import OwnedRootBinding, RootOwnershipError
 from ordessa_server.composition.root_ownership import (
     _issue_owned_root_binding, validate_owned_root_binding, DataRootOwner, DataRootPathUnsafeError, RuntimeCompositionUnavailable,
 )
@@ -358,7 +358,7 @@ class ServerRuntime:
     def _bind_core_methods_locked(self) -> None:
         if self.core_method_factory is None:
             return
-        from server_plugin_api import InvalidDeclarationError, ServerMethodDescriptor
+        from ordessa_server_plugin_api import InvalidDeclarationError, ServerMethodDescriptor
         if not callable(self.core_method_factory):
             raise InvalidDeclarationError("core_method_factory must be callable")
         if self.unit_runtime is None or self.plugin_host is None:
@@ -806,7 +806,7 @@ def build_runtime(
     # or schema write so a partial historical root cannot be silently stamped
     # as current when that source is absent. Explicit bare compositions do
     # not gain the migration provider before the historical-root guard.
-    from server_plugin_api import (
+    from ordessa_server_plugin_api import (
         ContributionDeclarationError, ContributionPointSpec,
         WIRE_DISCOVERY_FACETS_POINT_ID,
         WIRE_ERROR_FAMILIES_POINT_ID, ServerPluginSelection,
@@ -925,7 +925,7 @@ def build_runtime(
         # -- the plugin-host boundary --------------------------------------------
         # One dispatch truth: the host's method registry. The host registers
         # `server.hello`; every business row arrives through a plugin.
-        from server_plugin_api import ACP_ADMISSION_PORT, StreamRouteDescriptor  # noqa: F401  (admission type)
+        from ordessa_server_plugin_api import ACP_ADMISSION_PORT, StreamRouteDescriptor  # noqa: F401  (admission type)
         from ordessa_server.composition.plugin_host import MethodRegistry, ServerPluginHost, StreamRouteRegistry
         from ordessa_interfaces.system_access.subscriptions.cursors import CursorCodec
         from ordessa_interfaces.system_access.services.invocation import WireService

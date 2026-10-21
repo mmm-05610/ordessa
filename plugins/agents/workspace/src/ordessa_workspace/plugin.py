@@ -2,7 +2,7 @@
 
 Owns the five `workspaces.*` wire methods, their shape, their availability
 (readiness blockers), the `WorkspaceRecords` store and the `WorkspaceService`
-instance, registered through `server_plugin_api` and activated by the plugin
+instance, registered through `ordessa_server_plugin_api` and activated by the plugin
 host. When this plugin is not composed, those five methods are honestly
 absent: not advertised by `server.hello`, refused by dispatch as unknown —
 never silently kept alive by a second table.
@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     WIRE_ERROR_FAMILIES_API_VERSION,
     WIRE_ERROR_FAMILIES_POINT_ID,
     Contribution,
@@ -40,15 +40,15 @@ from server_plugin_api import (
     ServerPluginRegistration,
 )
 
-from server_plugin_api import ServerError
-from server_plugin_api import (
+from ordessa_server_plugin_api import ServerError
+from ordessa_server_plugin_api import (
     bounded as _bounded,
     require as _require,
     version as _version,
 )
 from ordessa_workspace import connectors as _connector_builders
 from ordessa_workspace.wire_projection import workspace_record
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 from ordessa_workspace.error_families import WORKSPACE_ERROR_FAMILIES
 from ordessa_workspace.records import WorkspaceRecords
 from ordessa_workspace.service import WorkspaceService

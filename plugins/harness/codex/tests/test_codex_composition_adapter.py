@@ -11,7 +11,7 @@ with its subject rather than being re-pointed at nothing. The declaration half
 """
 from types import SimpleNamespace
 
-from ordessa_execution_agents.harness.definitions.command_projection import HarnessCommandSpec
+from ordessa_agents.harness.definitions.command_projection import HarnessCommandSpec
 
 from ordessa_harness_codex.composition import command_from_plan
 

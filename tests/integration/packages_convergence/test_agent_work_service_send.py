@@ -13,7 +13,7 @@ import sys
 import pytest
 from test_agent_guarded_bootstrap import setup, PEER
 from agent_work_business_fixture import build_agent_work_package_approval
-from ordessa_execution_agents.public import InteractionService
+from ordessa_agents.public import InteractionService
 from ordessa_engineering.application.api.service import EngineeringService
 from ordessa_engineering.application.contracts.work_context import decode_work_binding
 from ordessa_engineering.application.contracts.dispatch_identity import work_dispatch_key

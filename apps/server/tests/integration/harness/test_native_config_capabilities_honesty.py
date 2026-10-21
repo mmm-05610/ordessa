@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext,
     ApplicationTarget,
     Assessment,
@@ -57,11 +57,11 @@ from ordessa_execution_agents.harness.definitions import (
     ValueSchema,
     VersionRange,
 )
-from ordessa_execution_agents.harness.definitions.contracts import RuntimeConfirmed, RuntimeUnknown
+from ordessa_agents.harness.definitions.contracts import RuntimeConfirmed, RuntimeUnknown
 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
 from ordessa_units.records.operation_journal import OperationJournal
-from ordessa_execution_agents.harness.contracts.models.application import RuntimeSnapshot
-from ordessa_execution_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
+from ordessa_agents.harness.contracts.models.application import RuntimeSnapshot
+from ordessa_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
 
 _TARGET = ApplicationTarget("server-1", "session-1", "channel-1", 7)
 _REVISION = "native-rev-7"

@@ -24,7 +24,7 @@ mint/verify pairs in the tests; the production-level statement stays
 "refused/unknown until S-06" and is asserted, not faked.
 
 This module consumes the published Harness capability types from
-``ordessa_execution_agents.harness.definitions``; it imports neither the
+``ordessa_agents.harness.definitions``; it imports neither the
 retired C1/kernel Harness implementation nor Server host internals.
 
 TEST DOUBLE ONLY - PRODUCTION MUST NOT INJECT THIS PORT
@@ -46,7 +46,7 @@ from __future__ import annotations
 import hashlib
 from typing import Any, Callable, Mapping
 
-from ordessa_execution_agents.harness.definitions import Confirmed, DesiredFragment, Refused, Unknown
+from ordessa_agents.harness.definitions import Confirmed, DesiredFragment, Refused, Unknown
 
 from ordessa_model_provider.ports import (
     ELIGIBILITY_READY, ELIGIBILITY_UNKNOWN, ELIGIBILITY_UNSUPPORTED,

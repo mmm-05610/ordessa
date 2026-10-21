@@ -6,7 +6,7 @@ always come from the core-held Profile snapshot; applying never writes the
 catalog back and a Profile update never applies itself.
 """
 from __future__ import annotations
-from ordessa_execution_agents.profiles import decode_revision_ref, encode_content
+from ordessa_agents.profiles import decode_revision_ref, encode_content
 
 from dataclasses import replace
 
@@ -18,9 +18,9 @@ from ordessa_units.configuration.contracts import (
     ApplicationPolicy, ConfigurationChangeRequest, ConfigurationContractError,
     ConfigurationRevisionConflict,
 )
-from ordessa_execution_agents.profiles.definitions.models import ProfileRevisionRef
-from ordessa_execution_agents.profiles.management.service import ProfileService
-from ordessa_execution_agents.harness.providers.registry.contributions import RUNTIME_METHODS
+from ordessa_agents.profiles.definitions.models import ProfileRevisionRef
+from ordessa_agents.profiles.management.service import ProfileService
+from ordessa_agents.harness.providers.registry.contributions import RUNTIME_METHODS
 
 from agent_tools_fixtures.management import setup  # noqa: F401 - pytest fixture (already marked)
 from agent_tools_fixtures.node_publication import setup as node_fixture, Provider  # noqa: F401 - fixture dependency

@@ -17,7 +17,7 @@ Import discipline (gate G01/G20, ``tests/test_isolation.py``):
   ``ordessa_profile`` or any Chat/Workbench host module. Dependency direction is
   one way: the product composes this domain, never the reverse;
 * the optional Server seam (``plugin``) is the only module that may import
-  ``server_plugin_api`` descriptors, and only to describe methods when a host
+  ``ordessa_server_plugin_api`` descriptors, and only to describe methods when a host
   calls ``build()`` — importing the module still registers nothing.
 """
 from __future__ import annotations

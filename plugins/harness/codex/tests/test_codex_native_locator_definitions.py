@@ -1,5 +1,5 @@
 import pytest
-from ordessa_execution_agents.harness.definitions import NativeProfileRef, NativeContinuationRef, NativeCredentialRef
+from ordessa_agents.harness.definitions import NativeProfileRef, NativeContinuationRef, NativeCredentialRef
 from ordessa_harness_codex.continuation import CodexContinuationResourceProvider
 from ordessa_harness_codex.contracts import CodexContinuationV1
 from ordessa_harness_codex.launch import CodexLaunchAdapter

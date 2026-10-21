@@ -4,8 +4,8 @@ from dataclasses import replace
 from pathlib import Path
 import ast
 import pytest
-from ordessa_execution_agents.sdk import HarnessError
-from ordessa_execution_agents.profiles import decode_content
+from ordessa_agents.sdk import HarnessError
+from ordessa_agents.profiles import decode_content
 from ordessa_harness_qoder import factory,registered_keys
 
 PIN={'environmentNamespace':'test','definitionId':'qoder','revision':'1'}
@@ -28,4 +28,4 @@ def test_factory_never_accepts_authority_and_source_imports_only_sdk():
     import ordessa_harness_qoder.provider as module
     for node in ast.walk(ast.parse(Path(module.__file__).read_text())):
         if isinstance(node,ast.ImportFrom) and (node.module or '').startswith('ordessa_'):
-            assert node.module=='ordessa_execution_agents.sdk'
+            assert node.module=='ordessa_agents.sdk'

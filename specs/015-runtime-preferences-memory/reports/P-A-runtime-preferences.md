@@ -94,7 +94,7 @@ memory.enableManagedAutoMemory 默认开、tools.executionSandbox 需重启、QW
 
 - 写入面：仅 `plugins/assets/runtime-preferences/**` 与本报告。✅
 - 不 import model-provider/harness 内部；只 import main 已有的公开契约包
-  （`ordessa_harness_api`、`server_plugin_api`）。✅（静态门测试钉死）
+  （`ordessa_harness_api`、`ordessa_server_plugin_api`）。✅（静态门测试钉死）
 - 无 secret 内容：引用串 `ref://` 纪律，封闭 schema 拒绝 secret 形键（`validate_json`
   looks_secret_name + 引擎校验 + 测试）。✅
 - 不 fake green：失败反例（codex retry/dsh 无目标/陈旧 revision/未声明键/未识别版本）

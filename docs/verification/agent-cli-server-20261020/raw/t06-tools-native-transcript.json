@@ -1,0 +1,131 @@
+{
+  "source": "codex-app-server/1 native rollout, derived summary (account identifiers omitted)",
+  "rolloutFile": "rollout-2026-10-21T10-44-01-01a15c58-1edc-7592-96cb-625b4273b2d3.jsonl",
+  "malformedLines": 0,
+  "recordCount": 25,
+  "sessionMeta": {
+    "session_id": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+    "id": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+    "cwd": "/tmp/t06-tools-codex/work",
+    "originator": "ordessa-cli",
+    "cli_version": "0.157.1",
+    "model_provider": "openai"
+  },
+  "turnContext": {
+    "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+    "cwd": "/tmp/t06-tools-codex/work",
+    "approvalPolicy": "never",
+    "sandboxPolicy": {
+      "type": "read-only"
+    },
+    "permissionProfile": {
+      "type": "managed",
+      "file_system": {
+        "type": "restricted",
+        "entries": [
+          {
+            "path": {
+              "type": "special",
+              "value": {
+                "kind": "root"
+              }
+            },
+            "access": "read"
+          }
+        ]
+      },
+      "network": "restricted"
+    },
+    "model": "gpt-5.6-sol"
+  },
+  "turnRecords": [
+    {
+      "type": "task_started",
+      "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+      "durationMs": null,
+      "lastAgentMessage": null
+    },
+    {
+      "type": "task_complete",
+      "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+      "durationMs": 11329,
+      "lastAgentMessage": "无法创建：当前工作目录为只读。"
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "phase": null,
+      "text": "<environment_context>\n  <cwd>/tmp/t06-tools-codex/work</cwd>\n  <shell>bash</shell>\n  <current_date>2026-10-21</current_date>\n  <timezone>Asia/Shanghai</timezone>\n  <filesystem><workspace_roots><root>/tmp/t06-tools-codex/work</root></workspace_roots><permission_profile type=\"managed\"><file_system type=\"restricted\"><entry access=\"read\"><special>:root</special></entry></file_system></permission_profile></filesystem>\n</environment_context>"
+    },
+    {
+      "role": "user",
+      "phase": null,
+      "text": "在你的工作目录创建文件 `tools-proof.txt`，内容写 `ordessa-tool-ok`；然后用命令读取它并只回复文件内容。"
+    },
+    {
+      "role": "assistant",
+      "phase": "commentary",
+      "text": "我会创建该文件，再通过命令读取并核对内容。"
+    },
+    {
+      "role": "assistant",
+      "phase": "final_answer",
+      "text": "无法创建：当前工作目录为只读。"
+    }
+  ],
+  "toolEvents": [
+    {
+      "kind": "custom_tool_call",
+      "name": "exec",
+      "callId": "call_8c8dd0e4639e4dd99582219fd3a14a95",
+      "input": "const patch = \"*** Begin Patch\\n*** Add File: tools-proof.txt\\n+ordessa-tool-ok\\n*** End Patch\";\nconst r = await tools.apply_patch(patch);\ntext(r);\n",
+      "output": [
+        "Script failed\nWall time 0.0 seconds\nOutput:\n",
+        "Script error:\npatch rejected: writing is blocked by read-only sandbox; rejected by user approval settings"
+      ]
+    }
+  ],
+  "tokenUsage": [
+    {
+      "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+      "sessionId": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+      "turnTokens": {
+        "input_tokens": 13047,
+        "cached_input_tokens": 11136,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 118,
+        "reasoning_output_tokens": 48,
+        "total_tokens": 13165
+      },
+      "threadTokens": {
+        "input_tokens": 13047,
+        "cached_input_tokens": 11136,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 118,
+        "reasoning_output_tokens": 48,
+        "total_tokens": 13165
+      }
+    },
+    {
+      "turnId": "01a15c58-204b-7053-b29a-76da66501a6b",
+      "sessionId": "01a15c58-1edc-7592-96cb-625b4273b2d3",
+      "turnTokens": {
+        "input_tokens": 26254,
+        "cached_input_tokens": 24064,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 194,
+        "reasoning_output_tokens": 108,
+        "total_tokens": 26448
+      },
+      "threadTokens": {
+        "input_tokens": 26254,
+        "cached_input_tokens": 24064,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 194,
+        "reasoning_output_tokens": 108,
+        "total_tokens": 26448
+      }
+    }
+  ]
+}

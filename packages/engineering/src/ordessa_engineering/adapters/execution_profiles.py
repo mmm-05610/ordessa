@@ -12,8 +12,8 @@ from itertools import islice
 from dataclasses import dataclass, field
 from typing import Any
 
-from decision_runtime import DecisionAnswer, DecisionQuestion, PolicyRef
-from ordessa_execution_agents.profiles import (
+from ordessa_decision import DecisionAnswer, DecisionQuestion, PolicyRef
+from ordessa_agents.profiles import (
     ProfileRevisionRef,
     ProfileService,
     encode_content,
@@ -217,8 +217,8 @@ class NativeProfileAgentCreator:
     """
 
     def __init__(self, manager, *, endpoint, request_factory, invocation_resolver):
-        from ordessa_execution_agents.public import AgentManager
-        from ordessa_execution_agents.sdk.endpoint import BoundEndpoint
+        from ordessa_agents.public import AgentManager
+        from ordessa_agents.sdk.endpoint import BoundEndpoint
 
         if type(manager) is not AgentManager:
             raise EngineeringError("original_public_agent_manager_required")
@@ -231,7 +231,7 @@ class NativeProfileAgentCreator:
         self._invocation_resolver = invocation_resolver
 
     async def create(self, profile_ref: object, authorization: Any) -> object:
-        from ordessa_execution_agents.public import AgentStartRequest
+        from ordessa_agents.public import AgentStartRequest
 
         if type(profile_ref) is not ProfileRevisionRef:
             raise EngineeringError("fixed_profile_revision_required")

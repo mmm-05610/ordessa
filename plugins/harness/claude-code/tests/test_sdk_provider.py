@@ -9,8 +9,8 @@ from dataclasses import replace
 from pathlib import Path
 import pytest
 
-from ordessa_execution_agents.sdk import BoundPath, PrepareContext, SessionBootstrap, HarnessError
-from ordessa_execution_agents.profiles import decode_content
+from ordessa_agents.sdk import BoundPath, PrepareContext, SessionBootstrap, HarnessError
+from ordessa_agents.profiles import decode_content
 from ordessa_harness_claude_code import factory, PROTOCOL
 
 PIN = {'environmentNamespace': 'test', 'definitionId': 'claude', 'revision': '1'}
@@ -121,7 +121,7 @@ def test_runtime_source_imports_sdk_only_and_old_execution_modules_are_absent():
     for path in root.rglob('*.py'):
         for node in ast.walk(ast.parse(path.read_text())):
             if isinstance(node, ast.ImportFrom) and (node.module or '').startswith('ordessa_'):
-                assert node.module == 'ordessa_execution_agents.sdk', (path, node.module)
+                assert node.module == 'ordessa_agents.sdk', (path, node.module)
 
 
 def test_factory_metadata_retains_identifier_and_has_only_sdk_dependency():

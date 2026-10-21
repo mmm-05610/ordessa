@@ -34,7 +34,7 @@ def server(tmp_path):
         yield runtime, client, {"Authorization": f"Bearer {runtime.token}"}, application
 
 
-def post_wire(client, headers, method="profiles.list", params=None, body=None):
+def post_wire(client, headers, method="agents.profiles.list", params=None, body=None):
     return client.post(f"/wire/v1/{method}", headers=headers, json=body or {
         "jsonrpc": "2.0", "id": method, "method": method,
         "params": {"includeArchived": False} if params is None else params,
@@ -72,7 +72,7 @@ def test_a_fault_inside_the_wire_dispatch_answers_as_a_full_envelope(server, mon
     response = post_wire(client, headers)
     assert response.status_code == 200, response.text[:200]
     envelope = response.json()
-    assert envelope["jsonrpc"] == "2.0" and envelope["id"] == "profiles.list", envelope
+    assert envelope["jsonrpc"] == "2.0" and envelope["id"] == "agents.profiles.list", envelope
     assert envelope["error"]["details"]["internalCode"] == "KeyError", envelope
 
 
@@ -135,7 +135,7 @@ def test_the_existing_wire_error_paths_are_unchanged(server):
         ("bad-envelope", {"nope": 1}, 400),
         ("method-mismatch", {"jsonrpc": "2.0", "id": "m", "method": "other.method",
                              "params": {}}, 400),
-        ("typed-refusal", {"jsonrpc": "2.0", "id": "p", "method": "profiles.list",
+        ("typed-refusal", {"jsonrpc": "2.0", "id": "p", "method": "agents.profiles.list",
                            "params": {"includeArchived": "yes"}}, 200),
     ]
     for name, body, status in cases:

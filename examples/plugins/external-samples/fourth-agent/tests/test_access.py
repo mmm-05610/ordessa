@@ -26,7 +26,7 @@ import ast
 from pathlib import Path
 
 import pytest
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 from ordessa_server.composition.runtime import build_runtime
 

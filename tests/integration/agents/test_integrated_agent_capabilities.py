@@ -1,12 +1,12 @@
 """Integrated Agent Tools/Jev admission on the original core, without native effects."""
-from ordessa_execution_agents.harness.definitions.errors import CoreDTOError
+from ordessa_agents.harness.definitions.errors import CoreDTOError
 
 import pytest
 
-from ordessa_execution_agents import public
-from ordessa_execution_agents.units.admission import invocation
-from ordessa_execution_agents.units.configuration import offers as read_configuration
-from ordessa_execution_agents.harness.definitions.runtime_providers import PURE_READ_METHODS, RUNTIME_METHODS
+from ordessa_agents import public
+from ordessa_agents.units.admission import invocation
+from ordessa_agents.units.configuration import offers as read_configuration
+from ordessa_agents.harness.definitions.runtime_providers import PURE_READ_METHODS, RUNTIME_METHODS
 from pacthold.public import Environment, InstallationRecord
 
 

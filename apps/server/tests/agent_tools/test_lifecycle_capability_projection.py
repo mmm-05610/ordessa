@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import pytest
 from ordessa_system_access_bindings import agents
 from ordessa_system_access_client import WireClient
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 
 def registry(monkeypatch, actions):

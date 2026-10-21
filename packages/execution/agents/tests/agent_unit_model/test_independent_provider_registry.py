@@ -7,7 +7,7 @@ import pytest
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 from pacthold.public import Environment,InstallationRecord
 from ordessa_units.public import AgentContributionSet
-from ordessa_execution_agents.harness.providers.registry.errors import CatalogAdmissionRefused
+from ordessa_agents.harness.providers.registry.errors import CatalogAdmissionRefused
 
 
 

@@ -2,13 +2,13 @@
 import pytest
 
 from agent_tools_fixtures.runtime_admission import Provider
-from ordessa_execution_agents.harness.providers.registry.errors import (
+from ordessa_agents.harness.providers.registry.errors import (
     CatalogAdmissionRefused,
     CatalogUnavailable,
     CatalogIdentityConflict,
 )
-from ordessa_execution_agents.harness.providers.registry.contributions import AgentContributionSet
-from ordessa_execution_agents.harness.providers.registry.definition_admission import (
+from ordessa_agents.harness.providers.registry.contributions import AgentContributionSet
+from ordessa_agents.harness.providers.registry.definition_admission import (
     HarnessContributionSet,
     HarnessDefinitionDeclaration,
     HarnessDefinitionDescriptor,

@@ -15,7 +15,7 @@ from typing import Any, Callable
 from fastapi import Depends, Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from server_plugin_api import ServerError
+from ordessa_server_plugin_api import ServerError
 from ordessa_interfaces.http.admission import idempotency_key
 
 
@@ -42,7 +42,7 @@ def workspace_http_routes(
     records: Any, service: Any,
 ) -> "tuple[Any, ...]":
     """The plugin's HTTP route descriptors, closed over its own objects."""
-    from server_plugin_api import HttpRouteDescriptor
+    from ordessa_server_plugin_api import HttpRouteDescriptor
 
     PLUGIN_ID = "ordessa.workspace"
 

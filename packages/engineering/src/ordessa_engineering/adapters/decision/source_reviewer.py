@@ -18,7 +18,7 @@ from copy import deepcopy
 from dataclasses import asdict
 from hashlib import sha256
 
-from decision_runtime import DecisionAnswer, DecisionQuestion, PolicyRef
+from ordessa_decision import DecisionAnswer, DecisionQuestion, PolicyRef
 from .source_job import SourceReviewJobServices, SourceReviewRequest, SourceReviewTask
 from .source_history import historical_selection, historical_answers, _verified_native_result
 from ordessa_infrastructure.encoding import canonical_bytes, decode_json

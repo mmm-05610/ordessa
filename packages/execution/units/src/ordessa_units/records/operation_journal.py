@@ -18,7 +18,7 @@ import stat
 from threading import RLock
 from uuid import uuid4
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ApplicationTarget, Confirmed, ErrorCode, NotFound, OperationRecord, Plan,
     Refused, Unknown,
 )

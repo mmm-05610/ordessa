@@ -2,8 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { configurationReader } from "../../src/ordessa_harness_pi/acp/profile/configuration-query.mjs"
-import { configurationDigest,stableJSON,jsonDigest } from "../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/digest.mjs"
-import { configurationOperations,CONFIGURATION_APPLY,CONFIGURATION_OPERATION } from "../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/operation.mjs"
+import { configurationDigest,stableJSON,jsonDigest } from "../../../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/digest.mjs"
+import { configurationOperations,CONFIGURATION_APPLY,CONFIGURATION_OPERATION } from "../../../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/operation.mjs"
 
 test('unsupported metadata is refused before any native setter or operation record', async () => {
   let setters = 0
@@ -360,7 +360,7 @@ test('actual server registration wraps prompt/setConfigOption/apply with one ses
     ['@agentclientprotocol/sdk',sdk],['./agent.js',agent],['./deps.js',deps],
     ['./steering.js',steering],['./loaded-turn.js',loaded],
     ['./configuration-query.mjs',new URL("../../src/ordessa_harness_pi/acp/profile/configuration-query.mjs",import.meta.url).href],
-    ["../../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/operation.mjs",new URL("../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/operation.mjs",import.meta.url).href],
+    ["../../../../../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/operation.mjs",new URL("../../../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/operation.mjs",import.meta.url).href],
     ['./creation.mjs',creation],['./provider-registration.mjs',registration],
   ]) server=server.replace(`'${from}'`,JSON.stringify(to)).replace(`"${from}"`,JSON.stringify(to))
   try {

@@ -311,7 +311,7 @@ def test_the_wire_query_is_read_only_and_shape_closed(world):
 
 def test_the_wire_query_refuses_malformed_input_with_the_stable_code_only(world):
     _database, _facts, _policies, authority = world
-    from server_plugin_api import WireError
+    from ordessa_server_plugin_api import WireError
     with pytest.raises(WireError) as caught:
         authority.query({"operationDigest": "short"})
     assert "PERMISSION_AUTHORIZATION_INVALID" in str(caught.value)

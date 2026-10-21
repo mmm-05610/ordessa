@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     reject_sensitive_keys,
     ServerMethodDescriptor,
     ServerPluginContext,
@@ -41,16 +41,16 @@ from ordessa_model_provider.choices import (
     ModelChoiceService,
 )
 from ordessa_model_provider.records import ProviderModelRecords
-from server_plugin_api.internal_errors import ServerError
-from server_plugin_api.wire_errors import WireError
+from ordessa_server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.wire_errors import WireError
 # foundation@8844c475bc adaptation: the wire's shared param-shape helpers live
 # in the contract package and the domain-shape validators in the compat
 # package (host handlers.py docstring, T014-S2c) - the frozen refusal strings
 # cannot drift between the host wall and this handler.
 from ordessa_model_provider.wire_models import models as _models
-from server_plugin_api.wire_shape import bounded as _bounded
-from server_plugin_api.wire_shape import request_id as _request_id
-from server_plugin_api.wire_shape import version as _version
+from ordessa_server_plugin_api.wire_shape import bounded as _bounded
+from ordessa_server_plugin_api.wire_shape import request_id as _request_id
+from ordessa_server_plugin_api.wire_shape import version as _version
 
 
 #: Assignment param shape (032: inlined from the retired server-compat

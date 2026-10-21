@@ -7,8 +7,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from decision_runtime import DecisionAnswer, DecisionQuestion, PolicyRef, DecisionError
-from decision_runtime.historical.values import canonical
+from ordessa_decision import DecisionAnswer, DecisionQuestion, PolicyRef, DecisionError
+from ordessa_decision.historical.values import canonical
 from ordessa_engineering.adapters.decision.source_job import SourceReviewTask, SourceReviewJobServices
 
 from ordessa_engineering.adapters.decision import source_reviewer
@@ -358,7 +358,7 @@ def test_v2_evidence_source_admits_exact_256kib():
 @pytest.mark.parametrize('refusal', ('evidence', 'question', 'v1-source'))
 def test_oversized_evidence_or_question_refuses_before_decision_invocation(monkeypatch, refusal):
     import asyncio
-    from decision_runtime import DecisionError as ContractError
+    from ordessa_decision import DecisionError as ContractError
     options = {
         'evidence': dict(baseline_raw=b'baseline', candidate_raw=b'candidate',
                          evidence_raw=b'baseline' + b'e' * (262145 - 8)),

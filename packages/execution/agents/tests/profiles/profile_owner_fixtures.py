@@ -4,8 +4,8 @@ No Unit/environment owner or production grant is constructed by this fixture.
 """
 from threading import RLock
 from ordessa_infrastructure.security.fingerprints import HmacKeyRing
-from ordessa_execution_agents.profiles.definitions.errors import ProfileValidationError
-from ordessa_execution_agents.profiles.definitions.validation import canonical
+from ordessa_agents.profiles.definitions.errors import ProfileValidationError
+from ordessa_agents.profiles.definitions.validation import canonical
 
 class Fingerprint:
     def __init__(self):self.ring=HmacKeyRing({'fixture':b'controlled-profile-test-key'},active_key_id='fixture')

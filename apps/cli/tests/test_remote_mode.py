@@ -14,7 +14,7 @@ import threading
 from contextlib import redirect_stderr, redirect_stdout
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from ordessa_agent_tools.cli import main
+from ordessa_cli.cli import main
 
 TOKEN = 'test-remote-token'
 
@@ -29,25 +29,25 @@ def _closed(properties, required=()):
 
 
 OPERATIONS = {
-    'profiles.capabilities': (_closed({}), None),
-    'profiles.list': (_closed({'includeArchived': {'type': 'boolean'}}),
+    'agents.profiles.capabilities': (_closed({}), None),
+    'agents.profiles.list': (_closed({'includeArchived': {'type': 'boolean'}}),
                       {'command': 'agents profiles', 'operation': 'list',
                        'args': ({'name': 'includeArchived',
                                  'flags': ('--include-archived',), 'type': 'boolean'},)}),
-    'profiles.read': (_closed({'profileRef': {'type': 'object'}}, ('profileRef',)),
+    'agents.profiles.read': (_closed({'profileRef': {'type': 'object'}}, ('profileRef',)),
                       {'command': 'agents profiles', 'operation': 'read',
                        'args': ({'name': 'profileRef', 'type': 'json-file'},)}),
-    'profiles.preview': (_closed({'profileRef': {'type': 'object'}}, ('profileRef',)),
+    'agents.profiles.preview': (_closed({'profileRef': {'type': 'object'}}, ('profileRef',)),
                          {'command': 'agents profiles', 'operation': 'preview',
                           'args': ({'name': 'profileRef', 'type': 'json-file'},)}),
-    'profiles.create': (_closed({'profileId': _text(), 'displayName': _text(),
+    'agents.profiles.create': (_closed({'profileId': _text(), 'displayName': _text(),
                                  'manifest': {'type': 'object'}},
                                 ('profileId', 'displayName', 'manifest')),
                         {'command': 'agents profiles', 'operation': 'create',
                          'args': ({'name': 'profileId', 'type': 'string'},
                                   {'name': 'displayName', 'flags': ('--name',), 'type': 'string'},
                                   {'name': 'manifest', 'flags': ('--manifest',), 'type': 'json-file'})}),
-    'profiles.rename': (_closed({'profileId': _text(), 'displayName': _text(),
+    'agents.profiles.rename': (_closed({'profileId': _text(), 'displayName': _text(),
                                  'expectedCatalogRevision': {'type': 'integer'}},
                                 ('profileId', 'displayName', 'expectedCatalogRevision')),
                         {'command': 'agents profiles', 'operation': 'rename',
@@ -126,14 +126,14 @@ class Handler(BaseHTTPRequestHandler):
         if method == 'operations.describe':
             operation = body['params']['operationId']
             self._send({'jsonrpc': '2.0', 'id': body['id'], 'result': _envelope(
-                body['id'], operation, data={'capability': 'profiles',
+                body['id'], operation, data={'capability': 'agents',
                                              'operation': _descriptor(operation)})})
             return
         assert method == 'operations.call', method
         operation = body['params']['operationId']
         inputs = body['params']['input']
         State.calls.append((operation, inputs))
-        if State.revoke and operation in ('profiles.create', 'profiles.rename'):
+        if State.revoke and operation in ('agents.profiles.create', 'agents.profiles.rename'):
             self._send({'jsonrpc': '2.0', 'id': body['id'],
                         'error': {'code': 'FORBIDDEN', 'message': 'denied'}}, 403)
             return
@@ -146,25 +146,25 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._send({'jsonrpc': '2.0', 'id': key, 'result': envelope})
             return
-        if operation == 'profiles.capabilities':
+        if operation == 'agents.profiles.capabilities':
             envelope = _envelope(key, operation, data={
                 'contractVersion': 'profile-json/1', 'schema': {}, 'schemaDigest': 'sha256:' + '0' * 64,
                 'environmentNamespace': 'remote-ns',
                 'supports': {'profileCatalog': True, 'nodes': False, 'managedInput': False},
                 'supportedMethods': sorted(OPERATIONS)})
-        elif operation == 'profiles.list':
+        elif operation == 'agents.profiles.list':
             entries = [{'profileId': p['profileId'], 'catalogRevision': p['catalogRevision'],
                         'displayName': p['displayName'], 'archivedAt': None,
                         'currentManifestRef': State.ref(p)}
                        for p in State.profiles.values()]
             envelope = _envelope(key, operation, data={'entries': entries})
-        elif operation in ('profiles.read', 'profiles.preview'):
+        elif operation in ('agents.profiles.read', 'agents.profiles.preview'):
             ref = inputs['profileRef']
             profile = State.profiles.get(ref.get('profileId'))
             if profile is None or ref != State.ref(profile):
                 envelope = _envelope(key, operation, status='refused', error={
                     'code': 'INVALID_INPUT', 'message': 'Profile reference is invalid', 'retryable': False})
-            elif operation == 'profiles.read':
+            elif operation == 'agents.profiles.read':
                 envelope = _envelope(key, operation, data={
                     'ref': State.ref(profile),
                     'content': {'schemaVersion': '1',
@@ -178,7 +178,7 @@ class Handler(BaseHTTPRequestHandler):
                                      error={'code': 'CAPABILITY_UNSUPPORTED',
                                             'message': 'Profile preview remains unresolved',
                                             'retryable': False})
-        elif operation == 'profiles.create':
+        elif operation == 'agents.profiles.create':
             profile = {'profileId': inputs['profileId'], 'catalogRevision': 1,
                        'displayName': inputs['displayName'], 'manifest': inputs['manifest']}
             State.profiles[profile['profileId']] = profile
@@ -186,7 +186,7 @@ class Handler(BaseHTTPRequestHandler):
                 'profileId': profile['profileId'], 'catalogRevision': 1,
                 'displayName': profile['displayName'], 'archivedAt': None,
                 'currentManifestRef': State.ref(profile)})
-        elif operation == 'profiles.rename':
+        elif operation == 'agents.profiles.rename':
             profile = State.profiles.get(inputs['profileId'])
             if profile is None or profile['catalogRevision'] != inputs['expectedCatalogRevision']:
                 envelope = _envelope(key, operation, status='refused', error={
@@ -277,9 +277,9 @@ def test_remote_profile_create_read_preview_replay_lost_response_and_revocation(
         assert code == 4 and preview['status'] == 'refused'
         assert preview['data']['ready'] is False and preview['data']['status'] == 'unresolved'
 
-        code, output, _ = _run(mode + ['call', 'profiles.capabilities', '--input', '-',
+        code, output, _ = _run(mode + ['call', 'agents.profiles.capabilities', '--input', '-',
                                        '--json'], stdin=b'{}')
-        assert code == 0 and 'profiles.create' in json.loads(output)['data']['supportedMethods']
+        assert code == 0 and 'agents.profiles.create' in json.loads(output)['data']['supportedMethods']
 
         # Replaying the same request id and input reads the original result.
         revisions = STATE.profiles['peer']['catalogRevision']
@@ -314,7 +314,7 @@ def test_remote_profile_create_read_preview_replay_lost_response_and_revocation(
                                        '--request-id', 'revoked-1', '--json'])
         assert code == 2 and json.loads(output)['error']['code'] == 'PERMISSION_DENIED'
         assert STATE.profiles['peer']['displayName'] == 'Committed'
-        assert all(operation.startswith('profiles.') for operation, _ in STATE.calls)
+        assert all(operation.startswith('agents.profiles.') for operation, _ in STATE.calls)
     finally:
         server.shutdown()
         server.server_close()

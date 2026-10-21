@@ -69,7 +69,7 @@ dependency because every Decision rules run uses it.
   save-result and field references. It imports no owner.
 - `ordessa_interfaces.system_access` owns the registry and dispatch; it imports
   no owner.
-- `ordessa_execution_agents.capability` owns the Agent/Profile/Harness
+- `ordessa_agents.capability` owns the Agent/Profile/Harness
   capability adapters; Server and CLI publish the same implementation.
 - `apps/cli` owns only the local/remote composition and the foreground session.
 - The CLI closure does not import or depend on Units, Engineering, the Server

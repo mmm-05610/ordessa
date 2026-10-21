@@ -37,7 +37,7 @@ only declares. The split:
   (extension-backed).
 - **The platform (admits)**: the point's conflict registry
   (`pacthold.harness_kit.contributions`, bound by the product composition via the
-  public `server_plugin_api` staging protocol) refuses duplicate adapter ids,
+  public `ordessa_server_plugin_api` staging protocol) refuses duplicate adapter ids,
   overlapping `(harnessId, nativeVersionRange)` for one facet/entries set,
   and cross-facet field-claim conflicts - at composition, never last-wins.
   The Server host owns point binding (typed unbound/version refusals),

@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import re
 from datetime import datetime, timezone
 from collections.abc import Mapping
-from decision_runtime.definitions import (
+from ordessa_decision.definitions import (
     CandidateBatch, ProposalCandidateBatch, DecisionQuestion, BusinessOutcome,
     ValidationReceipt, PolicyRef, ExternalRef, ContractError, freeze, plain, digest,
 )

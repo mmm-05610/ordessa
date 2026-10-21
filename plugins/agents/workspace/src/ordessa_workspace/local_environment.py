@@ -20,7 +20,7 @@ import stat
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Mapping
 
-from server_plugin_api import ServerError
+from ordessa_server_plugin_api import ServerError
 
 #: One workspace file, as the Worker channel bounds it too.
 MAX_WORKSPACE_FILE_BYTES = 8 * 1024 * 1024
@@ -247,7 +247,7 @@ def _host_sandbox_probe() -> Mapping[str, Any]:
     provider reports unavailable rather than guessing another sandbox.
     """
     from ordessa_environments.definitions.sandbox_port import (SandboxPortError)
-    from ordessa_execution_agents.harness.providers.resolution.sandbox_resolution import (resolve_sandbox_port)
+    from ordessa_agents.harness.providers.resolution.sandbox_resolution import (resolve_sandbox_port)
     try:
         port = resolve_sandbox_port(
             os.environ.get("AGENT_BOX_SANDBOX_PROVIDER") or "sandbox-bwrap"

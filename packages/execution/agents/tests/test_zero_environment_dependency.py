@@ -2,10 +2,10 @@
 import ast
 from pathlib import Path
 
-import ordessa_execution_agents
+import ordessa_agents
 
 
-ROOT = Path(ordessa_execution_agents.__file__).parent
+ROOT = Path(ordessa_agents.__file__).parent
 ENVIRONMENT_OWNER = "ordessa_environments"
 
 

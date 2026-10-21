@@ -8,7 +8,7 @@ api-requests.md` SR-7 (composition is C0's surface, so this file verifies the
 plugin against the *contract* types and a host-shaped context, never against a
 live product).
 
-Evidence level: L1 — the real `server_plugin_api` dataclasses, the real
+Evidence level: L1 — the real `ordessa_server_plugin_api` dataclasses, the real
 `DefinitionService`/`DefinitionStore`, a real file store under `tmp_path`, and no
 mock of a seam this plugin claims to consume.
 
@@ -56,7 +56,7 @@ SRC_DIR = TESTS_DIR.parent / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from server_plugin_api import (  # noqa: E402
+from ordessa_server_plugin_api import (  # noqa: E402
     PLUGIN_METHOD_ID,
     SERVER_PLUGIN_API_VERSION,
     ServerMethodDescriptor,
@@ -738,7 +738,7 @@ def test_every_c5_code_the_domain_can_raise_has_a_wire_family():
     would surface as the `UNAVAILABLE` fall-through, which is a lie about a
     refusal the domain actually answered."""
     from ordessa_assets_subagents import wire as wire_module
-    from server_plugin_api import FAMILIES
+    from ordessa_server_plugin_api import FAMILIES
 
     assert set(errors.ERROR_CODES) == set(wire_module.C5_ERROR_FAMILIES)
     unknown = [code for code in wire_module.C5_ERROR_FAMILIES if code not in errors.ERROR_CODES]
@@ -831,11 +831,11 @@ def test_the_registration_face_imports_only_the_contract_and_its_own_domain():
 
     (`tests/test_boundaries_t03b.py` owns the package-wide allow-list; this lock
     covers the two files this task added, so the rule holds even while that
-    file's list is being widened for `server_plugin_api`.)"""
+    file's list is being widened for `ordessa_server_plugin_api`.)"""
     import ast
 
     src = Path(__file__).resolve().parents[1] / "src" / "ordessa_assets_subagents"
-    allowed_roots = {"server_plugin_api", "ordessa_assets_subagents"}
+    allowed_roots = {"ordessa_server_plugin_api", "ordessa_assets_subagents"}
     offenders: dict[str, list[str]] = {}
     for name in ("plugin.py", "wire.py"):
         tree = ast.parse((src / name).read_text(encoding="utf-8"))

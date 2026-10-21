@@ -8,7 +8,7 @@ private shortcuts: no direct handler invocation, no registry mutation.
 
 Error reading across the dispatch wall: since the foundation checkpoint the
 plugin's domain refusals leave the handlers as the published
-`server_plugin_api.ServerError` (converted at the wire boundary by
+`ordessa_server_plugin_api.ServerError` (converted at the wire boundary by
 `error_families.to_server_error`) and the host projects them through this
 composition's `wire.error-families` contribution — the api-requests.md §G1
 "no plugin-visible typed refusal" gap is closed and consumed. The helpers
@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 REPO_ROOT = Path(__file__).resolve().parents[5]
 
@@ -113,7 +113,7 @@ def domain_code(exc: BaseException) -> str | None:
     """The typed refusal code behind the host's projection wall.
 
     After the foundation seam the handler-side `AssetDomainError` is
-    converted to `server_plugin_api.ServerError` (carrying the same `code`)
+    converted to `ordessa_server_plugin_api.ServerError` (carrying the same `code`)
     at the wire edge, and `WireError.from_server_error` chains THAT as
     `__cause__`; the ServerError in turn keeps the domain error one more
     link down. Reading `.code` off the immediate cause therefore returns

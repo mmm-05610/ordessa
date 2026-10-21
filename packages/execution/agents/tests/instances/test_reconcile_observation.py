@@ -11,14 +11,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from ordessa_execution_agents.instances.contracts import InstanceBindingMaterial
-from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref
-from ordessa_execution_agents.sdk.endpoint import BoundEndpoint, ProcessObservation
-from ordessa_execution_agents.sdk.harness import HarnessDescriptor
-from ordessa_execution_agents.sdk.instances import AgentInstanceRef, EndpointRef
-from ordessa_execution_agents.sdk.interactions import BindingProvenance
-from ordessa_execution_agents.sdk.manager import AgentManager, ManagerRefused, Records
-from ordessa_execution_agents.sdk.prepare import canonical_digest
+from ordessa_agents.instances.contracts import InstanceBindingMaterial
+from ordessa_agents.profiles import ProfileRevisionRef, encode_revision_ref
+from ordessa_agents.sdk.endpoint import BoundEndpoint, ProcessObservation
+from ordessa_agents.sdk.harness import HarnessDescriptor
+from ordessa_agents.sdk.instances import AgentInstanceRef, EndpointRef
+from ordessa_agents.sdk.interactions import BindingProvenance
+from ordessa_agents.sdk.manager import AgentManager, ManagerRefused, Records
+from ordessa_agents.sdk.prepare import canonical_digest
 
 
 class Authority:

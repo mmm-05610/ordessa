@@ -6,12 +6,12 @@ import hashlib,json
 from types import SimpleNamespace
 import pytest
 from interaction_fixtures import original_service,provenance,INSTANCE,ENDPOINT,DIGEST
-from ordessa_execution_agents.sdk.interactions import (
+from ordessa_agents.sdk.interactions import (
     FrozenPrompt,TurnReadQuery,TurnReceipt,TurnRef,WriteBinding,BindingProvenance,
     GuardedSendObservation,InteractionsRefused,freeze_prompt,turn_query,InteractionService,
 )
-from ordessa_execution_agents.sdk.endpoint import BoundEndpoint
-from ordessa_execution_agents.sdk.prepare import EndpointError
+from ordessa_agents.sdk.endpoint import BoundEndpoint
+from ordessa_agents.sdk.prepare import EndpointError
 
 PARAMS_BYTES=b'{"prompt":[{"text":"hi","type":"text"}],"sessionId":"session-1"}'
 
@@ -67,7 +67,7 @@ def test_read_binding_needs_its_own_read_authority(tmp_path):
     assert source.read_binding(INSTANCE,invocation=reader)==provenance()
     with pytest.raises(InteractionsRefused):source.read_binding(INSTANCE,invocation=authority.token(read=False))
     with pytest.raises(InteractionsRefused):source.read_binding(replace(INSTANCE,binding_digest='sha256:'+'b'*64),invocation=reader)
-    row=source.records.operation(__import__('ordessa_execution_agents.sdk.interactions',fromlist=['_digest_of'])._digest_of({'namespace':INSTANCE.namespace,'instanceId':INSTANCE.instance_id}),'instance-binding')
+    row=source.records.operation(__import__('ordessa_agents.sdk.interactions',fromlist=['_digest_of'])._digest_of({'namespace':INSTANCE.namespace,'instanceId':INSTANCE.instance_id}),'instance-binding')
     payload=dict(row.payload);payload['provenance']={**payload['provenance'],'sourceRevision':'corrupt'}
     source.records._db.execute('UPDATE operations SET payload=? WHERE request_id=?',(json.dumps(payload),row.request_id))
     with pytest.raises(InteractionsRefused):source.read_binding(INSTANCE,invocation=reader)
@@ -135,7 +135,7 @@ def test_reservation_input_conflict_foreign_scope_and_restart_never_allocate_sec
 
 
 def test_fresh_capacity_expiry_and_operation_end_cannot_reconstruct_send(tmp_path,monkeypatch):
-    import ordessa_execution_agents.sdk.interactions as module
+    import ordessa_agents.sdk.interactions as module
     clock=[100.0]
     monkeypatch.setattr(module.time,'monotonic',lambda:clock[0])
     monkeypatch.setattr(module,'MAX_FRESH_TURNS',2)

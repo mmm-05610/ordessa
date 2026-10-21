@@ -3,7 +3,7 @@ import hashlib
 from types import SimpleNamespace
 import pytest
 
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.providers.registry import (
     HARNESS_DEFINITION_VERSION,
     HarnessDefinitionDeclaration,
     HarnessDefinitionDescriptor,

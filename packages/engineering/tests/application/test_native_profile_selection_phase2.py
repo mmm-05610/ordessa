@@ -10,7 +10,7 @@ from threading import RLock
 
 import pytest
 
-from decision_runtime import DecisionAnswer, PolicyRef
+from ordessa_decision import DecisionAnswer, PolicyRef
 from ordessa_engineering.adapters.execution_profiles import ProfileTaskInput
 from ordessa_engineering.adapters.execution_profiles import (
     NativeProfileChoice,
@@ -18,7 +18,7 @@ from ordessa_engineering.adapters.execution_profiles import (
     NativeProfileUnitCreator,
 )
 from ordessa_engineering.domain.common.outcomes.library_failures import EngineeringError
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     ProfileAccessRefused,
     ProfileNotFound,
     ProfileRevisionConflict,
@@ -208,7 +208,7 @@ def test_native_profile_unit_creator_uses_public_unit_manager_and_fixed_ref():
     )
     # Construct a native immutable ref; the controlled public manager only
     # records the UnitSpec and does not assert production authorization.
-    from ordessa_execution_agents.profiles import ProfileRevisionRef
+    from ordessa_agents.profiles import ProfileRevisionRef
 
     ref = ProfileRevisionRef("env-a", "profile-a", 2, "sha256:" + "e" * 64)
     authorization = object()

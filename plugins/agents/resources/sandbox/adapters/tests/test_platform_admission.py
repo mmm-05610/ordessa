@@ -27,8 +27,8 @@ from _sandbox_adapters_helpers import pinned_versions
 from ordessa_server.composition.configuration.contributions import CONFIGURATION_POINT
 from ordessa_server.composition.configuration.contributions import HarnessContributionError
 from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
-from ordessa_execution_agents.harness.definitions import ConfigurationAdapterDescriptor, FieldClaim, ValueSchema, VersionRange
-from server_plugin_api import AbsentContribution, Contribution, ContributionBatch, stage_contributions
+from ordessa_agents.harness.definitions import ConfigurationAdapterDescriptor, FieldClaim, ValueSchema, VersionRange
+from ordessa_server_plugin_api import AbsentContribution, Contribution, ContributionBatch, stage_contributions
 
 import ordessa_sandbox_adapters
 from ordessa_sandbox_adapters import (

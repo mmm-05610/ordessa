@@ -30,7 +30,7 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[1] / "src" / "ordessa_prompts"
 CONTRACTS_DIR = PACKAGE_ROOT.parent.parent / "contracts"
 
 #: Nothing in this domain may import these (host internals / sibling
-#: products / other plugins). server_plugin_api and the Python stdlib are
+#: products / other plugins). ordessa_server_plugin_api and the Python stdlib are
 #: the whole external vocabulary the package may use.
 FORBIDDEN_IMPORT_PREFIXES = (
     "ordessa_server", "ordessa_server_compat", "ordessa_server_product",
@@ -40,7 +40,7 @@ FORBIDDEN_IMPORT_PREFIXES = (
 )
 #: 032: the Execution-owned Harness definitions edge is the published adapter
 #: vocabulary; the bare `pacthold` root stays forbidden.
-ALLOWED_IMPORT_MODULES = ("ordessa_execution_agents.harness.definitions",)
+ALLOWED_IMPORT_MODULES = ("ordessa_agents.harness.definitions",)
 
 
 def _imported_names_of(source: str) -> "list[str]":
@@ -149,7 +149,7 @@ def test_importing_backend_and_plugin_makes_no_either(tmp_path):
 def test_missing_dependencies_are_not_masked_by_environment(tmp_path):
     """A context with zero ports builds and serves the public library:
     the fixture environment may not be quietly supplying the seams."""
-    from server_plugin_api import ServerPluginContext
+    from ordessa_server_plugin_api import ServerPluginContext
     from ordessa_prompts.plugin import PromptsServerPlugin
     plugin = PromptsServerPlugin(store_path=tmp_path / "bare.db")
     registration = plugin.build(ServerPluginContext(
@@ -196,11 +196,11 @@ API_ALLOWED_IMPORTS = {"__future__", "base64", "dataclasses", "hashlib", "re",
 #: predicate `_boundary_offenders` applies to every real package file —
 #: see test_boundary_scan_covers_the_new_harness_adapters_files)
 #: continues to refuse `pacthold.harness_kit.` internals while the published
-#: `ordessa_execution_agents.harness.definitions` vocabulary stays admissible — both sides proven
+#: `ordessa_agents.harness.definitions` vocabulary stays admissible — both sides proven
 #: by test_published_harness_api_admissible_but_internals_refused.
 #: The amendment is documented in PX-report.md.
 PLUGIN_ALLOWED_IMPORTS = {"__future__", "base64", "pathlib", "typing",
-                          "server_plugin_api", "ordessa_prompts",
+                          "ordessa_server_plugin_api", "ordessa_prompts",
                           "ordessa_prompts.api", "ordessa_prompts.backend.records",
                           "ordessa_prompts.backend.service",
                           "ordessa_prompts.backend.storage",
@@ -230,7 +230,7 @@ def test_api_modules_import_only_stdlib_and_each_other(path: Path):
 def test_plugin_imports_only_the_published_contract_vocabulary():
     for name in _module_imports(PACKAGE_ROOT / "plugin.py"):
         assert name in PLUGIN_ALLOWED_IMPORTS, (
-            f"plugin.py imports {name!r}; only server_plugin_api, the stdlib and "
+            f"plugin.py imports {name!r}; only ordessa_server_plugin_api, the stdlib and "
             "this package are allowed (G01/G08 boundary)")
 
 
@@ -253,10 +253,10 @@ def test_boundary_scan_covers_the_new_harness_adapters_files():
 def test_published_harness_api_admissible_but_internals_refused():
     """The exact-prefix boundary rule, proven on BOTH sides for the new
     harness_adapters face (EXT-02 review round 1): the PUBLISHED
-    `ordessa_execution_agents.harness.definitions` vocabulary passes, the harness PLUGIN
+    `ordessa_agents.harness.definitions` vocabulary passes, the harness PLUGIN
     internals (`pacthold.harness_kit.`) are refused."""
-    assert _boundary_offenders(["ordessa_execution_agents.harness.definitions"]) == []
-    assert _boundary_offenders(["ordessa_execution_agents.harness.definitions.contracts"]) == []
+    assert _boundary_offenders(["ordessa_agents.harness.definitions"]) == []
+    assert _boundary_offenders(["ordessa_agents.harness.definitions.contracts"]) == []
     offenders = _boundary_offenders(["ordessa_server_product.harness_adapters.registry",
                                      "pacthold.harness_kit"])
     assert set(offenders) == {"ordessa_server_product.harness_adapters.registry", "pacthold.harness_kit"}
@@ -287,7 +287,7 @@ def test_api_import_works_with_third_party_packages_suppressed():
         "import json\n"
         "print(json.dumps({\n"
         "  'symbols': len(api.__all__),\n"
-        "  'contract_imported': 'server_plugin_api' in sys.modules,\n"
+        "  'contract_imported': 'ordessa_server_plugin_api' in sys.modules,\n"
         "  'sqlite_imported': 'sqlite3' in sys.modules,\n"
         "  'server_imported': any(m.startswith('ordessa_server') for m in sys.modules),\n"
         "  'plugin_imported': 'ordessa_prompts.plugin' in sys.modules,\n"
@@ -325,7 +325,7 @@ def test_the_boundary_scan_itself_refuses_a_cross_domain_import():
         offenders = _boundary_offenders(_imported_names_of(source))
         assert offenders, f"the scan let a {label} import through: {source!r}"
 
-    allowed = ("from server_plugin_api import ServerPluginContext\n"
+    allowed = ("from ordessa_server_plugin_api import ServerPluginContext\n"
                "import sqlite3\nimport json\n")
     assert _boundary_offenders(_imported_names_of(allowed)) == [], (
         "the scan rejects the allowed vocabulary instead of the forbidden one")

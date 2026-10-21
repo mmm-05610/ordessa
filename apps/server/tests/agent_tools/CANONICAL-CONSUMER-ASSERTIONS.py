@@ -126,7 +126,7 @@ async def assert_canonical_dispatch_semantics(
     # A Submission is only prepared by the calling workflow here. The retired
     # direct recording operation must still refuse and leave the table empty.
     assert submission_count() == 0
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
     try:
         await wire_binding.invoke("engineering.submissions.record", retired_request, caller)
     except WireError as error:

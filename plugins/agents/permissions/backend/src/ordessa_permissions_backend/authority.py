@@ -44,7 +44,7 @@ from ordessa_permissions_api import (
     PolicyRefusal,
     TOOL_KEYS,
 )
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 from .facts import ApprovalFacts
 from .policies import PolicyRepository

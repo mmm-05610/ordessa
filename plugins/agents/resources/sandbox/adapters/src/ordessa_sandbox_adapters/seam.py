@@ -3,7 +3,7 @@
 Status after the `harness-api` checkpoint (record
 ``docs/implementation/specifications/011-plugin-rollout/checkpoints/harness-api.json``, implementation
 ``61966e3118``, ref ``refs/heads/codex/011-harness-api-ready``, merged into this
-lane as ``d3f026904e``): ``plugins/harness/api`` (``ordessa_execution_agents.harness.definitions``,
+lane as ``d3f026904e``): ``plugins/harness/api`` (``ordessa_agents.harness.definitions``,
 py.typed, standalone wheel) IS a published ``publicExports`` entry of that
 READY record, and ``publicExports.harnessApiExports`` names every C3 apply
 symbol this seam binds — ``SetField``, ``ResetField``, ``InvokeAction``,
@@ -37,7 +37,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional, Union
 
-from ordessa_execution_agents.harness.definitions.intents import (
+from ordessa_agents.harness.definitions.intents import (
     FieldPath,
     IntentSet,
     IntentSource,
@@ -163,7 +163,7 @@ class CompiledFieldIntent:
                             sandbox_contribution_version())
 
     def to_harness_c3(self) -> Union[SetField, ResetField, InvokeAction]:
-        """Build the real ``ordessa_execution_agents.harness.definitions`` intent for this field.
+        """Build the real ``ordessa_agents.harness.definitions`` intent for this field.
 
         Malformed shape against the platform contract — a path-flavoured
         segment, a secret-bearing field name, a missing or unknown baseline

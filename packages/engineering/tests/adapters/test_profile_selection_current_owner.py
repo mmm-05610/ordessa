@@ -10,7 +10,7 @@ import pytest
 
 from ordessa_engineering.adapters.execution_profiles import NativeProfileSelectionSource
 from ordessa_engineering.domain.common.outcomes.library_failures import EngineeringError
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     ProfileAccessRefused, ProfileNotFound, ProfileRevisionConflict,
     ProfileRevisionRef, ProfileService, SqliteProfileStore,
 )

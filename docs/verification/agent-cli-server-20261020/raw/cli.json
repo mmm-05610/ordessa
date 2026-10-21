@@ -1,0 +1,1 @@
+{"apiVersion": "agent-tools/1", "requestId": "3ff16776855647f4aac9c46d4b619b22", "command": "agents profiles list", "status": "completed", "data": {"entries": []}, "error": null, "operationRef": null, "evidenceRefs": []}

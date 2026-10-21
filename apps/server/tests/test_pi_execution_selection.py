@@ -8,8 +8,8 @@ import time
 import pytest
 from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore
 from ordessa_environments_local import LocalEnvironmentResourceProvider
-from ordessa_execution_agents.profiles import ProfileService
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.profiles import ProfileService
+from ordessa_agents.harness.providers.registry import (
     HarnessDefinitionDescriptor, HarnessDefinitionDeclaration, HarnessInstallationObservation)
 from ordessa_units.assembly import UnitRunPermission
 from ordessa_units.public import AgentOwnerUnavailable, unit_services

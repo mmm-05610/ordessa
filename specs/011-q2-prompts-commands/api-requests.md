@@ -7,7 +7,7 @@
 
 | 接缝 | 本树状态 | 证据 |
 | --- | --- | --- |
-| Server 方法注册 | **可用**：`server_plugin_api.contract.ServerMethodDescriptor / ServerPluginRegistration / ServerPluginContext(plugin_id, data_root, ports)` | `packages/server-plugin-api/src/server_plugin_api/contract.py:164-215`（已 `import` 通过） |
+| Server 方法注册 | **可用**：`ordessa_server_plugin_api.contract.ServerMethodDescriptor / ServerPluginRegistration / ServerPluginContext(plugin_id, data_root, ports)` | `packages/server-plugin-api/src/ordessa_server_plugin_api/contract.py:164-215`（已 `import` 通过） |
 | 插件私有数据根 | **可用**：`ServerPluginContext.data_root` | 同上 `:180` |
 | Workbench Settings 贡献 | **可用**：`WorkbenchSettingsSection`、`Workbench.addSettingsSection`、`openSettings`、`WorkbenchToken` | `packages/desktop-platform/contracts/workbench/src/workbench.ts:25,41,45,59`；宿主实现 `plugins/workbench/src/model.ts:124` |
 | Workspace 项目解析服务 | **存在**（本域 `project-ref` 授权解析的候选真实依赖） | `plugins/workspace/src/ordessa_workspace/{plugin,records,http}.py` |

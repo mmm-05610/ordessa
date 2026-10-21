@@ -5,9 +5,9 @@ validator. Optional capability/protocol facts use this domain's existing strict
 normalizer instead of being dropped by the historical four-field surface.
 """
 from typing import Mapping
-from server_plugin_api.wire_errors import WireError
-from server_plugin_api.internal_errors import ServerError
-from server_plugin_api.wire_shape import bounded
+from ordessa_server_plugin_api.wire_errors import WireError
+from ordessa_server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.wire_shape import bounded
 from .protocols import normalize_model_facts
 
 

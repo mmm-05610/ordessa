@@ -34,8 +34,8 @@ def _sha256(path: Path) -> str:
 def implementation_facts() -> dict[str, Any]:
     engineering_root = importlib.resources.files('ordessa_engineering')
     try:
-        from decision_runtime.job import SPEC_VERSION
-        decision_root = importlib.resources.files('decision_runtime')
+        from ordessa_decision.job import SPEC_VERSION
+        decision_root = importlib.resources.files('ordessa_decision')
         runtime_version = importlib.metadata.version('decision-runtime')
         jsonschema_version = importlib.metadata.version('jsonschema')
         referencing_version = importlib.metadata.version('referencing')
@@ -46,9 +46,9 @@ def implementation_facts() -> dict[str, Any]:
             {name: _sha256(engineering_root.joinpath(*name.split('/'))) for name in ENGINEERING_FILES}
             | {'ordessa_infrastructure:' + name: _sha256(importlib.resources.files(
                 'ordessa_infrastructure').joinpath(*name.split('/'))) for name in INFRASTRUCTURE_FILES}),
-        'decision_runtime': {name: _sha256(decision_root.joinpath(*name.split('/')))
+        'ordessa_decision': {name: _sha256(decision_root.joinpath(*name.split('/')))
                              for name in DECISION_RUNTIME_FILES},
-        'decision_runtime_version': runtime_version,
+        'ordessa_decision_version': runtime_version,
         'decision_contract_version': SPEC_VERSION,
         'jsonschema_version': jsonschema_version,
         'referencing_version': referencing_version,
@@ -58,7 +58,7 @@ def implementation_facts() -> dict[str, Any]:
 def verify_implementation(registry: Mapping[str, Any]) -> None:
     """The active registry's implementation must equal the live source closure."""
     implementation = registry['implementation']
-    source_keys = {'engineering', 'decision_runtime', 'decision_runtime_version', 'decision_contract_version', 'jsonschema_version', 'referencing_version'}
+    source_keys = {'engineering', 'ordessa_decision', 'ordessa_decision_version', 'decision_contract_version', 'jsonschema_version', 'referencing_version'}
     if not isinstance(implementation, Mapping) or set(implementation) != source_keys:
         raise EngineeringError('operation_registry_implementation_shape')
     if implementation != implementation_facts():

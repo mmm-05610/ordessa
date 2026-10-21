@@ -73,7 +73,7 @@ async def review_case(tmp_path,monkeypatch,verdict='passed'):
         with factory.begin(SCOPE,'read') as uow:
             package=uow.implementation.resolve_package(submission.package_ref)
             work=decode_work_binding(uow.workflow.read(fixture['head']))
-        from ordessa_execution_agents.profiles import encode_revision_ref
+        from ordessa_agents.profiles import encode_revision_ref
         from ordessa_engineering.domain.changes.agent_submission_report import AgentSubmissionReport
         assert type(submission) is AgentSubmissionReport
         with access.admit(caller,fixture['wire'],'engineering.reviews.request',request_id='request-independent',trace_id='review') as ctx:

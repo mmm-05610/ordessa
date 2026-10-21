@@ -99,7 +99,7 @@ def test_a_ambiguous_product_selection_refuses_startup(monkeypatch, tmp_path):
 def test_a_missing_dependency_plugin_refuses_startup(tmp_path):
     """A selection whose declared dependency is absent refuses at activation
     (fail closed), not at first request."""
-    from server_plugin_api import (
+    from ordessa_server_plugin_api import (
         ServerPluginDescriptor, ServerPlugin, ServerPluginContext,
         ServerPluginRegistration, DependencyError,
     )
@@ -122,7 +122,7 @@ def test_a_missing_dependency_plugin_refuses_startup(tmp_path):
 
 def test_default_product_publishes_only_the_pacthold_agent_contract(tmp_path):
     """The core method factory owns `/3`; retired product aliases are unknown."""
-    from server_plugin_api import WireError
+    from ordessa_server_plugin_api import WireError
 
     default = build_runtime(tmp_path / "default")
     try:

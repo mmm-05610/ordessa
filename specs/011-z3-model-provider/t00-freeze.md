@@ -95,6 +95,6 @@ save/probe 属 ProviderCatalogPort 但示例未覆盖；为避免歧义冻结为
 
 ## 9. 环境事实
 
-- 本树 venv：`.venv`（Python 3.12.14）。导入验证 `pacthold`/`ordessa_server`/`server_plugin_api` ok。
+- 本树 venv：`.venv`（Python 3.12.14）。导入验证 `pacthold`/`ordessa_server`/`ordessa_server_plugin_api` ok。
 - npm：frozen lock 安装 277 packages；本线不修改根 `package-lock.json`（TS 测试经根 hoisted vitest/react 运行）。
 - 严禁真实模型调用（E3 无授权）；probe 一律本地假端点/受控反例。

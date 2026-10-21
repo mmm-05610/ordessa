@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from server_plugin_api import HostAdmissionClosedError, ServerPluginRegistration
+from ordessa_server_plugin_api import HostAdmissionClosedError, ServerPluginRegistration
 
 from contribution_fakes import ContribPlugin, new_host
 
@@ -47,7 +47,7 @@ class _RefusingStopPlugin:
 
     def __init__(self, plugin_id: str, *, requires: tuple[str, ...] = (),
                  events: list, refuse: bool) -> None:
-        from server_plugin_api import SERVER_PLUGIN_API_VERSION, ServerPluginDescriptor
+        from ordessa_server_plugin_api import SERVER_PLUGIN_API_VERSION, ServerPluginDescriptor
 
         self._descriptor = ServerPluginDescriptor(
             id=plugin_id, display_name=f"refusing {plugin_id}", version="1",

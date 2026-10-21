@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Iterable, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ServerPluginContext,
     ServerPluginDescriptor,
     ServerPluginRegistration,

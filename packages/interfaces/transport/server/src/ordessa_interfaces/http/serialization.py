@@ -14,7 +14,7 @@ import json
 import re
 from typing import Any, Mapping
 
-from server_plugin_api.wire_errors import WireError
+from ordessa_server_plugin_api.wire_errors import WireError
 
 
 METHOD_PATTERN = re.compile(r"^[a-z][a-zA-Z0-9_]*(\.[a-z][a-zA-Z0-9_]*)+$")

@@ -1,0 +1,4 @@
+ordessa-server: data root /tmp/w2-e2e2/root
+ordessa-server: instance token /tmp/w2-e2e2/root/secrets/http-token (generated, 0600)
+ordessa-server: capabilities agents
+ordessa-server: harness admitted kilo, pi, claude, codex, hermes, dsh

@@ -29,7 +29,7 @@ import textwrap
 
 import pytest
 
-from ordessa_execution_agents.harness.transport.channel import (
+from ordessa_agents.harness.transport.channel import (
     ChannelClosed,
     LaunchSpec,
     ProcessChannel,
@@ -219,7 +219,7 @@ def test_connect_handshake_negotiates_protocol_version(tmp_path) -> None:
         negotiated = client.connect(
             timeout=5,
             client_info={
-                "applicationName": "ordessa-agent-tools",
+                "applicationName": "ordessa-cli",
                 "applicationVersion": "0.1.0a2",
             },
         )

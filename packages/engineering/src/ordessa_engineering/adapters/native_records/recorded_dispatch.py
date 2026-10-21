@@ -114,7 +114,7 @@ def failure_diagnostic(binding, error, stage):
     is accepted only while it still names this binding's operation, input and
     Unit; anything else is reported without the write evidence.
     """
-    from ordessa_execution_agents.harness.transport import native_write_failure
+    from ordessa_agents.harness.transport import native_write_failure
     from ...application.contracts.failure_diagnostic import FailureDiagnostic
     from ordessa_infrastructure.encoding.immutable_json import safe_json
     native = native_write_failure(error)
@@ -540,7 +540,7 @@ class NativeDispatchSources:
             yield
 
     def _resolve(self,context,package,unit_ref):
-        from ordessa_execution_agents.profiles import ProfileRevisionRef
+        from ordessa_agents.profiles import ProfileRevisionRef
         from ordessa_units.bindings.contracts import DirectoryBindingRef
         profile,directory,invocation,digest=self.resolver(context,package,unit_ref)
         expected=package.payload.execution_profile_ref

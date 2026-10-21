@@ -25,8 +25,8 @@
 ## 平台真实接缝（存在 / 不存在，附位置）
 | 设计要求 | 现状 | 证据位置 |
 | --- | --- | --- |
-| 插件公开注册面 | 存在：`ServerPluginDescriptor/Registration/Context`、`ServerMethodDescriptor`、`HttpRouteDescriptor`、`StreamRouteDescriptor`、`provided_ports`、`start_hooks`、`disposal` | `packages/server-plugin-api/src/server_plugin_api/contract.py:21,56,94,123,163,186,216` |
-| 组合期冲突拒绝 | 存在：`DuplicateMethodError`、`PortConflictError`、`DependentActiveError` 等 | `packages/server_plugin_api/errors.py:33,120,134` |
+| 插件公开注册面 | 存在：`ServerPluginDescriptor/Registration/Context`、`ServerMethodDescriptor`、`HttpRouteDescriptor`、`StreamRouteDescriptor`、`provided_ports`、`start_hooks`、`disposal` | `packages/server-plugin-api/src/ordessa_server_plugin_api/contract.py:21,56,94,123,163,186,216` |
+| 组合期冲突拒绝 | 存在：`DuplicateMethodError`、`PortConflictError`、`DependentActiveError` 等 | `packages/ordessa_server_plugin_api/errors.py:33,120,134` |
 | `Contribution` / `FacetDescriptor` / C1–C4 注册点 | **不存在**（全仓 grep 仅命中 `docs/design/*`、`specs/*` 文档） | — |
 | Harness 封闭配置意图（C3） | 本树 main 快照 **不存在**；仅未发布 C0 分支提交（见上） | `git show b5dcf84703` |
 | 工具副作用前授权钩子（pre-effect gate） | **不存在**（grep `pre-effect/EffectGate/before_tool` 只命中文档） | — |

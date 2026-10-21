@@ -3,7 +3,7 @@
 Pure preparation retains pinned native flags/configuration. No direct process,
 Unit, permission issuer, protocol fallback or ACP substitution is exported.
 """
-from ordessa_execution_agents.sdk import (HarnessDescriptor,HarnessError,PrepareContext,
+from ordessa_agents.sdk import (HarnessDescriptor,HarnessError,PrepareContext,
     ProfileContent,LaunchPlan)
 from .native_channel import compile_config,ConfigRefusal
 

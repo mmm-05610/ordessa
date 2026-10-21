@@ -20,7 +20,7 @@ def test_product_no_legacy_executor_or_journal_and_probe_is_not_vacuous():
     composition=Path('apps/server/src/ordessa_server/composition')
     assert root.is_dir() and composition.is_dir()
     assert tuple(root.rglob('*.py')) and tuple(composition.rglob('*.py'))
-    assert legacy_edges('from ordessa_execution_agents.harness.records.operation_journal import OperationJournal\nx=OperationJournal("x")')
+    assert legacy_edges('from ordessa_agents.harness.records.operation_journal import OperationJournal\nx=OperationJournal("x")')
     assert legacy_edges('from .live_runtime import NativeLiveModelRuntime')
     offenders={str(p):legacy_edges(p.read_text())
                for owner in (root,composition) for p in owner.rglob('*.py')}

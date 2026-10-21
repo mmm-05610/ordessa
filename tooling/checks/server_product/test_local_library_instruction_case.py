@@ -414,7 +414,7 @@ def _native_cli_source_graph(module, seed, material, raw, claims, versions, monk
     sys.path.insert(0, str(repo / 'packages/engineering/tests/application'))
     import test_real_source_chain as chain
     from test_itemized_source_chain import ItemizedControlledProvider
-    from ordessa_execution_agents.profiles import ProfileService
+    from ordessa_agents.profiles import ProfileService
     from ordessa_units.bindings.profile_admission import UnitProfileAdmission
     from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
     from ordessa_server.composition.configuration.product_selection import create_host_product_composition
@@ -436,7 +436,7 @@ def _native_cli_source_graph(module, seed, material, raw, claims, versions, monk
     from ordessa_engineering.application.assembly import EngineeringPorts, build_engineering_service
     from ordessa_engineering.adapters.persistence.sqlite import migrations
     from ordessa_decision_jev import JevProviderSettings
-    from decision_runtime import PolicyRef
+    from ordessa_decision import PolicyRef
     import hashlib
     fingerprint = ProtectedFingerprintHmac({'synthetic': b'synthetic-fixture-fingerprint-32!'}, active_key_id='synthetic')
     # A synthetic, freshly written executable stands in for the external Pi
@@ -592,7 +592,7 @@ def test_full_cli_native_continuation_keeps_original_authority(tmp_path, monkeyp
     from ordessa_server.composition.unit_file_callback_approval import UnitFileCallbackApproval
     from ordessa_units.api.manager import UnitManager
     from ordessa_units.api import UnitApiRefused
-    from ordessa_execution_agents.harness.transport.environment_channel import EnvironmentProcessChannel
+    from ordessa_agents.harness.transport.environment_channel import EnvironmentProcessChannel
     from ordessa_engineering.application.contracts.dispatch_identity import unit_bootstrap_request_key
     from ordessa_engineering.application.usecases.changes.dispatch_continuation import CONTINUATION_OPERATION
     import ordessa_engineering.application.usecases.support.clock as engineering_clock
@@ -692,7 +692,7 @@ def test_full_cli_native_continuation_keeps_original_authority(tmp_path, monkeyp
     binding = WorkBinding(work_id, source.scope, source.method, 1,
                           (WorkAssociation('package', source.package_ref),))
     work_digest = Digest('sha256', content_digest(work_binding_projection(binding)).removeprefix('sha256:'))
-    from ordessa_execution_agents.profiles import encode_revision_ref
+    from ordessa_agents.profiles import encode_revision_ref
     profile = encode_revision_ref(source.profile_ref)
     environment_ref = EnvironmentRef(source.scope.realm_id, source.profile_ref.profile_id,
         Digest('sha256', profile['contentDigest'].removeprefix('sha256:')))

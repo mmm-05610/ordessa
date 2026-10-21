@@ -5,12 +5,12 @@ from ordessa_server.composition.configuration.contributions import descriptor_ad
 from _permissions_adapters_helpers import make_ceiling, make_intent
 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
 from ordessa_units.records.operation_journal import OperationJournal
-from ordessa_execution_agents.harness.contracts.models.application import RuntimeSnapshot
+from ordessa_agents.harness.contracts.models.application import RuntimeSnapshot
 from ordessa_server.composition.configuration.contributions import CONFIGURATION_POINT
 from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
 from ordessa_server.composition.configuration.contributions import POINT_API_VERSION
-from ordessa_execution_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
+from ordessa_agents.harness.definitions import (
     AdapterContext, AdapterRefusal, ApplicationTarget, DesiredFragment, Installation, Plan,
     TargetDescriptor, TargetHandle, VerificationUnknown,
 )
@@ -18,7 +18,7 @@ from ordessa_permissions_adapters import (
     ClaudeAdapter, PolicyCompileSnapshot, PolicyConfigurationAdapter,
 )
 from ordessa_server.composition.plugin_host import MethodRegistry, ServerPluginHost, StreamRouteRegistry
-from server_plugin_api import Contribution, ContributionBatch, ServerPluginDescriptor, ServerPluginRegistration
+from ordessa_server_plugin_api import Contribution, ContributionBatch, ServerPluginDescriptor, ServerPluginRegistration
 
 
 def test_c4_plan_preserves_a_real_fragment_item_id(tmp_path) -> None:

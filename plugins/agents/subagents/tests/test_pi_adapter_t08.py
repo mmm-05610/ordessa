@@ -17,7 +17,7 @@ import os
 import subprocess
 
 import pytest
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, Assessment, Installation, IntentSource, Mismatch,
     VerificationUnknown,
 )

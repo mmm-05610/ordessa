@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import pytest
 
 from ordessa_environments import EnvironmentRefused
-from ordessa_execution_agents.harness.transport import RequestTimeout, WriterLeaseRefused
+from ordessa_agents.harness.transport import RequestTimeout, WriterLeaseRefused
 from ordessa_units.admission.connection import ConnectionLeaseRefused
 from ordessa_units.records.unit_records import UnitRecordsRefused
 

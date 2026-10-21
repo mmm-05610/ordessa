@@ -13,19 +13,19 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import ConfigurationAdapterDescriptor, VersionRange
+from ordessa_agents.harness.definitions import ConfigurationAdapterDescriptor, VersionRange
 from ordessa_server.composition.configuration.contributions import HarnessContributionError
 from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
-from server_plugin_api import Contribution, ContributionBatch, stage_contributions
+from ordessa_server_plugin_api import Contribution, ContributionBatch, stage_contributions
 
 from ordessa_harness_codex import acp_model_facts as codex_facts
 from ordessa_harness_pi import acp_model_facts as pi_facts
-from ordessa_execution_agents.harness.definitions.model_compilation import parse_version
+from ordessa_agents.harness.definitions.model_compilation import parse_version
 from _brand_c2 import adapter_for, c2_module, descriptor_for, owner_for_brand
 from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
 from ordessa_harness_codex.acp_model_configuration import CodexAdapter
 from ordessa_harness_pi.acp_model_configuration import PiAdapter
-from ordessa_execution_agents.harness.definitions.model_compilation import (
+from ordessa_agents.harness.definitions.model_compilation import (
     AdapterContext, ChoiceRequest, CompileIntent, Refusal, TargetHandle,
 )
 
@@ -440,7 +440,7 @@ def test_brand_c2_factories_are_public_and_stay_pure():
     import ast
 
     # types supplies an immutable projection; no IO or host/provider dependency.
-    allowed_roots = {"ordessa_execution_agents", "tomllib", "types"}
+    allowed_roots = {"ordessa_agents", "tomllib", "types"}
     for brand in common_brands():
         module = c2_module(brand)
         source = Path(module.__file__).read_text()
@@ -461,7 +461,7 @@ def test_brand_c2_factories_are_public_and_stay_pure():
 
 
 def test_neutral_ranges_use_explicit_provider_facts_and_refuse_overlap():
-    from ordessa_execution_agents.harness.configuration.validation.version_ranges import (
+    from ordessa_agents.harness.configuration.validation.version_ranges import (
         version_in_range, parse_range, ranges_provably_disjoint,
         RegistrationConflict, check_registration_conflicts,
     )

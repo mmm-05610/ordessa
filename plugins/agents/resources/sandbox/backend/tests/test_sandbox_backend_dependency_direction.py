@@ -24,7 +24,7 @@ FORBIDDEN_ROOTS = {
     "pacthold.harness_kit", "pacthold",
     "ordessa_permissions", "ordessa_permissions_api",
 }
-ALLOWED_EXTERNAL = {"ordessa_sandbox_api", "server_plugin_api"}
+ALLOWED_EXTERNAL = {"ordessa_sandbox_api", "ordessa_server_plugin_api"}
 
 
 def _imported_roots() -> set[str]:
@@ -77,7 +77,7 @@ from ordessa_sandbox_backend import (
     SandboxOptionCatalogue, SandboxNativeService, NativeSandboxRepository,
     SandboxVerifier, build_sandbox_plugin,
 )
-from server_plugin_api import ServerPluginContext
+from ordessa_server_plugin_api import ServerPluginContext
 
 catalogue = SandboxOptionCatalogue.from_repo(harnesses_toml=__import__("pathlib").Path({str(captured_resource)!r}))
 service = SandboxNativeService(catalogue=catalogue)

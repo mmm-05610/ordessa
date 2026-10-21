@@ -18,7 +18,7 @@ import threading
 from typing import Any, Mapping
 
 from ordessa_infrastructure.encoding.immutable_json import safe_json
-from ordessa_execution_agents.harness.transport import LeaseBoundChannel, ProcessChannel, WriterLease
+from ordessa_agents.harness.transport import LeaseBoundChannel, ProcessChannel, WriterLease
 
 COMPLETE_UNIT_FIELDS = {"environmentNamespace", "unitId", "ownerProviderRef", "sourceRevision"}
 

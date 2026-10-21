@@ -31,7 +31,7 @@ from ordessa_units.records.operation_journal import OperationJournal
 from ordessa_units.records.unit_records import (
     CanonicalConfigurationScopeRef, UnitRecords,
 )
-from ordessa_execution_agents.harness.transport import Message, RequestTimeout
+from ordessa_agents.harness.transport import Message, RequestTimeout
 
 
 NODE = {"environmentNamespace": "test", "instanceId": "node", "generation": 1}

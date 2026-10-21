@@ -23,7 +23,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from server_plugin_api import ServerPluginContext, WireError
+from ordessa_server_plugin_api import ServerPluginContext, WireError
 
 from ordessa_server.composition.native_channels.history import KIND
 from ordessa_server.composition.native_channels.history import NativeSessionHistory

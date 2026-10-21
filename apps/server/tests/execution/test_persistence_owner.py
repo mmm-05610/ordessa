@@ -68,7 +68,7 @@ def test_workspace_and_receipt_share_transaction_and_rollback_together(tmp_path)
     idempotency.fail = False
     first = records.create(**kwargs)
     assert records.create(**kwargs) == first
-    from server_plugin_api.internal_errors import ServerError
+    from ordessa_server_plugin_api.internal_errors import ServerError
     with pytest.raises(ServerError) as conflict:
         records.create(**dict(kwargs, request_digest="different"))
     assert conflict.value.code == "IDEMPOTENCY_CONFLICT"

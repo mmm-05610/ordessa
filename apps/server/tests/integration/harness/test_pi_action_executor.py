@@ -5,14 +5,14 @@ import copy
 import json
 
 import pytest
-from ordessa_execution_agents.harness.definitions import ApplicationTarget, InvokeAction, IntentSource
+from ordessa_agents.harness.definitions import ApplicationTarget, InvokeAction, IntentSource
 from ordessa_units.configuration.actions import ActionBatch
 from ordessa_units.configuration.actions import ActionInvocation
 from ordessa_server.composition.native_channels.native_action_executor import ACTION_ID
 from ordessa_server.composition.native_channels.action_factories import create_pi_action_executor as PiSessionActionExecutor
-from ordessa_execution_agents.harness.configuration.compilation.native_digest import configuration_digest
-from ordessa_execution_agents.harness.definitions.native_channels import NativeSessionObservation
-from ordessa_execution_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
+from ordessa_agents.harness.configuration.compilation.native_digest import configuration_digest
+from ordessa_agents.harness.definitions.native_channels import NativeSessionObservation
+from ordessa_agents.harness.definitions.native_channels import NativeConfigurationUnavailable
 
 
 def rig():

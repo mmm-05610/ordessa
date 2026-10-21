@@ -1,0 +1,226 @@
+{
+  "brand": "kilo",
+  "prompt": "计算 17*23，只回复数字。",
+  "model": "deepseek-v4.1-flash",
+  "codexModel": "gpt-5.6-sol",
+  "steps": {
+    "acquire": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "22cf4d18131c4c54b99cc11697686f61",
+      "command": "call environments.acquire --input /tmp/t04b-mech-kilo/acquire.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/7d1dfd7ce1904320ab08e47243c4fd64",
+        "useIdentity": "environment-use/59aa9994f39e4089b5496a0b13601a1a",
+        "status": "completed",
+        "ownerScope": {
+          "kind": "principal",
+          "ref": "instance"
+        },
+        "environmentIdentity": "environment/e047cb3527144ce1901a9be87dcc9f98"
+      },
+      "error": null,
+      "operationRef": "environment-operation/7d1dfd7ce1904320ab08e47243c4fd64",
+      "evidenceRefs": []
+    },
+    "start": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "start-1",
+      "command": "call agents.start --input /tmp/t04b-mech-kilo/start.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-start-receipt/1",
+        "instanceId": "instance-76aae578b8694e0fbad0cfe90e2c625d",
+        "operationRef": "agent-start/fb36245884394d4c874526d8e610fa8a",
+        "state": "running",
+        "instanceRef": {
+          "schemaVersion": "agent-instance/1",
+          "namespace": "server",
+          "instanceId": "instance-76aae578b8694e0fbad0cfe90e2c625d",
+          "bindingDigest": "sha256:0467c9940d6a671255d65791ad18100542f77be886eca793f37576935250cf3d"
+        },
+        "processEndpointRef": {
+          "schemaVersion": "agent-endpoint/1",
+          "issuer": "environment-endpoints:604704b7169d32235e322cd6",
+          "endpointId": "endpoint/e725d3367253486080ea1bf91dbe8dd0",
+          "revision": "1",
+          "descriptorDigest": "sha256:2a3682d3da2cf72dd47967b132e3935d1661cc943fd585a710b221bd1b2636f1"
+        },
+        "sessionId": "ses_ea3d52ff1ffez1RvOh4A8ZrtUF",
+        "error": null
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "stop": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "stop-1",
+      "command": "call agents.stop --input /tmp/t04b-mech-kilo/stop.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "endpoint-operation/1",
+        "operationRef": "environment-operation/78c04e5804da4ab1ab542d5ecbc01682",
+        "status": "completed",
+        "processEndpointRef": {
+          "schemaVersion": "agent-endpoint/1",
+          "issuer": "environment-endpoints:604704b7169d32235e322cd6",
+          "endpointId": "endpoint/e725d3367253486080ea1bf91dbe8dd0",
+          "revision": "1",
+          "descriptorDigest": "sha256:2a3682d3da2cf72dd47967b132e3935d1661cc943fd585a710b221bd1b2636f1"
+        },
+        "facts": {
+          "action": "terminate",
+          "cancellation": "requested",
+          "processState": "running"
+        },
+        "evidenceRefs": [],
+        "error": null
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "reconcile": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "rec-1",
+      "command": "call agents.reconcile --input /tmp/t04b-mech-kilo/reconcile.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-process-observation/1",
+        "state": "exited",
+        "observedAt": "2026-10-21T01:54:33.751998+00:00",
+        "nativeIdentityDigest": "sha256:e5190ef4e4b82d6b27a06c74fe19d11ceb26517255ae16bc4b31ed3b8322a49f",
+        "exitCode": -9,
+        "evidenceRefs": []
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "processRelease": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "prel-1",
+      "command": "call environments.process-release --input /tmp/t04b-mech-kilo/prelease.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/3e9f66de05f948029101d012c451d8a0",
+        "useIdentity": "environment-use/59aa9994f39e4089b5496a0b13601a1a",
+        "status": "completed",
+        "resourcePreserved": true,
+        "receipt": {
+          "processIdentity": "local-process/2064414",
+          "transportReleased": true,
+          "processState": "exited",
+          "ioState": "closed",
+          "exitCode": "-9"
+        },
+        "exitClaimed": false
+      },
+      "error": null,
+      "operationRef": "environment-operation/3e9f66de05f948029101d012c451d8a0",
+      "evidenceRefs": []
+    },
+    "release": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "rel-1",
+      "command": "call environments.release --input /tmp/t04b-mech-kilo/release.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/755b8df77f144d5db68ded31d93aea0f",
+        "useIdentity": "environment-use/59aa9994f39e4089b5496a0b13601a1a",
+        "status": "completed",
+        "resourcePreserved": true,
+        "receipt": {
+          "useIdentity": "environment-use/59aa9994f39e4089b5496a0b13601a1a",
+          "environmentIdentity": "environment/e047cb3527144ce1901a9be87dcc9f98",
+          "generation": 0,
+          "resourcePreserved": true,
+          "providerFacts": {
+            "useIdentity": "environment-use/59aa9994f39e4089b5496a0b13601a1a",
+            "isolation": "none",
+            "root": "/tmp/t04b-mech-kilo/work",
+            "rootPreserved": true,
+            "resourcePreserved": true,
+            "attempts": [
+              "local-use/environment-use/59aa9994f39e4089b5496a0b13601a1a/1"
+            ]
+          }
+        }
+      },
+      "error": null,
+      "operationRef": "environment-operation/755b8df77f144d5db68ded31d93aea0f",
+      "evidenceRefs": []
+    }
+  },
+  "attempts": 1,
+  "origin": "http://127.0.0.1:45183",
+  "instanceRef": {
+    "schemaVersion": "agent-instance/1",
+    "namespace": "server",
+    "instanceId": "instance-76aae578b8694e0fbad0cfe90e2c625d",
+    "bindingDigest": "sha256:0467c9940d6a671255d65791ad18100542f77be886eca793f37576935250cf3d"
+  },
+  "sessionId": "ses_ea3d52ff1ffez1RvOh4A8ZrtUF",
+  "processEndpointRef": {
+    "schemaVersion": "agent-endpoint/1",
+    "issuer": "environment-endpoints:604704b7169d32235e322cd6",
+    "endpointId": "endpoint/e725d3367253486080ea1bf91dbe8dd0",
+    "revision": "1",
+    "descriptorDigest": "sha256:2a3682d3da2cf72dd47967b132e3935d1661cc943fd585a710b221bd1b2636f1"
+  },
+  "launchEnvironment": {
+    "processes": [
+      {
+        "pid": 2064414,
+        "cmdline": "node /home/maoqh/.local/bin/kilo acp"
+      },
+      {
+        "pid": 2064421,
+        "cmdline": "/home/maoqh/.local/lib/node_modules/@kilocode/cli/bin/.kilo acp"
+      }
+    ],
+    "configuredNames": {
+      "KILO_CONFIG_CONTENT": 368,
+      "KILO_PROVIDER_KEY": 51
+    }
+  },
+  "outcome": "MECHANICS_ONLY",
+  "serverExitCode": -15,
+  "log": [
+    "== service configuration ==",
+    "{\"allowlist\": [\"kilo\"], \"providers\": {\"kilo\": {\"env\": {\"KILO_CONFIG_CONTENT\": \"{\\\"autoupdate\\\": false, \\\"model\\\": \\\"opencode-go/deepseek-v4.1-flash\\\", \\\"provider\\\": {\\\"opencode-go\\\": {\\\"npm\\\": \\\"@ai-sdk/openai-compatible\\\", \\\"name\\\": \\\"OpenCode Go\\\", \\\"options\\\": {\\\"baseURL\\\": \\\"https://opencode.ai/zen/go/v1\\\", \\\"apiKey\\\": \\\"{env:KILO_PROVIDER_KEY}\\\", \\\"headers\\\": {\\\"x-opencode-session\\\": \\\"ordessa-t04b\\\"}}, \\\"models\\\": {\\\"deepseek-v4.1-flash\\\": {\\\"name\\\": \\\"deepseek-v4.1-flash\\\"}}}}}\"}, \"envFrom\": {\"KILO_PROVIDER_KEY\": \"OPEN_CODE_GO_API_KEY\"}}}}",
+    "SERVER> {\"event\":\"listening\",\"origin\":\"http://127.0.0.1:45183\",\"pid\":2064392,\"serverId\":\"ordessa-t04b-kilo\"}",
+    "== environments create local (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"54b8e42eced34ea4bebf59d38f69b7de\", \"command\": \"environments create local --root /tmp/t04b-mech-kilo/work --alias demo\", \"status\": \"completed\", \"data\": {\"identity\": \"environment/e047cb3527144ce1901a9be87dcc9f98\", \"alias\": \"demo\", \"aliases\": [\"demo\"], \"provider\": \"local\", \"backendId\": \"/tmp/t04b-mech-kilo/work\", \"phase\": \"ready\", \"generation\": 0, \"state\": \"running\", \"observationStale\": false, \"observedAt\": \"2026-10-21T01:54:25.915026+00:00\", \"operationStatus\": {\"phase\": \"ready\", \"operation\": null}, \"activeUses\": 0, \"isolation\": \"none\", \"endpointKind\": \"local-directory\", \"health\": \"ready\", \"capabilities\": {\"isolation\": \"none\", \"statuses\": {\"byte-channel\": \"supported\", \"files\": \"supported\", \"process\": \"supported\", \"stderr\": \"supported\", \"terminal\": \"unsupported\"}, \"provides\": [\"byte-channel\", \"files\", \"process\", \"stderr\"], \"values\": {\"provider\": \"local\", \"resourceKind\": \"directory\"}, \"assurance\": {\"isolation\": \"none\", \"isolationIsSecurityBoundary\": false, \"localDevelopmentOnly\": true, \"providerAssurance\": \"provider_self_report\", \"statement\": \"provider-reported isolation; it is not a permission, lease or hold\"}}}, \"error\": null, \"operationRef\": \"environment-command/b1bd1d02b91f4937a821f060b67e62c4\", \"evidenceRefs\": []}",
+    "== environments.acquire (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"22cf4d18131c4c54b99cc11697686f61\", \"command\": \"call environments.acquire --input /tmp/t04b-mech-kilo/acquire.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/7d1dfd7ce1904320ab08e47243c4fd64\", \"useIdentity\": \"environment-use/59aa9994f39e4089b5496a0b13601a1a\", \"status\": \"completed\", \"ownerScope\": {\"kind\": \"principal\", \"ref\": \"instance\"}, \"environmentIdentity\": \"environment/e047cb3527144ce1901a9be87dcc9f98\"}, \"error\": null, \"operationRef\": \"environment-operation/7d1dfd7ce1904320ab08e47243c4fd64\", \"evidenceRefs\": []}",
+    "== environments.export-endpoint (raw wire) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"export-raw\", \"command\": \"environments.export-endpoint\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/3edc8c63a28b48419aba575edf8f80bf\", \"useIdentity\": \"environment-use/59aa9994f39e4089b5496a0b13601a1a\", \"status\": \"completed\", \"endpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:604704b7169d32235e322cd6\", \"endpointId\": \"endpoint/4bf706f07dd54a2bab15e291603a0b31\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:241967f9abbd5a92b5d3eb68243e49a7a5110f74d137197b9e9504bedbb057d6\"}, \"descriptor\": {\"schemaVersion\": \"environment-endpoint-descriptor/2\", \"endpointId\": \"endpoint/4bf706f07dd54a2bab15e291603a0b31\", \"revision\": \"1\", \"capabilities\": [\"communicate\", \"detach\", \"files\", \"launcher\", \"observe\", \"terminate\"], \"rootKeys\": [\"cache\", \"config\", \"data\", \"home\", \"state\", \"tmp\", \"work\"], \"preparedConfigurations\": [], \"reconnect\": \"unsupported\", \"providerId\": \"local\", \"endpointKind\": \"local-directory\"}}, \"error\": null, \"operationRef\": \"environment-operation/3edc8c63a28b48419aba575edf8f80bf\", \"evidenceRefs\": []}",
+    "== agents harness list ==",
+    "[\"kilo\"]",
+    "== agents profiles create (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"7cdbccb702864b4ea8b16555f3ac9bfc\", \"command\": \"agents profiles create demo-kilo --name kilo --manifest /tmp/t04b-mech-kilo/manifest.json\", \"status\": \"completed\", \"data\": {\"profileId\": \"demo-kilo\", \"catalogRevision\": 1, \"displayName\": \"kilo\", \"archivedAt\": null, \"currentManifestRef\": {\"environmentNamespace\": \"server\", \"profileId\": \"demo-kilo\", \"manifestRevision\": 1, \"contentDigest\": \"sha256:426bbd3a74f27b7e12235a5b362d762206edc213f667e736d9e94f4592850a7a\"}}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.start (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"start-1\", \"command\": \"call agents.start --input /tmp/t04b-mech-kilo/start.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-start-receipt/1\", \"instanceId\": \"instance-76aae578b8694e0fbad0cfe90e2c625d\", \"operationRef\": \"agent-start/fb36245884394d4c874526d8e610fa8a\", \"state\": \"running\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-76aae578b8694e0fbad0cfe90e2c625d\", \"bindingDigest\": \"sha256:0467c9940d6a671255d65791ad18100542f77be886eca793f37576935250cf3d\"}, \"processEndpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:604704b7169d32235e322cd6\", \"endpointId\": \"endpoint/e725d3367253486080ea1bf91dbe8dd0\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:2a3682d3da2cf72dd47967b132e3935d1661cc943fd585a710b221bd1b2636f1\"}, \"sessionId\": \"ses_ea3d52ff1ffez1RvOh4A8ZrtUF\", \"error\": null}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== sessionId: ses_ea3d52ff1ffez1RvOh4A8ZrtUF",
+    "== launched harness processes ==",
+    "pid=2064414 cmd=node /home/maoqh/.local/bin/kilo acp",
+    "pid=2064421 cmd=/home/maoqh/.local/lib/node_modules/@kilocode/cli/bin/.kilo acp",
+    "== configured provider environment names (value lengths) ==",
+    "{\"KILO_CONFIG_CONTENT\": 368, \"KILO_PROVIDER_KEY\": 51}",
+    "== agents.prompt SKIPPED (mechanics-only run, no model call) ==",
+    "== agents.stop (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"stop-1\", \"command\": \"call agents.stop --input /tmp/t04b-mech-kilo/stop.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"endpoint-operation/1\", \"operationRef\": \"environment-operation/78c04e5804da4ab1ab542d5ecbc01682\", \"status\": \"completed\", \"processEndpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:604704b7169d32235e322cd6\", \"endpointId\": \"endpoint/e725d3367253486080ea1bf91dbe8dd0\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:2a3682d3da2cf72dd47967b132e3935d1661cc943fd585a710b221bd1b2636f1\"}, \"facts\": {\"action\": \"terminate\", \"cancellation\": \"requested\", \"processState\": \"running\"}, \"evidenceRefs\": [], \"error\": null}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.reconcile (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"rec-1\", \"command\": \"call agents.reconcile --input /tmp/t04b-mech-kilo/reconcile.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-process-observation/1\", \"state\": \"exited\", \"observedAt\": \"2026-10-21T01:54:33.751998+00:00\", \"nativeIdentityDigest\": \"sha256:e5190ef4e4b82d6b27a06c74fe19d11ceb26517255ae16bc4b31ed3b8322a49f\", \"exitCode\": -9, \"evidenceRefs\": []}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== environments.process-release (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"prel-1\", \"command\": \"call environments.process-release --input /tmp/t04b-mech-kilo/prelease.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/3e9f66de05f948029101d012c451d8a0\", \"useIdentity\": \"environment-use/59aa9994f39e4089b5496a0b13601a1a\", \"status\": \"completed\", \"resourcePreserved\": true, \"receipt\": {\"processIdentity\": \"local-process/2064414\", \"transportReleased\": true, \"processState\": \"exited\", \"ioState\": \"closed\", \"exitCode\": \"-9\"}, \"exitClaimed\": false}, \"error\": null, \"operationRef\": \"environment-operation/3e9f66de05f948029101d012c451d8a0\", \"evidenceRefs\": []}",
+    "== environments.release (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"rel-1\", \"command\": \"call environments.release --input /tmp/t04b-mech-kilo/release.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/755b8df77f144d5db68ded31d93aea0f\", \"useIdentity\": \"environment-use/59aa9994f39e4089b5496a0b13601a1a\", \"status\": \"completed\", \"resourcePreserved\": true, \"receipt\": {\"useIdentity\": \"environment-use/59aa9994f39e4089b5496a0b13601a1a\", \"environmentIdentity\": \"environment/e047cb3527144ce1901a9be87dcc9f98\", \"generation\": 0, \"resourcePreserved\": true, \"providerFacts\": {\"useIdentity\": \"environment-use/59aa9994f39e4089b5496a0b13601a1a\", \"isolation\": \"none\", \"root\": \"/tmp/t04b-mech-kilo/work\", \"rootPreserved\": true, \"resourcePreserved\": true, \"attempts\": [\"local-use/environment-use/59aa9994f39e4089b5496a0b13601a1a/1\"]}}}, \"error\": null, \"operationRef\": \"environment-operation/755b8df77f144d5db68de",
+    "== server exit code: -15"
+  ],
+  "attemptNumber": null,
+  "attemptsUsed": 1,
+  "realModelCall": false
+}

@@ -1,7 +1,7 @@
 """decision-job/1 validation: closed keys, references and lowered limits."""
 import pytest
 
-from decision_runtime import DecisionError, default_host_limits, validate_job
+from ordessa_decision import DecisionError, default_host_limits, validate_job
 
 
 def job(**overrides):

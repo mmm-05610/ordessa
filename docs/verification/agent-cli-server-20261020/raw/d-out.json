@@ -1,0 +1,1 @@
+{"apiVersion": "agent-tools/1", "requestId": "81c512691f744ddfa444b1f6a3e6747c", "command": "call environments.delete --input /tmp/w4/d.json", "status": "refused", "data": null, "error": {"code": "INVALID_INPUT", "message": "Capability operation did not complete", "retryable": false}, "operationRef": "environment-command/512597efc5e14ee6822634ad0b3e7ecb", "evidenceRefs": []}

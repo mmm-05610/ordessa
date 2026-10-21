@@ -27,8 +27,8 @@ def build_packages_host(*, allowlist, bindings_by_capability, entry_points=None)
 def build_harness_catalog(*,allowlist,bindings_by_provider,entry_points=None):
     """Exact allowlisted SDK factories; configuration is not an execution grant."""
     from importlib.metadata import entry_points as installed_entry_points
-    from ordessa_execution_agents.harness.providers.catalog import HarnessCatalog
-    from ordessa_execution_agents.sdk import HarnessError
+    from ordessa_agents.harness.providers.catalog import HarnessCatalog
+    from ordessa_agents.sdk import HarnessError
     names=tuple(allowlist)
     if not names or len(set(names))!=len(names) or set(names)!=set(bindings_by_provider):
         raise HarnessError('HARNESS_ALLOWLIST_INVALID')
@@ -56,14 +56,16 @@ def build_agent_registry_host(owner,*,invocation_resolver,native_write_guard,pro
     Missing original authorities refuse composition; no grant or endpoint Use is
     manufactured. The product retains owner lifetime outside ephemeral commands.
     """
-    from ordessa_execution_agents.public import InteractionService,ProfileService
-    from ordessa_execution_agents.capability.native import build_native_capability
-    from ordessa_execution_agents.capability.profiles import build_profile_capability
+    from ordessa_agents.public import InteractionService,ProfileService
+    from ordessa_agents.capability.native import build_native_capability
+    from ordessa_agents.capability.profiles import build_profile_capability
     if (type(owner.interactions) is not InteractionService or type(owner.profile_service) is not ProfileService
             or owner.interactions.records is not owner.records or owner.manager.records is not owner.records):
         raise TypeError('single original Agent owner required')
-    capabilities=[build_profile_capability(owner.profile_service,invocation_resolver=invocation_resolver,guard=profile_guard),
-        build_native_capability(owner.interactions,invocation_resolver=invocation_resolver,write_guard=native_write_guard)]
+    from ordessa_agents.capability.agent_group import build_agent_group
+    capabilities=[build_agent_group(
+        build_profile_capability(owner.profile_service,invocation_resolver=invocation_resolver,guard=profile_guard),
+        build_native_capability(owner.interactions,invocation_resolver=invocation_resolver,write_guard=native_write_guard))]
     return CapabilityHost(build_registry(capabilities),('profiles','agents'))
 
 
@@ -84,19 +86,29 @@ def build_agent_registry_runtime(owner,authority,*,context_factory,invocation_re
     return RegistryRuntime(host,authority,context_factory=context_factory,server_id=server_id,close=close)
 
 
-def build_product_registry_runtime(data_root,product,authority,*,context_factory,server_id):
+def build_product_registry_runtime(data_root,product,authority,*,context_factory,server_id,authority_factory=None,deadline_seconds=30.0):
     """Current product -> original root -> original Agent owner -> F1 registry.
 
-    All trusted dependencies must exist before acquiring/creating a root. The
-    returned runtime retains the owner and OS lock; closing revokes SDK access.
-    No core.sqlite is created/adopted or historical schema activated here.
+    Trusted dependencies must be known before acquiring/creating a root. The
+    identity may be supplied directly (controlled host) or built by
+    `authority_factory(root)` *after* the root lock is held — the latter is how the
+    production path creates the instance token file inside a root it owns and
+    nowhere else. The returned runtime retains the owner and OS lock; closing
+    revokes SDK access. No core.sqlite is created/adopted or historical schema
+    activated here.
     """
     from ordessa_server.composition.root_ownership import DataRootOwner
     from ordessa_server.composition.registry_runtime import RegistryRuntime
     from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority
-    if type(authority) is not InstanceAccessAuthority or not callable(context_factory):
+    if authority_factory is not None and authority is not None:
+        raise TypeError('one origin for the original instance authority')
+    if authority_factory is None and type(authority) is not InstanceAccessAuthority:
         raise TypeError('original instance authority/context mapping required')
-    product.require_agent_inputs()
+    if authority_factory is not None and not callable(authority_factory):
+        raise TypeError('callable original instance authority factory required')
+    if not callable(context_factory):
+        raise TypeError('original instance authority/context mapping required')
+    product.require_trusted_startup()
     if type(server_id) is not str or not server_id or len(server_id)>512:
         raise ValueError('original bounded Server identity required')
     root=Path(data_root)
@@ -107,13 +119,16 @@ def build_product_registry_runtime(data_root,product,authority,*,context_factory
         (root/'state').mkdir(mode=0o700,exist_ok=True)
         store=root/'state'/'core.sqlite';child=root/'state'/'agent-owner'/'agent-instances.sqlite'
         binding=root_owner.bind_owned_root(root_path=root,store_path=store,child_path=child)
-        owner=product.assemble_owner(store,binding)
+        live_authority=(authority_factory(root) if authority_factory is not None else authority)
+        if type(live_authority) is not InstanceAccessAuthority:
+            raise TypeError('original instance authority required')
+        owner=product.assemble_owner(store,binding,authority=live_authority)
         capabilities=product.build_capabilities(owner)
         host=CapabilityHost(build_registry(capabilities),tuple(c.descriptor.id for c in capabilities))
         def close():
             try:owner.revoke()
             finally:root_owner.release()
-        runtime=RegistryRuntime(host,authority,context_factory=context_factory,server_id=server_id,close=close)
+        runtime=RegistryRuntime(host,live_authority,context_factory=context_factory,server_id=server_id,close=close,deadline_seconds=deadline_seconds)
         runtime.agent_owner=owner
         return runtime
     except BaseException:

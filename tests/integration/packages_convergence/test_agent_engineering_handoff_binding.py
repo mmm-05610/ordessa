@@ -19,7 +19,7 @@ from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.domain.changes.agent_dispatch import AgentDispatchBinding
 from ordessa_engineering.domain.changes.dispatch_codec import decode_dispatch
 from ordessa_engineering.domain.common.models.values import Digest
-from ordessa_execution_agents.sdk.interactions import InteractionService,InteractionsRefused
+from ordessa_agents.sdk.interactions import InteractionService,InteractionsRefused
 from ordessa_infrastructure.encoding import canonical_bytes
 
 

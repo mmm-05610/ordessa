@@ -9,22 +9,22 @@ import json
 import sqlite3
 
 import pytest
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ActionDescriptor, AdapterContext, ApplicationTarget, Assessment, ConfigurationAdapterDescriptor,
     DesiredFragment, FieldClaim, FieldPath, Installation, IntentSet, IntentSource, InvokeAction,
     Match, SetField, TargetDescriptor, TargetHandle, ValueSchema, VerificationUnknown, VersionRange,
 )
 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
-from ordessa_execution_agents.harness.contracts.models.application import NativeReadback
-from ordessa_execution_agents.harness.contracts.models.application import RuntimeSnapshot
+from ordessa_agents.harness.contracts.models.application import NativeReadback
+from ordessa_agents.harness.contracts.models.application import RuntimeSnapshot
 from ordessa_units.configuration.actions import ActionBatch
 from ordessa_units.configuration.actions import ActionGrant
 from ordessa_units.configuration.actions import ActionInvocation
 from ordessa_units.records.operation_journal import NativeActivationReceipt, OperationJournal
 from ordessa_server.composition.configuration.contributions import CONFIGURATION_POINT
-from ordessa_execution_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
+from ordessa_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
 from ordessa_server.composition.runtime import build_runtime
-from server_plugin_api import Contribution, ContributionBatch, ServerPluginDescriptor, ServerPluginRegistration
+from ordessa_server_plugin_api import Contribution, ContributionBatch, ServerPluginDescriptor, ServerPluginRegistration
 
 TARGET = ApplicationTarget("controlled-server", "canonical-session", "channel", 4)
 SCHEMA = ValueSchema("object", properties=(("level", ValueSchema("string")),), required=("level",))

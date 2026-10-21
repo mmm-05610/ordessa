@@ -1,5 +1,5 @@
 import pytest
-from ordessa_execution_agents.harness.definitions import NativeProfileRef, NativeContinuationRef, NativeCredentialRef
+from ordessa_agents.harness.definitions import NativeProfileRef, NativeContinuationRef, NativeCredentialRef
 from ordessa_harness_claude_code.profile import ClaudeProfileRef, ClaudeContinuationResourceProvider
 from ordessa_harness_claude_code.contracts import ClaudeContinuationV1
 

@@ -22,7 +22,7 @@ from ordessa_server.bootstrap.handshake import (
     emit_listening_handshake,
     loopback_origin,
 )
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     CLI_SERVER_FLAGS_POINT_ID,
     AbsentContribution,
     ServerFlagSpec,
@@ -44,7 +44,7 @@ class PortAllocationFailed(RuntimeError):
 
 
 #: The converters a contributed flag spec may name in its `add` mapping
-#: (`server_plugin_api.ServerFlagSpec` keeps the contract dependency-free
+#: (`ordessa_server_plugin_api.ServerFlagSpec` keeps the contract dependency-free
 #: by NAME, so the host resolves the callables).
 _FLAG_TYPES: "dict[str, Any]" = {"path": Path, "int": int}
 
@@ -137,16 +137,20 @@ class HttpCompositionUnavailable(RuntimeError):
     code = "HTTP_COMPOSITION_UNAVAILABLE"
 
 
-def _runtime_factory():
+def _product_composition():
+    """The one installed product that answers the HTTP entry point (no fallback)."""
     from ordessa_server.composition.product_selection import _resolve_product_composition
     try:
         product = _resolve_product_composition()
     except RuntimeError:
         raise HttpCompositionUnavailable('one installed current HTTP product required') from None
-    prepare = getattr(product, "prepare_http_runtime", None)
-    if not callable(prepare):
+    if not callable(getattr(product, "prepare_http_runtime", None)):
         raise HttpCompositionUnavailable("installed product supplies no current HTTP owner bindings")
-    factory = prepare()
+    return product
+
+
+def _runtime_factory():
+    factory = _product_composition().prepare_http_runtime()
     if not callable(factory):
         raise HttpCompositionUnavailable("installed product supplies no current HTTP runtime factory")
     return factory
@@ -162,21 +166,53 @@ def main(argv=None, *, runtime_factory=None):
     import sys
     from ordessa_server.composition.agent_owner import AgentOwnerUnavailable
     from ordessa_server.composition.registry_runtime import RegistryRuntime
-    used = parser()
+    product = None
+    product_error = None
+    if runtime_factory is None:
+        try:
+            product = _product_composition()
+        except HttpCompositionUnavailable as exc:
+            # Rendering the transport grammar (--help) must not require a product;
+            # serving without one still refuses below, before any root write.
+            product_error = exc
+    used = parser(() if product is None else business_flags(product))
     args = used.parse_args(argv)
     if not 0 <= args.port <= 65535:
         used.error("--port must be between 0 and 65535")
+    plan = None
+    if product is not None:
+        planner = getattr(product, "plan_server_cli", None)
+        if callable(planner):
+            plan = planner(vars(args))
+            if getattr(plan, "error", None):
+                used.error(plan.error)
     try:
-        factory = _runtime_factory() if runtime_factory is None else runtime_factory
+        if runtime_factory is not None:
+            factory = runtime_factory
+        elif plan is not None:
+            factory = getattr(product, plan.method)(*plan.args, **dict(plan.kwargs))
+        else:
+            if product_error is not None:
+                raise product_error
+            factory = _runtime_factory()
         if not callable(factory):
             raise HttpCompositionUnavailable("explicit current HTTP runtime factory required")
     except (HttpCompositionUnavailable, AgentOwnerUnavailable) as exc:
-        print(f"ordessa-server: {exc.code}: current HTTP owner bindings are required", file=sys.stderr)
+        print(f"ordessa-server: {exc.code}: {exc}: current HTTP owner bindings are required", file=sys.stderr)
         return 2
+    except RuntimeError as exc:
+        # Typed composition refusals (data-root lock, ownership identity) keep a
+        # stable message; a traceback is not a refusal a caller can act on.
+        print(f"ordessa-server: {exc}", file=sys.stderr)
+        return 2
+
     root = resolved_data_root(args.data_root)
-    sock = bind_loopback_socket(args.port)
+    sock = None
     runtime = None
     try:
+        # A busy port is a typed refusal, not a traceback: try it inside the
+        # same refusal handling as composition.
+        sock = bind_loopback_socket(args.port)
         runtime = factory(root)
         if type(runtime) is not RegistryRuntime or runtime._closed or not runtime.server_id:
             raise HttpCompositionUnavailable("live current RegistryRuntime with original Server identity required")
@@ -189,14 +225,19 @@ def main(argv=None, *, runtime_factory=None):
         Server(Config(app, log_config=None, lifespan="on", access_log=False)).run(sockets=[sock])
         return 0
     except (HttpCompositionUnavailable, AgentOwnerUnavailable) as exc:
-        print(f"ordessa-server: {exc.code}: current HTTP owner bindings are required", file=sys.stderr)
+        print(f"ordessa-server: {exc.code}: {exc}: current HTTP owner bindings are required", file=sys.stderr)
+        return 2
+    except RuntimeError as exc:
+        # Data-root lock/ownership and port refusals carry their own message.
+        print(f"ordessa-server: {exc}", file=sys.stderr)
         return 2
     finally:
         try:
             if runtime is not None and callable(getattr(runtime, 'close', None)):
                 runtime.close()
         finally:
-            sock.close()
+            if sock is not None:
+                sock.close()
 
 
 if __name__ == "__main__":

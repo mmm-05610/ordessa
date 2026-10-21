@@ -8,7 +8,7 @@ import asyncio
 import json
 
 from ordessa_environments import ProcessHandle, ProcessWaitTimeout
-from ordessa_execution_agents.harness.transport import (
+from ordessa_agents.harness.transport import (
     ProcessChannel, ChannelClosed, RequestTimeout, FramingError,
     WriterLeaseRefused, EffectWriteGuard, EffectWriteRefused, NativeWriteProgress,
 )

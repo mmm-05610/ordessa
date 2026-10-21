@@ -16,7 +16,7 @@ import textwrap
 
 import pytest
 
-from ordessa_execution_agents.harness.transport import (
+from ordessa_agents.harness.transport import (
     ChannelClosed,
     LaunchSpec,
     LostReceipt,
@@ -407,6 +407,6 @@ def test_duplicate_reverse_request_id_is_framing_error() -> None:
     channel = ScriptedChannel([reverse, reverse])
     scripted = GrokBuildAcpClient(channel)
     scripted.next_event()
-    from ordessa_execution_agents.harness.transport import FramingError
+    from ordessa_agents.harness.transport import FramingError
     with pytest.raises(FramingError):
         scripted.next_event()

@@ -82,10 +82,11 @@ const ALLOWED_CHANNELS = ['@ordessa/extension-api', '@ordessa/connections', '@or
 // '../../../../workbench/api/workbench' from contracts/foundation/src.
 const WORKBENCH_API_ROOT = path.join(repoRoot, 'packages/interfaces/channels/workbench/shell/workbench/api')
 // C-01 single-source layout data (nightly B-001): server-bridge/data-root.ts
-// imports the server-owned data_root_layout.json at build time. It is data
-// (not a domain API re-export), stays owned by apps/server, and is kept
-// honest by the cross-language comparison in server-bridge's data-root tests.
-const SERVER_LAYOUT_JSON = path.join(repoRoot, 'apps/server/src/ordessa_server/bootstrap/data_root_layout.json')
+// imports the shared data_root_layout.json at build time. It is data (not a
+// domain API re-export); after the layout contract moved to
+// `ordessa_infrastructure.layout` it stays owned by packages/infrastructure and
+// is kept honest by the cross-language comparison in server-bridge's data-root tests.
+const SHARED_LAYOUT_JSON = path.join(repoRoot, 'packages/infrastructure/src/ordessa_infrastructure/layout/data_root_layout.json')
 
 /** Every *.ts/*.tsx source under packages/interfaces/channels/workbench/**, excluding
  * installed/built output and tests/ directories (a wall test must be allowed
@@ -157,7 +158,7 @@ test('no platform source imports or re-exports a domain carrier path', async () 
         // Whitelisted escapes: the C4 workbench API re-export and the C-01
         // layout data file above; every other relative path must stay inside
         // packages/interfaces/channels/workbench/.
-        if (!insidePlatform(resolved) && !resolved.startsWith(WORKBENCH_API_ROOT + path.sep) && resolved !== SERVER_LAYOUT_JSON) {
+        if (!insidePlatform(resolved) && !resolved.startsWith(WORKBENCH_API_ROOT + path.sep) && resolved !== SHARED_LAYOUT_JSON) {
           violations.push(`${name} references '${specifier}' which resolves outside packages/interfaces/channels/workbench/ (${path.relative(repoRoot, resolved)})`)
         }
       }

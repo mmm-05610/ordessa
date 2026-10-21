@@ -34,7 +34,7 @@ from _sandbox_adapters_helpers import (
     platform_facts,
     target_handle,
 )
-from ordessa_execution_agents.harness.definitions.contracts import (
+from ordessa_agents.harness.definitions.contracts import (
     AdapterContext,
     Assessment,
     ConfigurationAdapter,
@@ -43,7 +43,7 @@ from ordessa_execution_agents.harness.definitions.contracts import (
     Verification,
     VerificationUnknown,
 )
-from server_plugin_api import ServerPluginContext, ServerPluginDescriptor
+from ordessa_server_plugin_api import ServerPluginContext, ServerPluginDescriptor
 
 from ordessa_sandbox_adapters import (
     ADAPTER_PLUGIN_ID,

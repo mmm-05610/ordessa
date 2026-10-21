@@ -301,7 +301,7 @@ BRAND_PINS: Mapping[str, VersionPin] = MappingProxyType({
         harness_id="claude-code",
         native_version="2.1.274",
         adapter_version="0.81.2",
-        native_evidence=f"{BM}:24,52 (packages/execution/agents/src/ordessa_execution_agents/harness/providers/registry_declarations/harnesses.toml:119)",
+        native_evidence=f"{BM}:24,52 (packages/execution/agents/src/ordessa_agents/harness/providers/registry_declarations/harnesses.toml:119)",
         adapter_evidence=f"{BM}:22 (plugins/harness/claude-code/tooling/npm/package.json:14)",
         native_pin_is_machine_enforced=False,
     ),

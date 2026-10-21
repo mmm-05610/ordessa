@@ -18,14 +18,14 @@ from types import SimpleNamespace
 
 import httpx2
 from pydantic_graph import GraphBuilder
-from decision_runtime.definitions import (DecisionQuestion, DecisionAnswer, PolicyRef,
+from ordessa_decision.definitions import (DecisionQuestion, DecisionAnswer, PolicyRef,
     TaskBrief, RunLimits, DecisionRequest, BusinessOutcome, DecisionServices,
     ReadContext, FlowRef, digest, plain)
 from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings
 from ordessa_decision_jev.provider import PROTOCOL_DIAGNOSTICS
-from decision_runtime.runtime import (TrustedFlow, RunContext, run_decision,
+from ordessa_decision.runtime import (TrustedFlow, RunContext, run_decision,
     reviewed_code_digest, flow_digest)
-from decision_runtime.evidence import FileEvidenceSink
+from ordessa_decision.evidence import FileEvidenceSink
 from assignment_source.task_gate import compile_task_gate, reduce_task_gate, _policy
 
 ENDPOINT = 'https://opencode.ai/zen/v1/systemone'

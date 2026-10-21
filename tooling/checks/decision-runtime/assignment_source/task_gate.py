@@ -8,9 +8,9 @@ from collections.abc import Mapping
 import json
 from pathlib import Path
 from urllib.parse import urlsplit, parse_qsl
-from decision_runtime.definitions import (TaskBrief, PolicyRef, DecisionQuestion,
+from ordessa_decision.definitions import (TaskBrief, PolicyRef, DecisionQuestion,
     DecisionAnswer, ExternalRef, canonical, digest, freeze, plain)
-from decision_runtime.runtime import RuntimeFailure
+from ordessa_decision.runtime import RuntimeFailure
 
 class PolicyInvalid(RuntimeFailure):
     def __init__(self): super().__init__('policy_invalid')

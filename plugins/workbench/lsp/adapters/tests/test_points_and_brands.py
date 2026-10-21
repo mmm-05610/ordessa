@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import pytest
-from ordessa_execution_agents.harness.definitions.contracts import AdapterContext, Assessment, \
+from ordessa_agents.harness.definitions.contracts import AdapterContext, Assessment, \
     Installation
-from ordessa_execution_agents.harness.definitions.errors import ContractError, ErrorCode
+from ordessa_agents.harness.definitions.errors import ContractError, ErrorCode
 
 from ordessa_lsp_adapters import (
     BRAND_EVIDENCE,
@@ -131,7 +131,7 @@ class TestCallablePayload:
         assert refusal.code == ErrorCode.INVALID_FRAGMENT
 
     def test_verify_unknown_no_native_readback(self, repo_pins) -> None:
-        from ordessa_execution_agents.harness.definitions.contracts import VerificationUnknown
+        from ordessa_agents.harness.definitions.contracts import VerificationUnknown
         payload = self._payload("claude-code", repo_pins)
         verdict = payload.verify(_context("claude-code", _pin_tuple("claude-code")), {})
         assert isinstance(verdict, VerificationUnknown)

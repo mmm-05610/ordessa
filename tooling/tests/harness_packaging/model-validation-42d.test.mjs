@@ -14,7 +14,7 @@ const script = fileURLToPath(new URL("../../checks/harness/model_validation_42d.
 // continuation test below could only ever fail on a missing import — and it did, silently,
 // for as long as no aggregate ran these files.
 const fakePeer = fileURLToPath(new URL("../../../packages/execution/agents/tests/agents/harness_transport/fake_acp_peer.mjs",import.meta.url))
-const bridge = path.resolve(here, "../../../packages/execution/agents/src/ordessa_execution_agents/harness/transport/vendor/harness_remote/bridge/src/acp-client.js")
+const bridge = path.resolve(here, "../../../packages/execution/agents/src/ordessa_agents/harness/transport/vendor/harness_remote/bridge/src/acp-client.js")
 
 function dryRun(family) {
   const dir = mkdtempSync(path.join(tmpdir(), "agentbox-42d-test-"))

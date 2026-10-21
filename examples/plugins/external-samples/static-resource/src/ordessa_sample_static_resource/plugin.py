@@ -1,7 +1,7 @@
 """External sample #2 — a static resource package.
 
 A minimal third-party Server plugin composed only through the public
-`server_plugin_api` contract. It owns two read-only wire methods,
+`ordessa_server_plugin_api` contract. It owns two read-only wire methods,
 `sample.resources.list` and `sample.resources.get`, and serves one frozen
 JSON document shipped inside its own distribution. It installs without
 Server, Harness or Profile: its only dependency is
@@ -28,7 +28,7 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ServerMethodDescriptor,
     ServerPluginContext,
     ServerPluginDescriptor,

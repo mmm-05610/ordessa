@@ -15,12 +15,12 @@ from types import SimpleNamespace
 import pytest
 
 from test_agent_guarded_bootstrap import setup, PEER
-from ordessa_execution_agents.public import ManagerRefused, Records
-from ordessa_execution_agents.sdk.prepare import (
+from ordessa_agents.public import ManagerRefused, Records
+from ordessa_agents.sdk.prepare import (
     BoundPath, ConfigurationArtifact, PreparedConfigurationRef, MaterialRef,
     SessionBootstrap, canonical_digest,
 )
-from ordessa_execution_agents.sdk.interactions import InteractionService
+from ordessa_agents.sdk.interactions import InteractionService
 from ordessa_environments.definitions.errors import EnvironmentRefused
 
 

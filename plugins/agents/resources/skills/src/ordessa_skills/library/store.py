@@ -16,7 +16,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from ordessa_execution_agents.harness.providers.resolution.artifacts.tree_identity import (runtime_artifact_tree_digest)
+from ordessa_agents.harness.providers.resolution.artifacts.tree_identity import (runtime_artifact_tree_digest)
 
 from ..api.errors import SkillAssetError
 from ..api.identity import ASSET_ID

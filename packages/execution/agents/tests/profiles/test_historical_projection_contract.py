@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     AgentBoxProfileV1,
     exact_historical_envelope,
 )

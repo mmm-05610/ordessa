@@ -1,6 +1,6 @@
 """Plugin registration for the permissions backend (public seam only).
 
-`descriptor()` + `build(context)` speak `server_plugin_api` and nothing else:
+`descriptor()` + `build(context)` speak `ordessa_server_plugin_api` and nothing else:
 the authorizer is contributed as the provided port
 `permissions.authorizer@1`, and the same authority behind the public ACP
 admission port `acp.admission.gate` (T07/G1): composition installs the
@@ -49,7 +49,7 @@ from ordessa_permissions_api import (
     Recorded,
     UnknownApproval,
 )
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ACP_ADMISSION_PORT,
     ContributionOwnerBusyError,
     ServerMethodDescriptor,

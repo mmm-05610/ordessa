@@ -12,7 +12,7 @@ import textwrap
 
 import pytest
 
-from ordessa_execution_agents.harness.transport import (
+from ordessa_agents.harness.transport import (
     ChannelClosed,
     LaunchSpec,
     ProcessChannel,
@@ -106,7 +106,7 @@ def test_l1_close_then_use_is_channel_closed(tmp_path) -> None:
 
 # Wire structures follow upstream SDK source pinned in claude_code.SOURCE_COMMIT.
 # These are fixture-peer protocol checks, not installed Claude/SDK observations.
-from ordessa_execution_agents.harness.transport import ChannelFailure, LostReceipt
+from ordessa_agents.harness.transport import ChannelFailure, LostReceipt
 from ordessa_harness_claude_code.stream_json import ClaudePermissionPending, ClaudeStreamFailure
 
 DUPLEX = textwrap.dedent(r'''

@@ -22,7 +22,7 @@ from ordessa_harness_grok_build.acp_model_facts import DIALECT, NATIVE_TARGET, R
 from ordessa_harness_grok_build.client import (
     GrokBuildAcpClient, GrokBuildAuthenticationRefused, describe,
 )
-from ordessa_execution_agents.harness.definitions.model_compilation import (
+from ordessa_agents.harness.definitions.model_compilation import (
     AdapterContext, ChoiceRequest, Refusal, TargetHandle, Verdict, Assessment,
 )
 

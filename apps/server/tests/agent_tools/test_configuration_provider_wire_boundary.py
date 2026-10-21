@@ -18,12 +18,12 @@ from agent_tools_fixtures.management import setup, node_fixture, explicit_capabi
 
 from ordessa_units.public import unit_services, encode_node_ref, wire_contract
 from ordessa_system_access_bindings import agent_core_methods
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 from agent_tools_fixtures.wire_cli import (
     SECRET, config as service_config, envelope, wire_server, without,
 )
-# The retired ``ordessa_agent_tools`` CLI grammar (nodes/providers subcommands) is
+# The retired ``ordessa_cli`` CLI grammar (nodes/providers subcommands) is
 # no longer imported here; the wire-handler tests below own these boundaries.
 
 

@@ -2,7 +2,7 @@
 
 `host.py` is the one dispatch truth (method registry + stream routes) and the
 plugin lifecycle. Domain plugins live beside it, one module per domain, and
-must only program against `server_plugin_api`.
+must only program against `ordessa_server_plugin_api`.
 """
 from __future__ import annotations
 

@@ -19,7 +19,7 @@ import pytest
 from ordessa_server import __main__ as host_cli
 from ordessa_server_product import cli as product_cli
 from ordessa_server.composition.configuration.product_selection import create_host_product_composition as create_composition
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     CLI_SERVER_FLAGS_API_VERSION,
     CLI_SERVER_FLAGS_POINT_ID,
     Contribution,

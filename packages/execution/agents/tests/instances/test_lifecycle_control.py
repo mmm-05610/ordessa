@@ -5,11 +5,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from ordessa_execution_agents.instances.contracts import InstanceControl
-from ordessa_execution_agents.sdk.endpoint import BoundEndpoint, EndpointValueError
-from ordessa_execution_agents.sdk.instances import AgentInstanceRef, EndpointRef
-from ordessa_execution_agents.sdk.manager import AgentManager, ManagerRefused, Records
-from ordessa_execution_agents.sdk.prepare import LaunchObservation, canonical_digest
+from ordessa_agents.instances.contracts import InstanceControl
+from ordessa_agents.sdk.endpoint import BoundEndpoint, EndpointValueError
+from ordessa_agents.sdk.instances import AgentInstanceRef, EndpointRef
+from ordessa_agents.sdk.manager import AgentManager, ManagerRefused, Records
+from ordessa_agents.sdk.prepare import LaunchObservation, canonical_digest
 
 
 class Authority:
@@ -81,11 +81,11 @@ class _NoGuarded(Member):
 
 
 def control_values(endpoint,instance_id='inst-1'):
-    from ordessa_execution_agents.instances.contracts import InstanceBindingMaterial
-    from ordessa_execution_agents.sdk.harness import HarnessDescriptor
-    from ordessa_execution_agents.profiles import ProfileRevisionRef,encode_revision_ref
-    from ordessa_execution_agents.sdk.interactions import BindingProvenance
-    from ordessa_execution_agents.sdk.prepare import canonical_digest
+    from ordessa_agents.instances.contracts import InstanceBindingMaterial
+    from ordessa_agents.sdk.harness import HarnessDescriptor
+    from ordessa_agents.profiles import ProfileRevisionRef,encode_revision_ref
+    from ordessa_agents.sdk.interactions import BindingProvenance
+    from ordessa_agents.sdk.prepare import canonical_digest
     digest='sha256:'+'a'*64
     profile=ProfileRevisionRef('ns-1','fixture-profile',1,digest)
     harness=HarnessDescriptor('fixture',{'environmentNamespace':'ns-1','definitionId':'fixture','revision':'1'},digest,None,(),())
@@ -298,7 +298,7 @@ def test_cross_principal_collision_refuses_before_effect(tmp_path):
 def test_reserved_after_crash_replays_unknown_without_second_effect(tmp_path):
     manager, records, instance, member = graph(tmp_path)
     invocation = SimpleNamespace(owner_scope=SimpleNamespace(kind='principal', ref='alice'))
-    from ordessa_execution_agents.sdk.prepare import canonical_digest
+    from ordessa_agents.sdk.prepare import canonical_digest
     digest = canonical_digest({'action': 'stop', 'instance': canonical_digest({
         'namespace': instance.namespace, 'instanceId': instance.instance_id}),
         'force': False, 'endpoint': EndpointRef('issuer', 'endpoint-1', 'rev-1',
@@ -390,18 +390,18 @@ def test_completion_never_overwrites_a_newer_control_with_stale_bytes(tmp_path):
         instance, 'stop', request_id='r1', principal_scope='principal:alice',
         request_digest=digest, force=False)
     # Simulate a newer writer control (e.g. a concurrent owner CAS) before completion.
-    from ordessa_execution_agents.instances.contracts import InstanceControl
+    from ordessa_agents.instances.contracts import InstanceControl
     newer = InstanceControl(control.namespace, control.instance_id, control.binding_digest,
                             control.principal_scope, control.endpoint_ref,
                             control.writer_epoch + 1, control.association,
                             control.active_operation_ref, control.active_action)
-    from ordessa_execution_agents.sdk.interactions import _digest_of
+    from ordessa_agents.sdk.interactions import _digest_of
     control_row=records.instance_control(instance)[1]
     newer_payload = {**control_row.payload,'control': newer.projection()}
     records._db.execute(
         "UPDATE operations SET payload=?, request_digest=? WHERE request_id=? AND operation='instance-control'",
         (__import__('json').dumps(newer_payload, sort_keys=True), _digest_of(newer_payload),
-         __import__('ordessa_execution_agents.instances.contracts',
+         __import__('ordessa_agents.instances.contracts',
                     fromlist=['instance_control_key']).instance_control_key(instance)))
     with pytest.raises(ManagerRefused) as stale:
         records.complete_lifecycle(control, control_payload, record, status='completed', payload={})

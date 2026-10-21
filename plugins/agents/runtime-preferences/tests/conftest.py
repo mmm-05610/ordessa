@@ -1,7 +1,7 @@
 """Test path bootstrap: the package under test is NOT pip-installed (the
 write surface of dispatch P-A forbids touching the shared venv); tests insert
-this package's ``src`` on sys.path. Everything else (ordessa_execution_agents.harness.definitions,
-pacthold.harness_kit, server_plugin_api, ordessa_server) resolves from the
+this package's ``src`` on sys.path. Everything else (ordessa_agents.harness.definitions,
+pacthold.harness_kit, ordessa_server_plugin_api, ordessa_server) resolves from the
 standard workspace venv.
 """
 from __future__ import annotations

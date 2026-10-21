@@ -10,7 +10,7 @@ from contextlib import contextmanager
 import pytest
 from test_agent_guarded_bootstrap import setup,PEER
 from ordessa_infrastructure.encoding import canonical_bytes
-from ordessa_execution_agents.sdk.interactions import InteractionService,InteractionsRefused
+from ordessa_agents.sdk.interactions import InteractionService,InteractionsRefused
 from ordessa_engineering.adapters.native_records.agent_execution import AgentExecutionConsumer
 from ordessa_engineering.adapters.persistence.sqlite.engineering_library import EngineeringLibrary
 from ordessa_engineering.adapters.persistence.sqlite.blob_store import SQLiteBlobStore

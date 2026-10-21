@@ -9,7 +9,7 @@ contribution, no invented second registry.
 ## Who admits what (single authority)
 
 * **The platform admits contributions.** `HarnessContributionRegistry` (behind
-  `server_plugin_api.stage_contributions` and the Server plugin host) is the
+  `ordessa_server_plugin_api.stage_contributions` and the Server plugin host) is the
   composition authority: it validates the payload against the point's
   `ConfigurationAdapterDescriptor` contract, refuses duplicate adapter ids,
   `(harness, native-version × adapter-version)` range overlaps, same-facet
@@ -88,7 +88,7 @@ pins are refused (`tests/test_real_point_binding.py`):
 
 ## Published C3 vocabulary and remaining effect boundary
 
-The active public C3 intent DTOs are provided by `ordessa_execution_agents.harness.definitions` (`packages/execution/agents`). A compiled
+The active public C3 intent DTOs are provided by `ordessa_agents.harness.definitions` (`packages/execution/agents`). A compiled
 `set_field` can become a real `SetField` through `to_harness_c3(target=...,
 source=...)` when the caller supplies an authorized target handle and source.
 Missing authority, a foreign facet, or a reset/action without its baseline or

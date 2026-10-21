@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from ordessa_execution_agents.harness.definitions.intents import TargetHandle
+from ordessa_agents.harness.definitions.intents import TargetHandle
 from ordessa_sandbox_api import CodexSandboxConfig, NativeSandboxIntent, \
     ToolCategory
 

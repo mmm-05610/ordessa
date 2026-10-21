@@ -1,6 +1,6 @@
 import { realpathSync, readFileSync } from "node:fs"
 import path from "node:path"
-import { verifyInstalledArtifact } from "../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/providers/resolution/_deployment/native-artifact-policy.mjs"
+import { verifyInstalledArtifact } from "../../../../../../packages/execution/agents/src/ordessa_agents/harness/providers/resolution/_deployment/native-artifact-policy.mjs"
 class LaunchRefusal extends Error { constructor(code) { super(code); this.code=code } }
 function onReadOnlyMount(file, mountInfoText = null) {
   if (process.platform !== "linux") return false

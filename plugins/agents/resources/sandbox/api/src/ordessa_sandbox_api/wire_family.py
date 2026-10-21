@@ -2,7 +2,7 @@
 
 Contracts §C4: "错误须映射至既有 wire family，不修改核心错误分支". Every one of
 the six stable codes in `SandboxErrorCode` resolves here to one of the twelve
-families the platform already publishes — `server_plugin_api.wire_errors.FAMILIES`.
+families the platform already publishes — `ordessa_server_plugin_api.wire_errors.FAMILIES`.
 No row invents a family name and nothing in this module touches (or branches
 inside) the platform's own error handling; the mapping is sandbox-side and
 purely additive.
@@ -11,7 +11,7 @@ Derivation of each row (never a new family): each value is either a family
 name the platform table answers for itself, or the family a same-shaped
 existing platform row already answers with — the guard test
 ``tests/test_wire_family.py`` re-checks every row against
-``server_plugin_api.wire_errors.family_for`` / ``converge_family`` /
+``ordessa_server_plugin_api.wire_errors.family_for`` / ``converge_family`` /
 ``WireError`` at test time. §C4 forbids merging the `unsupported` and
 `unknown` verdicts into one *code* (a missing probe must not read like a
 documented limit); codes may share a family only where the platform
@@ -26,7 +26,7 @@ validation only (errors.py's own comment), never a wire refusal, and asking
 for its family is an unmapped-input error.
 
 This package stays stdlib-only (its import-boundary guard forbids importing
-`server_plugin_api` in src): the platform's own resolver — the one-argument
+`ordessa_server_plugin_api` in src): the platform's own resolver — the one-argument
 callable a composition injects, per `wire_errors.FamilyResolver` — is
 therefore accepted as an *optional* `resolver` argument, so a host can have
 the answer confirmed by its live composition table while the standalone
@@ -40,13 +40,13 @@ from enum import Enum
 from .errors import SandboxApiError, SandboxErrorCode
 
 #: What a composition injects for family resolution (mirrors
-#: `server_plugin_api.wire_errors.FamilyResolver`, typed locally to keep the
+#: `ordessa_server_plugin_api.wire_errors.FamilyResolver`, typed locally to keep the
 #: stdlib-only import boundary).
 FamilyResolver = Callable[[str], str]
 
 #: The six stable sandbox codes -> the EXISTING wire/1 family each lands in.
 #: Keys are the code spellings (the wire/`details.internalCode` vocabulary),
-#: values are members of `server_plugin_api.wire_errors.FAMILIES`:
+#: values are members of `ordessa_server_plugin_api.wire_errors.FAMILIES`:
 #:
 #: - SANDBOX_NATIVE_UNSUPPORTED   -> CAPABILITY_UNSUPPORTED
 #:       documented limit: the brand offers no native sandbox here.

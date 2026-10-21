@@ -5,8 +5,8 @@ Profile catalog and Invocation issuer with controlled provider/owner ports.
 No native harness process or model is started.
 """
 from __future__ import annotations
-from ordessa_execution_agents.profiles import encode_revision_ref
-from ordessa_execution_agents.profiles import decode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import decode_revision_ref
 
 import json
 import hashlib
@@ -24,9 +24,9 @@ from ordessa_units.public import (
     unit_services,
     encode_node_ref,
 )
-from ordessa_execution_agents.harness.providers.registry.contributions import RUNTIME_METHODS
+from ordessa_agents.harness.providers.registry.contributions import RUNTIME_METHODS
 from ordessa_infrastructure.encoding.immutable_json import safe_json
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 from agent_tools_fixtures.assembly import assembly as assembly_fixture
 from agent_tools_fixtures.node_publication import Provider, setup as node_fixture  # register transitive fixture dependency

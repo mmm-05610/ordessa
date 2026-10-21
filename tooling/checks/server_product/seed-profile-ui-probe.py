@@ -44,12 +44,12 @@ def seed(client,*,namespace,first,next_content,request_prefix):
     if (type(namespace) is not str or not namespace.startswith('ordessa-profile-ui-')
             or not re.fullmatch(r'[a-z][a-z0-9._-]{0,63}',namespace) or type(request_prefix) is not str or not re.fullmatch(r'[a-z][a-z0-9._-]{0,49}',request_prefix)):
         raise ValueError('explicit disposable namespace and stable request prefix required')
-    capabilities=client.profile_capabilities(request_prefix+'-capabilities','profiles.create')
+    capabilities=client.profile_capabilities(request_prefix+'-capabilities','agents.profiles.create')
     if capabilities['environmentNamespace']!=namespace:
         raise ValueError('Profile namespace differs from explicit disposable scope')
     outputs=[]
     for suffix,content in (('current',first),('next',next_content)):
-        value=client.invoke('profiles.create',{'profileId':'ui-'+suffix,'displayName':'UI '+suffix+' probe',
+        value=client.invoke('agents.profiles.create',{'profileId':'ui-'+suffix,'displayName':'UI '+suffix+' probe',
             'manifest':content},request_prefix+'-'+suffix)
         if value['status']!='completed':return {'status':value['status'],'completedProfiles':len(outputs),'modelCalls':0}
         entry=value['data']

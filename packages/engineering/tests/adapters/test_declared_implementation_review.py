@@ -6,7 +6,7 @@ import asyncio
 
 import pytest
 
-from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref
+from ordessa_agents.profiles import ProfileRevisionRef, encode_revision_ref
 from ordessa_engineering.adapters.declared_implementation_review import (
     DeclaredImplementationReviewBindings,
 )

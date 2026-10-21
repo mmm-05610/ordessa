@@ -33,7 +33,7 @@ def test_capability_table_refuses_enforcement_on_every_graded_brand():
 
 def test_projection_payload_schema_admits_only_observational():
     from ordessa_extensions.adapters.contribution import build_payload_schema
-    from ordessa_execution_agents.harness.definitions import ContractError
+    from ordessa_agents.harness.definitions import ContractError
     schema = build_payload_schema()
     hook = dict(hookId="h", event="SessionStart", matcher=None,
                 actionKind="command", command=["echo"], handlerRef=None,

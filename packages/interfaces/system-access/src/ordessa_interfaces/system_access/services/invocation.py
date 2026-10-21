@@ -2,7 +2,7 @@
 
 The one dispatch table is the plugin host's method registry: every method's
 shape, handler, availability and owner travel as one atomic descriptor
-(`server_plugin_api.ServerMethodDescriptor`), and `dispatch`/`hello` read
+(`ordessa_server_plugin_api.ServerMethodDescriptor`), and `dispatch`/`hello` read
 only from this registry — there is no second method table anywhere in the
 Server. The host owns exactly one row's logic: the `server.hello` envelope
 (`serverId`, `protocolVersion`, `capabilities`, `auth`) and the aggregation of
@@ -14,7 +14,7 @@ business method arrives through a plugin — see
 `ordessa_server_compat.core_wire` for the compatibility core's frozen list.
 
 The param-shape helpers are the wire's shared vocabulary and they live in the
-contract package (`server_plugin_api.wire_shape`): plugins import them from
+contract package (`ordessa_server_plugin_api.wire_shape`): plugins import them from
 there, and so does this module — one implementation, so a frozen refusal
 string can never drift between the host's wall and a plugin's handler. The
 domain-shape validators that only the compatibility core raises
@@ -32,12 +32,12 @@ from asyncio import CancelledError
 
 from ordessa_interfaces.system_access.access_control.authentication import AccessError
 
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 from .discovery import ALWAYS_PRESENT_EMPTY_LIST
 from ordessa_interfaces.system_access.subscriptions.cursors import CursorCodec
 from ordessa_interfaces.system_access.contracts.transport import WIRE_VERSION
-from server_plugin_api.wire_errors import WireError
-from server_plugin_api.wire_shape import (
+from ordessa_server_plugin_api.wire_errors import WireError
+from ordessa_server_plugin_api.wire_shape import (
     bounded as _bounded,
     request_id as _request_id,
     require as _require,
@@ -271,7 +271,7 @@ class WireService:
         self.acp_admission_gate = acp_admission_gate
         # The host-owned discovery method; every other row arrives through a
         # plugin's registration (order preserved by the product composition).
-        from server_plugin_api import ServerMethodDescriptor
+        from ordessa_server_plugin_api import ServerMethodDescriptor
 
         self._registry.register(ServerMethodDescriptor(
             method_id="server.hello",
@@ -311,7 +311,7 @@ class WireService:
 
     def replace_handler(self, method_id: str, handler: Callable) -> None:
         """Rebind one plugin-owned method on the live registry."""
-        from server_plugin_api import ServerMethodDescriptor
+        from ordessa_server_plugin_api import ServerMethodDescriptor
 
         descriptor = self._registry.lookup(method_id)
         owner = self._require_plugin_owner(method_id)
@@ -326,7 +326,7 @@ class WireService:
     def amend_shape(self, method_id: str, *, required: "frozenset[str] | set[str]",
                     optional: "frozenset[str] | set[str]") -> None:
         """Re-declare one plugin-owned param shape on the live registry."""
-        from server_plugin_api import ServerMethodDescriptor
+        from ordessa_server_plugin_api import ServerMethodDescriptor
 
         descriptor = self._registry.lookup(method_id)
         owner = self._require_plugin_owner(method_id)

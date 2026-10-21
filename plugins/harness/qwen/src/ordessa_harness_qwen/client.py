@@ -4,7 +4,7 @@ The former direct HTTP transport consumer is retired. This provider
 never starts a process, reads login state, owns a Unit/session ledger or answers
 permissions. Native HTTP/SSE bootstrap is unavailable; it is never relabelled as ACP.
 """
-from ordessa_execution_agents.sdk import (HarnessDescriptor,HarnessError,PrepareContext,
+from ordessa_agents.sdk import (HarnessDescriptor,HarnessError,PrepareContext,
     ProfileContent,LaunchPlan)
 from .native_channel import compile_config,ConfigRefusal
 

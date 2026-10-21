@@ -131,7 +131,7 @@ class AgentLifecycle:
     def _owner(self, ref, node, action):
         if action not in ("stop", "release") or not self._manager_bound():
             raise UnitGuaranteeUnavailable("original Unit Manager stop owner required")
-        from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessAdmission
+        from ordessa_agents.harness.providers.registry.definition_admission import HarnessAdmission
         binding = node["binding"]
         admitted = HarnessAdmission(self._environment).describe_for_cleanup(
             binding["harnessDefinitionRef"], binding["harnessProviderRef"])

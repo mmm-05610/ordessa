@@ -4,7 +4,7 @@ No Unit/provider ledger, direct client, permission lease or ACP translation:
 the harness supplies its own correlation id encoder, and the owner only guards
 the physical write and observes the matching response.
 """
-from ordessa_execution_agents.sdk import HarnessDescriptor,HarnessError,PrepareContext,ProfileContent,LaunchPlan
+from ordessa_agents.sdk import HarnessDescriptor,HarnessError,PrepareContext,ProfileContent,LaunchPlan
 from dataclasses import dataclass
 from .native_channel import compile_config,ConfigRefusal,ISOLATION_FLAGS
 from .rpc_frames import encode_request
@@ -121,7 +121,7 @@ class PiPromptHandler:
         self._messages = {}
 
     def encode_prompt(self, session_id, params_bytes, operation_ref):
-        from ordessa_execution_agents.sdk.native_prompt import prompt_text
+        from ordessa_agents.sdk.native_prompt import prompt_text
         text = prompt_text(params_bytes)
         return encode_request(str(operation_ref), 'prompt', {'message': text})
 

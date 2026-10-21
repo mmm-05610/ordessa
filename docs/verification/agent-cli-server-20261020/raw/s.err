@@ -1,0 +1,4 @@
+ordessa-server: data root /tmp/w13/root
+ordessa-server: instance token /tmp/w13/root/secrets/http-token (generated, 0600)
+ordessa-server: capabilities agents, environments, decisions
+ordessa-server: harness admitted kilo, pi, claude, codex, hermes, dsh

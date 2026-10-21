@@ -16,7 +16,7 @@ WHY THIS EXISTS (measurement, recorded before any code change; full evidence:
   ``Installation("test-external", (1, 0, 0), (1, 0, 0), "fixture:installed")``
   (``plugins/harness/tests/fixtures/external_adapter/src/ordessa_test_external_adapter/__init__.py:67-69``),
   whose harness id matches none of the codex/claude/pi descriptors. The
-  ``harnesses.toml`` identity versions (``packages/execution/agents/src/ordessa_execution_agents/harness/providers/registry_declarations/harnesses.toml``,
+  ``harnesses.toml`` identity versions (``packages/execution/agents/src/ordessa_agents/harness/providers/registry_declarations/harnesses.toml``,
   e.g. codex ``version = "2.0"``) are *native* pins; none is an observed
   runtime-adapter version.
 * The Sandbox facet declared exactly ``(0, 1, 0)`` — its own release fact
@@ -51,14 +51,14 @@ from contextlib import contextmanager
 from pathlib import Path
 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
 from ordessa_units.records.operation_journal import OperationJournal
-from ordessa_execution_agents.harness.contracts.models.application import RuntimeSnapshot
-from ordessa_execution_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.contracts.models.application import RuntimeSnapshot
+from ordessa_agents.harness.configuration.materialization import MergeAuthority, TargetAuthority
+from ordessa_agents.harness.definitions import (
     AdapterContext, AdapterRefusal, ApplicationTarget, Assessment,
     ConfigurationAdapterDescriptor, DesiredFragment, ErrorCode, Installation,
     Refused, TargetDescriptor, TargetHandle, ValueSchema, VersionRange,
 )
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     AbsentContribution, Contribution, ContributionBatch,
     ServerPluginDescriptor, ServerPluginRegistration,
 )
@@ -113,7 +113,7 @@ def _permissions_codex_descriptor() -> ConfigurationAdapterDescriptor:
             ("approval_policy", ValueSchema("string", enum=("untrusted", "on-request"))),
         ),
         required=())
-    from ordessa_execution_agents.harness.definitions import FieldClaim
+    from ordessa_agents.harness.definitions import FieldClaim
     return ConfigurationAdapterDescriptor(
         "permissions.policy-adapter.codex", "v1", "permissions.policy-adapters",
         "v1", "codex", VersionRange((2, 0, 0), (2, 0, 0)),
@@ -288,7 +288,7 @@ class _PermissionsShapedStubPlugin:
         return ServerPluginDescriptor(self.PLUGIN_ID, "t020 permissions mirror", "0.1.0")
 
     def build(self, context):
-        from ordessa_execution_agents.harness.definitions import FieldClaim
+        from ordessa_agents.harness.definitions import FieldClaim
         perm_range = _permissions_declared_adapter_versions()
         claude = ConfigurationAdapterDescriptor(
             "permissions.policy-adapter.claude-code", "v1", "permissions.policy-adapters",

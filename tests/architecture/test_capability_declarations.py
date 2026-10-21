@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import harness_capabilities as caps
+from ordessa_agents.harness.definitions import harness_capabilities as caps
 from ordessa_harness_codex import production as codex_production
 from ordessa_harness_claude_code import production as claude_code_production
 from ordessa_harness_kilo import production as kilo_production
@@ -45,10 +45,10 @@ from ordessa_harness_opencode import production as opencode_production
 from ordessa_harness_pi import production as pi_production
 from ordessa_server.composition.selected_harness_catalog import capture_selected_harness_catalog
 from functools import partial
-from ordessa_execution_agents.harness.providers.declarations.capability_claims import capability_claims
+from ordessa_agents.harness.providers.declarations.capability_claims import capability_claims
 _CAPTURED_CATALOG = capture_selected_harness_catalog()
 registry_capabilities = partial(capability_claims, _CAPTURED_CATALOG.registry)
-from ordessa_execution_agents.harness.providers.declarations.loader import load_registry
+from ordessa_agents.harness.providers.declarations.loader import load_registry
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[2] / 'plugins' / 'harness'
 def _captured_js_projection():
@@ -385,7 +385,7 @@ def _production_claims(family: str) -> dict:
 
 def test_the_registry_schema_takes_its_vocabulary_from_the_canonical_contract():
     """`_CAPS` 不再是一份手写副本，而是 canonical 合同的封闭集合。"""
-    from ordessa_execution_agents.harness.providers.declarations import schema
+    from ordessa_agents.harness.providers.declarations import schema
 
     assert schema._CAPS == frozenset(caps.CANONICAL_CAPABILITY_IDS)
     assert len(schema._CAPS) == len(caps.CANONICAL_CAPABILITY_IDS)

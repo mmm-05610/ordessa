@@ -23,7 +23,7 @@ the control seam: the vertical is PARTIAL (freeze s3/s6), evidenced with
 controlled fixtures, never with a fabricated success.
 """
 from __future__ import annotations
-from ordessa_execution_agents.profiles.definitions.codec import encode_content, encode_revision_ref
+from ordessa_agents.profiles.definitions.codec import encode_content, encode_revision_ref
 
 import hashlib
 from collections.abc import Mapping
@@ -36,9 +36,9 @@ from ordessa_units.definitions.operations import (
 from ordessa_units.definitions.staged_operations import OperationRecipePhase, StagedOperationRecord
 
 from ordessa_units.bindings.assembly import hashed, plain, public_parameters
-from ordessa_execution_agents.profiles.definitions.models import ProfileRevision, ProfileRevisionRef
-from ordessa_execution_agents.profiles.definitions.codec import decode_content
-from ordessa_execution_agents.profiles.definitions.validation import ProfileValidationError, canonical_content
+from ordessa_agents.profiles.definitions.models import ProfileRevision, ProfileRevisionRef
+from ordessa_agents.profiles.definitions.codec import decode_content
+from ordessa_agents.profiles.definitions.validation import ProfileValidationError, canonical_content
 from ordessa_units.bindings.publication import IDENTITIES, _hash, _request_ref, _same_reference, decode_node_ref, encode_node_ref
 from ordessa_units.bindings.preparation_effects import FixedEffectScope, PreparationEffectPlan, verify_preparation_effect
 

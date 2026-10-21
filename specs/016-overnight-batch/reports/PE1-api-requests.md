@@ -11,7 +11,7 @@ permissions 侧回填;因包写入面仅 `plugins/permissions/**` 与 `reports/`
 - 端口名:`permissions.authority.query@1`(api 常量 `AUTHORITY_QUERY_PORT`;
   backend 常量 `AUTHORITY_PORT`,守卫测试钉死两处字面量不可漂移)。
 - 载体:`PermissionsAuthority`(backend),经 `PermissionsBackendPlugin.build`
-  的 `provided_ports` 注册——`server_plugin_api` Contribution 形态,core 无需改动
+  的 `provided_ports` 注册——`ordessa_server_plugin_api` Contribution 形态,core 无需改动
   即可经宿主端口表取用(PE1-3)。
 - 进程内契约:`ordessa_permissions_api.PermissionsAuthorityQueryPort`(Protocol,
   五方法:`effective_for_operation` / `effective_for_session` /

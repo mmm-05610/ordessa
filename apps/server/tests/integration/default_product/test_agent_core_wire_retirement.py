@@ -5,7 +5,7 @@ import importlib.util
 import sqlite3
 
 import pytest
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 from ordessa_server.composition.configuration.product_selection import create_host_product_composition as create_composition
 

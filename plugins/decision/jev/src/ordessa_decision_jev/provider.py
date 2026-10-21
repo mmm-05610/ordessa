@@ -16,9 +16,9 @@ from typesafe_sdk import (
     Usage, TypeSafeAuthenticationError, TypeSafePermissionDeniedError,
     TypeSafeAPIResponseValidationError, TypeSafeError, __version__,
 )
-from decision_runtime.definitions.values import canonical_bytes, digest_hex, plain, name
-from decision_runtime.definitions.models import DecisionQuestion, DecisionAnswer
-from decision_runtime.ports import ModelCallContext
+from ordessa_decision.definitions.values import canonical_bytes, digest_hex, plain, name
+from ordessa_decision.definitions.models import DecisionQuestion, DecisionAnswer
+from ordessa_decision.ports import ModelCallContext
 
 PROTOCOL_VERSION = 'jev-protocol/2'
 #: The official free route pins a model but echoes the *alias* in the response.

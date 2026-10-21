@@ -1,4 +1,4 @@
-import { configurationDigest, jsonDigest, stableJSON } from "../../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/digest.mjs"
+import { configurationDigest, jsonDigest, stableJSON } from "../../../../../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/digest.mjs"
 
 export const PROVIDER_REGISTER = '_ordessa/session/configuration/provider-register'
 

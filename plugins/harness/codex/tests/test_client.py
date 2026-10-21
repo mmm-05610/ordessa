@@ -14,7 +14,7 @@ import json
 
 import pytest
 
-from ordessa_execution_agents.harness.transport import (
+from ordessa_agents.harness.transport import (
     ChannelClosed,
     LaunchSpec,
     LostReceipt,
@@ -207,7 +207,7 @@ class ScriptedChannel:
         self.sent.append(raw)
 
     def next_message(self, *, timeout):
-        from ordessa_execution_agents.harness.transport import Message
+        from ordessa_agents.harness.transport import Message
         if not self.messages:
             raise ChannelClosed("controlled disconnect")
         return Message(self.messages.popleft())
@@ -411,7 +411,7 @@ def test_command_once_detached_hook_payload_cannot_change_native_dispatch(client
 
 
 def test_command_once_timeout_retains_original_id_and_query_does_not_send():
-    from ordessa_execution_agents.harness.transport import Message
+    from ordessa_agents.harness.transport import Message
     class Channel:
         def __init__(self): self.sent=[];self.response=None
         def send_frame(self,wire,*,before_write): before_write();self.sent.append(json.loads(wire))

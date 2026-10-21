@@ -14,7 +14,7 @@ from ordessa_server.composition.selected_harness_catalog import capture_selected
 
 REPO = Path(__file__).resolve().parents[5]
 TOML = capture_selected_harness_catalog().registry_bytes.decode("utf-8")
-SCHEMA = REPO / "packages/execution/agents/src/ordessa_execution_agents/harness/providers/declarations/schema.py"
+SCHEMA = REPO / "packages/execution/agents/src/ordessa_agents/harness/providers/declarations/schema.py"
 HM = REPO / "docs/implementation/design/prompts/harness-adapters.md"
 
 

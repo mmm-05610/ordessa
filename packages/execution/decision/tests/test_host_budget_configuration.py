@@ -4,10 +4,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from decision_runtime import DecisionError, DecisionRunner, FilesystemEvidenceStore, RulesOutcome, default_host_limits
-from decision_runtime.capability import build_capability
-from decision_runtime.evidence import EvidenceScope
-from decision_runtime.settings import DecisionsSettings
+from ordessa_decision import DecisionError, DecisionRunner, FilesystemEvidenceStore, RulesOutcome, default_host_limits
+from ordessa_decision.capability import build_capability
+from ordessa_decision.evidence import EvidenceScope
+from ordessa_decision.settings import DecisionsSettings
 
 
 class _Engine:

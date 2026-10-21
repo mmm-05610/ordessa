@@ -31,7 +31,7 @@ cross-language exact-equality guard over RefusalCode, kept green by not touching
 [2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
 [2m      Tests [22m [1m[32m28 passed[39m[22m[90m (28)[39m
 
-== mapping table (values verified subset of server_plugin_api.FAMILIES before printing) ==
+== mapping table (values verified subset of ordessa_server_plugin_api.FAMILIES before printing) ==
 code                              family                  static_row / family_for answer (derivation source)
 APPROVAL_NOT_ACTIONABLE           APPROVAL_INVALID        family_for=UNAVAILABLE (fall-through refined by contributed row)
 APPROVAL_RESULT_UNKNOWN           OUTCOME_UNKNOWN         family_for=UNAVAILABLE (fall-through refined by contributed row)

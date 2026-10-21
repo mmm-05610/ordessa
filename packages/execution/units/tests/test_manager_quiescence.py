@@ -4,7 +4,7 @@ from threading import Event, Thread
 import pytest
 import os
 
-from ordessa_execution_agents.harness.transport import WriterLeaseRefused
+from ordessa_agents.harness.transport import WriterLeaseRefused
 from ordessa_units.admission.invocation import InvocationAuthorityRefused
 from ordessa_units.errors import UnitApiRefused
 

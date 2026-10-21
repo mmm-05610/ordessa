@@ -7,8 +7,8 @@ existing schema tests; this file pins the surface and the reference validation.
 """
 import pytest
 
-from ordessa_execution_agents import public
-from ordessa_execution_agents.profiles import (
+from ordessa_agents import public
+from ordessa_agents.profiles import (
     ConfigurationDeclaration, Profile, ProfileContent, ProfileRevision, ProfileRevisionRef,
     ProfileService, ProfileStorePort, canonical_content, content_digest, decode_content,
     decode_profile, decode_revision, decode_revision_ref, encode_content, encode_profile,
@@ -32,7 +32,7 @@ def test_public_surface_is_import_only_and_exports_the_frozen_names():
         'InteractionService', 'AgentStartRequest', 'AgentStartReceipt', 'PreparedAgentContext', 'HarnessCatalog',
         'FrozenNativeRequest', 'NativeOperationRef', 'NativeOperationReceipt', 'NativeWriteBinding']
     # DESIGN §15 adds these exact native values; they retain their sole owner.
-    from ordessa_execution_agents.sdk import native_contracts
+    from ordessa_agents.sdk import native_contracts
     for name in ('FrozenNativeRequest','NativeOperationRef','NativeOperationReceipt','NativeWriteBinding'):
         assert getattr(public,name) is getattr(native_contracts,name)
     assert isinstance(public.AGENT_CONTRACT_VERSION, str) and public.AGENT_CONTRACT_VERSION

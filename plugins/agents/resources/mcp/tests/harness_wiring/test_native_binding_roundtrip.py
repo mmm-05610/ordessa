@@ -11,7 +11,7 @@ REAL ``ValueSchema``/``SetField``/``IntentSet`` types.
 import dataclasses
 
 import pytest
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ContractError, FieldPath, IntentSet, IntentSource, SetField, TargetHandle,
 )
 from wiring_helpers import CANARY, claude_planned
@@ -79,7 +79,7 @@ def test_undeclared_field_injection_refused_by_closed_object():
 
 
 def test_plaintext_secret_key_refused_by_validate_json():
-    from ordessa_execution_agents.harness.definitions import validate_json
+    from ordessa_agents.harness.definitions import validate_json
 
     planned = claude_planned()
     payload = nb.facet_payload_of(planned)
@@ -134,7 +134,7 @@ def test_assessment_mapping_never_upgrades_unproven_supported():
 
 
 def test_refusal_mapping_covers_every_error_code():
-    from ordessa_execution_agents.harness.definitions import ErrorCode, Refused
+    from ordessa_agents.harness.definitions import ErrorCode, Refused
 
     for code in ErrorCode:
         error = nb.refused_to_mcp_error(Refused(code, ("d",), True))

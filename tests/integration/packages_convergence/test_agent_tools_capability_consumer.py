@@ -14,7 +14,7 @@ from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority,AccessGrant
 from ordessa_server.composition.registry_runtime import RegistryRuntime
 from ordessa_server.composition.agent_bindings.profile_access import OriginalProfileAccess
-from ordessa_execution_agents.capability.profiles import build_profile_capability
+from ordessa_agents.capability.profiles import build_profile_capability
 from apps.cli.tests.integration.profile_test_owner import profile_owner
 
 
@@ -32,7 +32,7 @@ def test_ui_seed_requires_disposable_scope_uses_only_current_profiles_and_no_nat
     pin={'environmentNamespace':ns,'definitionId':'fixture','revision':'1'}
     original=profile_owner(tmp_path/'seed.sqlite',ns,'principal:seed',Policy(),pin)
     scope=Scope('fixture-realm','fixture-project');token='synthetic-seed-token'
-    issuer=InstanceAccessAuthority(lambda:token,principal_id='seed',grants=(AccessGrant(scope,('profiles.capabilities','profiles.create')),),legacy_principal=None)
+    issuer=InstanceAccessAuthority(lambda:token,principal_id='seed',grants=(AccessGrant(scope,('agents.profiles.capabilities','agents.profiles.create')),),legacy_principal=None)
     caller=[issuer.authenticate('Bearer '+token)];invocation=object()
     access=OriginalProfileAccess(issuer,caller_resolver=lambda v:caller[0] if v is invocation else None,
         scope_for_service=lambda service:scope if service is original.service else None,
@@ -41,8 +41,8 @@ def test_ui_seed_requires_disposable_scope_uses_only_current_profiles_and_no_nat
     host=CapabilityHost(build_registry([capability]),('profiles',));calls=[]
     class Client:
         def profile_capabilities(self,key,required):
-            calls.append('profiles.capabilities')
-            value=asyncio.run(host.call('profiles.capabilities',{},RequestContext({},key)))
+            calls.append('agents.profiles.capabilities')
+            value=asyncio.run(host.call('agents.profiles.capabilities',{},RequestContext({},key)))
             assert value.status=='completed' and required in value.data['supportedMethods'],value.error
             return value.data
         def invoke(self,op,inputs,key):
@@ -61,5 +61,5 @@ def test_ui_seed_requires_disposable_scope_uses_only_current_profiles_and_no_nat
         before=original.service._profile_store._conn.total_changes
         assert module.seed(Client(),namespace=ns,first=first,next_content=second,request_prefix='seed')==result
         assert original.service._profile_store._conn.total_changes==before
-        assert set(calls)=={'profiles.capabilities','profiles.create'}
+        assert set(calls)=={'agents.profiles.capabilities','agents.profiles.create'}
     finally:original.close()

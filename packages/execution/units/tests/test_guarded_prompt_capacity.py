@@ -12,7 +12,7 @@ import pytest
 # Initialize the public Units surface before importing contracts whose package
 # initializers revisit the API/reservation modules.
 from ordessa_units.public import decode_node_ref
-from ordessa_execution_agents.harness.transport import EffectWriteGuard, EffectWriteRefused
+from ordessa_agents.harness.transport import EffectWriteGuard, EffectWriteRefused
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_units.definitions.operations import OperationIntent, StepIntent
 from ordessa_units.records import AcpEvidenceCapacityRefused, OperationJournal, UnitRecords

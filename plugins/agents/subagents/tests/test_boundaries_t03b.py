@@ -95,12 +95,12 @@ FORBIDDEN_IMPORT_PREFIXES: tuple[str, ...] = (
 #: root to be *really imported* — so the list stays exactly as wide as the code.
 PUBLISHED_CONTRACT_PACKAGES: dict[str, str] = {
     #: Harness definitions are owned by the Execution agents distribution.
-    "ordessa_execution_agents.harness.definitions": "ordessa-execution-agents",
+    "ordessa_agents.harness.definitions": "ordessa-execution-agents",
     #: Q5's `permissions-api` checkpoint: the ceiling adjudication DTOs.
     "ordessa_permissions_api": "ordessa-permissions-api",
     #: Foundation's server plugin API: the descriptor `plugin.py`/`wire.py`
     #: register through (SR-7). Same allowance Q5's sandbox carries.
-    "server_plugin_api": "ordessa-server-plugin-api",
+    "ordessa_server_plugin_api": "ordessa-server-plugin-api",
 }
 
 #: Sibling-plugin *implementation* packages tolerated at their public top level
@@ -164,7 +164,7 @@ ALLOWED_NON_STDLIB_TOP_LEVEL: frozenset[str] = PRODUCTION_ALLOWED_TOP_LEVEL
 #: this list: the test scope's licence for it is carried by the entry below, not
 #: by removing it here.
 ALWAYS_FORBIDDEN_TOP_LEVEL: frozenset[str] = frozenset({
-    "ordessa_execution_agents",      # only the exact public definitions subtree is licensed
+    "ordessa_agents",      # only the exact public definitions subtree is licensed
     "pacthold.harness_kit",          # retired Harness implementation
     "ordessa_execution_api", "ordessa_server", "ordessa_server_compat", "ordessa_server_product",
     "pacthold", "ordessa_workspace", "ordessa_profile",
@@ -608,11 +608,11 @@ def test_the_forbidden_prefix_scan_reports_every_listed_prefix():
     assert blind == [], "the forbidden list is decorative for: " + ", ".join(blind)
     # negative control: legitimate imports must not be reported
     assert _forbidden_import_hits("import json\nfrom .dto import AgentDefinition\n") == []
-    assert _forbidden_import_hits("import server_plugin_api.internal_errors\n") == [], (
-        "the published server_plugin_api contract root is not forbidden")
+    assert _forbidden_import_hits("import ordessa_server_plugin_api.internal_errors\n") == [], (
+        "the published ordessa_server_plugin_api contract root is not forbidden")
     # the distinction the SR-13 change turns on: the *published* harness API is
     # allowed, the harness package's own modules are not
-    assert _forbidden_import_hits("from ordessa_execution_agents.harness.definitions import IntentSet\n") == []
+    assert _forbidden_import_hits("from ordessa_agents.harness.definitions import IntentSet\n") == []
     assert _forbidden_import_hits("from ordessa_execution_api.harness import IntentSet\n")
     assert _forbidden_import_hits("from pacthold.harness_kit import registry\n"), (
         "harness internals would read as the published API")
@@ -687,13 +687,13 @@ def test_the_runtime_import_allow_list_is_exactly_what_the_code_uses():
     # capability: each of the four predicates does report a defect
     assert _forbidden_root_hits("import ordessa_server.composition.configuration.contributions\n")
     assert _forbidden_root_hits("from pacthold.storage import database\n")
-    assert _forbidden_root_hits("from ordessa_execution_agents.harness.definitions import IntentSet\n",
+    assert _forbidden_root_hits("from ordessa_agents.harness.definitions import IntentSet\n",
                                 allowed_exact=GRANTED_MODULES) == []
-    assert _forbidden_root_hits("from ordessa_execution_agents.harness.providers.registry import HarnessCatalog\n",
+    assert _forbidden_root_hits("from ordessa_agents.harness.providers.registry import HarnessCatalog\n",
                                 allowed_exact=GRANTED_MODULES)
     assert _forbidden_root_hits("import ordessa_profile\n")
     assert _non_stdlib_top_levels("import requests\n") == {"requests"}
-    assert _non_stdlib_top_levels("from ordessa_execution_agents.harness.definitions import IntentSet\n") == set()
+    assert _non_stdlib_top_levels("from ordessa_agents.harness.definitions import IntentSet\n") == set()
     assert _non_stdlib_top_levels("import pacthold\n") == {"pacthold"}
     # the depth rule is real even while the sibling allow-list is empty: point
     # it at the root it exists for and it reports a below-top-level import
@@ -814,7 +814,7 @@ def test_the_stdlib_allow_list_scan_is_capable():
         "import yaml\n",
         "from pacthold.storage import database\n",
         "import numpy as np\n",
-        "from ordessa_execution_agents.harness.providers.registry import HarnessCatalog\n",
+        "from ordessa_agents.harness.providers.registry import HarnessCatalog\n",
         "import pacthold.harness_kit\n",
         "from ordessa_server_product.harness_adapters.application import configuration_service\n",
         "import ordessa_workspace\n",
@@ -825,10 +825,10 @@ def test_the_stdlib_allow_list_scan_is_capable():
                                  "from . import limits\n") == set()
     # the published contracts are the *only* third-party roots allowed, and
     # naming them is not a licence for anything else from the same producer
-    assert _non_stdlib_top_levels("from ordessa_execution_agents.harness.definitions.schema import x\n") == set()
+    assert _non_stdlib_top_levels("from ordessa_agents.harness.definitions.schema import x\n") == set()
     assert _non_stdlib_top_levels(
-        "from ordessa_execution_agents.harness.providers.registry import HarnessCatalog\n"
-    ) == {"ordessa_execution_agents.harness.providers.registry"}
+        "from ordessa_agents.harness.providers.registry import HarnessCatalog\n"
+    ) == {"ordessa_agents.harness.providers.registry"}
     assert _non_stdlib_top_levels("from pacthold.harness_contracts_contrib import x\n") == {
         "pacthold.harness_contracts_contrib"}
 
@@ -980,16 +980,16 @@ def test_every_domain_module_imports_under_the_published_contract_blocker():
         assert probe.hits == [PACKAGE_NAME], probe.hits
     # and it fires on an actual Execution implementation module, not on a
     # retired/nonexistent root that could fail before the blocker is reached.
-    implementation_module = "ordessa_execution_agents.harness.providers.registry"
+    implementation_module = "ordessa_agents.harness.providers.registry"
     with _isolation((implementation_module,)) as implementation_probe:
         with pytest.raises(ImportError) as implementation_info:
             importlib.import_module(implementation_module)
         assert _ImportBlocker.MARKER in str(implementation_info.value)
         assert implementation_probe.hits == [implementation_module], implementation_probe.hits
     # while the published contract remains importable inside this isolation
-    with _isolation(forbidden, keep=("ordessa_execution_agents.harness.definitions",),
+    with _isolation(forbidden, keep=("ordessa_agents.harness.definitions",),
                     grants=GRANTED_MODULES):
-        importlib.import_module("ordessa_execution_agents.harness.definitions")
+        importlib.import_module("ordessa_agents.harness.definitions")
 
 
 def _non_stdlib_top_levels_of_tree() -> set[str]:
@@ -1019,7 +1019,7 @@ def test_importing_execution_harness_definitions_never_reaches_this_package():
     import through `sys.modules` (the blind-gate lesson recorded in
     `apps/server/tests/test_dependency_direction.py:128`).
     """
-    definitions_root = "ordessa_execution_agents.harness.definitions"
+    definitions_root = "ordessa_agents.harness.definitions"
     with _isolation((PACKAGE_NAME,), keep=(definitions_root,)) as blocker:
         with pytest.raises(ImportError) as live:
             importlib.import_module(PACKAGE_NAME)

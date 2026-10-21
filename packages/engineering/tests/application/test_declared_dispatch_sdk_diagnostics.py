@@ -15,8 +15,8 @@ from unittest.mock import MagicMock
 import pytest
 
 from ordessa_environments import ProcessHandle
-from ordessa_execution_agents.harness.transport import EffectWriteGuard
-from ordessa_execution_agents.harness.transport.environment_channel import EnvironmentProcessChannel
+from ordessa_agents.harness.transport import EffectWriteGuard
+from ordessa_agents.harness.transport.environment_channel import EnvironmentProcessChannel
 from ordessa_engineering.adapters.native_records.recorded_dispatch import (
     failure_diagnostic as recorded_failure_diagnostic)
 from ordessa_engineering.application.contracts.errors import ApplicationError

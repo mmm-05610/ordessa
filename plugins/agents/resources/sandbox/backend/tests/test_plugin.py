@@ -1,4 +1,4 @@
-"""T04b — plugin registration via server_plugin_api public types only.
+"""T04b — plugin registration via ordessa_server_plugin_api public types only.
 
 No apps/server branching, no second registry, no host-internal imports; the
 Sandbox backend installs and registers with NO Permissions/Harness/compat
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 from _sandbox_backend_helpers import captured_harnesses_file
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ServerMethodDescriptor,
     ServerPluginContext,
     ServerPluginDescriptor,

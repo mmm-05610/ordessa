@@ -9,7 +9,7 @@ from contextlib import contextmanager
 import pytest
 from ordessa_infrastructure.encoding import canonical_bytes
 from test_agent_guarded_bootstrap import setup
-from ordessa_execution_agents.public import InteractionService
+from ordessa_agents.public import InteractionService
 
 PEER='''import json,sys
 session=SESSION

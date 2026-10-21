@@ -14,7 +14,7 @@ predication, bounded rules engines, and summary-only durable evidence.
   and is never retried. Evidence carries digests, engine/provider identity and
   usage only — no prompt, raw response or secret.
 
-Historical `decision_runtime` flow graph (pydantic-graph manager/contracts) is
+Historical `ordessa_decision` flow graph (pydantic-graph manager/contracts) is
 deleted from this package; `plugins/decision/jev` migration to the final ports is
 the remaining item (see the stage report), and the capability adapter waits for
 the DSH-1 `ordessa.capabilities` ABI.

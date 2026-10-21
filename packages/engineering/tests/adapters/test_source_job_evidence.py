@@ -3,11 +3,11 @@ import asyncio
 from types import SimpleNamespace
 
 import pytest
-from decision_runtime import DecisionAnswer, DecisionQuestion, DecisionRunner, FilesystemEvidenceStore, RulesOutcome
-from decision_runtime.capability import build_capability
-from decision_runtime.definitions.values import digest_hex
-from decision_runtime.evidence import EvidenceScope
-from decision_runtime.settings import DecisionsSettings
+from ordessa_decision import DecisionAnswer, DecisionQuestion, DecisionRunner, FilesystemEvidenceStore, RulesOutcome
+from ordessa_decision.capability import build_capability
+from ordessa_decision.definitions.values import digest_hex
+from ordessa_decision.evidence import EvidenceScope
+from ordessa_decision.settings import DecisionsSettings
 
 from ordessa_engineering.adapters.decision.job_evidence import OriginalReviewJobEvidence
 from ordessa_engineering.application.contracts.errors import ApplicationError
@@ -155,7 +155,7 @@ def test_completed_rules_result_cannot_replace_the_original_model_answer(tmp_pat
 @pytest.mark.parametrize('tied', ['ab', ['a', 1]])
 def test_profile_tie_rejects_wrong_type_even_when_all_proof_hashes_match(tmp_path, tied):
     import json
-    from decision_runtime.definitions.values import canonical_bytes
+    from ordessa_decision.definitions.values import canonical_bytes
     provider, owner, scope, capability, questions, job = setup(tmp_path, options={'a':'one','b':'two'})
     result = asyncio.run(capability.handlers['decisions.run']({'job': job},
         SimpleNamespace(request_id='original-review-request')))

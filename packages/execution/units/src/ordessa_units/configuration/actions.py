@@ -4,8 +4,8 @@ import hashlib
 import json
 from typing import Protocol
 
-from ordessa_execution_agents.harness.definitions import ApplicationTarget, InvokeAction
-from ordessa_execution_agents.harness.contracts.ports.records import NativeActivationReceiptView
+from ordessa_agents.harness.definitions import ApplicationTarget, InvokeAction
+from ordessa_agents.harness.contracts.ports.records import NativeActivationReceiptView
 
 
 @dataclass(frozen=True)

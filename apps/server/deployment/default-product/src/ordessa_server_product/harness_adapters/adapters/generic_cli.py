@@ -1,7 +1,7 @@
 from __future__ import annotations
 import re
-from ordessa_execution_agents.harness.definitions.command_projection import HarnessCommandSpec
-from ordessa_execution_agents.harness.providers.resolution.source_declaration import declare_source
+from ordessa_agents.harness.definitions.command_projection import HarnessCommandSpec
+from ordessa_agents.harness.providers.resolution.source_declaration import declare_source
 class GenericCliAdapter:
     def __init__(self,key): self.key=key
     def validate_native_payload(self,payload):

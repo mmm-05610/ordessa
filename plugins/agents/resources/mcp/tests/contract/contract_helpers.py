@@ -31,7 +31,7 @@ import pytest
 
 from ordessa_server.composition.plugin_host import MethodRegistry, ServerPluginHost
 from ordessa_interfaces.system_access.services.invocation import WireService
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 HERE = Path(__file__).resolve().parent
 PACKAGE_ROOT = HERE.parents[1]  # plugins/mcp

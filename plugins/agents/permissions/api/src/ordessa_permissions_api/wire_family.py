@@ -10,7 +10,7 @@ pure domain (stdlib plus itself): the platform symbols named below are the
 DERIVATION sources checked by `tests/test_wire_family.py`, not imports here.
 
 How each row was derived (every family name is READ from the platform's closed
-`FAMILIES` set in `server_plugin_api.wire_errors`; none is invented, and a
+`FAMILIES` set in `ordessa_server_plugin_api.wire_errors`; none is invented, and a
 guard test asserts `set(values) ⊆ FAMILIES`):
 
 * `APPROVAL_STALE -> APPROVAL_INVALID`: the platform's own

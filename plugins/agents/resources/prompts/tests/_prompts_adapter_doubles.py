@@ -1,7 +1,7 @@
 """Shared doubles for the prompts adapter tests (published shapes only)."""
 from __future__ import annotations
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, Installation, TargetDescriptor, TargetHandle,
 )
 

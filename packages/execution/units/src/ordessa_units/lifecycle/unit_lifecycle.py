@@ -21,7 +21,7 @@ import json
 import threading
 from typing import Mapping, Protocol
 
-from ordessa_execution_agents.harness.definitions.runtime_providers import RUNTIME_PROVIDER_VERSION
+from ordessa_agents.harness.definitions.runtime_providers import RUNTIME_PROVIDER_VERSION
 from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 
 from ..configuration.contracts import UnitInspection

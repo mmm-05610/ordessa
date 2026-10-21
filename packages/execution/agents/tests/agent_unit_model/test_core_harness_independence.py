@@ -4,7 +4,7 @@ These controlled fixtures own their private channel formats. They exercise the
 same CoreRegistry, UnitServices, preparation, configuration, and owner-read
 surfaces; they are contract evidence, not native-process or model evidence.
 """
-from ordessa_execution_agents.profiles import decode_revision_ref, encode_content
+from ordessa_agents.profiles import decode_revision_ref, encode_content
 from dataclasses import replace
 import ast
 import json
@@ -31,13 +31,13 @@ from ordessa_units.configuration.contracts import (
     ConfigurationChangeResult, ConfigurationItemResult, ConfigurationSnapshot,
     ConfigurationUnsupported, UnitInspection,
 )
-from ordessa_execution_agents.profiles.definitions.models import ProfileRevisionRef
+from ordessa_agents.profiles.definitions.models import ProfileRevisionRef
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import InvocationCurrentState, InvocationIssuer
 from ordessa_units.bindings.publication import NodePublicationEvidence, decode_node_ref
-from ordessa_execution_agents.profiles.management.service import ProfileService
+from ordessa_agents.profiles.management.service import ProfileService
 from ordessa_units.public import unit_services
-from ordessa_execution_agents.harness.providers.registry.contributions import (
+from ordessa_agents.harness.providers.registry.contributions import (
     AgentContributionSet, RUNTIME_METHODS, RUNTIME_PROVIDER_VERSION,
     RuntimeProviderDescriptor,
 )
@@ -498,7 +498,7 @@ def _brand_imports(source):
 def test_pacthold_agent_core_has_no_brand_specific_imports():
     root = Path(__file__).resolve().parents[5]
     owner_roots = (root / "packages/execution/kernel/src/pacthold/core",
-                   root / "packages/execution/agents/src/ordessa_execution_agents")
+                   root / "packages/execution/agents/src/ordessa_agents")
     sources = []
     for owner_root in owner_roots:
         owner_sources = list(owner_root.rglob("*.py"))

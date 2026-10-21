@@ -6,11 +6,11 @@ import pytest
 
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_infrastructure.database.records import DomainWrite, DomainRevisionConflict
-from ordessa_execution_agents.profiles.management.sqlite_store import SqliteProfileStore
-from ordessa_execution_agents.profiles.management.ports import ProfileStorePort
-from ordessa_execution_agents.profiles import ProfileService
-from ordessa_execution_agents.profiles.management.compatibility import PROFILE_RECORDS as CATALOG, REVISION_RECORDS as MANIFESTS
-from ordessa_execution_agents.profiles.definitions.codec import encode_content
+from ordessa_agents.profiles.management.sqlite_store import SqliteProfileStore
+from ordessa_agents.profiles.management.ports import ProfileStorePort
+from ordessa_agents.profiles import ProfileService
+from ordessa_agents.profiles.management.compatibility import PROFILE_RECORDS as CATALOG, REVISION_RECORDS as MANIFESTS
+from ordessa_agents.profiles.definitions.codec import encode_content
 from profile_owner_fixtures import Admission, Validator
 
 class Policy:
@@ -88,7 +88,7 @@ def test_same_owner_concurrent_writers_compare_versions_atomically_and_rollback(
 
 
 def test_profile_validation_refusal_is_before_any_record_or_request_commit(tmp_path):
-    from ordessa_execution_agents.profiles.definitions.errors import ProfileValidationError
+    from ordessa_agents.profiles.definitions.errors import ProfileValidationError
     store=SqliteProfileStore(tmp_path/'validation.sqlite');validator=Validator();validator.refuse=True
     admission=Admission(Policy(),'validation')
     service=ProfileService(store,admission,validator)
@@ -109,7 +109,7 @@ def test_profile_validation_refusal_is_before_any_record_or_request_commit(tmp_p
 
 def test_new_profile_store_refuses_existing_unit_database_without_mutating_it(tmp_path):
     import sqlite3
-    from ordessa_execution_agents.profiles.definitions.errors import ProfileStoreUnavailable
+    from ordessa_agents.profiles.definitions.errors import ProfileStoreUnavailable
     path=tmp_path/'historical-unit.sqlite'
     conn=sqlite3.connect(path);conn.execute('CREATE TABLE env_domain_records(original TEXT)');conn.commit();conn.close()
     before=path.read_bytes()

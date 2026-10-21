@@ -53,9 +53,9 @@ replay/rollback 5 红、generation/session/target 各 1–2 红、apply-chain �
 
 ## 3. 真实 API 接线现状
 
-- Server：`skills.*` 19 方法经 `server_plugin_api` 发布面注册；测试驱动真实 `build_runtime(server_plugins=(Workspace, Skills))` + 真 wire dispatch；旧 `assets.*` 未动且族不相交由测试钉住。
+- Server：`skills.*` 19 方法经 `ordessa_server_plugin_api` 发布面注册；测试驱动真实 `build_runtime(server_plugins=(Workspace, Skills))` + 真 wire dispatch；旧 `assets.*` 未动且族不相交由测试钉住。
 - Foundation 贡献面：`ContributionBatch` + `wire.error-families`，取代此前用 `WireError.__cause__` 夹带本域错误码的临时手法。
-- **Harness**：三品牌为真实 `ConfigurationAdapter`（`assess→Assessment`、`compile→IntentSet(MountContent/RemoveOwnedContent)`——本域只声明内容目录类意图，不产 `SetField` 携 `ContentRef{assetId@revision, sha256, 真实 size}`、`verify→Verification/VerificationUnknown`），经 `harness.configuration-adapters` 贡献点注册并由 `server_plugin_api.stage_contributions` + harness 真实 `HarnessContributionRegistry` 验证拒绝（重复 id / 重叠 facet-入口-版本区间；未绑定点时宿主 `ContributionPointUnboundError` fail-closed）；`apply_chain.py` 用发布的 `Plan/ApplicationResult/ReconfigurationDecision/ResumeRequest` 实现「先应用再发送」语义。Q1 私有意图词汇已删除（避免第二份词汇）。
+- **Harness**：三品牌为真实 `ConfigurationAdapter`（`assess→Assessment`、`compile→IntentSet(MountContent/RemoveOwnedContent)`——本域只声明内容目录类意图，不产 `SetField` 携 `ContentRef{assetId@revision, sha256, 真实 size}`、`verify→Verification/VerificationUnknown`），经 `harness.configuration-adapters` 贡献点注册并由 `ordessa_server_plugin_api.stage_contributions` + harness 真实 `HarnessContributionRegistry` 验证拒绝（重复 id / 重叠 facet-入口-版本区间；未绑定点时宿主 `ContributionPointUnboundError` fail-closed）；`apply_chain.py` 用发布的 `Plan/ApplicationResult/ReconfigurationDecision/ResumeRequest` 实现「先应用再发送」语义。Q1 私有意图词汇已删除（避免第二份词汇）。
 - Profile：`assets.skills` facet 经真实 `ProfilePluginServices.register_v2_facet(owner)` 注册，`assignments` 的 Profile 层由真实端口满足。
 - Permissions（Q5 permissions-api **r1 `bcd4387bec`**，随 harness-api 的 `dependsOn` 进入本树）：`mandatory_policy.PermissionsCeilingMandatoryPolicyPort`
   读真实 `ordessa_permissions_api.PolicyCeiling`（`ceilings.py:156`、`CeilingEntry.matches:135`、`intersect_ceilings:293`、

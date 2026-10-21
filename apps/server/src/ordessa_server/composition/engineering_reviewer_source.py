@@ -11,8 +11,8 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager, ExitStack
 from dataclasses import asdict, dataclass
 
-from decision_runtime.definitions import DecisionAnswer, DecisionQuestion, DecisionRequest, plain
-from decision_runtime.definitions.values import canonical
+from ordessa_decision.definitions import DecisionAnswer, DecisionQuestion, DecisionRequest, plain
+from ordessa_decision.definitions.values import canonical
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.application.contracts.reviewer_admission import CriterionAnswer, VerifiedReviewResponse
 from ordessa_engineering.application.orchestration.method_answers import nominal_criterion_answer

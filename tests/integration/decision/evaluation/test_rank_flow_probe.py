@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "tooling/checks/dec
 
 import httpx2
 import pytest
-from decision_runtime.definitions import TaskBrief, plain
+from ordessa_decision.definitions import TaskBrief, plain
 from assignment_source.build import load_assignment_policy
 
 SOURCE = Path(__file__).resolve().parents[4] / 'tooling/checks/decision-runtime/evaluation' / 'rank_flow_probe.py'

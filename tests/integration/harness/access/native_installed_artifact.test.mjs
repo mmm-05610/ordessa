@@ -8,7 +8,7 @@ import { tmpdir } from "node:os"
 import { execFileSync, spawnSync } from "node:child_process"
 import { fileURLToPath } from "node:url"
 import test from "node:test"
-import { installedArtifactSummary, verifyInstalledArtifact } from "../../../../packages/execution/agents/src/ordessa_execution_agents/harness/providers/resolution/_deployment/native-artifact-policy.mjs"
+import { installedArtifactSummary, verifyInstalledArtifact } from "../../../../packages/execution/agents/src/ordessa_agents/harness/providers/resolution/_deployment/native-artifact-policy.mjs"
 import { installedLaunchReference as defaultInstalledLaunchReference, resolveInstalledLaunch as defaultResolveInstalledLaunch,
   resolveManagedLaunch as defaultResolveManagedLaunch } from "../../../../apps/server/tests/support/launch_policy.mjs"
 import { captureLaunchCatalog } from "../../../../apps/server/src/ordessa_server/composition/native_channels/launch_catalog.mjs"
@@ -342,7 +342,7 @@ for (const brand of BRANDS) {
     const f = fixture(t, brand)
     publishManifest(f)
     const python = spawnSync("python3", ["-S", "-c",
-      "import json,sys; from ordessa_execution_agents.harness.providers.resolution.artifacts.tree_identity import runtime_artifact_tree_summary; print(json.dumps(runtime_artifact_tree_summary(sys.argv[1])))", f.root], {
+      "import json,sys; from ordessa_agents.harness.providers.resolution.artifacts.tree_identity import runtime_artifact_tree_summary; print(json.dumps(runtime_artifact_tree_summary(sys.argv[1])))", f.root], {
       encoding: "utf8", env: { ...process.env, PYTHONPATH: ["packages/execution/agents/src", "packages/infrastructure/src"].map(part => path.join(REPO, part)).join(path.delimiter) },
     })
     assert.equal(python.status, 0, python.stderr)

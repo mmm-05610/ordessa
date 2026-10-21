@@ -5,7 +5,7 @@ The rest of T016's task text — same-App auth/signature/owner/mount-order/
 dual-exception — is already owned by `test_platform_http_routes_same_app.py`
 (T012/T013 era) and is deliberately NOT re-implemented here. What this file
 adds is the genuinely missing case: a plugin that is NOT part of the product
-selection, written only against the published wall (`server_plugin_api`),
+selection, written only against the published wall (`ordessa_server_plugin_api`),
 composed next to the product trio on one live App — its `pacthold.contributions`
 v1 batch committed into the composition's Core snapshot, its route served
 behind the host bearer auth — and a duplicate/typed-conflict from that new
@@ -23,7 +23,7 @@ import dataclasses
 
 import pytest
 from fastapi.testclient import TestClient
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     PACTHOLD_CONTRIBUTIONS_API_VERSION,
     PACTHOLD_CONTRIBUTIONS_POINT_ID,
     SERVER_PLUGIN_API_VERSION,

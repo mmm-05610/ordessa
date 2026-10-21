@@ -1,0 +1,17 @@
+# Profile management（候选／待用户代码审阅）
+
+ProfileService是唯一管理实现，create/list/get/get_revision/revise/rename/archive，以及原clone/restore，
+均在原Environment权威上运行。Profile version与内容revision分开；revise产生新修订，归档保留固定历史引用。
+保存预置不应用运行期Unit配置，临时配置改变不自动保存预置。
+
+ProfileStorePort声明业务读写、原子CAS/request结果和延迟snapshot write接口。
+EnvironmentProfileStore将接口接入原store的Infrastructure DomainStorePort；无SQL导入、新连接、第二库或新ledger。
+一次commit_domain_change包含Profile CAS、可选新不可变修订和原请求结果；stage_snapshot仅返回待提交write，
+由原Unit事务与操作reserve共同提交。原实际SQLite适配保持原处，最终存储适配归属尚待讨论。
+
+admission lock/policy/principal/fingerprint/close检查及历史重放验证保留；compatibility.py明确保留旧历史标识，
+revise映射历史edit授权/指纹动作。根wire_schema保留v1/v3声明，Server显式接线；不提供旧Python服务/方法别名。
+
+依赖definitions与中性Environment API，不依赖具体Unit/Harness/apps。preview仍unresolved。
+公开入口ordessa_agents.profiles与aggregate public引用同一类，不增加存储权威。
+结构与修改方向已批准；本候选实现仍待用户代码审阅，测试通过不等于用户验收。

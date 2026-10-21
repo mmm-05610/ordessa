@@ -19,7 +19,7 @@ def test_default_registry_original_profile_native_and_cold_query_after_revoke(tm
         try:
             profile_actions=('capabilities','list','readEntry','read','preview','create','edit','clone','rename','archive','restore')
             original_caps=case.caller[0].grants[0].capabilities
-            caps=tuple(original_caps)+tuple('profiles.'+a for a in profile_actions)
+            caps=tuple(original_caps)+tuple('agents.profiles.'+a for a in profile_actions)
             case.issuer.replace_grants((AccessGrant(case.scope,caps),))
             case.caller[0]=case.issuer.authenticate('Bearer synthetic-native-token')
             def caller(invocation):
@@ -48,23 +48,23 @@ def test_default_registry_original_profile_native_and_cold_query_after_revoke(tm
                 assert result['id']==identity
                 return result['result']
             original=case.owner.service.select_current('peer')
-            ref=__import__('ordessa_execution_agents.profiles',fromlist=['encode_revision_ref']).encode_revision_ref(original.ref)
-            listing=await invoke('profiles.list',{},'list')
+            ref=__import__('ordessa_agents.profiles',fromlist=['encode_revision_ref']).encode_revision_ref(original.ref)
+            listing=await invoke('agents.profiles.list',{},'list')
             assert listing['status']=='completed' and listing['data']['entries'][0]['profileId']=='peer'
-            read=await invoke('profiles.read',{'profileRef':ref},'exact-revision')
+            read=await invoke('agents.profiles.read',{'profileRef':ref},'exact-revision')
             assert read['data']['ref']==ref and read['data']['content']['declarations']==[]
-            changed=await invoke('profiles.rename',{'profileId':'peer','displayName':'Registry rename','expectedCatalogRevision':1},'rename')
+            changed=await invoke('agents.profiles.rename',{'profileId':'peer','displayName':'Registry rename','expectedCatalogRevision':1},'rename')
             assert changed['status']=='completed' and case.owner.service.get('peer').name=='Registry rename'
-            assert changed==await invoke('profiles.rename',{'profileId':'peer','displayName':'Registry rename','expectedCatalogRevision':1},'rename')
+            assert changed==await invoke('agents.profiles.rename',{'profileId':'peer','displayName':'Registry rename','expectedCatalogRevision':1},'rename')
             apply=request(case)
             applied=await invoke('agents.native.recorded',{'request':apply.projection()},'native-registry')
             assert applied['status']=='completed' and applied['data']['state']=='completed'
             assert case.effects.read_text()=='m2\n'
-            case.issuer.replace_grants((AccessGrant(case.scope,('agents.operations.read','profiles.list','profiles.read')),))
+            case.issuer.replace_grants((AccessGrant(case.scope,('agents.operations.read','agents.profiles.list','agents.profiles.read')),))
             case.caller[0]=case.issuer.authenticate('Bearer synthetic-native-token')
             db=case.owner.service._profile_store._conn
             before=db.total_changes
-            denied=await invoke('profiles.rename',{'profileId':'peer','displayName':'Forbidden','expectedCatalogRevision':2},'revoked')
+            denied=await invoke('agents.profiles.rename',{'profileId':'peer','displayName':'Forbidden','expectedCatalogRevision':2},'revoked')
             assert denied['status']=='refused' and db.total_changes==before
             cold=await invoke('agents.native.query',{'operationRef':applied['data']['binding']['operationRef'],'expectedInputDigest':apply.input_digest},'cold')
             assert cold['data']==applied['data'] and case.effects.read_text()=='m2\n'
@@ -79,8 +79,8 @@ def test_default_registry_original_profile_native_and_cold_query_after_revoke(tm
 def test_installed_console_and_cli_module_share_registry_without_kernel(tmp_path):
     from installed_server_fixture import build_installed_server
     python, console, env, packaging = build_installed_server(
-        ROOT, tmp_path, extra_projects=('ordessa-agent-tools',))
-    for index, executable in enumerate(([str(console)],[str(python),'-m','ordessa_agent_tools'])):
+        ROOT, tmp_path, extra_projects=('ordessa-cli',))
+    for index, executable in enumerate(([str(console)],[str(python),'-m','ordessa_cli'])):
         receipt = tmp_path/('entry-imports-'+str(index)+'.json')
         env['ORDESSA_IMPORT_RECEIPT'] = str(receipt)
         result=subprocess.run([*executable,'--state',str(tmp_path/'state'),'list','--json'],cwd=tmp_path,env=env,capture_output=True,text=True,timeout=10)
@@ -96,7 +96,7 @@ def test_installed_console_and_cli_module_share_registry_without_kernel(tmp_path
         assert 'environments.process-release' not in ids
         imports=json.loads(receipt.read_text())
         assert imports['errors']==[],imports
-        assert 'ordessa_agent_tools.cli' in imports['origins']
+        assert 'ordessa_cli.cli' in imports['origins']
         assert 'ordessa_interfaces.system_access' in imports['origins']
     assert packaging['localWheels']
     # The root module is the existing long-lived HTTP entry, not the CLI.

@@ -32,7 +32,7 @@ from __future__ import annotations
 
 import pytest
 
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessDescriptorError, HarnessRegistry
 from ordessa_interfaces.system_access.server.idempotency import IdempotentRecords
 from ordessa_server_compat.model_configs.repository import ProviderModelRecords

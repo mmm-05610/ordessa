@@ -4,8 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from ordessa_execution_agents.profiles import ConfigurationDeclaration
-from ordessa_execution_agents.sdk.harness import HarnessError, PrepareContext, ProfileContent, SessionBootstrap
+from ordessa_agents.profiles import ConfigurationDeclaration
+from ordessa_agents.sdk.harness import HarnessError, PrepareContext, ProfileContent, SessionBootstrap
 from ordessa_harness_codex.provider import CodexHarnessProvider
 
 REF = {'environmentNamespace': 'ns-1', 'definitionId': 'codex', 'revision': '0.1.0a1'}

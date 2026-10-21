@@ -5,7 +5,7 @@ import sys
 import pytest
 from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore, ProcessRequest
 from ordessa_environments_local import LocalEnvironmentResourceProvider
-from ordessa_execution_agents.harness.transport import ChannelClosed, RequestTimeout, WriterLeaseRefused
+from ordessa_agents.harness.transport import ChannelClosed, RequestTimeout, WriterLeaseRefused
 from ordessa_units.sessions.environment_channel import EnvironmentProcessChannel
 
 

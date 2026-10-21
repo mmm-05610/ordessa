@@ -1,7 +1,7 @@
 """Pure Harness contracts preserve bounds without retired Work Core imports."""
 from dataclasses import FrozenInstanceError
 import pytest
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     NativeProfileRef, NativeContinuationRef, NativeCredentialRef,
     NativeRefInvalid, ProviderDescriptor,
 )

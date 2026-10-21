@@ -250,7 +250,7 @@ small ask rather than a vague dependency:
 ## SR-7 → C0 (`foundation`) — server plugin composition + wire methods
 
 - **Caller:** T13 product enablement.
-- **Target:** `server_plugin_api.ServerPluginDescriptor` /
+- **Target:** `ordessa_server_plugin_api.ServerPluginDescriptor` /
   `ServerMethodDescriptor` / `ServerPluginContext` registration and
   `products/server/src/ordessa_server_product/composition.py:40-55
   default_plugins()` insertion.
@@ -464,7 +464,7 @@ The stdlib-only collision is now concrete (from the boundary guard's own output)
 | --- | --- | --- |
 | `ordessa_harness_api` | `adapters/{__init__,base,claude,codex,intents,pi}.py`, `apply.py` | **allow** — published contract package of C0 (55 exports, standalone wheel) |
 | `ordessa_permissions_api` | `permissions_seam.py` | **allow** — published contract package of Q5 |
-| `server_plugin_api` | `plugin.py`, `wire.py` | **allow** — the platform's server-plugin API, the same one `plugins/workspace` registers through |
+| `ordessa_server_plugin_api` | `plugin.py`, `wire.py` | **allow** — the platform's server-plugin API, the same one `plugins/workspace` registers through |
 | `ordessa_permissions_backend` | `permissions_seam.py` | **do not allow** — that is Q5's *provider* package, not its published contract. Importing a sibling plugin's backend is the exact plugin→plugin private edge `AGENTS.md` rule 3 and the boundary tests exist to prevent, and it is not needed: the seam should receive the authorizer object and its port name **by host injection**, or take constants from `ordessa_permissions_api` only |
 
 So the guard migration must widen the allow-list to the first three rows and keep the

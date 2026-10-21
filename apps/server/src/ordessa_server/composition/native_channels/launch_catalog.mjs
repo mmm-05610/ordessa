@@ -1,5 +1,5 @@
-import { parseLaunchDescriptors } from "../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/transport/launch_descriptor.mjs"
-import { resolveAcpLaunch } from "../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/transport/launch_resolution.mjs"
+import { parseLaunchDescriptors } from "../../../../../../packages/execution/agents/src/ordessa_agents/harness/transport/launch_descriptor.mjs"
+import { resolveAcpLaunch } from "../../../../../../packages/execution/agents/src/ordessa_agents/harness/transport/launch_resolution.mjs"
 function freeze(value) { if (value && typeof value === "object") { for (const item of Object.values(value)) freeze(item); Object.freeze(value) } return value }
 export function captureLaunchCatalog(text, ports) {
   if (typeof text !== "string" || !Array.isArray(ports)) throw new Error("CAPTURED_LAUNCH_REQUIRED")

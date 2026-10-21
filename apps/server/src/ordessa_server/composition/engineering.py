@@ -18,8 +18,8 @@ from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_interfaces.system_access.contracts.transport import AccessError
 from ordessa_interfaces.system_access.access_control.authentication import AccessGrant
 from ordessa_units.assembly import LocalUnitOwner, UnitRunPermission
-from server_plugin_api import ServerPluginDescriptor, ServerPluginRegistration
-from server_plugin_api.wire_errors import WireError
+from ordessa_server_plugin_api import ServerPluginDescriptor, ServerPluginRegistration
+from ordessa_server_plugin_api.wire_errors import WireError
 
 # Explicit deployment-only grants; these operations remain absent from wire.
 INTERNAL_OWNER_CAPABILITIES = ('engineering.methods.adopt', 'engineering.methods.control',

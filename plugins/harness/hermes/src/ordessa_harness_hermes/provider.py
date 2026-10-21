@@ -4,7 +4,7 @@ No ambient executable lookup, projection, direct launch or historical Unit API.
 Native config/material bytes are prepared and verified by the external owner.
 """
 import json
-from ordessa_execution_agents.sdk import HarnessDescriptor,HarnessError,PrepareContext,ProfileContent,LaunchPlan,BoundPath
+from ordessa_agents.sdk import HarnessDescriptor,HarnessError,PrepareContext,ProfileContent,LaunchPlan,BoundPath
 
 
 class HermesHarnessProvider:

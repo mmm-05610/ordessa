@@ -1,6 +1,6 @@
 """The Skills facet adapters as REAL published `ConfigurationAdapter`s.
 
-Consumes the harness-api checkpoint (`ordessa_execution_agents.harness.definitions`, publication
+Consumes the harness-api checkpoint (`ordessa_agents.harness.definitions`, publication
 `d3f026904e`, record `docs/implementation/specifications/011-plugin-rollout/checkpoints/harness-api.json`)
 and registers through the published contribution point:
 
@@ -38,7 +38,7 @@ from __future__ import annotations
 import re
 from typing import Any, Mapping, Sequence
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapterDescriptor,
     ConfigurationCapability, ConfigurationCapabilities, ContractError,
     ErrorCode, FieldClaim, IntentSet, Match, Mismatch, TargetDescriptor,
@@ -84,7 +84,7 @@ def version_tuple(text: str) -> tuple[int, int, int]:
 #: the two call sites — descriptor registration and assess validation —
 #: on the same bytes).
 def build_payload_schema():
-    from ordessa_execution_agents.harness.definitions import ValueSchema
+    from ordessa_agents.harness.definitions import ValueSchema
     asset = ValueSchema(
         "object",
         properties=(
@@ -375,7 +375,7 @@ class SkillsConfigurationAdapter:
         edits at all (its claims carry only the owned content directory) —
         that absence is the adapter's own contract, not brand evidence.
         """
-        from ordessa_execution_agents.harness.definitions import ApplicationTarget
+        from ordessa_agents.harness.definitions import ApplicationTarget
         if not isinstance(target, ApplicationTarget):
             raise HarnessAdapterError("HARNESS_TARGET_INVALID",
                                       "needs the published ApplicationTarget")

@@ -71,9 +71,9 @@ for (const brand of BRANDS) {
         return item.isDirectory() ? pythonFiles(member) : /\.pyc?$/u.test(item.name) ? [member] : []
       })
       assert.deepEqual(pythonFiles(emptyRoot), [])
-      const namespace = path.join(emptyRoot, 'packages/execution/agents/src/ordessa_execution_agents')
+      const namespace = path.join(emptyRoot, 'packages/execution/agents/src/ordessa_agents')
       const expectedMissing = existsSync(namespace)
-        ? 'ordessa_execution_agents.harness.providers' : 'ordessa_execution_agents'
+        ? 'ordessa_agents.harness.providers' : 'ordessa_agents'
       assert.equal(existsSync(path.join(namespace, '__init__.py')), false)
       assert.equal(existsSync(path.join(namespace, 'harness/providers/resolution/artifacts/tree_identity.py')), false)
       assert.throws(() => summarize(missingDependencyBuilder, directory, bin), (error) => {

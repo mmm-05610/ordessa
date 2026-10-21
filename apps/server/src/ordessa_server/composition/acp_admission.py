@@ -12,7 +12,7 @@ import json
 from threading import RLock
 from typing import Mapping, Protocol
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     AcpAdmissionResult, AcpChannelBinding, AcpPermissionDecision,
     AcpSubmissionRequest,
 )

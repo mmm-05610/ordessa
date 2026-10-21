@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 from ordessa_permissions_api import NativeReceipt
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ContributionOwnerBusyError,
     ServerPluginContext,
     ServerPluginRegistration,

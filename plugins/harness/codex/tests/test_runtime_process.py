@@ -73,7 +73,7 @@ from ordessa_units.records.operation_journal import OperationJournal
 from ordessa_units.records.unit_records import (
     CanonicalConfigurationScopeRef, UnitRecords, UnitRecordsRefused,
 )
-from ordessa_execution_agents.harness.transport.channel import _TOKEN_ENV_KEYS
+from ordessa_agents.harness.transport.channel import _TOKEN_ENV_KEYS
 
 #: Real local installation observed 2026-10-05: `--version` -> codex-cli 0.159.0.
 EXECUTABLE = "/usr/lib/chatgpt/resources/codex"

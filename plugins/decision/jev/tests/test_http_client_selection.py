@@ -4,7 +4,7 @@ import time
 
 import httpx2
 import pytest
-from decision_runtime.definitions import CallPermit, DecisionQuestion, ModelCallContext, PolicyRef
+from ordessa_decision.definitions import CallPermit, DecisionQuestion, ModelCallContext, PolicyRef
 from ordessa_decision_jev import JevDecisionProvider, JevProviderError, JevProviderSettings
 
 

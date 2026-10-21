@@ -20,7 +20,7 @@
   2. `pip install -e 'packages/pacthold[dev]' -e packages/server-plugin-api -e plugins/harness/api`
   3. `pip install -e plugins/assets/sandbox/{api,backend,adapters} -e plugins/permissions/{api,backend,adapters}`（**必须先于 products/server**，否则 pip 从 PyPI 找 0.1.0 必红——本树第一手复现）
   4. `pip install -e 'apps/server[dev]' -e 'plugins/harness[dev]' -e plugins/workspace -e plugins/runtime-compat -e plugins/server-compat -e products/server -e plugins/assets/model-provider/{server,adapters,profile-contribution}`（S-10 清单；PB-6 合并后追加 `-e plugins/profile`）
-  5. imports 冒烟：`pacthold/server_plugin_api/ordessa_harness_api/ordessa_server/ordessa_harness/ordessa_server_product/ordessa_model_provider*/ordessa_profile` 全过
+  5. imports 冒烟：`pacthold/ordessa_server_plugin_api/ordessa_harness_api/ordessa_server/ordessa_harness/ordessa_server_product/ordessa_model_provider*/ordessa_profile` 全过
 - npm：`npm ci` 实测红（根 lock 缺本包两个 workspace 条目）→ 本地
   `npm install --no-save`（根 lock 零改动），已回填 **S-02**。
 - **R0 四套件计数（合并后、PB-2 动工前实测）**：Python **137 passed**

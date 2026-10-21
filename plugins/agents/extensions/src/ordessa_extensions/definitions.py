@@ -46,10 +46,10 @@ KNOWN_EVENTS: Mapping[str, str] = {
         " pinned closure); packages/execution/kernel/src/pacthold/harness_kit/"
         "harnesses.toml:38-40 (Order 59 stage A comment)"),
     "PreToolUse": (
-        "packages/execution/agents/src/ordessa_execution_agents/harness/providers/registry_declarations/harnesses.toml:117-119"
+        "packages/execution/agents/src/ordessa_agents/harness/providers/registry_declarations/harnesses.toml:117-119"
         " (Order 59 stage A comment, claude settings.json, 108 refs)"),
     "SubagentStop": (
-        "packages/execution/agents/src/ordessa_execution_agents/harness/providers/registry_declarations/harnesses.toml:38-40"
+        "packages/execution/agents/src/ordessa_agents/harness/providers/registry_declarations/harnesses.toml:38-40"
         " (Order 59 stage A comment, range end; comment-grade)"),
 }
 

@@ -66,7 +66,7 @@ def build_plan(*, old_bytes, facts, operations):
             raise RefreshRefused('input registry content digest differs')
     if operations != _reviewed_operations(base):
         raise RefreshRefused('unreviewed operation contract change')
-    if (facts.get('decision_runtime_version') != '0.2.0'
+    if (facts.get('ordessa_decision_version') != '0.2.0'
             or facts.get('decision_contract_version') != 'decision-job/1'
             or facts.get('jsonschema_version') != '4.20.0'
             or facts.get('referencing_version') != '0.36.2'
@@ -99,7 +99,7 @@ def build_plan(*, old_bytes, facts, operations):
                               for key in operations if operations[key]!=base['operations'][key]},
         'foreign_before':{k:v for k,v in base['implementation'].items() if k!='engineering'},
         'foreign_after':{k:v for k,v in facts.items() if k!='engineering'},
-        'runtime_source_keys':list(facts['decision_runtime']),
+        'runtime_source_keys':list(facts['ordessa_decision']),
     }}
 
 

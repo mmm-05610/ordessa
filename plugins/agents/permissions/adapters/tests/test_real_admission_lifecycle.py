@@ -3,7 +3,7 @@
 Every refusal here is raised by `ordessa_server.composition.configuration.contributions` (the
 Harness plugin's public contributions seam - the conflict authority the
 product composition binds to `harness.configuration-adapters`) or by the
-Server plugin host driving `server_plugin_api.stage_contributions`.
+Server plugin host driving `ordessa_server_plugin_api.stage_contributions`.
 
 Gate map (docs/implementation/design/safety-controls/verification.md):
 - gate 2: nothing here imports `ordessa_sandbox_*`; the field-claim conflict
@@ -22,11 +22,11 @@ from ordessa_server.composition.configuration.contributions import HarnessContri
 from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
 from ordessa_server.composition.configuration.contributions import POINT_API_VERSION
 from ordessa_server.composition.configuration.contributions import RUNTIME_POINT
-from ordessa_execution_agents.harness.definitions import (ConfigurationAdapterDescriptor, FieldClaim,
+from ordessa_agents.harness.definitions import (ConfigurationAdapterDescriptor, FieldClaim,
                                  ValueSchema, VersionRange)
 from ordessa_server.composition.plugin_host import (MethodRegistry, ServerPluginHost,
                                         StreamRouteRegistry)
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     AbsentContribution, Contribution, ContributionBatch,
     ContributionOwnerBusyError, ContributionPointUnboundError,
     ContributionVersionRefusedError, DuplicateContributionError,

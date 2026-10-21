@@ -15,8 +15,8 @@ Legend: ✅ exists & importable · ⚠️ partial / internal-only · ❌ does no
 ### Exists
 
 - **Published plugin contract package**: `packages/server-plugin-api`, dist name
-  `ordessa-server-plugin-api` v0.1.0 (`pyproject.toml:6`), module `server_plugin_api`,
-  zero dependencies. Stable exports (`src/server_plugin_api/__init__.py:43-67`):
+  `ordessa-server-plugin-api` v0.1.0 (`pyproject.toml:6`), module `ordessa_server_plugin_api`,
+  zero dependencies. Stable exports (`src/ordessa_server_plugin_api/__init__.py:43-67`):
   `SERVER_PLUGIN_API_VERSION` (`contract.py:8`), `PLUGIN_METHOD_ID` (`contract.py:15`),
   `ServerPluginDescriptor` (`contract.py:21`), `ServerMethodDescriptor` (`contract.py:56`),
   `StreamRouteDescriptor` (`contract.py:94`), `HttpRouteDescriptor` (`contract.py:123`),
@@ -53,7 +53,7 @@ Legend: ✅ exists & importable · ⚠️ partial / internal-only · ❌ does no
     `provided_ports` map (`:269-292`), `start_hooks`/`disposal` (`:293-294`).
   - Clean split example: `plugins/workspace/src/ordessa_workspace/plugin.py:48-206`.
 - **Boundary rules a new plugin must honor** (pinned gates): plugin may import
-  `server_plugin_api`, the host's neutral vocabulary (`ordessa_server.errors`, `.records`,
+  `ordessa_server_plugin_api`, the host's neutral vocabulary (`ordessa_server.errors`, `.records`,
   `.ids`, `.idempotency`, `.credentials`, `.events`, `.connectors`,
   `.wire.{errors,envelope,projection,handlers helpers}`), `pacthold`, its own package and
   declared deps — never host business modules (`apps/server/tests/test_server_compat_boundary.py:16-21`;
@@ -78,7 +78,7 @@ Legend: ✅ exists & importable · ⚠️ partial / internal-only · ❌ does no
 
 ### Q1 can build today
 
-Code against `server_plugin_api` + host semantics; unit-activate the plugin with
+Code against `ordessa_server_plugin_api` + host semantics; unit-activate the plugin with
 `build_runtime(data_root, server_plugins=(SkillsServerPlugin(), ...))` (explicit
 selection, `runtime.py:433`, `:524-525`). The composition inclusion itself is request G1.
 
@@ -396,7 +396,7 @@ fixtures (not test-dir files). Failure expectation carried from design: fake-gre
 
 ## Seams Q1 can build against today (no dependency)
 
-`server_plugin_api` full contract (§1) · bare-host `build_runtime(server_plugins=…)` test
+`ordessa_server_plugin_api` full contract (§1) · bare-host `build_runtime(server_plugins=…)` test
 loop (§7) · host storage ports (`database/objects/idempotency/notifier/data_root/assets
 root`) · `server_assets`/`server_profile_assets` schema & `SkillAssetStore` digest
 semantics for the migration ledger (§3, §5) · `workspaces.*` methods + `workspace.service`

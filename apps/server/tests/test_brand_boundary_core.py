@@ -159,7 +159,7 @@ def test_the_shared_layout_and_the_contract_agree_on_the_five_data_root_codes():
 
     assert DATA_ROOT_ERROR_CODES == tuple(LAYOUT["dataRootErrors"])
     shared = json.loads(
-        (REPO_ROOT / "apps/server/src/ordessa_server/bootstrap/data_root_layout.json")
+        (REPO_ROOT / "packages/infrastructure/src/ordessa_infrastructure/layout/data_root_layout.json")
         .read_text(encoding="utf-8")
     )
     assert list(shared["dataRootErrors"]) == list(DATA_ROOT_ERROR_CODES)

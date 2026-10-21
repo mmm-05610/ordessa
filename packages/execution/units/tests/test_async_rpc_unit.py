@@ -11,16 +11,16 @@ from openshell._proto import openshell_pb2 as pb, openshell_pb2_grpc as services
 from openshell.sandbox import SandboxClient
 from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore, EnvironmentRefused
 from ordessa_environments_openshell import OpenShellConfiguration, OpenShellEnvironmentProvider
-from ordessa_execution_agents.preparation import PreparedHarness, SessionBootstrap, ConfigurationResources
-from ordessa_execution_agents.harness.transport import LaunchSpec, LostReceipt, RequestTimeout
+from ordessa_agents.preparation import PreparedHarness, SessionBootstrap, ConfigurationResources
+from ordessa_agents.harness.transport import LaunchSpec, LostReceipt, RequestTimeout
 from ordessa_units.management import UnitInstance
 from ordessa_units.lifecycle.unit_lifecycle import UnitLifecycleRefused
 from ordessa_units.records import UnitRecords, OperationJournal
 from ordessa_units.records.unit_records import UnitRecordsRefused
 from ordessa_units.admission.connection import ConnectionLeasePort, ConnectionLeaseRefused
 from ordessa_units.sessions.evidence import AcpUnitEvidence
-from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref, canonical_content, content_digest
-from ordessa_execution_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
+from ordessa_agents.profiles import ProfileRevisionRef, encode_revision_ref, canonical_content, content_digest
+from ordessa_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 from types import SimpleNamespace
 from test_unit_instance import Authority, Scope
 

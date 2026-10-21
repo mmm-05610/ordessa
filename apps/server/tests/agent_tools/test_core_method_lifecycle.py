@@ -16,7 +16,7 @@ from ordessa_server.composition.configuration.product_selection import create_ho
 from ordessa_server.composition.plugin_host import MethodRegistry, ServerPluginHost, StreamRouteRegistry
 from ordessa_server.composition.unit_runtime import UnitRuntimeOwner
 from ordessa_units.persistence.sqlite import SqliteUnitStore, WriterLockHeldError
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     DuplicateMethodError, InvalidDeclarationError, ServerMethodDescriptor,
     ServerPluginDescriptor, ServerPluginRegistration,
 )
@@ -124,7 +124,7 @@ def test_invalid_core_batch_never_partially_publishes(tmp_path, bad):
         if bad == "container":
             return [descriptor()]
         invalid = {"owner": descriptor("agents.profiles.list", owner="fake.plugin"),
-                   "prefix": descriptor("profiles.list"), "type": object()}[bad]
+                   "prefix": descriptor("agents.profiles.list"), "type": object()}[bad]
         return (descriptor(), invalid)
     value, host, _ = runtime(tmp_path, factory)
     with pytest.raises(InvalidDeclarationError):

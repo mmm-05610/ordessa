@@ -5,7 +5,7 @@ pinned test harness definition; it is not production HarnessCatalog admission.
 """
 from threading import RLock
 from types import SimpleNamespace
-from ordessa_execution_agents.profiles import ProfileService,SqliteProfileStore,ProfileValidationError
+from ordessa_agents.profiles import ProfileService,SqliteProfileStore,ProfileValidationError
 from ordessa_infrastructure.security.fingerprints import HmacKeyRing
 from ordessa_infrastructure.encoding import canonical_bytes
 

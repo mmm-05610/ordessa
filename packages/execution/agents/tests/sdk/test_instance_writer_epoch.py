@@ -9,9 +9,9 @@ import pytest
 from interaction_fixtures import original_service,INSTANCE,DIGEST
 from test_interactions import Resolver,Guard,PARAMS_BYTES
 from test_acp_recorded_response import Protocol
-from ordessa_execution_agents.sdk.interactions import InteractionsRefused,GuardedSendObservation
-from ordessa_execution_agents.sdk.manager import Records,ManagerRefused
-from ordessa_execution_agents.sdk.native_contracts import METHODS
+from ordessa_agents.sdk.interactions import InteractionsRefused,GuardedSendObservation
+from ordessa_agents.sdk.manager import Records,ManagerRefused
+from ordessa_agents.sdk.native_contracts import METHODS
 
 
 def lifecycle_claim(records,request='stop'):

@@ -1,5 +1,5 @@
 """Actual Server/CoreRegistry + three independent providers; no native IO/model."""
-from ordessa_execution_agents.harness.providers.registry.errors import CatalogUnavailable
+from ordessa_agents.harness.providers.registry.errors import CatalogUnavailable
 from ordessa_server.composition.agent_tools.owner_ports import OwnerAssemblyRefused
 from pacthold.core.registration import RegistrationConflictError
 import importlib
@@ -115,7 +115,7 @@ def test_provider_selection_requires_v2_and_explicit_tuple(tmp_path):
 
 
 def test_duplicate_core_provider_rolls_back_all_selected_owners(tmp_path):
-    from server_plugin_api import ServerPluginDescriptor
+    from ordessa_server_plugin_api import ServerPluginDescriptor
     deployment = deployment_module()
     calls = []
     first = plugin(*FAMILIES[0], calls)

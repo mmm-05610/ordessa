@@ -20,8 +20,8 @@ import sys
 import ordessa_environments
 
 
-FORBIDDEN = {'pacthold','ordessa_units','ordessa_execution_agents','ordessa_server',
-    'ordessa_interfaces','ordessa_engineering','decision_runtime'}
+FORBIDDEN = {'pacthold','ordessa_units','ordessa_agents','ordessa_server',
+    'ordessa_interfaces','ordessa_engineering','ordessa_decision'}
 PURE_INFRASTRUCTURE = ('ordessa_infrastructure.encoding','ordessa_infrastructure.identifiers')
 DEFINITIONS = Path(ordessa_environments.__file__).parent / 'definitions'
 
@@ -68,7 +68,7 @@ def test_all_core_modules_are_independent_of_product_and_concrete_plugins():
 def test_injected_plugin_and_upper_layer_imports_are_detected():
     assert violations('from ordessa_environments_openshell.provider import OpenShellEnvironmentProvider') == ['ordessa_environments_openshell']
     assert violations('import ordessa_units.records\nfrom pacthold import Environment') == ['ordessa_units','pacthold']
-    assert violations('from ordessa_execution_agents.sandbox import Sandbox') == ['ordessa_execution_agents']
+    assert violations('from ordessa_agents.sandbox import Sandbox') == ['ordessa_agents']
     assert not violations('import sqlite3\nfrom .resources import EnvironmentManager')
     assert not violations('from ordessa_infrastructure.database.sqlite import create_connection')
 

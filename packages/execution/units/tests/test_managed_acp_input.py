@@ -15,7 +15,7 @@ from ordessa_units.channels.contracts import WorkspaceExecutionEvidence
 from ordessa_units.channels.reservations import CapturedInputRef
 from ordessa_units.admission.invocation import InvocationAuthorityRefused
 from ordessa_units.admission.connection import ConnectionLeaseRefused
-from ordessa_execution_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
 from ordessa_units.records import UnitRecordsRefused
 
 

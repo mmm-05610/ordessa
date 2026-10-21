@@ -8,7 +8,7 @@ objects so a test can assert the exact fact stayed primary.
 """
 from __future__ import annotations
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     SERVER_PLUGIN_API_VERSION,
     Contribution,
     ContributionBatch,

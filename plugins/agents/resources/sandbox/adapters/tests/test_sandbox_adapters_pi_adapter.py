@@ -19,7 +19,7 @@ from _sandbox_adapters_helpers import (
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import InvokeAction
+from ordessa_agents.harness.definitions import InvokeAction
 from ordessa_sandbox_api import SandboxErrorCode
 from ordessa_sandbox_adapters import (
     CompileRefusal,
@@ -115,7 +115,7 @@ def test_loaded_extension_compiles_a_real_platform_invoke_action():
         f"pi-sandbox-extension-loaded:sandbox-ext@{pin_version()}")
     # an action without a declared expected observation is refused by the
     # platform DTO, not by a private guard here
-    from ordessa_execution_agents.harness.definitions import ContractError
+    from ordessa_agents.harness.definitions import ContractError
     bare = result.intents[0].__class__(**{
         **{f: getattr(result.intents[0], f) for f in
            ("field_path_segments", "value", "kind", "intent", "target")},

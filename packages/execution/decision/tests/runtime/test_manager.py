@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from pydantic_graph import GraphBuilder
 
-from decision_runtime import (
+from ordessa_decision import (
     BusinessOutcome, DecisionManager, DecisionManagerError,
     DecisionRequest, DecisionServices, EvidenceUnknown, FlowRef, MemoryEvidenceSink,
     PolicyRef, ReadContext, RunContext, RunLimits, TaskBrief, TrustedFlow,

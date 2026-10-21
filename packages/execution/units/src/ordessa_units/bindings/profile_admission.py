@@ -4,7 +4,7 @@ These views borrow the Unit owner's lock, policy, fingerprint and atomic store.
 They add no connection, authority, grant, or persistent state; only the error
 vocabulary changes at the owner boundary.
 """
-from ordessa_execution_agents.profiles.definitions.errors import (
+from ordessa_agents.profiles.definitions.errors import (
     ProfileAccessRefused,
     ProfileChangeUnknown,
     ProfileStoreUnavailable,

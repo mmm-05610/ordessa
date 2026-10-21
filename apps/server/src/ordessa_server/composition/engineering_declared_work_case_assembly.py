@@ -46,7 +46,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from ordessa_execution_agents.profiles import ProfileRevisionRef
+from ordessa_agents.profiles import ProfileRevisionRef
 from ordessa_infrastructure.encoding import canonical_bytes
 from ordessa_infrastructure.identifiers import RequestKey
 from ordessa_engineering.adapters.decision.source_reviewer import DecisionReviewerSource
@@ -315,7 +315,7 @@ class _ReportCorrectionPorts:
             # authorize_acp_turn_query revalidates the ORIGINAL preparation's
             # profile_snapshot_ref/agent/environment against this permission.
             # The profile below is therefore not inferred from caller text.
-            from ordessa_execution_agents.profiles import encode_revision_ref
+            from ordessa_agents.profiles import encode_revision_ref
             return {'unit_ref': _plain(original.public_ref),
                 'profile_ref': encode_revision_ref(self.owner.permission.profile_revision),
                 'stop_record': _plain(self.records.owner_read_termination(unit_ref['unitId'], 'stop')),

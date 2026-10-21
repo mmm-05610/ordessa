@@ -4,7 +4,7 @@
 (`--data-root`, `--port`) and the loopback startup. Everything else the
 Server's command line accepts is declared here as `ServerFlagSpec` entries,
 contributed through the `cli.server-flags` v1 point that
-`server_plugin_api` names — and what the parsed values MEAN is decided by
+`ordessa_server_plugin_api` names — and what the parsed values MEAN is decided by
 `plan_server_cli`: which composition method runs, with which arguments, or
 which combination is refused and with what message. The host builds its
 parser from the contributed specs and calls the planned method generically,
@@ -25,7 +25,7 @@ from __future__ import annotations
 from typing import Any, Callable, Mapping
 from pathlib import Path
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     CLI_SERVER_FLAGS_API_VERSION,
     CLI_SERVER_FLAGS_POINT_ID,
     Contribution,

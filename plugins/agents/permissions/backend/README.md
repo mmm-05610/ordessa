@@ -2,7 +2,7 @@
 
 The §C1 authorizer service and the single authoritative store for approval
 facts (`server_approvals`). Public seam only: everything arrives through
-`server_plugin_api` types and the injected `database` port; nothing here
+`ordessa_server_plugin_api` types and the injected `database` port; nothing here
 imports a host, the compatibility layer, or the harness
 (`tests/test_backend_dependency_direction.py` enforces it).
 
@@ -98,8 +98,8 @@ The following constraints retain historical data and describe the remaining prod
    tool execution — that half answers a plain bool and the fence admits only
    `is True`, so no host type is involved. The submission half it refuses:
    the fence re-checks the permit against a frozen record the host owns
-   (`packages/interfaces/server/plugin-api/src/server_plugin_api/acp_admission.py`), its contract is
-   published in `server_plugin_api`, the prompt digest is computed by the
+   (`packages/interfaces/server/plugin-api/src/ordessa_server_plugin_api/acp_admission.py`), its contract is
+   published in `ordessa_server_plugin_api`, the prompt digest is computed by the
    host's private canonicalisation, and only the host's own refusal type
    survives the public port adapter as a typed code. Bind the original public permit/refusal contract through a Host-side authority over
    `ports[acp.admission.gate]`, and drop it in as this authority's

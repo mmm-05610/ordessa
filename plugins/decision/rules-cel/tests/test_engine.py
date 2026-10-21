@@ -1,7 +1,7 @@
 """`cel` engine tests; the mature dependency is currently BLOCKED (not installed)."""
 import pytest
 
-from decision_runtime.definitions.values import DecisionError
+from ordessa_decision.definitions.values import DecisionError
 from ordessa_decision_rules_cel import build
 
 PAYLOAD = {"checks": [{"id": "small", "when": "input.price < 10"}], "default": {"ok": True}}

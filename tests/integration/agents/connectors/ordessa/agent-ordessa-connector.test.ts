@@ -10,7 +10,7 @@ const SERVER = 'http://127.0.0.1:41207'
 const INSTANCE = `${SERVER}|server_1`
 const LOCATOR = '/run/ordessa/data-root/secrets/http-token'
 const capability = (id: string) => ({ id, supported: true })
-const ROUTES = ['workspaces.list', 'workspaces.open', 'workspaces.archive', 'profiles.list', 'sessions.list',
+const ROUTES = ['workspaces.list', 'workspaces.open', 'workspaces.archive', 'agents.profiles.list', 'sessions.list',
   'sessions.createAndSend', 'sessions.send', 'sendOutcome.query', 'history.snapshot', 'runs.stop', 'approvals.decide']
 
 const identityFor = (serverInstanceId: string, routes = ROUTES) => ({

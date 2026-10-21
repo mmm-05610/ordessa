@@ -7,7 +7,7 @@ No record-store creation, grant minting, recovery relaunch or alternate journal.
 from ordessa_units.lifecycle.unit_lifecycle import UnitLifecycle, UnitLifecycleRefused
 from ordessa_units.sessions.acp_factory import AcpChannelFactory
 from ordessa_units.sessions.callbacks import UnitCallbacks
-from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref, decode_revision
+from ordessa_agents.profiles import ProfileRevisionRef, encode_revision_ref, decode_revision
 from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_units.lifecycle.unit_lifecycle import same_reference, plain
 from collections.abc import Mapping
@@ -154,7 +154,7 @@ class UnitInstance(UnitLifecycle):
 
     def require_effect_write_guard(self, factory):
         """Check exact trusted fixed configuration; grant/reserve/send nothing."""
-        from ordessa_execution_agents.harness.transport import EffectWriteRefused
+        from ordessa_agents.harness.transport import EffectWriteRefused
         from ordessa_units.sessions.sdk_client import SdkAcpClient
         if not self._lifecycle_lock.acquire(blocking=False):
             raise EffectWriteRefused('original Unit configuration owner is busy')
@@ -184,7 +184,7 @@ class UnitInstance(UnitLifecycle):
         """
         from ordessa_units.sessions.acp_factory import AcpChannelRecord
         from ordessa_units.sessions.sdk_client import SdkAcpClient
-        from ordessa_execution_agents.harness.transport import EffectWriteRefused
+        from ordessa_agents.harness.transport import EffectWriteRefused
 
         if not self._lifecycle_lock.acquire(blocking=False):
             raise UnitLifecycleRefused('Original Unit lifecycle owner is busy')

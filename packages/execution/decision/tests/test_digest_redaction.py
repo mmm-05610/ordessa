@@ -1,7 +1,7 @@
 """Provider-safe digest invariants (JEV non-network assertions, core side)."""
 import pytest
 
-from decision_runtime.definitions.values import DecisionError, ContractError, canonical_bytes, digest
+from ordessa_decision.definitions.values import DecisionError, ContractError, canonical_bytes, digest
 
 
 def settings_projection(**overrides):

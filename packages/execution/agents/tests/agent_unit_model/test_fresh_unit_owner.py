@@ -176,7 +176,7 @@ def test_factory_cannot_substitute_harness_definition_or_retry_unknown(tmp_path,
 
 
 def test_foreign_fixed_profile_is_refused_before_factory(tmp_path):
-    from ordessa_execution_agents.profiles import encode_revision_ref
+    from ordessa_agents.profiles import encode_revision_ref
     with build_joint_owner(tmp_path) as j:
         foreign = replace(j.profile, environment_namespace='foreign')
         plan = {'profileSnapshot': {'ref': encode_revision_ref(foreign), 'manifest': {

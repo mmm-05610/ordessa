@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.providers.registry import (
     HARNESS_DEFINITION_VERSION,
     HarnessCatalog,
     HarnessDefinitionDeclaration,
@@ -19,7 +19,7 @@ from ordessa_execution_agents.harness.providers.registry import (
 from ordessa_execution_api.environment import GuaranteeUnavailableError
 from ordessa_harness_codex import CodexRuntimeProvider
 from ordessa_harness_codex.server_plugin import CodexServerPlugin
-from server_plugin_api import ServerPluginContext
+from ordessa_server_plugin_api import ServerPluginContext
 
 # Test fixture digest only — NOT a real implementation digest. Production
 # digests are injected by the deployment fingerprint gate.

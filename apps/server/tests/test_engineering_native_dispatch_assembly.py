@@ -261,7 +261,7 @@ def _bootstrap_resolver_fixture(tmp_path, *, refuse_start=False):
     from ordessa_engineering.domain.artifacts.method_binding import MethodRef
     from ordessa_engineering.domain.common.models.identity import ActorRef, Scope
     from ordessa_engineering.domain.common.models.values import Digest
-    from ordessa_execution_agents.profiles import ProfileRevisionRef
+    from ordessa_agents.profiles import ProfileRevisionRef
     from ordessa_server.composition.engineering_native_dispatch_assembly import _generation_unit_resolver
 
     scope = Scope('resolver-bootstrap-realm', 'resolver-bootstrap-project')
@@ -448,7 +448,7 @@ def _seeded_work_dispatch_fixture(tmp_path, *, schema_version=None, work_id=None
     from ordessa_engineering.domain.artifacts.method_binding import MethodRef
     from ordessa_engineering.domain.common.models.identity import ActorRef, Scope
     from ordessa_engineering.domain.common.models.values import Digest
-    from ordessa_execution_agents.profiles import ProfileRevisionRef
+    from ordessa_agents.profiles import ProfileRevisionRef
     from ordessa_server.composition.engineering_native_dispatch_assembly import (
         _generation_unit_resolver)
 
@@ -612,7 +612,7 @@ def implementation_selection():
     from ordessa_engineering.domain.common.models.identity import ActorRef, Scope
     from ordessa_engineering.domain.common.models.values import Digest
     from ordessa_engineering.domain.packages.refs import ImplementationPackageRef
-    from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref
+    from ordessa_agents.profiles import ProfileRevisionRef, encode_revision_ref
     from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
     from ordessa_server.composition.engineering_native_dispatch_assembly import _implementation_unit_resolver
 
@@ -681,7 +681,7 @@ def test_implementation_selector_reuses_original_public_manager_and_permission(i
 
 
 def test_implementation_selector_accepts_sealed_exact_profile_ref(implementation_selection):
-    from ordessa_execution_agents.profiles import encode_revision_ref
+    from ordessa_agents.profiles import encode_revision_ref
     from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
     case = implementation_selection
     assert case.resolve(case.context, case.work, sealed_mapping(encode_revision_ref(case.profile)),
@@ -690,7 +690,7 @@ def test_implementation_selector_accepts_sealed_exact_profile_ref(implementation
 
 @pytest.mark.parametrize('refusal', ['foreign-revision', 'extra-field', 'foreign-work'])
 def test_implementation_selector_rejects_substituted_input_before_inventory(implementation_selection, refusal):
-    from ordessa_execution_agents.profiles import encode_revision_ref
+    from ordessa_agents.profiles import encode_revision_ref
     case = implementation_selection
     profile, work = encode_revision_ref(case.profile), case.work
     expected = 'WORK_ACTION_IMPLEMENTATION_PROFILE_UNAVAILABLE'
@@ -709,7 +709,7 @@ def test_implementation_selector_rejects_substituted_input_before_inventory(impl
 @pytest.mark.parametrize('refusal', ['absent', 'ambiguous', 'stopped', 'agent', 'environment',
                                   'profile', 'archived', 'scope', 'permission', 'changed-handle'])
 def test_implementation_selector_refuses_without_creating_or_substituting(implementation_selection, refusal):
-    from ordessa_execution_agents.profiles import encode_revision_ref
+    from ordessa_agents.profiles import encode_revision_ref
     case = implementation_selection
     subject = case.grant_subject
     expected = 'WORK_ACTION_IMPLEMENTATION_UNIT_UNAVAILABLE'

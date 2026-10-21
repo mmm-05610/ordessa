@@ -1,7 +1,7 @@
 """The native-subagent-definitions domain plugin — one service, its wire face.
 
 Owns the `assets.subagents.*` wire methods, the `DefinitionStore` directory and
-the `DefinitionService` instance, registered through `server_plugin_api` and
+the `DefinitionService` instance, registered through `ordessa_server_plugin_api` and
 activated by the plugin host (T13 / gate G21: the product enables **one**
 service for this domain; nothing here keeps a second copy of the legacy
 authorization edge alive — grants, roster, `run_subagent` and child-turn limits
@@ -63,7 +63,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ServerPluginContext,
     ServerPluginDescriptor,
     ServerPluginRegistration,

@@ -4,11 +4,11 @@ from __future__ import annotations
 import json
 from importlib.resources import files
 
-from decision_runtime import canonical, digest
+from ordessa_decision import canonical, digest
 
 
 def test_all_packaged_vectors_canonical_and_digest():
-    raw = files('decision_runtime').joinpath('definitions', 'vectors.json').read_text(encoding='utf-8')
+    raw = files('ordessa_decision').joinpath('definitions', 'vectors.json').read_text(encoding='utf-8')
     vectors = json.loads(raw)
     assert len(vectors) == 5, 'the packaged vector set must not shrink'
     names = {v['name'] for v in vectors}

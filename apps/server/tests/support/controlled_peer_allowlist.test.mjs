@@ -36,8 +36,8 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../
 const TESTS_PATH_PATTERN = new RegExp(`tests[/"'.  ]*(acp_orchestration|acp-connector|integration)`)
 
 const PRODUCTION_ROOTS = [
-  "packages/execution/agents/src/ordessa_execution_agents/harness/transport",
-  "packages/execution/agents/src/ordessa_execution_agents/harness/definitions",
+  "packages/execution/agents/src/ordessa_agents/harness/transport",
+  "packages/execution/agents/src/ordessa_agents/harness/definitions",
   "apps/server/src/ordessa_server/composition/native_channels",
   ...["codex","claude-code","opencode","hermes","dsh","kilo","pi","qwen","grok-build"]
     .map(brand => `plugins/harness/${brand}/src/ordessa_harness_${brand.replaceAll('-','_')}/acp`),

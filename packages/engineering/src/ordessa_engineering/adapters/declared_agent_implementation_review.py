@@ -8,7 +8,7 @@ from dataclasses import asdict
 import hashlib
 from collections.abc import Mapping
 
-from ordessa_execution_agents.profiles import ProfileRevisionRef, ProfileService, encode_revision_ref
+from ordessa_agents.profiles import ProfileRevisionRef, ProfileService, encode_revision_ref
 from ordessa_infrastructure.encoding import canonical_bytes, decode_json
 from ..application.contracts.agent_report_review import (AgentReportAuthorship,
     AGENT_REPORT_REVIEW_CONTRACT, CAPABILITY, INTERFACE_VERSION)

@@ -8,12 +8,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
 import json
-from ordessa_execution_agents.harness.definitions import ApplicationTarget, Confirmed, Plan, Refused
-from ordessa_execution_agents.harness.definitions.native_evidence import NativeEvidence
-from ordessa_execution_agents.units.records.operation_journal import (
+from ordessa_agents.harness.definitions import ApplicationTarget, Confirmed, Plan, Refused
+from ordessa_agents.harness.definitions.native_evidence import NativeEvidence
+from ordessa_agents.units.records.operation_journal import (
     FenceObservation, NativeActivationReceipt, OperationJournal,
 )
-from ordessa_execution_agents.units.records.native_evidence import NativeEvidenceService
+from ordessa_agents.units.records.native_evidence import NativeEvidenceService
 
 EVIDENCE_SUPPORTED_BRANDS = ("pi", "codex", "claude-code")
 
@@ -66,7 +66,7 @@ class ControlledNativeStandIn:
 
     def observe(self, receipt: NativeActivationReceipt,
                 files: tuple[tuple[tuple[str, ...], str], ...]):
-        from ordessa_execution_agents.harness.contracts.models.application import NativeReadback
+        from ordessa_agents.harness.contracts.models.application import NativeReadback
         return NativeReadback(receipt.target, receipt.native_session_identity,
                               receipt.applied_revision, {"stand-in": self.brand}, files,
                               f"{self.brand}:native-readback:{receipt.operation_id}",

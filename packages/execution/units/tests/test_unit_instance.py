@@ -15,10 +15,10 @@ import pytest
 from ordessa_environments_local import LocalEnvironmentResourceProvider
 from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore
 import asyncio
-from ordessa_execution_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
-from ordessa_execution_agents.preparation import PreparedHarness, SessionBootstrap, ConfigurationResources
-from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref, canonical_content, content_digest
-from ordessa_execution_agents.harness.transport import LaunchSpec, ProcessChannel
+from ordessa_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
+from ordessa_agents.preparation import PreparedHarness, SessionBootstrap, ConfigurationResources
+from ordessa_agents.profiles import ProfileRevisionRef, encode_revision_ref, canonical_content, content_digest
+from ordessa_agents.harness.transport import LaunchSpec, ProcessChannel
 from ordessa_units.management import UnitInstance
 from ordessa_units.lifecycle.unit_lifecycle import UnitLifecycleRefused
 from ordessa_units.records import UnitRecords, OperationJournal
@@ -257,7 +257,7 @@ def test_profile_drift_refuses_before_acquire_or_record_reservation(flow):
 
 def test_profile_content_tampering_is_rejected_before_effects(flow):
     flow.plan['profileSnapshot']['manifest']['metadata']['marker']='forged'
-    from ordessa_execution_agents.profiles import ProfileValidationError
+    from ordessa_agents.profiles import ProfileValidationError
     with pytest.raises(ProfileValidationError,match='digest does not match'):
         flow.instance.prepare(flow.plan,flow.authority.issue('prepare'))
     assert flow.environments.opens==0
@@ -534,7 +534,7 @@ def test_configuration_original_authority_cut_prevents_bytes_at_admitted_write(f
 
 
 def test_remote_prompt_failure_preserves_sdk_error_and_releases_original_use(flow, monkeypatch):
-    from ordessa_execution_agents.harness.protocols.acp import AcpRemoteError
+    from ordessa_agents.harness.protocols.acp import AcpRemoteError
     failing_peer = PEER.replace("elif method=='session/prompt':", """elif method=='session/prompt':
         print(json.dumps({'jsonrpc':'2.0','id':q['id'],'error':{'code':-32603,'message':'backend prompt failed','data':{'source':'backend','error':'controlled Connection error'}}}),flush=True)
         continue

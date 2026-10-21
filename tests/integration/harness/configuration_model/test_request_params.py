@@ -10,12 +10,12 @@ from __future__ import annotations
 import pytest
 from ordessa_harness_codex import acp_model_facts as codex_facts
 from ordessa_harness_pi import acp_model_facts as pi_facts
-from ordessa_execution_agents.harness.definitions.model_compilation import parse_version
+from ordessa_agents.harness.definitions.model_compilation import parse_version
 from _brand_c2 import adapter_for, descriptor_for, c2_module
 from ordessa_harness_codex.acp_model_configuration import CodexAdapter
 from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
 from ordessa_harness_pi.acp_model_configuration import PiAdapter
-from ordessa_execution_agents.harness.definitions.model_compilation import (
+from ordessa_agents.harness.definitions.model_compilation import (
     AdapterContext, ChoiceRequest, IntentSet, Refusal, RequestParams,
     TargetHandle,
 )
@@ -233,7 +233,7 @@ def test_payload_schema_carries_the_closed_request_params_object():
 
 
 def test_malformed_request_params_answer_typed_results_not_raw_valueerror():
-    from ordessa_execution_agents.harness.definitions import ErrorCode, TargetHandle as HarnessTargetHandle
+    from ordessa_agents.harness.definitions import ErrorCode, TargetHandle as HarnessTargetHandle
 
     class _Target:
         kind = "file"
@@ -297,10 +297,10 @@ def test_the_pi_descriptor_claims_the_settings_target_and_the_codex_effort_field
 def test_an_unissued_param_target_compiles_to_a_typed_refusal_not_a_lookalike():
     """The Pi settings claim is inert until the host issues it; C2 refuses
     with CAPABILITY_UNSUPPORTED instead of writing through a lookalike."""
-    from ordessa_execution_agents.harness.definitions.model_compilation import (
+    from ordessa_agents.harness.definitions.model_compilation import (
         AdapterContext as Local, TargetHandle as LocalHandle)
 
-    from ordessa_execution_agents.harness.definitions import TargetHandle as HarnessTargetHandle
+    from ordessa_agents.harness.definitions import TargetHandle as HarnessTargetHandle
     class _Target:
         kind = "file"
         handle = HarnessTargetHandle("pi.models.json", 0)
@@ -329,6 +329,6 @@ def test_an_unissued_param_target_compiles_to_a_typed_refusal_not_a_lookalike():
             "requestParams": {"retry": {
                 "enabled": False, "maxRetries": 0,
                 "provider": {"maxRetries": 0, "maxRetryDelayMs": 1}}}})
-    from ordessa_execution_agents.harness.definitions import ErrorCode
+    from ordessa_agents.harness.definitions import ErrorCode
     assert refused.code is ErrorCode.CAPABILITY_UNSUPPORTED
     assert "has not issued" in refused.reason

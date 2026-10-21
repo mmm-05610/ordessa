@@ -46,7 +46,7 @@ python3.12 -m venv .venv
 .venv/bin/python -m pip install -e apps/server -e 'plugins/harness[dev]' 'apps/server[dev]' 'packages/pacthold[dev]'
 .venv/bin/python -m pip install -e plugins/server-compat -e plugins/workspace            # 文档缺
 .venv/bin/python -m pip install -e products/server                                       # 文档缺
-.venv/bin/python -c "import pacthold, ordessa_server, ordessa_harness, server_plugin_api"  # exit 0
+.venv/bin/python -c "import pacthold, ordessa_server, ordessa_harness, ordessa_server_plugin_api"  # exit 0
 ```
 
 两处可观测后果（都实测过）：
@@ -206,7 +206,7 @@ python3.12 -m venv .venv
   apps/server 43 failed+25 errors+10 skipped（exit 1，与 R0 权威账逐 ID 相同集合）。
 
 处置：已派 Prompts 域**接续切片**（只写 `plugins/assets/prompts/**` 与本 feature 的 `prompts/` 子目录），
-任务是补齐 G01–G08 反例、完成真实 `server_plugin_api` 注册的 T06 与 PR-R1..R3 回工；
+任务是补齐 G01–G08 反例、完成真实 `ordessa_server_plugin_api` 注册的 T06 与 PR-R1..R3 回工；
 两域在红 ID 清零之前不作为验收证据。
 
 ---

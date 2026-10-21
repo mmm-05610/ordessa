@@ -1,7 +1,7 @@
 """T02 dependency-direction gate for `ordessa_permissions_backend`.
 
 Allowed imports in `src/`: the standard library, `ordessa_permissions_api`,
-and `server_plugin_api` only. The host, the compat layer, pacthold and the
+and `ordessa_server_plugin_api` only. The host, the compat layer, pacthold and the
 harness are forbidden - the database arrives as an injected object typed by a
 small local Protocol, never by importing the host's class.
 """
@@ -17,7 +17,7 @@ FORBIDDEN_ROOTS = {
     "ordessa_workspace", "ordessa_sandbox_backend", "fastapi", "pydantic", "httpx",
     "sqlite3", "subprocess", "socket", "urllib", "requests",
 }
-ALLOWED_ROOTS = {"__future__", "ordessa_permissions_api", "server_plugin_api"}
+ALLOWED_ROOTS = {"__future__", "ordessa_permissions_api", "ordessa_server_plugin_api"}
 STDLIB_OK = set(sys.stdlib_module_names)
 
 

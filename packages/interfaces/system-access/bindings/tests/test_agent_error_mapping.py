@@ -8,11 +8,11 @@ from ordessa_units.errors import (
     UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch,
     UnitComparisonUnavailable, UnitOperationUnknown,
 )
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     HistoricalProfileIdentityMismatch, ProfileAccessRefused,
     ProfileStoreUnavailable, ProfileChangeUnknown,
 )
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 
 @pytest.mark.parametrize("error,code", [

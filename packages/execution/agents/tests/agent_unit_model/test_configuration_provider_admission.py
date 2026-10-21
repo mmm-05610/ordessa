@@ -8,17 +8,17 @@ or user-service access.
 import pytest
 from pacthold.adapters.sqlite.environment.store import SqliteStorePort
 
-from ordessa_execution_agents.harness.providers.registry.errors import CatalogAdmissionRefused, CatalogIdentityConflict
-from ordessa_execution_agents.harness.definitions.activation import HarnessActivationRef
+from ordessa_agents.harness.providers.registry.errors import CatalogAdmissionRefused, CatalogIdentityConflict
+from ordessa_agents.harness.definitions.activation import HarnessActivationRef
 from ordessa_infrastructure.encoding.immutable_json import sealed_mapping
 from pacthold.public import Environment, InstallationRecord
 from pacthold.core.registration import RegistrationConflictError
-from ordessa_execution_agents.harness.definitions.errors import CoreDTOError
+from ordessa_agents.harness.definitions.errors import CoreDTOError
 from pacthold.core.registration import CoreContributionSet
-from ordessa_execution_agents.harness.definitions.configuration_providers import (
+from ordessa_agents.harness.definitions.configuration_providers import (
     CONFIGURATION_PROVIDER_VERSION, ConfigurationProviderDescriptor, ConfigurationRoute,
 )
-from ordessa_execution_agents.harness.providers.registry.contributions import (
+from ordessa_agents.harness.providers.registry.contributions import (
     AgentContributionSet, RuntimeProviderDescriptor,
     RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS,
 )

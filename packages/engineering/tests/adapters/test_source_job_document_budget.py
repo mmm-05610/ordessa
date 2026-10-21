@@ -3,9 +3,9 @@ import asyncio
 from dataclasses import replace
 
 import pytest
-from decision_runtime import DecisionAnswer, FilesystemEvidenceStore, default_host_limits
-from decision_runtime.definitions.values import MAX_JOB_DOCUMENT_BYTES, canonical_bytes
-from decision_runtime.evidence import EvidenceScope
+from ordessa_decision import DecisionAnswer, FilesystemEvidenceStore, default_host_limits
+from ordessa_decision.definitions.values import MAX_JOB_DOCUMENT_BYTES, canonical_bytes
+from ordessa_decision.evidence import EvidenceScope
 from ordessa_engineering.adapters.decision.source_job import SourceReviewJobServices
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from test_itemized_source_reviews import _full_input_reviewer

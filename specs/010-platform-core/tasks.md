@@ -13,7 +13,7 @@ Format: Txxx [P] [USn]；[P] 仅表示独立文件/无前置依赖。每线只�
 ## Phase 2 — Foundational
 
 - [x] T004 A 在 packages/pacthold/src/pacthold/public.py 及对应中性模块建立 C1 完整 DTO/签名；packages/pacthold/tests/platform/test_public_contract.py 写正反契约测试；独立提交并在 reports/A.md 发布契约 exact SHA。依赖 T001。
-- [x] T005 [P] B 在 packages/server-plugin-api/src/server_plugin_api/ 增 C2 贡献协议与明确错误；包内契约测试证明零依赖、非法声明拒绝。依赖 T002，不依赖 A 实现。
+- [x] T005 [P] B 在 packages/server-plugin-api/src/ordessa_server_plugin_api/ 增 C2 贡献协议与明确错误；包内契约测试证明零依赖、非法声明拒绝。依赖 T002，不依赖 A 实现。
 - [x] T006 [P] C 设计并实现 packages/workbench/api 与业务 API 归属、共享模块构建映射；先补真实构建 Token 灵敏度反例。依赖 T003。
 
 ## Phase 3 — US1 核心自然接入（A）

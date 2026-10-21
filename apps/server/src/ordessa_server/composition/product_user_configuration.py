@@ -19,7 +19,7 @@ from ordessa_engineering.domain.changes.refs import ProposalRef
 from ordessa_engineering.domain.reviews.target_codec import decode_subject_ref
 from ordessa_engineering.domain.reviews.refs import SubmissionRef
 from ordessa_engineering.application.contracts.commands import CommandContext
-from ordessa_execution_agents.profiles import ProfileRevisionRef, ProfileService, decode_revision_ref
+from ordessa_agents.profiles import ProfileRevisionRef, ProfileService, decode_revision_ref
 from ordessa_environments import EnvironmentManager
 from ordessa_units.admission.context import UnitAdmissionContext
 from ordessa_units.public import composed_profile_service

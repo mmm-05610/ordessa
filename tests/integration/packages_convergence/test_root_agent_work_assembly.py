@@ -14,7 +14,7 @@ from test_agent_guarded_bootstrap import setup, PEER
 from test_original_access_handoff import other_thread
 from agent_work_business_fixture import build_agent_work_package_approval
 from test_real_source_chain import NOW, PRINCIPAL, SCOPE
-from ordessa_execution_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.application.contracts.work_context import decode_work_binding
 from ordessa_engineering.domain.approvals.scope import EnvironmentRef
@@ -26,7 +26,7 @@ from ordessa_system_access_bindings.engineering_wire import EngineeringWireBindi
 from ordessa_server.composition.agent_owner import AgentOwnerInputs
 from ordessa_server.composition.agent_bindings.native_access import OriginalNativeAccess
 from ordessa_server.composition.agent_bindings.profile_access import OriginalProfileAccess
-from ordessa_execution_agents.capability.profiles import build_profile_capability
+from ordessa_agents.capability.profiles import build_profile_capability
 from ordessa_server.composition.engineering_agent_work_assembly import (
     RootAgentWorkDispatchInputs, root_agent_application_ports_factory)
 from ordessa_server.composition.packages_convergence import build_product_registry_runtime

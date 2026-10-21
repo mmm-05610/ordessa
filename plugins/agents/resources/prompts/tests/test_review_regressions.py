@@ -26,7 +26,7 @@ from ordessa_prompts.backend.service import PromptsService
 from ordessa_prompts.backend.storage import PromptsStore
 from ordessa_prompts.plugin import PromptsServerPlugin
 
-from server_plugin_api import ServerPluginContext
+from ordessa_server_plugin_api import ServerPluginContext
 
 SRC = Path(__file__).resolve().parents[1] / "src" / "ordessa_prompts"
 

@@ -8,7 +8,7 @@ from ordessa_interfaces.system_access.access_control.authentication import Insta
 from ordessa_server.composition.packages_convergence import build_product_registry_runtime
 from ordessa_server_product.composition import ServerProductComposition
 from ordessa_server.composition.agent_owner import AgentOwnerInputs,AgentOwnerUnavailable
-from ordessa_execution_agents.capability.profiles import build_profile_capability
+from ordessa_agents.capability.profiles import build_profile_capability
 from ordessa_server.composition.agent_bindings.profile_access import OriginalProfileAccess
 from test_agent_guarded_bootstrap import setup,PEER
 
@@ -28,7 +28,7 @@ def test_product_original_root_records_profile_capability_and_empty_grants(tmp_p
         root=tmp_path/'product';runtime=None;caller=[None]
         scope=Scope('fixture-realm','fixture-project')
         issuer=InstanceAccessAuthority(lambda:'controlled-product-test-token',principal_id='existing-test-caller',
-            grants=(AccessGrant(scope,('profiles.list',)),),legacy_principal=None)
+            grants=(AccessGrant(scope,('agents.profiles.list',)),),legacy_principal=None)
         access=OriginalProfileAccess(issuer,caller_resolver=lambda invocation:caller[0] if invocation is case.fixture.invocation else None,
             scope_for_service=lambda service:scope if service is case.owner.service else None,
             principal_scope_for_caller=lambda value:'principal:'+value.principal_id)
@@ -49,7 +49,7 @@ def test_product_original_root_records_profile_capability_and_empty_grants(tmp_p
             assert runtime.agent_owner.interactions.records is runtime.agent_owner.records
             assert not (root/'state'/'core.sqlite').exists()
             assert (root/'state'/'agent-owner'/'agent-instances.sqlite').is_file()
-            body={'jsonrpc':'2.0','id':'list','method':'operations.call','params':{'operationId':'profiles.list','input':{}}}
+            body={'jsonrpc':'2.0','id':'list','method':'operations.call','params':{'operationId':'agents.profiles.list','input':{}}}
             answer=await runtime.wire(body,'Bearer controlled-product-test-token')
             assert answer['result']['status']=='completed' and answer['result']['data']['entries'][0]['profileId']=='peer'
             before=case.owner.service._profile_store._conn.total_changes
@@ -72,11 +72,11 @@ def test_product_original_root_records_profile_capability_and_empty_grants(tmp_p
 def test_product_root_native_original_receiver_and_cold_reopen_no_second_use(tmp_path,lose_root):
     import hashlib,shutil
     from ordessa_server.composition.agent_bindings.native_access import OriginalNativeAccess,NATIVE_READ,NATIVE_CAPABILITIES
-    from ordessa_execution_agents.capability.native import build_native_capability
+    from ordessa_agents.capability.native import build_native_capability
     from ordessa_infrastructure.encoding import canonical_bytes
     from test_recorded_native_configuration import PEER as NATIVE_PEER,OPTIONS,METHODS,ROOT
     async def scenario():
-        module=(ROOT/'packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/operation.mjs').as_uri()
+        module=(ROOT/'packages/execution/agents/src/ordessa_agents/harness/configuration/acp/operation.mjs').as_uri()
         peer=NATIVE_PEER.replace('MODULE',json.dumps(module)).replace('OPTIONS',json.dumps(OPTIONS))
         case=await setup(tmp_path/'fixture',peer,runner=(shutil.which('node'),),peer_name='peer.mjs')
         root=tmp_path/'product-native';runtime=None;caller=[None];started=[None]

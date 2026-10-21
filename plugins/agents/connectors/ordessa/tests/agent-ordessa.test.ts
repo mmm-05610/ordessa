@@ -222,7 +222,7 @@ it('refuses a first send whose hello identity the Server does not confirm', () =
 const REQUEST_ID = 'draft_11111111-1111-4111-8111-111111111111'
 const HELLO_FRAME = {
   serverId: 'server_1', protocolVersion: 'wire/1',
-  capabilities: ['workspaces.list', 'workspaces.open', 'profiles.list', 'sessions.createAndSend', 'sessions.send', 'sendOutcome.query']
+  capabilities: ['workspaces.list', 'workspaces.open', 'agents.profiles.list', 'sessions.createAndSend', 'sessions.send', 'sendOutcome.query']
     .map(id => ({ id, supported: true })),
   harnesses: [{ id: 'pi' }], nativeExecution: { mode: 'native', harness: 'pi', profileId: 'p_pi' },
 }
@@ -230,7 +230,7 @@ const DEFAULT_RESULTS: Record<string, Record<string, unknown>> = {
   'server.hello': HELLO_FRAME,
   'workspaces.list': { items: [{ id: 'W1', normalizedPath: '/repo/app', environment: { kind: 'local' }, archivedAt: null }] },
   'workspaces.open': { workspace: { id: 'W1', normalizedPath: '/repo/app', archivedAt: null } },
-  'profiles.list': { items: [{ id: 'p_pi', harness: 'pi', displayName: 'Pi', sendability: { state: 'ready' }, recoveryPending: false }] },
+  'agents.profiles.list': { items: [{ id: 'p_pi', harness: 'pi', displayName: 'Pi', sendability: { state: 'ready' }, recoveryPending: false }] },
   'sessions.createAndSend': { session: { id: 'session_7' }, outcome: 'accepted' },
   'sendOutcome.query': { outcome: 'unknown' },
 }
@@ -273,7 +273,7 @@ it('stops a first send whose project is already gone, before any send frame exis
   // The refusal carries the closed family and the typed code, never the Server text that quoted a host path.
   expect((failure as Error).message).toContain('LOCAL_PATH_MISSING')
   expect((failure as Error).message).not.toMatch(/home|private/)
-  expect(half.methods()).toEqual(['server.hello', 'profiles.list', 'workspaces.list', 'workspaces.open'])
+  expect(half.methods()).toEqual(['server.hello', 'agents.profiles.list', 'workspaces.list', 'workspaces.open'])
   await half.connection.close()
 })
 
@@ -292,7 +292,7 @@ it('keeps a typed send-period project loss deterministic instead of asking the S
   const half = await nativeHalf({ 'sessions.createAndSend': refuse('NOT_FOUND', 'the workspace is gone', 'NATIVE_PROJECT_CHANGED') })
   const failure = await half.failureOf(half.firstSend())
   expect((failure as Error).message).toMatch(/^project-invalid: /)
-  expect(half.methods()).toEqual(['server.hello', 'profiles.list', 'workspaces.list', 'workspaces.open', 'sessions.createAndSend'])
+  expect(half.methods()).toEqual(['server.hello', 'agents.profiles.list', 'workspaces.list', 'workspaces.open', 'sessions.createAndSend'])
   expect(half.calls.some(call => call.method === 'sendOutcome.query')).toBe(false)
   await half.connection.close()
 })
@@ -346,7 +346,7 @@ it('does not call a lost conversation with the Server a lost project', async () 
   // Availability proves nothing about the pick, so the selection stays and no re-selection is demanded.
   expect(failure?.code).toBe('UNAVAILABLE')
   expect(failure?.message).not.toMatch(/project-invalid/)
-  expect(half.methods()).toEqual(['server.hello', 'profiles.list', 'workspaces.list'])
+  expect(half.methods()).toEqual(['server.hello', 'agents.profiles.list', 'workspaces.list'])
   await half.connection.close()
 })
 

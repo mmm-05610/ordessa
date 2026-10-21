@@ -11,8 +11,8 @@ from ordessa_units.bindings.publication import (
     AgentNodeRef, NodePublication, NodePublicationEvidence, encode_node_ref,
     decode_node_ref, IDENTITIES, NODES,
 )
-from ordessa_execution_agents.harness.providers.registry.contributions import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.providers.registry.contributions import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
+from ordessa_agents.harness.providers.registry import (
     HarnessCatalog, HarnessDefinitionDeclaration, HarnessDefinitionDescriptor,
     HarnessInstallationObservation,
 )

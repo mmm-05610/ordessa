@@ -8,7 +8,7 @@ import time
 import pytest
 
 from ordessa_environments import EnvironmentRefused
-from ordessa_execution_agents.harness.transport import RequestTimeout
+from ordessa_agents.harness.transport import RequestTimeout
 from test_local_owner import live_owner
 
 

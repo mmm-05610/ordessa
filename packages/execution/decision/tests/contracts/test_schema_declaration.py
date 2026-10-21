@@ -12,14 +12,14 @@ from __future__ import annotations
 import json
 from importlib.resources import files
 
-from decision_runtime import DecisionRequest, DecisionResult, json_schema
+from ordessa_decision import DecisionRequest, DecisionResult, json_schema
 
 _SCHEMAS = {'request': DecisionRequest, 'result': DecisionResult}
 
 
 def test_packaged_schema_bytes_match_declaration_generation():
     for name, cls in _SCHEMAS.items():
-        raw = files('decision_runtime').joinpath('definitions', f'{name}.schema.json').read_text(encoding='utf-8')
+        raw = files('ordessa_decision').joinpath('definitions', f'{name}.schema.json').read_text(encoding='utf-8')
         assert json.loads(raw) == json_schema(cls), name
 
 

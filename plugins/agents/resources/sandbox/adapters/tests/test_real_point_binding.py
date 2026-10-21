@@ -24,8 +24,8 @@ from ordessa_server.composition.configuration.contributions import CONFIGURATION
 from ordessa_server.composition.configuration.contributions import POINT_API_VERSION as REAL_POINT_API_VERSION
 from ordessa_server.composition.configuration.contributions import ConfigurationAdapterDescriptor as RealDescriptor
 from ordessa_server.composition.configuration.contributions import FieldClaim as RealFieldClaim
-from ordessa_execution_agents.harness.definitions import ContractError, ValueSchema
-from server_plugin_api import Contribution, ContributionBatch
+from ordessa_agents.harness.definitions import ContractError, ValueSchema
+from ordessa_server_plugin_api import Contribution, ContributionBatch
 
 from ordessa_sandbox_adapters import (
     ClaudeSandboxAdapter,

@@ -6,7 +6,7 @@ runtime hands it.
 """
 from __future__ import annotations
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, Installation, TargetDescriptor, TargetHandle,
 )
 

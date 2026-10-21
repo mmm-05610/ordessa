@@ -6,8 +6,8 @@ import asyncio
 from types import SimpleNamespace
 import pytest
 from test_agent_guarded_bootstrap import setup
-from ordessa_execution_agents.sdk.interactions import InteractionService,InteractionsRefused
-from ordessa_execution_agents.sdk.endpoint import BoundEndpoint
+from ordessa_agents.sdk.interactions import InteractionService,InteractionsRefused
+from ordessa_agents.sdk.endpoint import BoundEndpoint
 from ordessa_engineering.adapters.native_records.agent_recorded_dispatch import RecordedDispatchExecution
 from ordessa_engineering.adapters.persistence.sqlite.engineering_library import EngineeringLibrary
 from ordessa_engineering.adapters.persistence.sqlite.blob_store import SQLiteBlobStore

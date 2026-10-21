@@ -48,16 +48,16 @@ The pure domain deliberately imports **none** of these at runtime (stdlib only);
 they are the seam vocabulary a future Server-plugin host would consume, and their
 existence was proven by actually importing them:
 
-- `server_plugin_api` — `SERVER_PLUGIN_API_VERSION`, `ServerMethodDescriptor`,
+- `ordessa_server_plugin_api` — `SERVER_PLUGIN_API_VERSION`, `ServerMethodDescriptor`,
   `ServerPluginDescriptor`, `ServerPluginContext`, `ServerPluginRegistration`,
   `StreamRouteDescriptor`, `HttpRouteDescriptor`, `ServerPlugin`, and typed errors
   `ServerPluginError`, `InvalidDeclarationError`, `DuplicateMethodError`, … (the
-  full list in `packages/server-plugin-api/src/server_plugin_api/__init__.py`).
+  full list in `packages/server-plugin-api/src/ordessa_server_plugin_api/__init__.py`).
 - `pacthold.storage` — `Database`, `FutureSchemaError`, `ObjectStore`,
   `ObjectRecord`, `SecretStore` (+ `MemorySecretStore`, `WindowsDpapiSecretStore`).
 
 `pip install -e` of `packages/pacthold` and `packages/server-plugin-api` into the
-isolated venv succeeded (exit 0); `import pacthold, server_plugin_api` succeeded.
+isolated venv succeeded (exit 0); `import pacthold, ordessa_server_plugin_api` succeeded.
 
 ## 3. Toolchain (this environment)
 
@@ -137,7 +137,7 @@ This change is **purely additive**: all files are new under
 against the committed tree for the package is empty after the mutation harness
 restored every file, confirming no existing suite was modified and no stray edit
 was left behind. Consequently no pre-existing test id is affected, and the
-dependency packages (`pacthold`, `server_plugin_api`) were consumed as installed
+dependency packages (`pacthold`, `ordessa_server_plugin_api`) were consumed as installed
 deps, not edited.
 
 The only suite in scope is the new package's own, run clean this turn:

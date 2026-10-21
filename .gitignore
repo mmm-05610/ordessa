@@ -59,8 +59,8 @@ packaging/.keys/
 /.toolchains/
 
 # W08 sole neutral runtime and its inherited regression sources.
-!/packages/execution/decision/src/decision_runtime/runtime/
-!/packages/execution/decision/src/decision_runtime/runtime/*.py
+!/packages/execution/decision/src/ordessa_decision/runtime/
+!/packages/execution/decision/src/ordessa_decision/runtime/*.py
 !/packages/execution/decision/tests/runtime/
 !/packages/execution/decision/tests/runtime/*.py
 

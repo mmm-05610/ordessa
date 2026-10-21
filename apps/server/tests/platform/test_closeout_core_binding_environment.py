@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 from ordessa_server.composition.unit_runtime import UnitRuntimeOwner
 from ordessa_server.composition.harness_registration import HarnessDefinitionHandler
-from server_plugin_api import ServerPluginDescriptor
+from ordessa_server_plugin_api import ServerPluginDescriptor
 from test_unit_governance_product import scope,declaration
 
 

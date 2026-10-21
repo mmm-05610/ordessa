@@ -27,9 +27,21 @@ class DispatchError(ContractError):
 
 @dataclass(frozen=True, slots=True)
 class RequestContext:
+    """One dispatched operation's identity, deadline and trusted local binding.
+
+    ``principal`` stays a JSON object: it is data a handler may inspect or log.
+    ``invocation`` is the opposite on purpose — a process-local object minted by
+    trusted composition (for the Server: the ``VerifiedPrincipal`` the instance
+    authority authenticated for THIS request). It is never serialized, never
+    crosses the wire and must not be persisted, so a handler can re-check the
+    original authority without a global "last caller" slot. A handler that does
+    not receive one must refuse rather than treat absence as permission.
+    """
+
     principal: Mapping[str, Any]
     request_id: str
     deadline: float | None = None
+    invocation: object | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.principal, Mapping):

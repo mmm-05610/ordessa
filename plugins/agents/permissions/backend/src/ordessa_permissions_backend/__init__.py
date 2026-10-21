@@ -35,7 +35,7 @@ Composition of this package:
   see the package README for the migration sequence.
 
 Depends only on the standard library, `ordessa_permissions_api` and
-`server_plugin_api`; the database is injected. `PermissionsHostAcpAuthority`
+`ordessa_server_plugin_api`; the database is injected. `PermissionsHostAcpAuthority`
 (T021) offers this lane to the channel fence as its permit verifier: it owns
 the tool-execution half outright (a plain bool against the recorded approval)
 and refuses the submission half until the composition injects the bound

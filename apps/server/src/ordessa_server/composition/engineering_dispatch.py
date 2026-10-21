@@ -31,7 +31,7 @@ def native_dispatch_sources(source,*,read_invocation_resolver):
 class OriginalAgentDispatchQueries:
     """Trusted mapping to an original READ invocation; never query from a digest."""
     def __init__(self,source,*,request_factory):
-        from ordessa_execution_agents.public import InteractionService
+        from ordessa_agents.public import InteractionService
         if type(source) is not InteractionService or not callable(request_factory):
             raise ValueError('Original Agent query owner required')
         self.source,self.request_factory=source,request_factory

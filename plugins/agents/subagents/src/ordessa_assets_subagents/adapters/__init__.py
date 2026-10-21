@@ -8,7 +8,7 @@ only compiling and interpreting it.
 Since `harness-api` was published at its historical checkpoint, the intent
 vocabulary is C0's, not ours:
 the types that cross this boundary are
-:class:`ordessa_execution_agents.harness.definitions.IntentSet` / `MountContent` /
+:class:`ordessa_agents.harness.definitions.IntentSet` / `MountContent` /
 `RemoveOwnedContent` / `BindSecret` / `InvokeAction` / `Assessment` /
 `Verification` / `AdapterContext` / `IntentSource` / `TargetHandle` /
 `FieldClaim` / `VersionRange`. The Q3-internal pieces kept here
@@ -26,7 +26,7 @@ records, never a published cross-tree shape** (SR-1b CA2 resolution).
 * `claude` / `codex` / `pi` — the per-brand triads, versioned per the pins in
   `docs/implementation/specifications/011-q3-subagents/capability-matrix.md`.
 """
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, AdapterRefusal, Assessment as ContractAssessment,
     BindSecret, ConfigurationAdapterDescriptor, ContentRef, FieldClaim,
     FieldPath, IntentSet, IntentSource, InvokeAction, MountContent,

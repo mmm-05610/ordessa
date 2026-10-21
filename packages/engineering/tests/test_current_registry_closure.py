@@ -13,25 +13,25 @@ from ordessa_engineering.application.usecases.reviews.assignments import ASSIGN_
 
 
 def test_current_facts_pin_real_job_contract_metadata_and_complete_sources():
-    from decision_runtime.job import SPEC_VERSION
+    from ordessa_decision.job import SPEC_VERSION
     facts = si.implementation_facts()
     assert facts['decision_contract_version'] == SPEC_VERSION == 'decision-job/1'
-    assert facts['decision_runtime_version'] == importlib.metadata.version('decision-runtime') == '0.2.0'
+    assert facts['ordessa_decision_version'] == importlib.metadata.version('decision-runtime') == '0.2.0'
     assert facts['jsonschema_version'] == importlib.metadata.version('jsonschema')
     assert facts['referencing_version'] == importlib.metadata.version('referencing')
     assert 'pydantic_graph_version' not in facts
-    assert set(facts) == {'engineering', 'decision_runtime', 'decision_runtime_version',
+    assert set(facts) == {'engineering', 'ordessa_decision', 'ordessa_decision_version',
                          'decision_contract_version', 'jsonschema_version', 'referencing_version'}
     engineering = Path(si.__file__).parents[2]
-    decision = Path(importlib.resources.files('decision_runtime'))
+    decision = Path(importlib.resources.files('ordessa_decision'))
     assert set(si.ENGINEERING_FILES) == {p.relative_to(engineering).as_posix() for p in engineering.rglob('*.py')}
     assert len(si.ENGINEERING_FILES) == len(set(si.ENGINEERING_FILES))
     assert set(si.DECISION_RUNTIME_FILES) == {p.relative_to(decision).as_posix() for p in decision.rglob('*.py')}
     assert len(si.DECISION_RUNTIME_FILES) == len(set(si.DECISION_RUNTIME_FILES))
-    assert 'job.py' in facts['decision_runtime'] and 'runner.py' in facts['decision_runtime']
-    assert 'historical/reader.py' in facts['decision_runtime']
-    assert 'runtime/flows.py' not in facts['decision_runtime']
-    assert 'validation/requests.py' not in facts['decision_runtime']
+    assert 'job.py' in facts['ordessa_decision'] and 'runner.py' in facts['ordessa_decision']
+    assert 'historical/reader.py' in facts['ordessa_decision']
+    assert 'runtime/flows.py' not in facts['ordessa_decision']
+    assert 'validation/requests.py' not in facts['ordessa_decision']
 
 
 @pytest.mark.parametrize('dependency', ['decision-runtime', 'jsonschema', 'referencing'])
@@ -47,8 +47,8 @@ def test_missing_actual_runtime_metadata_refuses_without_fallback(monkeypatch, d
 
 
 @pytest.mark.parametrize('section,key', [
-    ('decision_runtime', 'job.py'), ('decision_runtime', 'runner.py'),
-    ('decision_runtime', 'historical/reader.py'),
+    ('ordessa_decision', 'job.py'), ('ordessa_decision', 'runner.py'),
+    ('ordessa_decision', 'historical/reader.py'),
     ('engineering', 'adapters/decision/source_job.py'),
     ('engineering', 'ordessa_infrastructure:database/sqlite.py'),
 ])
@@ -67,7 +67,7 @@ def test_current_verifier_rejects_changed_and_omitted_source_pins(section, key):
             si.verify_implementation({'implementation': wrong})
 
 
-@pytest.mark.parametrize('key', ['decision_runtime_version', 'decision_contract_version',
+@pytest.mark.parametrize('key', ['ordessa_decision_version', 'decision_contract_version',
                                  'jsonschema_version', 'referencing_version'])
 def test_current_verifier_rejects_dependency_or_contract_drift(key):
     facts = si.implementation_facts()
@@ -104,7 +104,7 @@ def test_real_loader_refuses_changed_dependency_metadata(monkeypatch, dependency
 
 @pytest.mark.parametrize('relative', ['job.py', 'runner.py', 'historical/reader.py'])
 def test_real_loader_refuses_changed_decision_source_bytes(monkeypatch, relative):
-    target = Path(importlib.resources.files('decision_runtime')) / relative
+    target = Path(importlib.resources.files('ordessa_decision')) / relative
     original = si._sha256
     monkeypatch.setattr(si, '_sha256',
                         lambda path: 'sha256:' + '0'*64 if path == target else original(path))

@@ -30,15 +30,15 @@ FORBIDDEN_ROOTS = frozenset((
 #: Package roots permitted because they are this package, declared host API,
 #: or the PyYAML dependency. Other distributions are narrowed to exact
 #: imported public modules in PUBLIC_MODULES.
-ALLOWED_ROOTS = frozenset(("ordessa_skills", "server_plugin_api", "yaml", "_yaml"))
+ALLOWED_ROOTS = frozenset(("ordessa_skills", "ordessa_server_plugin_api", "yaml", "_yaml"))
 
 #: Exact external public modules actually imported by current source.
 #: Each is declared in pyproject.toml; see the file-level source mapping in
 #: the revision-2 report. No ancestor package or sibling submodule is granted.
 PUBLIC_MODULES = frozenset((
-    "ordessa_execution_agents.harness.providers.resolution.artifacts.tree_identity",
-    "ordessa_execution_agents.harness.providers.resolution.source_declaration",
-    "ordessa_execution_agents.harness.definitions",
+    "ordessa_agents.harness.providers.resolution.artifacts.tree_identity",
+    "ordessa_agents.harness.providers.resolution.source_declaration",
+    "ordessa_agents.harness.definitions",
     "ordessa_interfaces.system_access.contracts.storage",
     "ordessa_permissions_api",
 ))
@@ -119,9 +119,9 @@ def test_absolute_imports_stay_in_the_declared_surface():
         assert _allowed_import(public), public
     for forbidden in (
         "ordessa_execution_api.environment",
-        "ordessa_execution_agents.harness.providers.resolution.source_declaration.private",
-        "ordessa_execution_agents.harness.definitions.private",
-        "ordessa_execution_agents.harness.providers.resolution.artifacts.private",
+        "ordessa_agents.harness.providers.resolution.source_declaration.private",
+        "ordessa_agents.harness.definitions.private",
+        "ordessa_agents.harness.providers.resolution.artifacts.private",
         "ordessa_interfaces.system_access.contracts.storage.internal",
         "ordessa_permissions_api._internal",
         "ordessa_persistence_sqlite.product_database",

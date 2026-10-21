@@ -1,7 +1,7 @@
 """Real opt-in Server lifecycle with a temporary data root; no HTTP/models."""
 from ordessa_server.composition.agent_tools.owner_ports import OwnerAssemblyRefused
-from ordessa_execution_agents.profiles import encode_content
-from ordessa_execution_agents.profiles import encode_profile
+from ordessa_agents.profiles import encode_content
+from ordessa_agents.profiles import encode_profile
 import importlib.util
 from pathlib import Path
 import sys
@@ -88,7 +88,7 @@ def test_isolated_runtime_profile_storage_restart_and_empty_plugins(deployment, 
         runtime.stop()
         assert env._closed
         assert not runtime.owner.acquired
-        from server_plugin_api import WireError
+        from ordessa_server_plugin_api import WireError
         with pytest.raises(WireError) as unavailable:
             old_method.handler({})
         assert unavailable.value.family == "CAPABILITY_UNSUPPORTED"
@@ -235,7 +235,7 @@ def test_composition_contract_mismatch_refuses_before_creating_root(deployment, 
 def test_factory_rejects_unissued_or_expired_bindings_before_database_io(
     deployment, tmp_path, owned_root, monkeypatch, kind,
 ):
-    from server_plugin_api.root_ownership import OwnedRootBinding
+    from ordessa_server_plugin_api.root_ownership import OwnedRootBinding
     from types import SimpleNamespace
     root = tmp_path / "proof-root"
     owner = owned_root(root)

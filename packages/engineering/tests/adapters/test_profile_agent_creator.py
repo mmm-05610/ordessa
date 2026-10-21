@@ -21,9 +21,9 @@ from ordessa_engineering.adapters.execution_profiles import NativeProfileAgentCr
 from ordessa_engineering.adapters.profile_method import build_method_agent_execution_selection
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.domain.common.outcomes.library_failures import EngineeringError
-from ordessa_execution_agents.profiles import ProfileAccessRefused, ProfileRevisionRef, encode_content
-from ordessa_execution_agents.public import ManagerRefused
-from ordessa_execution_agents.sdk.instances import EndpointRef
+from ordessa_agents.profiles import ProfileAccessRefused, ProfileRevisionRef, encode_content
+from ordessa_agents.public import ManagerRefused
+from ordessa_agents.sdk.instances import EndpointRef
 
 
 def _creator_bindings(case, authorization):

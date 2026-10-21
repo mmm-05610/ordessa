@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT / 'tests/integration/packages_convergence'))
 
 from endpoint_fixture import LocalEndpointFixture  # noqa: E402
 
-from ordessa_execution_agents.sdk.manager import AgentManager, ManagerRefused, Records  # noqa: E402
+from ordessa_agents.sdk.manager import AgentManager, ManagerRefused, Records  # noqa: E402
 
 
 def test_manager_starts_replays_and_releases_a_real_local_process(tmp_path):

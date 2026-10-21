@@ -1,0 +1,290 @@
+{
+  "brand": "codex",
+  "prompt": "计算 17*23，只回复数字。",
+  "model": "deepseek-v4.1-flash",
+  "codexModel": "gpt-5.6-sol",
+  "steps": {
+    "acquire": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "ea3a7ece32c54d7f88f3655479ac44d0",
+      "command": "call environments.acquire --input /tmp/t04b-attempt1-codex/acquire.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/87f133384c50455bbd8ff302daaa4bc9",
+        "useIdentity": "environment-use/050c9ff5347f404b8519ae975342f381",
+        "status": "completed",
+        "ownerScope": {
+          "kind": "principal",
+          "ref": "instance"
+        },
+        "environmentIdentity": "environment/fc5145bb49e042548b474fa180de4e3e"
+      },
+      "error": null,
+      "operationRef": "environment-operation/87f133384c50455bbd8ff302daaa4bc9",
+      "evidenceRefs": []
+    },
+    "start": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "start-1",
+      "command": "call agents.start --input /tmp/t04b-attempt1-codex/start.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-start-receipt/1",
+        "instanceId": "instance-62d6753d54274820837ac541b126c7c7",
+        "operationRef": "agent-start/4bab630dd16644829043d6ee79bf8606",
+        "state": "running",
+        "instanceRef": {
+          "schemaVersion": "agent-instance/1",
+          "namespace": "server",
+          "instanceId": "instance-62d6753d54274820837ac541b126c7c7",
+          "bindingDigest": "sha256:f209d225318a295802452228aab231a0097103fd506c325b3b0159d0c7a24f60"
+        },
+        "processEndpointRef": {
+          "schemaVersion": "agent-endpoint/1",
+          "issuer": "environment-endpoints:35de07061ebfc8e60311a0e6",
+          "endpointId": "endpoint/d047bcabe2f84a7ab1a10c8a16cda076",
+          "revision": "1",
+          "descriptorDigest": "sha256:de1bc3fd5891a71d05008a629084fdb31a8e0a6b8cb14d2cd8eec593d07eb1a3"
+        },
+        "sessionId": "01a15c29-bc79-7900-8ca4-4e2bf56a50fa",
+        "error": null
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "prompt": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "prompt-1",
+      "command": "call agents.prompt --input /tmp/t04b-attempt1-codex/prompt-input.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-protocol-turn/1",
+        "turnRef": {
+          "schemaVersion": "agent-turn-ref/1",
+          "instanceRef": {
+            "schemaVersion": "agent-instance/1",
+            "namespace": "server",
+            "instanceId": "instance-62d6753d54274820837ac541b126c7c7",
+            "bindingDigest": "sha256:f209d225318a295802452228aab231a0097103fd506c325b3b0159d0c7a24f60"
+          },
+          "turnId": "turn/71f084fe16694f5faaa505596dd34c40"
+        },
+        "sessionId": "01a15c29-bc79-7900-8ca4-4e2bf56a50fa",
+        "agentOperationRef": "agent-operation/fe343b36738e4ac4bbbcb3d7b1584c31",
+        "endpointRequestId": "sha256:25ecc2d9ccb2140ae9922cdada83e3207dbcefd61142225ac693de6d59356900",
+        "endpointOperationRef": "environment-operation/339f59bc97be4e8e927bdd91240d0d12",
+        "engineeringAttemptRef": null,
+        "inputDigest": "sha256:be61cecf1c885e5e12030ba8384f94f119316bb1b084e8c36c4d74ba82553706",
+        "state": "completed",
+        "revision": 3,
+        "observationBytes": {
+          "answer": "391",
+          "bytesSent": 226,
+          "delivery": "confirmed",
+          "items": 1,
+          "method": "turn/completed",
+          "protocol": "codex-app-server/1",
+          "turnId": "01a15c29-bde1-70d1-aeae-a13a089db1f3",
+          "turnStatus": "completed"
+        },
+        "observationDigest": "sha256:c3e2df4cd9780c30fe8405d78baa14b0769e0e5bd822139596713b62f571adab"
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "query": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "query-1",
+      "command": "call agents.query --input /tmp/t04b-attempt1-codex/query-input.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-protocol-turn/1",
+        "turnRef": {
+          "schemaVersion": "agent-turn-ref/1",
+          "instanceRef": {
+            "schemaVersion": "agent-instance/1",
+            "namespace": "server",
+            "instanceId": "instance-62d6753d54274820837ac541b126c7c7",
+            "bindingDigest": "sha256:f209d225318a295802452228aab231a0097103fd506c325b3b0159d0c7a24f60"
+          },
+          "turnId": "turn/71f084fe16694f5faaa505596dd34c40"
+        },
+        "sessionId": "01a15c29-bc79-7900-8ca4-4e2bf56a50fa",
+        "agentOperationRef": "agent-operation/fe343b36738e4ac4bbbcb3d7b1584c31",
+        "endpointRequestId": "sha256:25ecc2d9ccb2140ae9922cdada83e3207dbcefd61142225ac693de6d59356900",
+        "endpointOperationRef": "environment-operation/339f59bc97be4e8e927bdd91240d0d12",
+        "engineeringAttemptRef": null,
+        "inputDigest": "sha256:be61cecf1c885e5e12030ba8384f94f119316bb1b084e8c36c4d74ba82553706",
+        "state": "completed",
+        "revision": 3,
+        "observationBytes": {
+          "answer": "391",
+          "bytesSent": 226,
+          "delivery": "confirmed",
+          "items": 1,
+          "method": "turn/completed",
+          "protocol": "codex-app-server/1",
+          "turnId": "01a15c29-bde1-70d1-aeae-a13a089db1f3",
+          "turnStatus": "completed"
+        },
+        "observationDigest": "sha256:c3e2df4cd9780c30fe8405d78baa14b0769e0e5bd822139596713b62f571adab"
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "stop": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "stop-1",
+      "command": "call agents.stop --input /tmp/t04b-attempt1-codex/stop.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "endpoint-operation/1",
+        "operationRef": "environment-operation/c08a23ab86af47d088aa6ea7fd604ce1",
+        "status": "completed",
+        "processEndpointRef": {
+          "schemaVersion": "agent-endpoint/1",
+          "issuer": "environment-endpoints:35de07061ebfc8e60311a0e6",
+          "endpointId": "endpoint/d047bcabe2f84a7ab1a10c8a16cda076",
+          "revision": "1",
+          "descriptorDigest": "sha256:de1bc3fd5891a71d05008a629084fdb31a8e0a6b8cb14d2cd8eec593d07eb1a3"
+        },
+        "facts": {
+          "action": "terminate",
+          "cancellation": "requested",
+          "processState": "running"
+        },
+        "evidenceRefs": [],
+        "error": null
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "reconcile": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "rec-1",
+      "command": "call agents.reconcile --input /tmp/t04b-attempt1-codex/reconcile.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-process-observation/1",
+        "state": "exited",
+        "observedAt": "2026-10-21T01:53:30.640965+00:00",
+        "nativeIdentityDigest": "sha256:0af8dd63060b4e9176ee76a04598430478ebf69c3afddf8f8abedac551333c86",
+        "exitCode": -9,
+        "evidenceRefs": []
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "processRelease": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "prel-1",
+      "command": "call environments.process-release --input /tmp/t04b-attempt1-codex/prelease.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/868789a7365d4837a35824de5341718a",
+        "useIdentity": "environment-use/050c9ff5347f404b8519ae975342f381",
+        "status": "completed",
+        "resourcePreserved": true,
+        "receipt": {
+          "processIdentity": "local-process/2064103",
+          "transportReleased": true,
+          "processState": "exited",
+          "ioState": "closed",
+          "exitCode": "-9"
+        },
+        "exitClaimed": false
+      },
+      "error": null,
+      "operationRef": "environment-operation/868789a7365d4837a35824de5341718a",
+      "evidenceRefs": []
+    },
+    "release": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "rel-1",
+      "command": "call environments.release --input /tmp/t04b-attempt1-codex/release.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/7d627ef06189426692e623ff36465a25",
+        "useIdentity": "environment-use/050c9ff5347f404b8519ae975342f381",
+        "status": "completed",
+        "resourcePreserved": true,
+        "receipt": {
+          "useIdentity": "environment-use/050c9ff5347f404b8519ae975342f381",
+          "environmentIdentity": "environment/fc5145bb49e042548b474fa180de4e3e",
+          "generation": 0,
+          "resourcePreserved": true,
+          "providerFacts": {
+            "useIdentity": "environment-use/050c9ff5347f404b8519ae975342f381",
+            "isolation": "none",
+            "root": "/tmp/t04b-attempt1-codex/work",
+            "rootPreserved": true,
+            "resourcePreserved": true,
+            "attempts": [
+              "local-use/environment-use/050c9ff5347f404b8519ae975342f381/1"
+            ]
+          }
+        }
+      },
+      "error": null,
+      "operationRef": "environment-operation/7d627ef06189426692e623ff36465a25",
+      "evidenceRefs": []
+    }
+  },
+  "attempts": 1,
+  "origin": "http://127.0.0.1:48897",
+  "instanceRef": {
+    "schemaVersion": "agent-instance/1",
+    "namespace": "server",
+    "instanceId": "instance-62d6753d54274820837ac541b126c7c7",
+    "bindingDigest": "sha256:f209d225318a295802452228aab231a0097103fd506c325b3b0159d0c7a24f60"
+  },
+  "sessionId": "01a15c29-bc79-7900-8ca4-4e2bf56a50fa",
+  "processEndpointRef": {
+    "schemaVersion": "agent-endpoint/1",
+    "issuer": "environment-endpoints:35de07061ebfc8e60311a0e6",
+    "endpointId": "endpoint/d047bcabe2f84a7ab1a10c8a16cda076",
+    "revision": "1",
+    "descriptorDigest": "sha256:de1bc3fd5891a71d05008a629084fdb31a8e0a6b8cb14d2cd8eec593d07eb1a3"
+  },
+  "outcome": "ROUND_COMPLETED",
+  "serverExitCode": -15,
+  "log": [
+    "== service configuration ==",
+    "{\"allowlist\": [\"codex\"], \"providers\": {\"codex\": {\"command\": [\"/home/maoqh/.local/bin/codex\"]}}}",
+    "SERVER> {\"event\":\"listening\",\"origin\":\"http://127.0.0.1:48897\",\"pid\":2064085,\"serverId\":\"ordessa-t04b-codex\"}",
+    "== environments create local (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"e70cf5e907c142e889ae24051fc49c01\", \"command\": \"environments create local --root /tmp/t04b-attempt1-codex/work --alias demo\", \"status\": \"completed\", \"data\": {\"identity\": \"environment/fc5145bb49e042548b474fa180de4e3e\", \"alias\": \"demo\", \"aliases\": [\"demo\"], \"provider\": \"local\", \"backendId\": \"/tmp/t04b-attempt1-codex/work\", \"phase\": \"ready\", \"generation\": 0, \"state\": \"running\", \"observationStale\": false, \"observedAt\": \"2026-10-21T01:53:14.882532+00:00\", \"operationStatus\": {\"phase\": \"ready\", \"operation\": null}, \"activeUses\": 0, \"isolation\": \"none\", \"endpointKind\": \"local-directory\", \"health\": \"ready\", \"capabilities\": {\"isolation\": \"none\", \"statuses\": {\"byte-channel\": \"supported\", \"files\": \"supported\", \"process\": \"supported\", \"stderr\": \"supported\", \"terminal\": \"unsupported\"}, \"provides\": [\"byte-channel\", \"files\", \"process\", \"stderr\"], \"values\": {\"provider\": \"local\", \"resourceKind\": \"directory\"}, \"assurance\": {\"isolation\": \"none\", \"isolationIsSecurityBoundary\": false, \"localDevelopmentOnly\": true, \"providerAssurance\": \"provider_self_report\", \"statement\": \"provider-reported isolation; it is not a permission, lease or hold\"}}}, \"error\": null, \"operationRef\": \"environment-command/e5ff808d4add4562a27c4f68c83f7d7a\", \"evidenceRefs\": []}",
+    "== environments.acquire (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"ea3a7ece32c54d7f88f3655479ac44d0\", \"command\": \"call environments.acquire --input /tmp/t04b-attempt1-codex/acquire.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/87f133384c50455bbd8ff302daaa4bc9\", \"useIdentity\": \"environment-use/050c9ff5347f404b8519ae975342f381\", \"status\": \"completed\", \"ownerScope\": {\"kind\": \"principal\", \"ref\": \"instance\"}, \"environmentIdentity\": \"environment/fc5145bb49e042548b474fa180de4e3e\"}, \"error\": null, \"operationRef\": \"environment-operation/87f133384c50455bbd8ff302daaa4bc9\", \"evidenceRefs\": []}",
+    "== environments.export-endpoint (raw wire) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"export-raw\", \"command\": \"environments.export-endpoint\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/5a1cf83c02894bc28c7552c703e4ce99\", \"useIdentity\": \"environment-use/050c9ff5347f404b8519ae975342f381\", \"status\": \"completed\", \"endpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:35de07061ebfc8e60311a0e6\", \"endpointId\": \"endpoint/b522488feebf474d91109814858c9d8b\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:9bb44d1228d95e739db593dcd519a61a5f1309988fe64b41041a660cd375c236\"}, \"descriptor\": {\"schemaVersion\": \"environment-endpoint-descriptor/2\", \"endpointId\": \"endpoint/b522488feebf474d91109814858c9d8b\", \"revision\": \"1\", \"capabilities\": [\"communicate\", \"detach\", \"files\", \"launcher\", \"observe\", \"terminate\"], \"rootKeys\": [\"cache\", \"config\", \"data\", \"home\", \"state\", \"tmp\", \"work\"], \"preparedConfigurations\": [], \"reconnect\": \"unsupported\", \"providerId\": \"local\", \"endpointKind\": \"local-directory\"}}, \"error\": null, \"operationRef\": \"environment-operation/5a1cf83c02894bc28c7552c703e4ce99\", \"evidenceRefs\": []}",
+    "== agents harness list ==",
+    "[\"codex\"]",
+    "== agents profiles create (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"22770672b30b437eba392464b09bb78c\", \"command\": \"agents profiles create demo-codex --name codex --manifest /tmp/t04b-attempt1-codex/manifest.json\", \"status\": \"completed\", \"data\": {\"profileId\": \"demo-codex\", \"catalogRevision\": 1, \"displayName\": \"codex\", \"archivedAt\": null, \"currentManifestRef\": {\"environmentNamespace\": \"server\", \"profileId\": \"demo-codex\", \"manifestRevision\": 1, \"contentDigest\": \"sha256:7e5151bf0a27b248f1110c24181a8c2c0aab5f4a7ad7cd0b8276e655d1b7088a\"}}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.start (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"start-1\", \"command\": \"call agents.start --input /tmp/t04b-attempt1-codex/start.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-start-receipt/1\", \"instanceId\": \"instance-62d6753d54274820837ac541b126c7c7\", \"operationRef\": \"agent-start/4bab630dd16644829043d6ee79bf8606\", \"state\": \"running\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-62d6753d54274820837ac541b126c7c7\", \"bindingDigest\": \"sha256:f209d225318a295802452228aab231a0097103fd506c325b3b0159d0c7a24f60\"}, \"processEndpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:35de07061ebfc8e60311a0e6\", \"endpointId\": \"endpoint/d047bcabe2f84a7ab1a10c8a16cda076\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:de1bc3fd5891a71d05008a629084fdb31a8e0a6b8cb14d2cd8eec593d07eb1a3\"}, \"sessionId\": \"01a15c29-bc79-7900-8ca4-4e2bf56a50fa\", \"error\": null}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== sessionId: 01a15c29-bc79-7900-8ca4-4e2bf56a50fa",
+    "== agents.prompt (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"prompt-1\", \"command\": \"call agents.prompt --input /tmp/t04b-attempt1-codex/prompt-input.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-protocol-turn/1\", \"turnRef\": {\"schemaVersion\": \"agent-turn-ref/1\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-62d6753d54274820837ac541b126c7c7\", \"bindingDigest\": \"sha256:f209d225318a295802452228aab231a0097103fd506c325b3b0159d0c7a24f60\"}, \"turnId\": \"turn/71f084fe16694f5faaa505596dd34c40\"}, \"sessionId\": \"01a15c29-bc79-7900-8ca4-4e2bf56a50fa\", \"agentOperationRef\": \"agent-operation/fe343b36738e4ac4bbbcb3d7b1584c31\", \"endpointRequestId\": \"sha256:25ecc2d9ccb2140ae9922cdada83e3207dbcefd61142225ac693de6d59356900\", \"endpointOperationRef\": \"environment-operation/339f59bc97be4e8e927bdd91240d0d12\", \"engineeringAttemptRef\": null, \"inputDigest\": \"sha256:be61cecf1c885e5e12030ba8384f94f119316bb1b084e8c36c4d74ba82553706\", \"state\": \"completed\", \"revision\": 3, \"observationBytes\": {\"answer\": \"391\", \"bytesSent\": 226, \"delivery\": \"confirmed\", \"items\": 1, \"method\": \"turn/completed\", \"protocol\": \"codex-app-server/1\", \"turnId\": \"01a15c29-bde1-70d1-aeae-a13a089db1f3\", \"turnStatus\": \"completed\"}, \"observationDigest\": \"sha256:c3e2df4cd9780c30fe8405d78baa14b0769e0e5bd822139596713b62f571adab\"}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.query (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"query-1\", \"command\": \"call agents.query --input /tmp/t04b-attempt1-codex/query-input.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-protocol-turn/1\", \"turnRef\": {\"schemaVersion\": \"agent-turn-ref/1\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-62d6753d54274820837ac541b126c7c7\", \"bindingDigest\": \"sha256:f209d225318a295802452228aab231a0097103fd506c325b3b0159d0c7a24f60\"}, \"turnId\": \"turn/71f084fe16694f5faaa505596dd34c40\"}, \"sessionId\": \"01a15c29-bc79-7900-8ca4-4e2bf56a50fa\", \"agentOperationRef\": \"agent-operation/fe343b36738e4ac4bbbcb3d7b1584c31\", \"endpointRequestId\": \"sha256:25ecc2d9ccb2140ae9922cdada83e3207dbcefd61142225ac693de6d59356900\", \"endpointOperationRef\": \"environment-operation/339f59bc97be4e8e927bdd91240d0d12\", \"engineeringAttemptRef\": null, \"inputDigest\": \"sha256:be61cecf1c885e5e12030ba8384f94f119316bb1b084e8c36c4d74ba82553706\", \"state\": \"completed\", \"revision\": 3, \"observationBytes\": {\"answer\": \"391\", \"bytesSent\": 226, \"delivery\": \"confirmed\", \"items\": 1, \"method\": \"turn/completed\", \"protocol\": \"codex-app-server/1\", \"turnId\": \"01a15c29-bde1-70d1-aeae-a13a089db1f3\", \"turnStatus\": \"completed\"}, \"observationDigest\": \"sha256:c3e2df4cd9780c30fe8405d78baa14b0769e0e5bd822139596713b62f571adab\"}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.stop (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"stop-1\", \"command\": \"call agents.stop --input /tmp/t04b-attempt1-codex/stop.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"endpoint-operation/1\", \"operationRef\": \"environment-operation/c08a23ab86af47d088aa6ea7fd604ce1\", \"status\": \"completed\", \"processEndpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:35de07061ebfc8e60311a0e6\", \"endpointId\": \"endpoint/d047bcabe2f84a7ab1a10c8a16cda076\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:de1bc3fd5891a71d05008a629084fdb31a8e0a6b8cb14d2cd8eec593d07eb1a3\"}, \"facts\": {\"action\": \"terminate\", \"cancellation\": \"requested\", \"processState\": \"running\"}, \"evidenceRefs\": [], \"error\": null}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.reconcile (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"rec-1\", \"command\": \"call agents.reconcile --input /tmp/t04b-attempt1-codex/reconcile.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-process-observation/1\", \"state\": \"exited\", \"observedAt\": \"2026-10-21T01:53:30.640965+00:00\", \"nativeIdentityDigest\": \"sha256:0af8dd63060b4e9176ee76a04598430478ebf69c3afddf8f8abedac551333c86\", \"exitCode\": -9, \"evidenceRefs\": []}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== environments.process-release (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"prel-1\", \"command\": \"call environments.process-release --input /tmp/t04b-attempt1-codex/prelease.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/868789a7365d4837a35824de5341718a\", \"useIdentity\": \"environment-use/050c9ff5347f404b8519ae975342f381\", \"status\": \"completed\", \"resourcePreserved\": true, \"receipt\": {\"processIdentity\": \"local-process/2064103\", \"transportReleased\": true, \"processState\": \"exited\", \"ioState\": \"closed\", \"exitCode\": \"-9\"}, \"exitClaimed\": false}, \"error\": null, \"operationRef\": \"environment-operation/868789a7365d4837a35824de5341718a\", \"evidenceRefs\": []}",
+    "== environments.release (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"rel-1\", \"command\": \"call environments.release --input /tmp/t04b-attempt1-codex/release.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/7d627ef06189426692e623ff36465a25\", \"useIdentity\": \"environment-use/050c9ff5347f404b8519ae975342f381\", \"status\": \"completed\", \"resourcePreserved\": true, \"receipt\": {\"useIdentity\": \"environment-use/050c9ff5347f404b8519ae975342f381\", \"environmentIdentity\": \"environment/fc5145bb49e042548b474fa180de4e3e\", \"generation\": 0, \"resourcePreserved\": true, \"providerFacts\": {\"useIdentity\": \"environment-use/050c9ff5347f404b8519ae975342f381\", \"isolation\": \"none\", \"root\": \"/tmp/t04b-attempt1-codex/work\", \"rootPreserved\": true, \"resourcePreserved\": true, \"attempts\": [\"local-use/environment-use/050c9ff5347f404b8519ae975342f381/1\"]}}}, \"error\": null, \"operationRef\": \"environment-operation/7d627ef0618",
+    "== server exit code: -15"
+  ],
+  "attemptNumber": 1,
+  "attemptsUsed": 1,
+  "realModelCall": true
+}

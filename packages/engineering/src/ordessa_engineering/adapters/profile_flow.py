@@ -7,8 +7,8 @@ never starts an Agent or supplies its authorization.
 from dataclasses import dataclass
 from collections.abc import Mapping
 
-from decision_runtime import DecisionError, DecisionQuestion, PolicyRef
-from decision_runtime.job import validate_job
+from ordessa_decision import DecisionError, DecisionQuestion, PolicyRef
+from ordessa_decision.job import validate_job
 from .decision.source_job import SourceReviewJobServices
 from ..application.contracts.errors import ApplicationError
 from ..domain.common.outcomes.library_failures import EngineeringError

@@ -23,7 +23,7 @@ import { fileURLToPath } from "node:url"
 import test from "node:test"
 
 const snapshot = process.env.HARNESS_REMOTE_SNAPSHOT
-  ?? fileURLToPath(new URL("../../../src/ordessa_execution_agents/harness/transport/vendor/harness_remote", import.meta.url))
+  ?? fileURLToPath(new URL("../../../src/ordessa_agents/harness/transport/vendor/harness_remote", import.meta.url))
 const src = (...parts) => path.join(snapshot, "bridge", "src", ...parts)
 const { AcpClient } = await import(`file://${src("acp-client.js")}`)
 

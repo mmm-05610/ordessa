@@ -11,7 +11,7 @@ import pytest
 
 from endpoint_fixture import LocalEndpointFixture
 from ordessa_environments import EnvironmentRefused
-from ordessa_execution_agents.instances.contracts import InstanceControl
+from ordessa_agents.instances.contracts import InstanceControl
 
 
 @pytest.mark.parametrize('action',['stop','detach'])

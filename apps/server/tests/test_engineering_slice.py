@@ -167,8 +167,8 @@ def test_actual_compiled_method_bridge_executes_same_facade_journal(runtime, tmp
 
 
 def test_async_contextual_error_wall_does_not_leak_exception(runtime):
-    from server_plugin_api import ServerMethodDescriptor
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api import ServerMethodDescriptor
+    from ordessa_server_plugin_api.wire_errors import WireError
     async def broken(params, caller):
         raise RuntimeError('private-material-sentinel')
     runtime.wire._registry.register(ServerMethodDescriptor(method_id='engineering.test_failure',
@@ -181,8 +181,8 @@ def test_async_contextual_error_wall_does_not_leak_exception(runtime):
 
 
 def test_legacy_async_handler_cannot_run_after_legacy_admission_ends(runtime):
-    from server_plugin_api import ServerMethodDescriptor
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api import ServerMethodDescriptor
+    from ordessa_server_plugin_api.wire_errors import WireError
     effects = []
     async def deferred(params):
         effects.append('unauthorized-deferred-effect')

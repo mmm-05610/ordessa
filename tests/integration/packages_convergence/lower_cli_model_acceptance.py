@@ -36,7 +36,7 @@ def _read(path):
 
 
 def _command(state, *, module):
-    prefix = ([sys.executable, '-m', 'ordessa_agent_tools'] if module
+    prefix = ([sys.executable, '-m', 'ordessa_cli'] if module
               else [str(Path(sys.executable).parent / 'ordessa')])
     return prefix + ['--state', str(state), 'session']
 
@@ -141,7 +141,7 @@ def run(argv=None):
                       if args.expect in observed else 'FAIL', 'expected': args.expect,
                       'observed': observed[:1200]})
         # Build the original turn query from the same public SDK value.
-        from ordessa_execution_agents.sdk.interactions import TurnRef, turn_query
+        from ordessa_agents.sdk.interactions import TurnRef, turn_query
         turn = prompt_value['data']['turnRef']
         query = turn_query(TurnRef.decode(turn), prompt_value['data']['inputDigest'])
         (inputs / 'query.json').write_text(json.dumps(query.projection()))

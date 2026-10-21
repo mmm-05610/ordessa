@@ -6,8 +6,8 @@ import importlib.util
 import pytest
 from ordessa_server.composition.selected_harness_catalog import capture_selected_harness_catalog
 from ordessa_server.composition.native_channels.selected_installation_ports import captured_installation_recipes
-from ordessa_execution_agents.harness.providers.declarations.capability_claims import capability_claims
-from ordessa_execution_agents.harness.providers.declarations.installation_recipe import BuildRecipeFiles
+from ordessa_agents.harness.providers.declarations.capability_claims import capability_claims
+from ordessa_agents.harness.providers.declarations.installation_recipe import BuildRecipeFiles
 
 ROOT = Path(__file__).resolve().parents[2]
 BRANDS = ("codex", "claude-code", "opencode", "hermes", "dsh", "kilo", "pi")

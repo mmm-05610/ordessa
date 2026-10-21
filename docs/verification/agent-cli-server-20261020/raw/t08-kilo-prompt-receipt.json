@@ -1,0 +1,853 @@
+{
+  "brand": "codex",
+  "prompt": "计算 17*23，只回复数字。",
+  "artifact": "tools-proof.txt",
+  "expectedContent": "ordessa-tool-ok",
+  "codexModel": "gpt-5.6-sol",
+  "maxModelCalls": 1,
+  "skipPrompt": false,
+  "expectedSha256": "sha256:585b62bb7a3e776473d3d81d718df4a7a0bb3f2a1a8da53e8c88a9de500f0450",
+  "steps": {
+    "acquire": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "8e0f60d28acf4627a63d7e3ba4afc165",
+      "command": "call environments.acquire --input /tmp/t08k2-ws/acquire.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/b388fb41f22b45869bca1f0d3f4ce908",
+        "useIdentity": "environment-use/76498755fdf2445bb6187df8b4199d6f",
+        "status": "completed",
+        "ownerScope": {
+          "kind": "principal",
+          "ref": "instance"
+        },
+        "environmentIdentity": "environment/5f65678dbd204580a2c26758797543d9"
+      },
+      "error": null,
+      "operationRef": "environment-operation/b388fb41f22b45869bca1f0d3f4ce908",
+      "evidenceRefs": []
+    },
+    "start": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "start-1",
+      "command": "call agents.start --input /tmp/t08k2-ws/start.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-start-receipt/1",
+        "instanceId": "instance-0b4a6de269c54fe6831e3c770d67b764",
+        "operationRef": "agent-start/6f621950b1c1493488c1ed813617294b",
+        "state": "running",
+        "instanceRef": {
+          "schemaVersion": "agent-instance/1",
+          "namespace": "server",
+          "instanceId": "instance-0b4a6de269c54fe6831e3c770d67b764",
+          "bindingDigest": "sha256:f14d87cad29c454f08c0874993b9932be76e2cda7314e34b0c884879b663e3a4"
+        },
+        "processEndpointRef": {
+          "schemaVersion": "agent-endpoint/1",
+          "issuer": "environment-endpoints:ffaf330a1acdf32c7d1d0bde",
+          "endpointId": "endpoint/1039febb5f984c7d85211163273c6402",
+          "revision": "1",
+          "descriptorDigest": "sha256:fb35ec9d36af73693748a3400b8b0b0941dbf687e29a1827dc8993d5d4e54894"
+        },
+        "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+        "error": null
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "stop": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "stop-1",
+      "command": "call agents.stop --input /tmp/t08k2-ws/stop-1-input.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "endpoint-operation/1",
+        "operationRef": "environment-operation/1e42951a92f749ff9676ea9499d2405e",
+        "status": "completed",
+        "processEndpointRef": {
+          "schemaVersion": "agent-endpoint/1",
+          "issuer": "environment-endpoints:ffaf330a1acdf32c7d1d0bde",
+          "endpointId": "endpoint/1039febb5f984c7d85211163273c6402",
+          "revision": "1",
+          "descriptorDigest": "sha256:fb35ec9d36af73693748a3400b8b0b0941dbf687e29a1827dc8993d5d4e54894"
+        },
+        "facts": {
+          "action": "terminate",
+          "cancellation": "requested",
+          "processState": "running"
+        },
+        "evidenceRefs": [],
+        "error": null
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "reconcile": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "rec-1",
+      "command": "call agents.reconcile --input /tmp/t08k2-ws/rec-1-input.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-process-observation/1",
+        "state": "exited",
+        "observedAt": "2026-10-21T05:33:04.444734+00:00",
+        "nativeIdentityDigest": "sha256:6e1a0158a108964c25e7166adb1a7b2e458af747a3dc156054fa949a767235cb",
+        "exitCode": -9,
+        "evidenceRefs": []
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "processRelease": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "prel-1",
+      "command": "call environments.process-release --input /tmp/t08k2-ws/prelease.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/da3a1efd602948fd8784c90906cbeffc",
+        "useIdentity": "environment-use/76498755fdf2445bb6187df8b4199d6f",
+        "status": "completed",
+        "resourcePreserved": true,
+        "receipt": {
+          "processIdentity": "local-process/13365",
+          "transportReleased": true,
+          "processState": "exited",
+          "ioState": "closed",
+          "exitCode": "-9"
+        },
+        "exitClaimed": false
+      },
+      "error": null,
+      "operationRef": "environment-operation/da3a1efd602948fd8784c90906cbeffc",
+      "evidenceRefs": []
+    },
+    "release": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "rel-1",
+      "command": "call environments.release --input /tmp/t08k2-ws/release.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/17084d145e5540bd82089dbb9856b62a",
+        "useIdentity": "environment-use/76498755fdf2445bb6187df8b4199d6f",
+        "status": "completed",
+        "resourcePreserved": true,
+        "receipt": {
+          "useIdentity": "environment-use/76498755fdf2445bb6187df8b4199d6f",
+          "environmentIdentity": "environment/5f65678dbd204580a2c26758797543d9",
+          "generation": 0,
+          "resourcePreserved": true,
+          "providerFacts": {
+            "useIdentity": "environment-use/76498755fdf2445bb6187df8b4199d6f",
+            "isolation": "none",
+            "root": "/tmp/t08k2-ws/work",
+            "rootPreserved": true,
+            "resourcePreserved": true,
+            "attempts": [
+              "local-use/environment-use/76498755fdf2445bb6187df8b4199d6f/1"
+            ]
+          }
+        }
+      },
+      "error": null,
+      "operationRef": "environment-operation/17084d145e5540bd82089dbb9856b62a",
+      "evidenceRefs": []
+    }
+  },
+  "origin": "http://127.0.0.1:51137",
+  "identity": "environment/5f65678dbd204580a2c26758797543d9",
+  "control": {
+    "write": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "ebb178ef74a6473996041cab1b59f1b6",
+      "command": "call environments.files --input /tmp/t08k2-ws/control-write.json",
+      "status": "completed",
+      "data": {
+        "operation": "write",
+        "path": "t06-control-pre.txt",
+        "bytes": 14,
+        "byteLength": 14
+      },
+      "error": null,
+      "operationRef": "environment-command/9ece5b43ddba4d52a0a8559d6e2ece53",
+      "evidenceRefs": []
+    },
+    "read": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "ac3bcc7ad2e2415595795524fe6373d5",
+      "command": "call environments.files --input /tmp/t08k2-ws/control-read.json",
+      "status": "completed",
+      "data": {
+        "content": "t06-control-ok"
+      },
+      "error": null,
+      "operationRef": "environment-command/b2d082c9f9534e87b42ca2e01d1e056d",
+      "evidenceRefs": []
+    },
+    "content": "t06-control-ok",
+    "matches": true,
+    "contentSha256": "sha256:2338fa885eceb380e2446f204440d6220c26c83e76b8b5a1ecd42b925b6b5645"
+  },
+  "instanceRef": {
+    "schemaVersion": "agent-instance/1",
+    "namespace": "server",
+    "instanceId": "instance-0b4a6de269c54fe6831e3c770d67b764",
+    "bindingDigest": "sha256:f14d87cad29c454f08c0874993b9932be76e2cda7314e34b0c884879b663e3a4"
+  },
+  "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+  "processEndpointRef": {
+    "schemaVersion": "agent-endpoint/1",
+    "issuer": "environment-endpoints:ffaf330a1acdf32c7d1d0bde",
+    "endpointId": "endpoint/1039febb5f984c7d85211163273c6402",
+    "revision": "1",
+    "descriptorDigest": "sha256:fb35ec9d36af73693748a3400b8b0b0941dbf687e29a1827dc8993d5d4e54894"
+  },
+  "codexProcessesBefore": [
+    {
+      "pid": 8072,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=utility --utility-sub-type=network.mojom.NetworkService --lang=zh-CN --service-sandbox-type=none --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt"
+    },
+    {
+      "pid": 8082,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=utility --utility-sub-type=storage.mojom.StorageService --lang=zh-CN --service-sandbox-type=utility --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-di"
+    },
+    {
+      "pid": 8342,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+    },
+    {
+      "pid": 8343,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+    },
+    {
+      "pid": 8381,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=utility --utility-sub-type=audio.mojom.AudioService --lang=zh-CN --service-sandbox-type=none --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home"
+    },
+    {
+      "pid": 8389,
+      "cmdline": "/usr/lib/chatgpt/resources/codex -c features.code_mode_host=true app-server --analytics-default-enabled -c plugins.codex-app-tools@openai-bundled.mcp_servers.codex_app.enabled=true -c plugins.code-rev"
+    },
+    {
+      "pid": 8749,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+    },
+    {
+      "pid": 8829,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+    },
+    {
+      "pid": 8851,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+    },
+    {
+      "pid": 8877,
+      "cmdline": "/usr/bin/ssh -T -v -o BatchMode=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=12 -i /home/maoqh/.ssh/maomaokingdom.pem -p 22 root@121.40.184.111 sh -c 'if [ -z \"$SHELL\" ] || [ ! -x \"$SHELL\" ]; "
+    },
+    {
+      "pid": 10272,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+    },
+    {
+      "pid": 10750,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+    },
+    {
+      "pid": 11045,
+      "cmdline": "/usr/lib/chatgpt/resources/codex -c forced_login_method=\"chatgpt\" exec-server --remote https://codex-cloud-environments.chatgpt.com/api --environment-id ccarenv_b64_Y2NhcmVudl82YWJjNTY3ZjE5NzA4MTkxYjM"
+    },
+    {
+      "pid": 11629,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+    },
+    {
+      "pid": 12393,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+    },
+    {
+      "pid": 12685,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+    },
+    {
+      "pid": 12831,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+    },
+    {
+      "pid": 12840,
+      "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+    }
+  ],
+  "turn": {
+    "modelCallNumber": 1,
+    "prompt": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "prompt-a",
+      "command": "call agents.prompt --input /tmp/t08k2-ws/prompt-input-a.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-protocol-turn/1",
+        "turnRef": {
+          "schemaVersion": "agent-turn-ref/1",
+          "instanceRef": {
+            "schemaVersion": "agent-instance/1",
+            "namespace": "server",
+            "instanceId": "instance-0b4a6de269c54fe6831e3c770d67b764",
+            "bindingDigest": "sha256:f14d87cad29c454f08c0874993b9932be76e2cda7314e34b0c884879b663e3a4"
+          },
+          "turnId": "turn/8212a44e21a34053905bc96e5f7b19bc"
+        },
+        "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+        "agentOperationRef": "agent-operation/2928dec9d82c46b28a973c8c7197ff51",
+        "endpointRequestId": "sha256:a5b0b8d6dbd9241c29b289766fc272a2d0212873e31cc1b5be9b53314723af53",
+        "endpointOperationRef": "environment-operation/56e5adb2d21d4f38ab4f9fb950bed1f9",
+        "engineeringAttemptRef": null,
+        "inputDigest": "sha256:50dcefe881fbd75591d59b5cc44553292b1e23a934bf64f875b994354ecfbb91",
+        "state": "completed",
+        "revision": 3,
+        "observationBytes": {
+          "bytesSent": 226,
+          "delivery": "confirmed",
+          "protocol": {
+            "frames": [
+              {
+                "jsonrpc": "2.0",
+                "method": "session/update",
+                "params": {
+                  "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+                  "update": {
+                    "availableCommands": [
+                      {
+                        "description": "Keep working toward a session goal. /goal <objective> or pause, resume, clear. A goal may wait on a scheduled wakeup, a cron task, or a background process: the wait suspends the goal until it fires and the goal resumes itself; /goal pause and /goal clear cancel its armed timers. If the objective is to wait for a deploy, build, or CI job, schedule that wait immediately; do not explore the repository first.",
+                        "name": "goal"
+                      },
+                      {
+                        "description": "guided AGENTS.md setup",
+                        "name": "init"
+                      },
+                      {
+                        "description": "Guide for Kilo configuration: config paths, kilo.json fields, commands, agents, skills, permissions, MCPs, providers, TUI settings, plus Agent Manager worktree setup/run scripts, workflows, and state. Use for Kilo config questions, locating loaded config, changing settings, or Agent Manager questions about run/setup scripts, worktree setup/workflows, apply/merge/PR/conflicts, missing sessions/worktrees, and agent-manager.json recovery.",
+                        "name": "kilo-config"
+                      },
+                      {
+                        "description": "import a Claude Code session transcript",
+                        "name": "resume-claude"
+                      },
+                      {
+                        "description": "import an OpenAI Codex session transcript",
+                        "name": "resume-codex"
+                      },
+                      {
+                        "description": "review changes [uncommitted|staged|unpushed|branch|commit|pr]",
+                        "name": "review"
+                      }
+                    ],
+                    "sessionUpdate": "available_commands_update"
+                  }
+                }
+              },
+              {
+                "jsonrpc": "2.0",
+                "method": "session/update",
+                "params": {
+                  "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+                  "update": {
+                    "content": {
+                      "text": "391",
+                      "type": "text"
+                    },
+                    "messageId": "msg_15cef2a72001fdtwZ7RjzPA9uQ",
+                    "sessionUpdate": "agent_message_chunk"
+                  }
+                }
+              },
+              {
+                "jsonrpc": "2.0",
+                "method": "session/update",
+                "params": {
+                  "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+                  "update": {
+                    "cost": {
+                      "amount": 8.085e-05,
+                      "currency": "USD"
+                    },
+                    "sessionUpdate": "usage_update",
+                    "size": 1000000,
+                    "used": 13075
+                  }
+                }
+              },
+              {
+                "id": "agent-operation/2928dec9d82c46b28a973c8c7197ff51",
+                "jsonrpc": "2.0",
+                "result": {
+                  "_meta": {},
+                  "stopReason": "end_turn",
+                  "usage": {
+                    "cachedReadTokens": 12800,
+                    "inputTokens": 275,
+                    "outputTokens": 2,
+                    "totalTokens": 13077
+                  }
+                }
+              }
+            ],
+            "protocolId": "acp"
+          }
+        },
+        "observationDigest": "sha256:e0b4134d739f953e38ade3bbd41e1341bccd3aa7d19f4789ad52ef19fefb1f53"
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "status": "COMPLETED",
+    "promptOperationRef": "agent-operation/2928dec9d82c46b28a973c8c7197ff51",
+    "turnId": "turn/8212a44e21a34053905bc96e5f7b19bc",
+    "nativeTurnId": null,
+    "turnStatus": null,
+    "delivery": "confirmed",
+    "bytesSent": 226,
+    "items": null,
+    "answer": null,
+    "inputDigest": "sha256:50dcefe881fbd75591d59b5cc44553292b1e23a934bf64f875b994354ecfbb91",
+    "observationDigest": "sha256:e0b4134d739f953e38ade3bbd41e1341bccd3aa7d19f4789ad52ef19fefb1f53",
+    "endpointOperationRef": "environment-operation/56e5adb2d21d4f38ab4f9fb950bed1f9",
+    "revision": 3,
+    "state": "completed",
+    "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+    "observationBytes": {
+      "bytesSent": 226,
+      "delivery": "confirmed",
+      "protocol": {
+        "frames": [
+          {
+            "jsonrpc": "2.0",
+            "method": "session/update",
+            "params": {
+              "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+              "update": {
+                "availableCommands": [
+                  {
+                    "description": "Keep working toward a session goal. /goal <objective> or pause, resume, clear. A goal may wait on a scheduled wakeup, a cron task, or a background process: the wait suspends the goal until it fires and the goal resumes itself; /goal pause and /goal clear cancel its armed timers. If the objective is to wait for a deploy, build, or CI job, schedule that wait immediately; do not explore the repository first.",
+                    "name": "goal"
+                  },
+                  {
+                    "description": "guided AGENTS.md setup",
+                    "name": "init"
+                  },
+                  {
+                    "description": "Guide for Kilo configuration: config paths, kilo.json fields, commands, agents, skills, permissions, MCPs, providers, TUI settings, plus Agent Manager worktree setup/run scripts, workflows, and state. Use for Kilo config questions, locating loaded config, changing settings, or Agent Manager questions about run/setup scripts, worktree setup/workflows, apply/merge/PR/conflicts, missing sessions/worktrees, and agent-manager.json recovery.",
+                    "name": "kilo-config"
+                  },
+                  {
+                    "description": "import a Claude Code session transcript",
+                    "name": "resume-claude"
+                  },
+                  {
+                    "description": "import an OpenAI Codex session transcript",
+                    "name": "resume-codex"
+                  },
+                  {
+                    "description": "review changes [uncommitted|staged|unpushed|branch|commit|pr]",
+                    "name": "review"
+                  }
+                ],
+                "sessionUpdate": "available_commands_update"
+              }
+            }
+          },
+          {
+            "jsonrpc": "2.0",
+            "method": "session/update",
+            "params": {
+              "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+              "update": {
+                "content": {
+                  "text": "391",
+                  "type": "text"
+                },
+                "messageId": "msg_15cef2a72001fdtwZ7RjzPA9uQ",
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          },
+          {
+            "jsonrpc": "2.0",
+            "method": "session/update",
+            "params": {
+              "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+              "update": {
+                "cost": {
+                  "amount": 8.085e-05,
+                  "currency": "USD"
+                },
+                "sessionUpdate": "usage_update",
+                "size": 1000000,
+                "used": 13075
+              }
+            }
+          },
+          {
+            "id": "agent-operation/2928dec9d82c46b28a973c8c7197ff51",
+            "jsonrpc": "2.0",
+            "result": {
+              "_meta": {},
+              "stopReason": "end_turn",
+              "usage": {
+                "cachedReadTokens": 12800,
+                "inputTokens": 275,
+                "outputTokens": 2,
+                "totalTokens": 13077
+              }
+            }
+          }
+        ],
+        "protocolId": "acp"
+      }
+    },
+    "query": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "query-a",
+      "command": "call agents.query --input /tmp/t08k2-ws/query-input-a.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-protocol-turn/1",
+        "turnRef": {
+          "schemaVersion": "agent-turn-ref/1",
+          "instanceRef": {
+            "schemaVersion": "agent-instance/1",
+            "namespace": "server",
+            "instanceId": "instance-0b4a6de269c54fe6831e3c770d67b764",
+            "bindingDigest": "sha256:f14d87cad29c454f08c0874993b9932be76e2cda7314e34b0c884879b663e3a4"
+          },
+          "turnId": "turn/8212a44e21a34053905bc96e5f7b19bc"
+        },
+        "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+        "agentOperationRef": "agent-operation/2928dec9d82c46b28a973c8c7197ff51",
+        "endpointRequestId": "sha256:a5b0b8d6dbd9241c29b289766fc272a2d0212873e31cc1b5be9b53314723af53",
+        "endpointOperationRef": "environment-operation/56e5adb2d21d4f38ab4f9fb950bed1f9",
+        "engineeringAttemptRef": null,
+        "inputDigest": "sha256:50dcefe881fbd75591d59b5cc44553292b1e23a934bf64f875b994354ecfbb91",
+        "state": "completed",
+        "revision": 3,
+        "observationBytes": {
+          "bytesSent": 226,
+          "delivery": "confirmed",
+          "protocol": {
+            "frames": [
+              {
+                "jsonrpc": "2.0",
+                "method": "session/update",
+                "params": {
+                  "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+                  "update": {
+                    "availableCommands": [
+                      {
+                        "description": "Keep working toward a session goal. /goal <objective> or pause, resume, clear. A goal may wait on a scheduled wakeup, a cron task, or a background process: the wait suspends the goal until it fires and the goal resumes itself; /goal pause and /goal clear cancel its armed timers. If the objective is to wait for a deploy, build, or CI job, schedule that wait immediately; do not explore the repository first.",
+                        "name": "goal"
+                      },
+                      {
+                        "description": "guided AGENTS.md setup",
+                        "name": "init"
+                      },
+                      {
+                        "description": "Guide for Kilo configuration: config paths, kilo.json fields, commands, agents, skills, permissions, MCPs, providers, TUI settings, plus Agent Manager worktree setup/run scripts, workflows, and state. Use for Kilo config questions, locating loaded config, changing settings, or Agent Manager questions about run/setup scripts, worktree setup/workflows, apply/merge/PR/conflicts, missing sessions/worktrees, and agent-manager.json recovery.",
+                        "name": "kilo-config"
+                      },
+                      {
+                        "description": "import a Claude Code session transcript",
+                        "name": "resume-claude"
+                      },
+                      {
+                        "description": "import an OpenAI Codex session transcript",
+                        "name": "resume-codex"
+                      },
+                      {
+                        "description": "review changes [uncommitted|staged|unpushed|branch|commit|pr]",
+                        "name": "review"
+                      }
+                    ],
+                    "sessionUpdate": "available_commands_update"
+                  }
+                }
+              },
+              {
+                "jsonrpc": "2.0",
+                "method": "session/update",
+                "params": {
+                  "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+                  "update": {
+                    "content": {
+                      "text": "391",
+                      "type": "text"
+                    },
+                    "messageId": "msg_15cef2a72001fdtwZ7RjzPA9uQ",
+                    "sessionUpdate": "agent_message_chunk"
+                  }
+                }
+              },
+              {
+                "jsonrpc": "2.0",
+                "method": "session/update",
+                "params": {
+                  "sessionId": "ses_ea310d773ffelel6SEqNt2vBUD",
+                  "update": {
+                    "cost": {
+                      "amount": 8.085e-05,
+                      "currency": "USD"
+                    },
+                    "sessionUpdate": "usage_update",
+                    "size": 1000000,
+                    "used": 13075
+                  }
+                }
+              },
+              {
+                "id": "agent-operation/2928dec9d82c46b28a973c8c7197ff51",
+                "jsonrpc": "2.0",
+                "result": {
+                  "_meta": {},
+                  "stopReason": "end_turn",
+                  "usage": {
+                    "cachedReadTokens": 12800,
+                    "inputTokens": 275,
+                    "outputTokens": 2,
+                    "totalTokens": 13077
+                  }
+                }
+              }
+            ],
+            "protocolId": "acp"
+          }
+        },
+        "observationDigest": "sha256:e0b4134d739f953e38ade3bbd41e1341bccd3aa7d19f4789ad52ef19fefb1f53"
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "queryAnswer": null,
+    "queryObservationDigest": "sha256:e0b4134d739f953e38ade3bbd41e1341bccd3aa7d19f4789ad52ef19fefb1f53",
+    "querySameOperation": true,
+    "querySameEndpointOperation": true,
+    "queryAnswerMatchesPrompt": true
+  },
+  "native": {
+    "path": null,
+    "malformedLines": 0,
+    "timedOut": true,
+    "records": 0,
+    "sessionMeta": null,
+    "turnContexts": [],
+    "turnRecords": [],
+    "items": [],
+    "messages": [],
+    "tokenUsage": [],
+    "toolEvents": []
+  },
+  "outcome": "ROUND_COMPLETED",
+  "retrieval": {
+    "identity": "environment/5f65678dbd204580a2c26758797543d9",
+    "expectedContent": "ordessa-tool-ok",
+    "expectedSha256": "sha256:585b62bb7a3e776473d3d81d718df4a7a0bb3f2a1a8da53e8c88a9de500f0450",
+    "ls": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "files-ls-1",
+      "command": "call environments.files --input /tmp/t08k2-ws/files-ls.json",
+      "status": "completed",
+      "data": {
+        "entries": [
+          "t06-control-pre.txt",
+          "config/kilo/.bash-permission-migrated",
+          "config/kilo/.gitignore",
+          "data/kilo/kilo.db",
+          "data/kilo/kilo.db-shm",
+          "data/kilo/kilo.db-wal",
+          "data/kilo/telemetry-id",
+          "data/kilo/log/2026-10-21T052856.log",
+          "data/kilo/log/opencode.log",
+          "data/kilo/storage/migration",
+          "data/kilo/storage/session_diff/ses_ea310d773ffelel6SEqNt2vBUD.json",
+          "state/kilo-sandbox-policy/421e888d3f89085813e50c92210b5fc5ff431963dcfde567520be280ac0d4d9a/ee1c0b629bd40d0c9896e2c9da0410c3d1f1f04f28dadc923c30a0e363c7e77e.json"
+        ]
+      },
+      "error": null,
+      "operationRef": "environment-command/ca7cd07372204a86ac903a841cdcae7c",
+      "evidenceRefs": []
+    },
+    "entryCount": 12,
+    "artifactListed": false,
+    "controlListed": true,
+    "entriesSample": [
+      "t06-control-pre.txt"
+    ],
+    "cat": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "files-cat-1",
+      "command": "call environments.files --input /tmp/t08k2-ws/files-cat.json",
+      "status": "unknown",
+      "data": null,
+      "error": {
+        "code": "EFFECT_UNKNOWN",
+        "message": "Capability operation did not complete",
+        "retryable": false
+      },
+      "operationRef": "environment-command/e9b4acbe268441998f2bbf9ee67fdf5b",
+      "evidenceRefs": []
+    },
+    "content": null,
+    "contentBytes": null,
+    "contentSha256": null,
+    "contentMatchesExpected": false,
+    "contentStrippedMatches": false
+  },
+  "hostArtifact": {
+    "path": "/tmp/t08k2-ws/work/tools-proof.txt",
+    "exists": false
+  },
+  "serverExitCode": -15,
+  "residue": {
+    "workspaceProcesses": [],
+    "codexProcessesAfter": [
+      {
+        "pid": 8072,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=utility --utility-sub-type=network.mojom.NetworkService --lang=zh-CN --service-sandbox-type=none --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt"
+      },
+      {
+        "pid": 8082,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=utility --utility-sub-type=storage.mojom.StorageService --lang=zh-CN --service-sandbox-type=utility --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-di"
+      },
+      {
+        "pid": 8342,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+      },
+      {
+        "pid": 8343,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+      },
+      {
+        "pid": 8381,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=utility --utility-sub-type=audio.mojom.AudioService --lang=zh-CN --service-sandbox-type=none --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home"
+      },
+      {
+        "pid": 8389,
+        "cmdline": "/usr/lib/chatgpt/resources/codex -c features.code_mode_host=true app-server --analytics-default-enabled -c plugins.codex-app-tools@openai-bundled.mcp_servers.codex_app.enabled=true -c plugins.code-rev"
+      },
+      {
+        "pid": 8749,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+      },
+      {
+        "pid": 8829,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+      },
+      {
+        "pid": 8851,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+      },
+      {
+        "pid": 8877,
+        "cmdline": "/usr/bin/ssh -T -v -o BatchMode=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=12 -i /home/maoqh/.ssh/maomaokingdom.pem -p 22 root@121.40.184.111 sh -c 'if [ -z \"$SHELL\" ] || [ ! -x \"$SHELL\" ]; "
+      },
+      {
+        "pid": 10272,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+      },
+      {
+        "pid": 10750,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+      },
+      {
+        "pid": 11045,
+        "cmdline": "/usr/lib/chatgpt/resources/codex -c forced_login_method=\"chatgpt\" exec-server --remote https://codex-cloud-environments.chatgpt.com/api --environment-id ccarenv_b64_Y2NhcmVudl82YWJjNTY3ZjE5NzA4MTkxYjM"
+      },
+      {
+        "pid": 11629,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+      },
+      {
+        "pid": 12393,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+      },
+      {
+        "pid": 12685,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+      },
+      {
+        "pid": 12831,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+      },
+      {
+        "pid": 12840,
+        "cmdline": "/usr/lib/chatgpt/ChatGPT --type=renderer --crashpad-handler-pid=8028 --enable-crash-reporter=, --user-data-dir=/home/maoqh/.config/Codex --owl-electron-scheme-replay --standard-schemes=app,codex-sandb"
+      }
+    ]
+  },
+  "secretScan": {
+    "filesScanned": 37,
+    "secretNamesChecked": [
+      "OPEN_CODE_GO_API_KEY",
+      "DEEPSEEK_API_KEY"
+    ],
+    "hits": []
+  },
+  "log": [
+    "== service configuration ==",
+    "{\"allowlist\": [\"kilo\"], \"providers\": {\"kilo\": {\"env\": {\"KILO_CONFIG_CONTENT\": \"{\\\"autoupdate\\\": false, \\\"model\\\": \\\"opencode-go/deepseek-v4.1-flash\\\", \\\"provider\\\": {\\\"opencode-go\\\": {\\\"npm\\\": \\\"@ai-sdk/openai-compatible\\\", \\\"name\\\": \\\"OpenCode Go\\\", \\\"options\\\": {\\\"baseURL\\\": \\\"https://opencode.ai/zen/go/v1\\\", \\\"apiKey\\\": \\\"{env:KILO_PROVIDER_KEY}\\\"}, \\\"models\\\": {\\\"deepseek-v4.1-flash\\\": {\\\"name\\\": \\\"deepseek-v4.1-flash\\\"}}}}}\"}, \"envFrom\": {\"KILO_PROVIDER_KEY\": \"OPEN_CODE_GO_API_KEY\"}}}}",
+    "SERVER> {\"event\":\"listening\",\"origin\":\"http://127.0.0.1:51137\",\"pid\":13330,\"serverId\":\"ordessa-t06-codex\"}",
+    "== environments create local (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"57b918d5bbd445f0868901d240bd05f3\", \"command\": \"environments create local --root /tmp/t08k2-ws/work --alias demo\", \"status\": \"completed\", \"data\": {\"identity\": \"environment/5f65678dbd204580a2c26758797543d9\", \"alias\": \"demo\", \"aliases\": [\"demo\"], \"provider\": \"local\", \"backendId\": \"/tmp/t08k2-ws/work\", \"phase\": \"ready\", \"generation\": 0, \"state\": \"running\", \"observationStale\": false, \"observedAt\": \"2026-10-21T05:28:53.314067+00:00\", \"operationStatus\": {\"phase\": \"ready\", \"operation\": null}, \"activeUses\": 0, \"isolation\": \"none\", \"endpointKind\": \"local-directory\", \"health\": \"ready\", \"capabilities\": {\"isolation\": \"none\", \"statuses\": {\"byte-channel\": \"supported\", \"files\": \"supported\", \"process\": \"supported\", \"stderr\": \"supported\", \"terminal\": \"unsupported\"}, \"provides\": [\"byte-channel\", \"files\", \"process\", \"stderr\"], \"values\": {\"provider\": \"local\", \"resourceKind\": \"directory\"}, \"assurance\": {\"isolation\": \"none\", \"isolationIsSecurityBoundary\": false, \"localDevelopmentOnly\": true, \"providerAssurance\": \"provider_self_report\", \"statement\": \"provider-reported isolation; it is not a permission, lease or hold\"}}}, \"error\": null, \"operationRef\": \"environment-command/823b17b73779433981400a3ff4acf30d\", \"evidenceRefs\": []}",
+    "== environments.files write control (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"ebb178ef74a6473996041cab1b59f1b6\", \"command\": \"call environments.files --input /tmp/t08k2-ws/control-write.json\", \"status\": \"completed\", \"data\": {\"operation\": \"write\", \"path\": \"t06-control-pre.txt\", \"bytes\": 14, \"byteLength\": 14}, \"error\": null, \"operationRef\": \"environment-command/9ece5b43ddba4d52a0a8559d6e2ece53\", \"evidenceRefs\": []}",
+    "== environments.files cat control (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"ac3bcc7ad2e2415595795524fe6373d5\", \"command\": \"call environments.files --input /tmp/t08k2-ws/control-read.json\", \"status\": \"completed\", \"data\": {\"content\": \"t06-control-ok\"}, \"error\": null, \"operationRef\": \"environment-command/b2d082c9f9534e87b42ca2e01d1e056d\", \"evidenceRefs\": []}",
+    "== environments.acquire (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"8e0f60d28acf4627a63d7e3ba4afc165\", \"command\": \"call environments.acquire --input /tmp/t08k2-ws/acquire.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/b388fb41f22b45869bca1f0d3f4ce908\", \"useIdentity\": \"environment-use/76498755fdf2445bb6187df8b4199d6f\", \"status\": \"completed\", \"ownerScope\": {\"kind\": \"principal\", \"ref\": \"instance\"}, \"environmentIdentity\": \"environment/5f65678dbd204580a2c26758797543d9\"}, \"error\": null, \"operationRef\": \"environment-operation/b388fb41f22b45869bca1f0d3f4ce908\", \"evidenceRefs\": []}",
+    "== environments.export-endpoint (raw wire) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"export-raw\", \"command\": \"environments.export-endpoint\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/09f941a3cc9b40498fd01c1b516e9f06\", \"useIdentity\": \"environment-use/76498755fdf2445bb6187df8b4199d6f\", \"status\": \"completed\", \"endpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:ffaf330a1acdf32c7d1d0bde\", \"endpointId\": \"endpoint/5b63921765a64dbf9cc4d7f4d49507ca\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:aeb66f15e5fe1f34be9d7e609443af640639e8493ecd3563460619ace0ded3e7\"}, \"descriptor\": {\"schemaVersion\": \"environment-endpoint-descriptor/2\", \"endpointId\": \"endpoint/5b63921765a64dbf9cc4d7f4d49507ca\", \"revision\": \"1\", \"capabilities\": [\"communicate\", \"detach\", \"files\", \"launcher\", \"observe\", \"terminate\"], \"rootKeys\": [\"cache\", \"config\", \"data\", \"dsh-home\", \"home\", \"state\", \"tmp\", \"work\"], \"preparedConfigurations\": [], \"reconnect\": \"unsupported\", \"providerId\": \"local\", \"endpointKind\": \"local-directory\"}}, \"error\": null, \"operationRef\": \"environment-operation/09f941a3cc9b40498fd01c1b516e9f06\", \"evidenceRefs\": []}",
+    "== agents harness list ==",
+    "[\"kilo\"]",
+    "== agents profiles create (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"86d156acdf214841909ca9305fbd4530\", \"command\": \"agents profiles create demo-kilo --name kilo --manifest /tmp/t08k2-ws/manifest.json\", \"status\": \"completed\", \"data\": {\"profileId\": \"demo-kilo\", \"catalogRevision\": 1, \"displayName\": \"kilo\", \"archivedAt\": null, \"currentManifestRef\": {\"environmentNamespace\": \"server\", \"profileId\": \"demo-kilo\", \"manifestRevision\": 1, \"contentDigest\": \"sha256:426bbd3a74f27b7e12235a5b362d762206edc213f667e736d9e94f4592850a7a\"}}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.start (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"start-1\", \"command\": \"call agents.start --input /tmp/t08k2-ws/start.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-start-receipt/1\", \"instanceId\": \"instance-0b4a6de269c54fe6831e3c770d67b764\", \"operationRef\": \"agent-start/6f621950b1c1493488c1ed813617294b\", \"state\": \"running\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-0b4a6de269c54fe6831e3c770d67b764\", \"bindingDigest\": \"sha256:f14d87cad29c454f08c0874993b9932be76e2cda7314e34b0c884879b663e3a4\"}, \"processEndpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:ffaf330a1acdf32c7d1d0bde\", \"endpointId\": \"endpoint/1039febb5f984c7d85211163273c6402\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:fb35ec9d36af73693748a3400b8b0b0941dbf687e29a1827dc8993d5d4e54894\"}, \"sessionId\": \"ses_ea310d773ffelel6SEqNt2vBUD\", \"error\": null}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== sessionId: ses_ea310d773ffelel6SEqNt2vBUD",
+    "== real model call 1/1 ==",
+    "== agents.prompt (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"prompt-a\", \"command\": \"call agents.prompt --input /tmp/t08k2-ws/prompt-input-a.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-protocol-turn/1\", \"turnRef\": {\"schemaVersion\": \"agent-turn-ref/1\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-0b4a6de269c54fe6831e3c770d67b764\", \"bindingDigest\": \"sha256:f14d87cad29c454f08c0874993b9932be76e2cda7314e34b0c884879b663e3a4\"}, \"turnId\": \"turn/8212a44e21a34053905bc96e5f7b19bc\"}, \"sessionId\": \"ses_ea310d773ffelel6SEqNt2vBUD\", \"agentOperationRef\": \"agent-operation/2928dec9d82c46b28a973c8c7197ff51\", \"endpointRequestId\": \"sha256:a5b0b8d6dbd9241c29b289766fc272a2d0212873e31cc1b5be9b53314723af53\", \"endpointOperationRef\": \"environment-operation/56e5adb2d21d4f38ab4f9fb950bed1f9\", \"engineeringAttemptRef\": null, \"inputDigest\": \"sha256:50dcefe881fbd75591d59b5cc44553292b1e23a934bf64f875b994354ecfbb91\", \"state\": \"completed\", \"revision\": 3, \"observationBytes\": {\"bytesSent\": 226, \"delivery\": \"confirmed\", \"protocol\": {\"frames\": [{\"jsonrpc\": \"2.0\", \"method\": \"session/update\", \"params\": {\"sessionId\": \"ses_ea310d773ffelel6SEqNt2vBUD\", \"update\": {\"availableCommands\": [{\"description\": \"Keep working toward a session goal. /goal <objective> or pause, resume, clear. A goal may wait on a scheduled wakeup, a cron task, or a background process: the wait suspends the goal until it fires and the goal resumes itself; /goal pause and /goal clear cancel its armed timers. If the objective is to wait for a deploy, build, or CI job, schedule that wait immediately; do not explore the repository first.\", \"name\": \"goal\"}, {\"description\": \"guided AGENTS.md setup\", \"name\": \"init\"}, {\"description\": \"Guide for Kilo configuration: config paths, kilo.json fields, commands, agents, skills, permissions, MCPs, providers, TUI settings, plus Agent Manager worktree setup/run scripts, workflows, and state. Use for Kilo config questions, locating loaded config, changing settings, or Agent Manager questions about run/setup scripts, worktree setup/workflows, apply/merge/PR/conflicts, missing sessions/worktrees, and agent-manager.json recovery.\", \"name\": \"kilo-config\"}, {\"description\": \"import a Claude Code session transcript\", \"name\": \"resume-claude\"}, {\"description\": \"import an OpenAI Codex session transcript\", \"name\": \"resume-codex\"}, {\"description\": \"review changes [uncommitted|staged|unpushed|branch|commit|pr]\", \"name\": \"review\"}], \"sessionUpdate\": \"available_commands_update\"}}}, {\"jsonrpc\": \"2.0\", \"method\": \"session/update\", \"params\": {\"sessionId\": \"ses_ea310d773ffelel6SEqNt2vBUD\", \"update\": {\"content\": {\"text\": \"391\", \"type\": \"text\"}, \"messageId\": \"msg_15cef2a72001fdtwZ7RjzPA9uQ\", \"sessionUpdate\": \"agent_message_chunk\"}}}, {\"jsonrpc\": \"2.0\", \"method\": \"session/update\", \"params\": {\"sessionId\": \"ses_ea310d773ffelel6SEqNt2vBUD\", \"update\": {\"cost\": {\"amount\": 8.085e-05, \"currency\": \"USD\"}, \"sessionUpdate\": \"usage_update\", \"size\": 1000000, \"used\": 13075}}}, {\"id\": \"agent-operation/2928dec9d82c46b28a973c8c7197ff51\", \"jsonrpc\": \"2.0\", \"result\": {\"_meta\": {}, \"stopReason\": \"end_turn\", \"usage\": {\"cachedReadTokens\": 12800, \"inputTokens\": 275, \"outputTokens\": 2, \"totalTokens\": 13077}}}], \"protocolId\": \"acp\"}}, \"observationDigest\": \"sha256:e0b4134d739f953e38ade3bbd41e1341bccd3aa7d19f4789ad52ef19fefb1f53\"}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== turn: turnId=turn/8212a44e21a34053905bc96e5f7b19bc nativeTurnId=None turnStatus=None delivery=confirmed items=None answer=None",
+    "== agents.query (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"query-a\", \"command\": \"call agents.query --input /tmp/t08k2-ws/query-input-a.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-protocol-turn/1\", \"turnRef\": {\"schemaVersion\": \"agent-turn-ref/1\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-0b4a6de269c54fe6831e3c770d67b764\", \"bindingDigest\": \"sha256:f14d87cad29c454f08c0874993b9932be76e2cda7314e34b0c884879b663e3a4\"}, \"turnId\": \"turn/8212a44e21a34053905bc96e5f7b19bc\"}, \"sessionId\": \"ses_ea310d773ffelel6SEqNt2vBUD\", \"agentOperationRef\": \"agent-operation/2928dec9d82c46b28a973c8c7197ff51\", \"endpointRequestId\": \"sha256:a5b0b8d6dbd9241c29b289766fc272a2d0212873e31cc1b5be9b53314723af53\", \"endpointOperationRef\": \"environment-operation/56e5adb2d21d4f38ab4f9fb950bed1f9\", \"engineeringAttemptRef\": null, \"inputDigest\": \"sha256:50dcefe881fbd75591d59b5cc44553292b1e23a934bf64f875b994354ecfbb91\", \"state\": \"completed\", \"revision\": 3, \"observationBytes\": {\"bytesSent\": 226, \"delivery\": \"confirmed\", \"protocol\": {\"frames\": [{\"jsonrpc\": \"2.0\", \"method\": \"session/update\", \"params\": {\"sessionId\": \"ses_ea310d773ffelel6SEqNt2vBUD\", \"update\": {\"availableCommands\": [{\"description\": \"Keep working toward a session goal. /goal <objective> or pause, resume, clear. A goal may wait on a scheduled wakeup, a cron task, or a background process: the wait suspends the goal until it fires and the goal resumes itself; /goal pause and /goal clear cancel its armed timers. If the objective is to wait for a deploy, build, or CI job, schedule that wait immediately; do not explore the repository first.\", \"name\": \"goal\"}, {\"description\": \"guided AGENTS.md setup\", \"name\": \"init\"}, {\"description\": \"Guide for Kilo configuration: config paths, kilo.json fields, commands, agents, skills, permissions, MCPs, providers, TUI settings, plus Agent Manager worktree setup/run scripts, workflows, and state. Use for Kilo config questions, locating loaded config, changing settings, or Agent Manager questions about run/setup scripts, worktree setup/workflows, apply/merge/PR/conflicts, missing sessions/worktrees, and agent-manager.json recovery.\", \"name\": \"kilo-config\"}, {\"description\": \"import a Claude Code session transcript\", \"name\": \"resume-claude\"}, {\"description\": \"import an OpenAI Codex session transcript\", \"name\": \"resume-codex\"}, {\"description\": \"review changes [uncommitted|staged|unpushed|branch|commit|pr]\", \"name\": \"review\"}], \"sessionUpdate\": \"available_commands_update\"}}}, {\"jsonrpc\": \"2.0\", \"method\": \"session/update\", \"params\": {\"sessionId\": \"ses_ea310d773ffelel6SEqNt2vBUD\", \"update\": {\"content\": {\"text\": \"391\", \"type\": \"text\"}, \"messageId\": \"msg_15cef2a72001fdtwZ7RjzPA9uQ\", \"sessionUpdate\": \"agent_message_chunk\"}}}, {\"jsonrpc\": \"2.0\", \"method\": \"session/update\", \"params\": {\"sessionId\": \"ses_ea310d773ffelel6SEqNt2vBUD\", \"update\": {\"cost\": {\"amount\": 8.085e-05, \"currency\": \"USD\"}, \"sessionUpdate\": \"usage_update\", \"size\": 1000000, \"used\": 13075}}}, {\"id\": \"agent-operation/2928dec9d82c46b28a973c8c7197ff51\", \"jsonrpc\": \"2.0\", \"result\": {\"_meta\": {}, \"stopReason\": \"end_turn\", \"usage\": {\"cachedReadTokens\": 12800, \"inputTokens\": 275, \"outputTokens\": 2, \"totalTokens\": 13077}}}], \"protocolId\": \"acp\"}}, \"observationDigest\": \"sha256:e0b4134d739f953e38ade3bbd41e1341bccd3aa7d19f4789ad52ef19fefb1f53\"}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== query: answer=None sameOperation=True",
+    "== waiting for the native rollout to record task_complete ==",
+    "== native rollout: None records=0 malformed=0 timedOut=True toolEvents=0 ==",
+    "== cleanup chain (stop -> reconcile -> process-release -> release) ==",
+    "== cleanup target: instance={'schemaVersion': 'agent-instance/1', 'namespace': 'server', 'instanceId': 'instance-0b4a6de269c54fe6831e3c770d67b764', 'bindingDigest': 'sha256:f14d87cad29c454f08c0874993b9932be76e2cda7314e34b0c884879b663e3a4'} processEndpoint={'schemaVersion': 'agent-endpoint/1', 'issuer': 'environment-endpoints:ffaf330a1acdf32c7d1d0bde', 'endpointId': 'endpoint/1039febb5f984c7d85211163273c6402', 'revision': '1', 'descriptorDigest': 'sha256:fb35ec9d36af73693748a3400b8b0b0941dbf687e29a1827dc8993d5d4e54894'} use='environment-use/76498755fdf2445bb6187df8b4199d6f' ==",
+    "== agents.stop (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"stop-1\", \"command\": \"call agents.stop --input /tmp/t08k2-ws/stop-1-input.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"endpoint-operation/1\", \"operationRef\": \"environment-operation/1e42951a92f749ff9676ea9499d2405e\", \"status\": \"completed\", \"processEndpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:ffaf330a1acdf32c7d1d0bde\", \"endpointId\": \"endpoint/1039febb5f984c7d85211163273c6402\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:fb35ec9d36af73693748a3400b8b0b0941dbf687e29a1827dc8993d5d4e54894\"}, \"facts\": {\"action\": \"terminate\", \"cancellation\": \"requested\", \"processState\": \"running\"}, \"evidenceRefs\": [], \"error\": null}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.reconcile (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"rec-1\", \"command\": \"call agents.reconcile --input /tmp/t08k2-ws/rec-1-input.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-process-observation/1\", \"state\": \"exited\", \"observedAt\": \"2026-10-21T05:33:04.444734+00:00\", \"nativeIdentityDigest\": \"sha256:6e1a0158a108964c25e7166adb1a7b2e458af747a3dc156054fa949a767235cb\", \"exitCode\": -9, \"evidenceRefs\": []}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== environments.process-release (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"prel-1\", \"command\": \"call environments.process-release --input /tmp/t08k2-ws/prelease.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/da3a1efd602948fd8784c90906cbeffc\", \"useIdentity\": \"environment-use/76498755fdf2445bb6187df8b4199d6f\", \"status\": \"completed\", \"resourcePreserved\": true, \"receipt\": {\"processIdentity\": \"local-process/13365\", \"transportReleased\": true, \"processState\": \"exited\", \"ioState\": \"closed\", \"exitCode\": \"-9\"}, \"exitClaimed\": false}, \"error\": null, \"operationRef\": \"environment-operation/da3a1efd602948fd8784c90906cbeffc\", \"evidenceRefs\": []}",
+    "== environments.release (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"rel-1\", \"command\": \"call environments.release --input /tmp/t08k2-ws/release.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/17084d145e5540bd82089dbb9856b62a\", \"useIdentity\": \"environment-use/76498755fdf2445bb6187df8b4199d6f\", \"status\": \"completed\", \"resourcePreserved\": true, \"receipt\": {\"useIdentity\": \"environment-use/76498755fdf2445bb6187df8b4199d6f\", \"environmentIdentity\": \"environment/5f65678dbd204580a2c26758797543d9\", \"generation\": 0, \"resourcePreserved\": true, \"providerFacts\": {\"useIdentity\": \"environment-use/76498755fdf2445bb6187df8b4199d6f\", \"isolation\": \"none\", \"root\": \"/tmp/t08k2-ws/work\", \"rootPreserved\": true, \"resourcePreserved\": true, \"attempts\": [\"local-use/environment-use/76498755fdf2445bb6187df8b4199d6f/1\"]}}}, \"error\": null, \"operationRef\": \"environment-operation/17084d145e5540bd82089dbb9856b62a\"",
+    "== environments.files ls (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"files-ls-1\", \"command\": \"call environments.files --input /tmp/t08k2-ws/files-ls.json\", \"status\": \"completed\", \"data\": {\"entries\": [\"t06-control-pre.txt\", \"config/kilo/.bash-permission-migrated\", \"config/kilo/.gitignore\", \"data/kilo/kilo.db\", \"data/kilo/kilo.db-shm\", \"data/kilo/kilo.db-wal\", \"data/kilo/telemetry-id\", \"data/kilo/log/2026-10-21T052856.log\", \"data/kilo/log/opencode.log\", \"data/kilo/storage/migration\", \"data/kilo/storage/session_diff/ses_ea310d773ffelel6SEqNt2vBUD.json\", \"state/kilo-sandbox-policy/421e888d3f89085813e50c92210b5fc5ff431963dcfde567520be280ac0d4d9a/ee1c0b629bd40d0c9896e2c9da0410c3d1f1f04f28dadc923c30a0e363c7e77e.json\"]}, \"error\": null, \"operationRef\": \"environment-command/ca7cd07372204a86ac903a841cdcae7c\", \"evidenceRefs\": []}",
+    "== ls: entries=12 artifactListed=False controlListed=True ==",
+    "== environments.files cat tools-proof.txt (exit 6) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"files-cat-1\", \"command\": \"call environments.files --input /tmp/t08k2-ws/files-cat.json\", \"status\": \"unknown\", \"data\": null, \"error\": {\"code\": \"EFFECT_UNKNOWN\", \"message\": \"Capability operation did not complete\", \"retryable\": false}, \"operationRef\": \"environment-command/e9b4acbe268441998f2bbf9ee67fdf5b\", \"evidenceRefs\": []}",
+    "== cat: bytes=None sha256=None exactMatch=False strippedMatch=False content=None ==",
+    "== server exit code: -15",
+    "== residue: processes still running inside the workspace ==",
+    "[]",
+    "== secret scan ==",
+    "{\"filesScanned\": 37, \"secretNamesChecked\": [\"OPEN_CODE_GO_API_KEY\", \"DEEPSEEK_API_KEY\"], \"hits\": []}"
+  ],
+  "budget": {
+    "limit": 1,
+    "counterFile": "/tmp/t08k2-budget.txt",
+    "usedAfter": 1
+  }
+}

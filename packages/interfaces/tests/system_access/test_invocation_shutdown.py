@@ -12,7 +12,7 @@ from threading import Event, Thread
 import pytest
 
 from ordessa_interfaces.system_access.services.invocation import WireService
-from server_plugin_api import ServerMethodDescriptor, WireError
+from ordessa_server_plugin_api import ServerMethodDescriptor, WireError
 
 
 class _Registry:

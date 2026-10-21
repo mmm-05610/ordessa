@@ -6,9 +6,9 @@ an unresolved request, and has no model, write or approval operation.
 """
 from dataclasses import dataclass
 
-from decision_runtime import DecisionAnswer, DecisionQuestion, FilesystemEvidenceStore, check_summary
-from decision_runtime.definitions.values import digest_hex, job_document_bound
-from decision_runtime.evidence import EvidenceScope
+from ordessa_decision import DecisionAnswer, DecisionQuestion, FilesystemEvidenceStore, check_summary
+from ordessa_decision.definitions.values import digest_hex, job_document_bound
+from ordessa_decision.evidence import EvidenceScope
 
 from ...application.contracts.errors import ApplicationError
 

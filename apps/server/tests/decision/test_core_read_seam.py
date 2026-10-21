@@ -2,7 +2,7 @@
 from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch
 
 from ordessa_units.admission.material_admission import material_registration_snapshot as _test_resource_snapshot
-from ordessa_execution_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
 from dataclasses import replace
 from contextlib import contextmanager
 import builtins
@@ -12,7 +12,7 @@ import os
 import pytest
 from pacthold.public import Environment, InstallationRecord
 from ordessa_units.public import *
-from ordessa_execution_agents.harness.providers.registry.contributions import RUNTIME_METHODS
+from ordessa_agents.harness.providers.registry.contributions import RUNTIME_METHODS
 
 DEF={'environmentNamespace':'test','definitionId':'fake','revision':'1'}
 class Policy:
@@ -161,7 +161,7 @@ def test_T65_old_provider_unsupported(setup):
     other.close()
 
 async def test_T55_T56_profile_and_filtered_scope(setup):
-    from decision_runtime.definitions import ReadContext
+    from ordessa_decision.definitions import ReadContext
     from ordessa_system_access_bindings import OrdessaReadFacade, ObservationQuery
     env,policy,owner,api=setup
     context=ReadContext(object(),'test')
@@ -184,9 +184,9 @@ async def test_T55_T56_profile_and_filtered_scope(setup):
     assert owner.effects==[]
 
 async def test_T61_T62_T67_core_adapter_graph_owner_validation(setup,tmp_path):
-    from decision_runtime.definitions import plain, DecisionServices
+    from ordessa_decision.definitions import plain, DecisionServices
     from assignment_source.offline import offline_case
-    from decision_runtime.runtime import run_decision
+    from ordessa_decision.runtime import run_decision
     from pacthold.decision.flows.agent_assignment.build import build_assignment_flow
     from ordessa_system_access_bindings import OrdessaReadFacade, ObservationQuery, OwnerProposalValidator
     env,policy,owner,api=setup

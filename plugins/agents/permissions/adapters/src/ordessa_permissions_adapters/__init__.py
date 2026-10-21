@@ -11,7 +11,7 @@ point `harness.configuration-adapters` (api_version `v1`, facet
 `permissions.policy-adapters`) via `PolicyAdaptersPlugin` ->
 `ServerPluginRegistration.contributions`. Duplicate/overlap refusal,
 field-claim conflicts, owner injection and publish-on-commit are performed
-by the point's conflict registry driven through `server_plugin_api`; this
+by the point's conflict registry driven through `ordessa_server_plugin_api`; this
 package admits nothing (the former private `PolicyAdapterRegistry` was
 removed as a second authority).
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_execution_agents.harness.providers.resolution.artifacts.tree_identity import (runtime_artifact_tree_digest)
+from ordessa_agents.harness.providers.resolution.artifacts.tree_identity import (runtime_artifact_tree_digest)
 
 from ordessa_skills.api.errors import SkillAssetError
 from ordessa_skills.library.store import SkillRevisionStore
@@ -74,7 +74,7 @@ def test_a_failed_install_leaves_no_staging_and_the_previous_revision_intact(tmp
 
 
 def _digest(store, asset_id, revision):
-    from ordessa_execution_agents.harness.providers.resolution.artifacts.tree_identity import (runtime_artifact_tree_digest as digest_of)
+    from ordessa_agents.harness.providers.resolution.artifacts.tree_identity import (runtime_artifact_tree_digest as digest_of)
     return digest_of(store.revision_dir(asset_id, revision))
 
 

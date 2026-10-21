@@ -860,7 +860,7 @@ def test_public_v2_uses_original_instance_admission_bootstrap_and_sdk_handoff(tm
     from ordessa_interfaces.system_access.access_control.authentication import AccessGrant, InstanceAccessAuthority
     from ordessa_interfaces.system_access.contracts.refs import Scope as WireScope
     from ordessa_system_access_bindings.engineering import EngineeringCommandAccess
-    from ordessa_execution_agents.profiles import decode_revision_ref
+    from ordessa_agents.profiles import decode_revision_ref
     from ordessa_units.assembly import UnitRunPermission
     from test_declared_implementation_results import _assembly
     from test_real_source_chain import NOW, PRINCIPAL

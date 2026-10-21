@@ -52,7 +52,7 @@
 
 ### G5 serverScope / principal 语义（低紧急）
 - 调用者：`assignments/`。现状：服务端无 principal 概念，鉴权=单数据根 bearer token
-  （`runtime.py:458`），handler 只见 params（`server_plugin_api/contract.py:71`）。
+  （`runtime.py:458`），handler 只见 params（`ordessa_server_plugin_api/contract.py:71`）。
 - 需要：明确「serverScope = 该 Server 数据根实例身份」书面语义，或在 descriptor 上给类型化上下文。
 - 失败反例：伪造/跨 Server `workspaceId` 必须拒绝而非解析成功（G07）。
 - 独立路径：Q1 以 `workspace.records.get()` 存在性校验 + 本地 `server_scope` 列实现，等 C0 裁定后对齐。

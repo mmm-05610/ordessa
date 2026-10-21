@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     OwnedRootBinding, RootOwnershipError, ServerPluginSelection,
 )
 

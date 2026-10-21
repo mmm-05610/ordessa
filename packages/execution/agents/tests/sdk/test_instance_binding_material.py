@@ -6,10 +6,10 @@ import pytest
 
 from interaction_fixtures import original_service,INSTANCE,MATERIAL,DIGEST
 from test_interactions import PARAMS_BYTES
-from ordessa_execution_agents.instances.contracts import InstanceBindingMaterial
-from ordessa_execution_agents.sdk.interactions import _digest_of,InteractionsRefused
-from ordessa_execution_agents.sdk.manager import ManagerRefused
-from ordessa_execution_agents.sdk.prepare import canonical_digest
+from ordessa_agents.instances.contracts import InstanceBindingMaterial
+from ordessa_agents.sdk.interactions import _digest_of,InteractionsRefused
+from ordessa_agents.sdk.manager import ManagerRefused
+from ordessa_agents.sdk.prepare import canonical_digest
 
 
 def test_full_original_material_uses_unchanged_binding_digest_formula():

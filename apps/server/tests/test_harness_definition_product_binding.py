@@ -1,7 +1,7 @@
 """Product factories bind original Harness admission, without Unit dispatch."""
-from ordessa_execution_agents.harness.providers.registry.errors import CatalogAdmissionRefused
+from ordessa_agents.harness.providers.registry.errors import CatalogAdmissionRefused
 import pytest
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.providers.registry import (
     HarnessAdmission, HarnessDefinitionDescriptor,
     HarnessDefinitionDeclaration, HarnessInstallationObservation,
     harness_registration_snapshot,

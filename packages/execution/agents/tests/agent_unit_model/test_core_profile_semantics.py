@@ -4,8 +4,8 @@ These tests use the existing SQLite/core fixtures and controlled owner ports.
 They do not start provider processes or make model calls.
 """
 from __future__ import annotations
-from ordessa_execution_agents.profiles import encode_revision_ref
-from ordessa_execution_agents.profiles import decode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import decode_revision_ref
 
 import json
 import sqlite3
@@ -28,17 +28,17 @@ from ordessa_units.configuration.contracts import (
     ConfigurationRevisionConflict,
     ConfigurationUnsupported,
 )
-from ordessa_execution_agents.profiles.definitions.models import ProfileRevisionRef
+from ordessa_agents.profiles.definitions.models import ProfileRevisionRef
 from ordessa_units.configuration.service import CONFIGURATION_ATTEMPTS
 from ordessa_units.bindings.publication import decode_node_ref
-from ordessa_execution_agents.profiles.management.service import ProfileService
+from ordessa_agents.profiles.management.service import ProfileService
 from pacthold.public import EnvironmentClosedError
 
 from agent_tools_fixtures.node_publication import setup as node_fixture, Provider as ManagementProvider  # noqa: F401
 from agent_tools_fixtures.assembly import assembly
 from test_apply_profile import DECLARATION, DEFINITION, _base_ref, _profile
 from agent_tools_fixtures.management import setup as management_setup
-from ordessa_execution_agents.harness.providers.registry.contributions import RUNTIME_METHODS
+from ordessa_agents.harness.providers.registry.contributions import RUNTIME_METHODS
 
 
 @pytest.fixture(autouse=True)
@@ -384,7 +384,7 @@ def test_correcting_omission_under_spent_request_id_conflicts_before_native_effe
 
 
 def test_typed_manifest_diff_errors_are_reexported_by_identity():
-    from ordessa_execution_agents import public
+    from ordessa_agents import public
     from ordessa_units.configuration.contracts import (
         ConfigurationConversionRefused as CoreConversionRefused,
         ConfigurationOmissionRefused as CoreOmissionRefused,

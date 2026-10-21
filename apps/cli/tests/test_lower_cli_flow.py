@@ -7,7 +7,7 @@ from contextlib import redirect_stderr, redirect_stdout
 
 import pytest
 
-from ordessa_agent_tools.cli import main
+from ordessa_cli.cli import main
 
 
 def run_cli(argv, stdin=b''):
@@ -145,7 +145,7 @@ def test_profile_and_harness_surface(tmp_path):
     bad['manifestRevision'] = 99
     revision_file = tmp_path / 'bad-ref.json'
     revision_file.write_text(json.dumps(bad))
-    code, output, _ = run_cli(['--state', state, 'call', 'profiles.read', '--input', '-',
+    code, output, _ = run_cli(['--state', state, 'call', 'agents.profiles.read', '--input', '-',
                                '--json'], stdin=json.dumps({'profileRef': bad}).encode())
     assert code == 2 and envelope(output)['status'] == 'refused'
 
@@ -216,8 +216,11 @@ def test_unknown_command_and_invalid_input_are_deterministic(tmp_path):
     assert code == 4 and envelope(output)['error']['code'] == 'CAPABILITY_UNSUPPORTED'
     code, output, _ = run_cli(['--state', state, 'environments', 'create', 'local', '--json'])
     assert code == 2 and envelope(output)['error']['code'] == 'INVALID_INPUT'
-    code, _, error = run_cli(['environments', 'list', '--json'])
-    assert code == 2 and '--state' in error
+    # No mode selector means the zero-configuration default target; a missing
+    # instance is a deterministic refusal that names both explicit escapes.
+    code, output, error = run_cli(['environments', 'list', '--json'])
+    assert code == 4 and envelope(output)['error']['code'] == 'AUTHORITY_UNAVAILABLE'
+    assert 'ordessa-server' in error and '--state' in error
 
 
 def test_ask_without_a_provider_is_an_explicit_refusal(tmp_path):

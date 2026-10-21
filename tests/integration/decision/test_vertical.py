@@ -8,12 +8,12 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "tooling/checks/decision-runtime"))
 import pytest
 import httpx2
-from decision_runtime.definitions import *
-from decision_runtime.validation import decode_request
+from ordessa_decision.definitions import *
+from ordessa_decision.validation import decode_request
 from assignment_source.offline import *
-from decision_runtime.runtime import run_decision, EvidenceUnknown
+from ordessa_decision.runtime import run_decision, EvidenceUnknown
 from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings
-from decision_runtime.evidence import FileEvidenceSink
+from ordessa_decision.evidence import FileEvidenceSink
 from assignment_source.build import build_assignment_flow
 
 @pytest.mark.parametrize('action',['continue','reuse','restore','wait','reconfigure','create','noDelegation'])
@@ -101,7 +101,7 @@ def test_T01_T02_contract_roundtrip_vectors():
     request,flow,services=offline_case()
     assert decode_request(canonical(request))==request
     with pytest.raises(ContractError): decode_request(canonical({**request.to_dict(),'allowWrite':True}))
-    path=Path(__file__).parents[3]/'packages/execution/decision/src/decision_runtime/definitions/vectors.json'
+    path=Path(__file__).parents[3]/'packages/execution/decision/src/ordessa_decision/definitions/vectors.json'
     for v in json.loads(path.read_text()): assert digest(v['name'],decode(v['canonical'].encode()))==v['digest']
 
 def test_T19_T55_boundary_scanner_positive_and_injected_private(tmp_path):

@@ -9,9 +9,9 @@ from pathlib import Path
 from dataclasses import replace
 import pytest
 from ordessa_infrastructure.encoding import canonical_bytes
-from ordessa_execution_agents.public import Records,InteractionService
-from ordessa_execution_agents.sdk.native_contracts import METHODS,FrozenNativeRequest,NativeOperationRef,NativeOperationReceipt
-from ordessa_execution_agents.sdk.interactions import InteractionsRefused
+from ordessa_agents.public import Records,InteractionService
+from ordessa_agents.sdk.native_contracts import METHODS,FrozenNativeRequest,NativeOperationRef,NativeOperationReceipt
+from ordessa_agents.sdk.interactions import InteractionsRefused
 from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority,AccessGrant
 from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_server.composition.agent_bindings.native_access import OriginalNativeAccess,NATIVE_READ,NATIVE_CAPABILITIES
@@ -45,7 +45,7 @@ for await (const line of readline.createInterface({input:process.stdin})){
 
 
 async def native_case(tmp_path,*,grants=True):
-    module=(ROOT/'packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/operation.mjs').as_uri()
+    module=(ROOT/'packages/execution/agents/src/ordessa_agents/harness/configuration/acp/operation.mjs').as_uri()
     peer=PEER.replace('MODULE',json.dumps(module)).replace('OPTIONS',json.dumps(OPTIONS))
     case=await setup(tmp_path,peer,runner=(shutil.which('node'),),peer_name='peer.mjs')
     started=await case.manager.start(case.request,case.endpoint,case.fixture.invocation)
@@ -197,8 +197,8 @@ asyncio.run(go())
 READ_CHILD=r'''
 import asyncio,json,sys
 from pathlib import Path
-from ordessa_execution_agents.public import Records,InteractionService
-from ordessa_execution_agents.sdk.native_contracts import NativeOperationRef,NativeOperationReceipt
+from ordessa_agents.public import Records,InteractionService
+from ordessa_agents.sdk.native_contracts import NativeOperationRef,NativeOperationReceipt
 from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority,AccessGrant
 from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_server.composition.agent_bindings.native_access import OriginalNativeAccess,NATIVE_READ
@@ -247,7 +247,7 @@ def test_actual_agent_process_exit_after_writer_cut_and_independent_process_read
 
 def test_closed_native_schema_and_full_binding_digest_negatives(tmp_path):
     from jsonschema import Draft202012Validator
-    from ordessa_execution_agents.sdk.native_schemas import native_contract_schema
+    from ordessa_agents.sdk.native_schemas import native_contract_schema
     async def scenario():
         case=await native_case(tmp_path)
         try:

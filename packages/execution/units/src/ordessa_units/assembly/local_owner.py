@@ -11,8 +11,8 @@ import time
 import uuid
 from collections.abc import Mapping
 
-from ordessa_execution_agents.profiles import ProfileService, encode_revision_ref
-from ordessa_execution_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
+from ordessa_agents.profiles import ProfileService, encode_revision_ref
+from ordessa_agents.harness.definitions.runtime_providers import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 from ordessa_units.definitions.admission_identity import AdmissionNamespace
 from ordessa_units.definitions.operations import OperationIntent, StepIntent
 from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping

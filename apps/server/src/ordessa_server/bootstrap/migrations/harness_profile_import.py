@@ -5,7 +5,7 @@ This module constructs no Environment, supports no native schema and reads no fi
 """
 from __future__ import annotations
 
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     HistoricalProfileIdentityMismatch, ProfileService, ProfileRevisionRef,
     ProfileValidationError,
     decode_content, encode_content,

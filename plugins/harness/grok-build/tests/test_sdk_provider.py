@@ -4,8 +4,8 @@ import asyncio
 from dataclasses import replace
 from pathlib import Path
 import pytest
-from ordessa_execution_agents.sdk import PrepareContext, BoundPath, SessionBootstrap, HarnessError
-from ordessa_execution_agents.profiles import decode_content
+from ordessa_agents.sdk import PrepareContext, BoundPath, SessionBootstrap, HarnessError
+from ordessa_agents.profiles import decode_content
 from ordessa_harness_grok_build import factory
 
 PIN={'environmentNamespace':'test','definitionId':'grok-build','revision':'1'}
@@ -74,7 +74,7 @@ def test_runtime_imports_only_public_sdk_and_no_retired_client():
     for path in Path(module.__file__).parent.glob('*.py'):
         for node in ast.walk(ast.parse(path.read_text())):
             if isinstance(node,ast.ImportFrom) and (node.module or '').startswith('ordessa_'):
-                assert node.module=='ordessa_execution_agents.sdk'
+                assert node.module=='ordessa_agents.sdk'
 
 
 def test_missing_approved_roots_or_endpoint_fails_before_effect():

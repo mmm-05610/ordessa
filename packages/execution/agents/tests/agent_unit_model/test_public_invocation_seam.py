@@ -2,7 +2,7 @@
 import pytest
 
 from ordessa_units.admission import invocation
-from ordessa_execution_agents import public
+from ordessa_agents import public
 
 
 @pytest.mark.parametrize("name", (

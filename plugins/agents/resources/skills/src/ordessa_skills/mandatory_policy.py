@@ -70,7 +70,7 @@ SKILL_TOOL_KEY = "skill"
 #: (`plugins/agents/permissions/backend/src/ordessa_permissions_backend/plugin.py:43`,
 #: registered at plugin.py:165). Skills does NOT declare it in
 #: `descriptor().requires`: the host grants another plugin's ports only along a
-#: declared dependency (server_plugin_api/contract.py:258-270), and a hard
+#: declared dependency (ordessa_server_plugin_api/contract.py:258-270), and a hard
 #: require would invert dependency (contracts.md 可选注册不能反转依赖), so the
 #: composition hands the object in through the plugin constructor instead.
 PERMISSIONS_AUTHORIZER_PORT = "permissions.authorizer@1"

@@ -115,10 +115,10 @@
         "permissions.approvals.decide",
         "permissions.approvals.query"
       ],
-      "acp.admission.gate": "PermissionsAcpAdmission (server_plugin_api.ACP_ADMISSION_PORT, version 1) \u2014 accepted only for a grant bound to this exact operation; ready derived from authority + authoritative native evidence"
+      "acp.admission.gate": "PermissionsAcpAdmission (ordessa_server_plugin_api.ACP_ADMISSION_PORT, version 1) \u2014 accepted only for a grant bound to this exact operation; ready derived from authority + authoritative native evidence"
     },
     "harnessPointWiring": "contributes facet 'permissions.policy-adapters' to harness.configuration-adapters@v1 via ContributionBatch; admission/overlap/claim-conflict raised by the platform (HarnessContributionError, ContributionPointUnboundError, ContributionVersionRefusedError, ContributionOwnerBusyError)",
-    "wireFamilyMapping": "PERMISSION_ERROR_FAMILIES / permissions_wire_family / wire_body_for \u2014 every code maps onto an existing server_plugin_api.FAMILIES entry (guarded)"
+    "wireFamilyMapping": "PERMISSION_ERROR_FAMILIES / permissions_wire_family / wire_body_for \u2014 every code maps onto an existing ordessa_server_plugin_api.FAMILIES entry (guarded)"
   },
   "commandsAndEvidence": [
     {

@@ -32,7 +32,7 @@ function capabilities(overrides: Record<string, unknown> = {}): AgentProfileCata
     schema: profileSchemaMirror.schema,
     environmentNamespace: namespace,
     supports: { profileCatalog: true },
-    supportedMethods: ['profiles.capabilities', 'profiles.list', 'profiles.readEntry', 'profiles.read'],
+    supportedMethods: ['agents.profiles.capabilities', 'agents.profiles.list', 'agents.profiles.readEntry', 'agents.profiles.read'],
     ...overrides,
   } as AgentProfileCatalogCapabilities
 }
@@ -61,16 +61,16 @@ it('requires exact contract version, digest, schema, support=true and all read m
     ['digest', { schemaDigest: 'sha256:bad' }],
     ['schema', { schema: { contractVersion: 'profile-json/1' } }],
     ['support', { supports: { profileCatalog: false } }],
-    ['methods', { supportedMethods: ['profiles.capabilities'] }],
-    ['malformed support facts', { supportedMethods: ['profiles.capabilities', 1] }],
+    ['methods', { supportedMethods: ['agents.profiles.capabilities'] }],
+    ['malformed support facts', { supportedMethods: ['agents.profiles.capabilities', 1] }],
     ['namespace', { environmentNamespace: '' }],
   ]
   for (const [name, override] of variants) {
-    const { wire, call } = makeWire(method => method === 'profiles.capabilities'
+    const { wire, call } = makeWire(method => method === 'agents.profiles.capabilities'
       ? accepted(capabilities(override)) : accepted({ entries: [] }))
     const result = await createWireClient(wire).list()
     expect(result.kind, name).toBe('unavailable')
-    expect(call.mock.calls.map(([, params]) => params.operationId)).toEqual(['profiles.capabilities'])
+    expect(call.mock.calls.map(([, params]) => params.operationId)).toEqual(['agents.profiles.capabilities'])
   }
   const absent = makeWire(() => accepted(capabilities()))
   expect((await createWireClient(absent.wire, null).list()).kind).toBe('unavailable')
@@ -78,7 +78,7 @@ it('requires exact contract version, digest, schema, support=true and all read m
 })
 
 it('distinguishes an empty catalog from an unavailable port and preserves refused/unknown outcomes', async () => {
-  const empty = makeWire(method => method === 'profiles.capabilities'
+  const empty = makeWire(method => method === 'agents.profiles.capabilities'
     ? accepted(capabilities()) : accepted({ entries: [] }))
   expect(await createWireClient(empty.wire).list()).toEqual({ kind: 'ok', value: [] })
 
@@ -90,7 +90,7 @@ it('distinguishes an empty catalog from an unavailable port and preserves refuse
     ['refused', { kind: 'Refused', requestId: 'r', reason: 'policy', retryable: false }],
     ['unknown', { kind: 'Unknown', requestId: 'r', reason: 'transport lost' }],
   ] as const) {
-    const { wire } = makeWire(method => method === 'profiles.capabilities'
+    const { wire } = makeWire(method => method === 'agents.profiles.capabilities'
       ? accepted(capabilities()) : response)
     expect((await createWireClient(wire).list()).kind).toBe(kind)
   }
@@ -100,36 +100,36 @@ it('reads only exact ProfileRefs, validates returned manifest identity, and call
   const methods: string[] = []
   const { wire, call } = makeWire((method, params) => {
     methods.push(method)
-    if (method === 'profiles.capabilities') return accepted(capabilities())
-    if (method === 'profiles.list') return accepted({ entries: [entry] })
-    if (method === 'profiles.readEntry') return accepted(entry)
-    if (method === 'profiles.read') return accepted({ ref: params.profileRef, content: { model: 'm' } })
+    if (method === 'agents.profiles.capabilities') return accepted(capabilities())
+    if (method === 'agents.profiles.list') return accepted({ entries: [entry] })
+    if (method === 'agents.profiles.readEntry') return accepted(entry)
+    if (method === 'agents.profiles.read') return accepted({ ref: params.profileRef, content: { model: 'm' } })
     throw new Error(`unexpected method ${method}`)
   })
   expect(await createWireClient(wire).list()).toEqual({ kind: 'ok', value: [entry] })
   expect(await createWireClient(wire).readEntry(entry.profileId)).toEqual({ kind: 'ok', value: entry })
   expect(await createWireClient(wire).read(ref)).toEqual({ kind: 'ok', value: { ref, content: { model: 'm' } } })
-  const readCall = call.mock.calls.find(([, params]) => params.operationId === 'profiles.read')
-  expect(readCall?.[1]).toEqual({ operationId: 'profiles.read', input: { profileRef: ref } })
-  expect(methods.every(method => ['profiles.capabilities', 'profiles.list', 'profiles.readEntry', 'profiles.read'].includes(method))).toBe(true)
+  const readCall = call.mock.calls.find(([, params]) => params.operationId === 'agents.profiles.read')
+  expect(readCall?.[1]).toEqual({ operationId: 'agents.profiles.read', input: { profileRef: ref } })
+  expect(methods.every(method => ['agents.profiles.capabilities', 'agents.profiles.list', 'agents.profiles.readEntry', 'agents.profiles.read'].includes(method))).toBe(true)
   expect(methods).not.toContain('profiles.v2.read')
   expect(methods).not.toContain('agent.config.submitOperation')
 
-  const foreignRead = makeWire(method => method === 'profiles.capabilities' ? accepted(capabilities())
+  const foreignRead = makeWire(method => method === 'agents.profiles.capabilities' ? accepted(capabilities())
     : accepted({ ref: { ...ref, environmentNamespace: 'other' }, content: { model: 'foreign' } }))
   expect((await createWireClient(foreignRead.wire).read({ ...ref, environmentNamespace: 'other' })).kind).toBe('unknown')
-  expect(foreignRead.call.mock.calls.map(([, params]) => params.operationId)).toEqual(['profiles.capabilities'])
-  const mismatched = makeWire(method => method === 'profiles.capabilities' ? accepted(capabilities())
+  expect(foreignRead.call.mock.calls.map(([, params]) => params.operationId)).toEqual(['agents.profiles.capabilities'])
+  const mismatched = makeWire(method => method === 'agents.profiles.capabilities' ? accepted(capabilities())
     : accepted({ ref: { ...ref, manifestRevision: 4 }, content: { secret: 'must-not-display' } }))
   expect((await createWireClient(mismatched.wire).read(ref)).kind).toBe('unknown')
 })
 
 it('rejects malformed and cross-namespace catalog entries instead of presenting them', async () => {
-  const malformed = makeWire(method => method === 'profiles.capabilities' ? accepted(capabilities())
+  const malformed = makeWire(method => method === 'agents.profiles.capabilities' ? accepted(capabilities())
     : accepted({ entries: [{ ...entry, currentManifestRef: { ...ref, environmentNamespace: 'foreign' } }] }))
   expect((await createWireClient(malformed.wire).list()).kind).toBe('unknown')
 
-  const malformedShape = makeWire(method => method === 'profiles.capabilities' ? accepted(capabilities())
+  const malformedShape = makeWire(method => method === 'agents.profiles.capabilities' ? accepted(capabilities())
     : accepted({ entries: [{ ...entry, unexpected: true }] }))
   expect((await createWireClient(malformedShape.wire).list()).kind).toBe('unknown')
 })

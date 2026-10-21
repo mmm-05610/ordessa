@@ -26,7 +26,7 @@ def _chain(error):
         seen.add(id(error))
         cls = type(error)
         code = None
-        if cls.__module__.startswith(('ordessa_', 'server_plugin_api')):
+        if cls.__module__.startswith(('ordessa_', 'ordessa_server_plugin_api')):
             attributes = BaseException.__getattribute__(error, '__dict__')
             candidate = attributes.get('code', vars(cls).get('code'))
             if type(candidate) is str and _CODE.fullmatch(candidate):

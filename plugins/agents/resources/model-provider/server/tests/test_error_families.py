@@ -11,7 +11,7 @@ falls through to UNAVAILABLE (publication must not mask anything).
 from __future__ import annotations
 
 import pytest
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     Contribution, ContributionBatch, ServerPluginDescriptor,
     ServerPluginRegistration, WIRE_ERROR_FAMILIES_API_VERSION,
     WIRE_ERROR_FAMILIES_POINT_ID,

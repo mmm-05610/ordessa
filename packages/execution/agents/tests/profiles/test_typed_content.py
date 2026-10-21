@@ -4,15 +4,15 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from ordessa_execution_agents.profiles.definitions.models import (
+from ordessa_agents.profiles.definitions.models import (
     Profile, ProfileContent, ProfileRevision, ProfileRevisionRef, ConfigurationDeclaration,
 )
-from ordessa_execution_agents.profiles.definitions.json_values import OMITTED
-from ordessa_execution_agents.profiles.definitions.codec import (
+from ordessa_agents.profiles.definitions.json_values import OMITTED
+from ordessa_agents.profiles.definitions.codec import (
     decode_content, encode_content, decode_revision, encode_revision, content_digest,
     decode_declaration, encode_declaration, encode_profile, encode_revision_ref,
 )
-from ordessa_execution_agents.profiles.definitions.validation import canonical, ProfileValidationError
+from ordessa_agents.profiles.definitions.validation import canonical, ProfileValidationError
 
 
 def content():

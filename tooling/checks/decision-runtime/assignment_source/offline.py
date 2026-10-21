@@ -1,9 +1,9 @@
 """Controlled offline fixtures demonstrate mechanisms, never real model quality."""
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from decision_runtime.definitions import *
+from ordessa_decision.definitions import *
 from .build import load_assignment_policy, build_assignment_flow
-from decision_runtime.evidence import MemoryEvidenceSink
+from ordessa_decision.evidence import MemoryEvidenceSink
 
 class OfflineProvider:
     settings_digest=digest('descriptor',{'provider':'controlled_offline'})
@@ -55,6 +55,6 @@ def offline_case(*, alternate=False, action='continue', unclear=False, limits=No
     return request,flow,services
 
 async def run_offline(**kwargs):
-    from decision_runtime.runtime import run_decision
+    from ordessa_decision.runtime import run_decision
     request,flow,services=offline_case(**kwargs)
     return await run_decision(request,flow=flow,services=services)

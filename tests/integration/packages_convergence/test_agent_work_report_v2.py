@@ -16,8 +16,8 @@ import threading
 import pytest
 
 from ordessa_infrastructure.encoding import canonical_bytes, decode_json
-from ordessa_execution_agents.public import InteractionService, ManagerRefused
-from ordessa_execution_agents.sdk.interactions import InteractionsRefused
+from ordessa_agents.public import InteractionService, ManagerRefused
+from ordessa_agents.sdk.interactions import InteractionsRefused
 from ordessa_engineering.application.api.service import EngineeringService
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.application.contracts.work_context import decode_work_binding

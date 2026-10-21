@@ -4,7 +4,7 @@ Since the foundation checkpoint the real admission authority is the
 platform: contributions to `harness.configuration-adapters` are admitted
 (duplicate/overlap refusal, field-claim conflicts, owner injection,
 publish-on-commit) by the harness-side conflict registry driven through the
-public `server_plugin_api` staging protocol. The package's former private
+public `ordessa_server_plugin_api` staging protocol. The package's former private
 `PolicyAdapterRegistry` - which re-implemented exactly that refusal set as a
 second authority - has been removed; what remains here is pure data:
 
@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ServerPluginContext,
     ServerPluginDescriptor,
     ServerPluginRegistration,

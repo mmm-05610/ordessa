@@ -10,7 +10,7 @@ import sys
 import zipfile
 
 OWNERS={'ordessa_server','ordessa_environments','ordessa_environments_local',
-        'ordessa_execution_agents','ordessa_engineering','ordessa_units','plugins'}
+        'ordessa_agents','ordessa_engineering','ordessa_units','plugins'}
 
 
 def main():
@@ -74,14 +74,14 @@ def main():
             evidence.append({'distribution':metadata['Name'],'wheel':str(path),
                 'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
                 'requires':requires,'entryPoints':script,'files':len(names)})
-    cli_wheels=list(directory.glob('ordessa_agent_tools-[0-9]*.whl'))
+    cli_wheels=list(directory.glob('ordessa_cli-[0-9]*.whl'))
     if cli_wheels:
         with zipfile.ZipFile(cli_wheels[0]) as wheel:
             names=wheel.namelist()
             entries=[n for n in names if n.endswith('.dist-info/entry_points.txt')]
             script=wheel.read(entries[0]).decode() if entries else ''
-            assert 'ordessa = ordessa_agent_tools.cli:main' in script
-            evidence.append({'distribution':'ordessa-agent-tools','wheel':str(cli_wheels[0]),
+            assert 'ordessa = ordessa_cli.cli:main' in script
+            evidence.append({'distribution':'ordessa-cli','wheel':str(cli_wheels[0]),
                 'sha256':hashlib.sha256(cli_wheels[0].read_bytes()).hexdigest(),
                 'entryPoints':script})
     contracts=wheels['ordessa_interfaces_contracts'];host=wheels['ordessa_interfaces']

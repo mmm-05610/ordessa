@@ -66,7 +66,7 @@ import re
 from types import MappingProxyType
 from typing import Any, Callable, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     WIRE_ERROR_FAMILIES_API_VERSION,
     WIRE_ERROR_FAMILIES_POINT_ID,
     Contribution,

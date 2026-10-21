@@ -91,9 +91,9 @@ RUNTIME_CONTRACT_DISTRIBUTIONS = frozenset({
 #: rather than a hand-typed list.
 CONTRACT_ROOT_BY_DISTRIBUTION = {
     # Harness public DTOs are part of the Execution agents distribution.
-    "ordessa_execution_agents.harness.definitions": "ordessa-execution-agents",
+    "ordessa_agents.harness.definitions": "ordessa-execution-agents",
     "ordessa_permissions_api": "ordessa-permissions-api",
-    "server_plugin_api": "ordessa-server-plugin-api",
+    "ordessa_server_plugin_api": "ordessa-server-plugin-api",
 }
 #: Q5's *provider* package: a test-time double only (§SR-13b row 4, §SR-15). It
 #: must never appear in the runtime closure.
@@ -170,7 +170,7 @@ def test_the_manifest_declares_exactly_the_published_contract_runtime_deps() -> 
     # comparing raw strings that can never match
     assert _distribution('ordessa-harness-api>=1.0,<2;python_version>="3.11"') == (
         "ordessa-harness-api")
-    assert _distribution(CONTRACT_ROOT_BY_DISTRIBUTION["ordessa_execution_agents.harness.definitions"]) == "ordessa-execution-agents"
+    assert _distribution(CONTRACT_ROOT_BY_DISTRIBUTION["ordessa_agents.harness.definitions"]) == "ordessa-execution-agents"
 
 
 def test_the_package_directory_ships_only_python_source() -> None:

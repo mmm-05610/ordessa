@@ -1,0 +1,353 @@
+{
+  "brand": "codex",
+  "prompt": "在你的工作目录创建文件 `tools-proof.txt`，内容写 `ordessa-tool-ok`；然后用命令读取它并只回复文件内容。",
+  "artifact": "tools-proof.txt",
+  "expectedContent": "ordessa-tool-ok",
+  "codexModel": "gpt-5.6-sol",
+  "maxModelCalls": 1,
+  "skipPrompt": true,
+  "expectedSha256": "sha256:585b62bb7a3e776473d3d81d718df4a7a0bb3f2a1a8da53e8c88a9de500f0450",
+  "steps": {
+    "acquire": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "525cb575443e412987edd5df738cc1bb",
+      "command": "call environments.acquire --input /tmp/t08-ws2/acquire.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/39bb57852d2643d284d4bb03870512a7",
+        "useIdentity": "environment-use/da8d49f3dcad4ec681c6344db3de344c",
+        "status": "completed",
+        "ownerScope": {
+          "kind": "principal",
+          "ref": "instance"
+        },
+        "environmentIdentity": "environment/bfb23e64051e4fb3aea9051b727848e2"
+      },
+      "error": null,
+      "operationRef": "environment-operation/39bb57852d2643d284d4bb03870512a7",
+      "evidenceRefs": []
+    },
+    "start": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "start-1",
+      "command": "call agents.start --input /tmp/t08-ws2/start.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-start-receipt/1",
+        "instanceId": "instance-df3cee76e94340c38a04e0ad0913591c",
+        "operationRef": "agent-start/7c4f4988e93b41aaa2bcb5900ca0adab",
+        "state": "running",
+        "instanceRef": {
+          "schemaVersion": "agent-instance/1",
+          "namespace": "server",
+          "instanceId": "instance-df3cee76e94340c38a04e0ad0913591c",
+          "bindingDigest": "sha256:1aa0098168e28f0d838ac222b0aad678f7c35dd4d127a02131c88343df8adb57"
+        },
+        "processEndpointRef": {
+          "schemaVersion": "agent-endpoint/1",
+          "issuer": "environment-endpoints:58870924d5290c30d1142d4b",
+          "endpointId": "endpoint/a5aecc2c34dd46319ed3a6d6d4b2dd60",
+          "revision": "1",
+          "descriptorDigest": "sha256:f99a696d005288de864562b67fd6b9969d59e5fa9c36efb40be1edbf11ddb735"
+        },
+        "sessionId": "07304c81-654d-42ce-9de4-a24258373e67",
+        "error": null
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "stop": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "stop-1",
+      "command": "call agents.stop --input /tmp/t08-ws2/stop-1-input.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "endpoint-operation/1",
+        "operationRef": "environment-operation/b157706634f944a0bdbcf63e22f6f713",
+        "status": "completed",
+        "processEndpointRef": {
+          "schemaVersion": "agent-endpoint/1",
+          "issuer": "environment-endpoints:58870924d5290c30d1142d4b",
+          "endpointId": "endpoint/a5aecc2c34dd46319ed3a6d6d4b2dd60",
+          "revision": "1",
+          "descriptorDigest": "sha256:f99a696d005288de864562b67fd6b9969d59e5fa9c36efb40be1edbf11ddb735"
+        },
+        "facts": {
+          "action": "terminate",
+          "cancellation": "requested",
+          "processState": "running"
+        },
+        "evidenceRefs": [],
+        "error": null
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "reconcile": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "rec-1",
+      "command": "call agents.reconcile --input /tmp/t08-ws2/rec-1-input.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-process-observation/1",
+        "state": "exited",
+        "observedAt": "2026-10-21T03:32:19.664454+00:00",
+        "nativeIdentityDigest": "sha256:8f2ad0f24eaaae518f2db480d015133e4c2afafc0eedcd5ce20669b699e0f739",
+        "exitCode": -9,
+        "evidenceRefs": []
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "processRelease": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "prel-1",
+      "command": "call environments.process-release --input /tmp/t08-ws2/prelease.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/7482cc6c17cc4230a2282f64502dcfef",
+        "useIdentity": "environment-use/da8d49f3dcad4ec681c6344db3de344c",
+        "status": "completed",
+        "resourcePreserved": true,
+        "receipt": {
+          "processIdentity": "local-process/2095433",
+          "transportReleased": true,
+          "processState": "exited",
+          "ioState": "closed",
+          "exitCode": "-9"
+        },
+        "exitClaimed": false
+      },
+      "error": null,
+      "operationRef": "environment-operation/7482cc6c17cc4230a2282f64502dcfef",
+      "evidenceRefs": []
+    },
+    "release": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "rel-1",
+      "command": "call environments.release --input /tmp/t08-ws2/release.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/22b81f9f68474141aafcf910918bac76",
+        "useIdentity": "environment-use/da8d49f3dcad4ec681c6344db3de344c",
+        "status": "completed",
+        "resourcePreserved": true,
+        "receipt": {
+          "useIdentity": "environment-use/da8d49f3dcad4ec681c6344db3de344c",
+          "environmentIdentity": "environment/bfb23e64051e4fb3aea9051b727848e2",
+          "generation": 0,
+          "resourcePreserved": true,
+          "providerFacts": {
+            "useIdentity": "environment-use/da8d49f3dcad4ec681c6344db3de344c",
+            "isolation": "none",
+            "root": "/tmp/t08-ws2/work",
+            "rootPreserved": true,
+            "resourcePreserved": true,
+            "attempts": [
+              "local-use/environment-use/da8d49f3dcad4ec681c6344db3de344c/1"
+            ]
+          }
+        }
+      },
+      "error": null,
+      "operationRef": "environment-operation/22b81f9f68474141aafcf910918bac76",
+      "evidenceRefs": []
+    }
+  },
+  "origin": "http://127.0.0.1:34071",
+  "identity": "environment/bfb23e64051e4fb3aea9051b727848e2",
+  "control": {
+    "write": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "070df490111245318de4b20ce1011c4e",
+      "command": "call environments.files --input /tmp/t08-ws2/control-write.json",
+      "status": "completed",
+      "data": {
+        "operation": "write",
+        "path": "t06-control-pre.txt",
+        "bytes": 14,
+        "byteLength": 14
+      },
+      "error": null,
+      "operationRef": "environment-command/9465967e16a7461e81862d074be82838",
+      "evidenceRefs": []
+    },
+    "read": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "d920a00b45cc484bab6821931025fccb",
+      "command": "call environments.files --input /tmp/t08-ws2/control-read.json",
+      "status": "completed",
+      "data": {
+        "content": "t06-control-ok"
+      },
+      "error": null,
+      "operationRef": "environment-command/8a3657117e204409b44f91249c079fa8",
+      "evidenceRefs": []
+    },
+    "content": "t06-control-ok",
+    "matches": true,
+    "contentSha256": "sha256:2338fa885eceb380e2446f204440d6220c26c83e76b8b5a1ecd42b925b6b5645"
+  },
+  "instanceRef": {
+    "schemaVersion": "agent-instance/1",
+    "namespace": "server",
+    "instanceId": "instance-df3cee76e94340c38a04e0ad0913591c",
+    "bindingDigest": "sha256:1aa0098168e28f0d838ac222b0aad678f7c35dd4d127a02131c88343df8adb57"
+  },
+  "sessionId": "07304c81-654d-42ce-9de4-a24258373e67",
+  "processEndpointRef": {
+    "schemaVersion": "agent-endpoint/1",
+    "issuer": "environment-endpoints:58870924d5290c30d1142d4b",
+    "endpointId": "endpoint/a5aecc2c34dd46319ed3a6d6d4b2dd60",
+    "revision": "1",
+    "descriptorDigest": "sha256:f99a696d005288de864562b67fd6b9969d59e5fa9c36efb40be1edbf11ddb735"
+  },
+  "codexProcessesBefore": [
+    {
+      "pid": 1892946,
+      "cmdline": "/home/maoqh/.vscode/extensions/openai.chatgpt-26.1007.21434-linux-x64/bin/linux-x86_64/codex -c features.code_mode_host=true app-server --analytics-default-enabled"
+    },
+    {
+      "pid": 2095400,
+      "cmdline": "bash -c W=/home/maoqh/projects/ordessa/worktree/agent-cli-server-20261020; cd $W && python3 - <<'PY'\nfrom pathlib import Path\np=Path('tmp/t08_dsh.py'); t=p.read_text()\nt=t.replace(\"'harness': {'allowl"
+    }
+  ],
+  "turn": {},
+  "native": {
+    "path": null,
+    "skipped": true,
+    "toolEvents": []
+  },
+  "outcome": "ROUND_COMPLETED",
+  "retrieval": {
+    "identity": "environment/bfb23e64051e4fb3aea9051b727848e2",
+    "expectedContent": "ordessa-tool-ok",
+    "expectedSha256": "sha256:585b62bb7a3e776473d3d81d718df4a7a0bb3f2a1a8da53e8c88a9de500f0450",
+    "ls": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "files-ls-1",
+      "command": "call environments.files --input /tmp/t08-ws2/files-ls.json",
+      "status": "completed",
+      "data": {
+        "entries": [
+          "t06-control-pre.txt",
+          "dsh-home/.anonymous-user-id",
+          "dsh-home/profiles/acp/cordis.patch.yml",
+          "dsh-home/profiles/acp/cordis.yml",
+          "dsh-home/profiles/acp/package.json",
+          "dsh-home/profiles/acp/pnpm-workspace.yaml",
+          "dsh-home/sessions/--tmp-t08-ws2-work--/07304c81-654d-42ce-9de4-a24258373e67/session.lock",
+          "dsh-home/sessions/--tmp-t08-ws2-work--/07304c81-654d-42ce-9de4-a24258373e67/session.v4.jsonl.zstd",
+          "dsh-home/storages/session_projcache/sessions/07304c81-654d-42ce-9de4-a24258373e67.json",
+          "tmp/node-addon-native-custom-loader-1000/native-cache/node-addon-require-builtin-linux-x64-gnu/0.1.9/linux-x64-gnu/linux-x64-gnu-napi-v9.node"
+        ]
+      },
+      "error": null,
+      "operationRef": "environment-command/685c5cecf41545aab0e84add2d29aaff",
+      "evidenceRefs": []
+    },
+    "entryCount": 10,
+    "artifactListed": false,
+    "controlListed": true,
+    "entriesSample": [
+      "t06-control-pre.txt"
+    ],
+    "cat": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "files-cat-1",
+      "command": "call environments.files --input /tmp/t08-ws2/files-cat.json",
+      "status": "unknown",
+      "data": null,
+      "error": {
+        "code": "EFFECT_UNKNOWN",
+        "message": "Capability operation did not complete",
+        "retryable": false
+      },
+      "operationRef": "environment-command/0ee20fe46bc746cab36111c38d9557a8",
+      "evidenceRefs": []
+    },
+    "content": null,
+    "contentBytes": null,
+    "contentSha256": null,
+    "contentMatchesExpected": false,
+    "contentStrippedMatches": false
+  },
+  "hostArtifact": {
+    "path": "/tmp/t08-ws2/work/tools-proof.txt",
+    "exists": false
+  },
+  "serverExitCode": -15,
+  "residue": {
+    "workspaceProcesses": [],
+    "codexProcessesAfter": [
+      {
+        "pid": 1892946,
+        "cmdline": "/home/maoqh/.vscode/extensions/openai.chatgpt-26.1007.21434-linux-x64/bin/linux-x86_64/codex -c features.code_mode_host=true app-server --analytics-default-enabled"
+      },
+      {
+        "pid": 2095400,
+        "cmdline": "bash -c W=/home/maoqh/projects/ordessa/worktree/agent-cli-server-20261020; cd $W && python3 - <<'PY'\nfrom pathlib import Path\np=Path('tmp/t08_dsh.py'); t=p.read_text()\nt=t.replace(\"'harness': {'allowl"
+      }
+    ]
+  },
+  "secretScan": {
+    "filesScanned": 32,
+    "secretNamesChecked": [
+      "OPEN_CODE_GO_API_KEY",
+      "DEEPSEEK_API_KEY"
+    ],
+    "hits": []
+  },
+  "log": [
+    "== service configuration ==",
+    "{\"allowlist\": [\"dsh\"], \"providers\": {\"dsh\": {}}}",
+    "SERVER> {\"event\":\"listening\",\"origin\":\"http://127.0.0.1:34071\",\"pid\":2095412,\"serverId\":\"ordessa-t06-codex\"}",
+    "== environments create local (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"15fdf707c2ab430c8735f52daa86f93a\", \"command\": \"environments create local --root /tmp/t08-ws2/work --alias demo\", \"status\": \"completed\", \"data\": {\"identity\": \"environment/bfb23e64051e4fb3aea9051b727848e2\", \"alias\": \"demo\", \"aliases\": [\"demo\"], \"provider\": \"local\", \"backendId\": \"/tmp/t08-ws2/work\", \"phase\": \"ready\", \"generation\": 0, \"state\": \"running\", \"observationStale\": false, \"observedAt\": \"2026-10-21T03:32:13.928122+00:00\", \"operationStatus\": {\"phase\": \"ready\", \"operation\": null}, \"activeUses\": 0, \"isolation\": \"none\", \"endpointKind\": \"local-directory\", \"health\": \"ready\", \"capabilities\": {\"isolation\": \"none\", \"statuses\": {\"byte-channel\": \"supported\", \"files\": \"supported\", \"process\": \"supported\", \"stderr\": \"supported\", \"terminal\": \"unsupported\"}, \"provides\": [\"byte-channel\", \"files\", \"process\", \"stderr\"], \"values\": {\"provider\": \"local\", \"resourceKind\": \"directory\"}, \"assurance\": {\"isolation\": \"none\", \"isolationIsSecurityBoundary\": false, \"localDevelopmentOnly\": true, \"providerAssurance\": \"provider_self_report\", \"statement\": \"provider-reported isolation; it is not a permission, lease or hold\"}}}, \"error\": null, \"operationRef\": \"environment-command/362e39d8f449475a98242858befc02cf\", \"evidenceRefs\": []}",
+    "== environments.files write control (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"070df490111245318de4b20ce1011c4e\", \"command\": \"call environments.files --input /tmp/t08-ws2/control-write.json\", \"status\": \"completed\", \"data\": {\"operation\": \"write\", \"path\": \"t06-control-pre.txt\", \"bytes\": 14, \"byteLength\": 14}, \"error\": null, \"operationRef\": \"environment-command/9465967e16a7461e81862d074be82838\", \"evidenceRefs\": []}",
+    "== environments.files cat control (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"d920a00b45cc484bab6821931025fccb\", \"command\": \"call environments.files --input /tmp/t08-ws2/control-read.json\", \"status\": \"completed\", \"data\": {\"content\": \"t06-control-ok\"}, \"error\": null, \"operationRef\": \"environment-command/8a3657117e204409b44f91249c079fa8\", \"evidenceRefs\": []}",
+    "== environments.acquire (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"525cb575443e412987edd5df738cc1bb\", \"command\": \"call environments.acquire --input /tmp/t08-ws2/acquire.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/39bb57852d2643d284d4bb03870512a7\", \"useIdentity\": \"environment-use/da8d49f3dcad4ec681c6344db3de344c\", \"status\": \"completed\", \"ownerScope\": {\"kind\": \"principal\", \"ref\": \"instance\"}, \"environmentIdentity\": \"environment/bfb23e64051e4fb3aea9051b727848e2\"}, \"error\": null, \"operationRef\": \"environment-operation/39bb57852d2643d284d4bb03870512a7\", \"evidenceRefs\": []}",
+    "== environments.export-endpoint (raw wire) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"export-raw\", \"command\": \"environments.export-endpoint\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/85ca0eaf46464cb68e0fc90d7009d1b2\", \"useIdentity\": \"environment-use/da8d49f3dcad4ec681c6344db3de344c\", \"status\": \"completed\", \"endpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:58870924d5290c30d1142d4b\", \"endpointId\": \"endpoint/258802b5d7264d1e95ba139c1f65f7b7\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:1780c79012a964880536bdbcdeaa530a28a14ee146367dce6cf7cf771f14d729\"}, \"descriptor\": {\"schemaVersion\": \"environment-endpoint-descriptor/2\", \"endpointId\": \"endpoint/258802b5d7264d1e95ba139c1f65f7b7\", \"revision\": \"1\", \"capabilities\": [\"communicate\", \"detach\", \"files\", \"launcher\", \"observe\", \"terminate\"], \"rootKeys\": [\"cache\", \"config\", \"data\", \"dsh-home\", \"home\", \"state\", \"tmp\", \"work\"], \"preparedConfigurations\": [], \"reconnect\": \"unsupported\", \"providerId\": \"local\", \"endpointKind\": \"local-directory\"}}, \"error\": null, \"operationRef\": \"environment-operation/85ca0eaf46464cb68e0fc90d7009d1b2\", \"evidenceRefs\": []}",
+    "== agents harness list ==",
+    "[\"dsh\"]",
+    "== agents profiles create (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"bc2c49462e994a92b00044951e4fd0ad\", \"command\": \"agents profiles create demo-dsh --name dsh --manifest /tmp/t08-ws2/manifest.json\", \"status\": \"completed\", \"data\": {\"profileId\": \"demo-dsh\", \"catalogRevision\": 1, \"displayName\": \"dsh\", \"archivedAt\": null, \"currentManifestRef\": {\"environmentNamespace\": \"server\", \"profileId\": \"demo-dsh\", \"manifestRevision\": 1, \"contentDigest\": \"sha256:4d6f96d3231426ff69bec57b9cfaaa47331b5a7d576ca9c79625fc7cba8eabe4\"}}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.start (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"start-1\", \"command\": \"call agents.start --input /tmp/t08-ws2/start.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-start-receipt/1\", \"instanceId\": \"instance-df3cee76e94340c38a04e0ad0913591c\", \"operationRef\": \"agent-start/7c4f4988e93b41aaa2bcb5900ca0adab\", \"state\": \"running\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-df3cee76e94340c38a04e0ad0913591c\", \"bindingDigest\": \"sha256:1aa0098168e28f0d838ac222b0aad678f7c35dd4d127a02131c88343df8adb57\"}, \"processEndpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:58870924d5290c30d1142d4b\", \"endpointId\": \"endpoint/a5aecc2c34dd46319ed3a6d6d4b2dd60\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:f99a696d005288de864562b67fd6b9969d59e5fa9c36efb40be1edbf11ddb735\"}, \"sessionId\": \"07304c81-654d-42ce-9de4-a24258373e67\", \"error\": null}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== sessionId: 07304c81-654d-42ce-9de4-a24258373e67",
+    "== --skip-prompt: no real model call in this round ==",
+    "== cleanup chain (stop -> reconcile -> process-release -> release) ==",
+    "== cleanup target: instance={'schemaVersion': 'agent-instance/1', 'namespace': 'server', 'instanceId': 'instance-df3cee76e94340c38a04e0ad0913591c', 'bindingDigest': 'sha256:1aa0098168e28f0d838ac222b0aad678f7c35dd4d127a02131c88343df8adb57'} processEndpoint={'schemaVersion': 'agent-endpoint/1', 'issuer': 'environment-endpoints:58870924d5290c30d1142d4b', 'endpointId': 'endpoint/a5aecc2c34dd46319ed3a6d6d4b2dd60', 'revision': '1', 'descriptorDigest': 'sha256:f99a696d005288de864562b67fd6b9969d59e5fa9c36efb40be1edbf11ddb735'} use='environment-use/da8d49f3dcad4ec681c6344db3de344c' ==",
+    "== agents.stop (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"stop-1\", \"command\": \"call agents.stop --input /tmp/t08-ws2/stop-1-input.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"endpoint-operation/1\", \"operationRef\": \"environment-operation/b157706634f944a0bdbcf63e22f6f713\", \"status\": \"completed\", \"processEndpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:58870924d5290c30d1142d4b\", \"endpointId\": \"endpoint/a5aecc2c34dd46319ed3a6d6d4b2dd60\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:f99a696d005288de864562b67fd6b9969d59e5fa9c36efb40be1edbf11ddb735\"}, \"facts\": {\"action\": \"terminate\", \"cancellation\": \"requested\", \"processState\": \"running\"}, \"evidenceRefs\": [], \"error\": null}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.reconcile (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"rec-1\", \"command\": \"call agents.reconcile --input /tmp/t08-ws2/rec-1-input.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-process-observation/1\", \"state\": \"exited\", \"observedAt\": \"2026-10-21T03:32:19.664454+00:00\", \"nativeIdentityDigest\": \"sha256:8f2ad0f24eaaae518f2db480d015133e4c2afafc0eedcd5ce20669b699e0f739\", \"exitCode\": -9, \"evidenceRefs\": []}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== environments.process-release (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"prel-1\", \"command\": \"call environments.process-release --input /tmp/t08-ws2/prelease.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/7482cc6c17cc4230a2282f64502dcfef\", \"useIdentity\": \"environment-use/da8d49f3dcad4ec681c6344db3de344c\", \"status\": \"completed\", \"resourcePreserved\": true, \"receipt\": {\"processIdentity\": \"local-process/2095433\", \"transportReleased\": true, \"processState\": \"exited\", \"ioState\": \"closed\", \"exitCode\": \"-9\"}, \"exitClaimed\": false}, \"error\": null, \"operationRef\": \"environment-operation/7482cc6c17cc4230a2282f64502dcfef\", \"evidenceRefs\": []}",
+    "== environments.release (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"rel-1\", \"command\": \"call environments.release --input /tmp/t08-ws2/release.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/22b81f9f68474141aafcf910918bac76\", \"useIdentity\": \"environment-use/da8d49f3dcad4ec681c6344db3de344c\", \"status\": \"completed\", \"resourcePreserved\": true, \"receipt\": {\"useIdentity\": \"environment-use/da8d49f3dcad4ec681c6344db3de344c\", \"environmentIdentity\": \"environment/bfb23e64051e4fb3aea9051b727848e2\", \"generation\": 0, \"resourcePreserved\": true, \"providerFacts\": {\"useIdentity\": \"environment-use/da8d49f3dcad4ec681c6344db3de344c\", \"isolation\": \"none\", \"root\": \"/tmp/t08-ws2/work\", \"rootPreserved\": true, \"resourcePreserved\": true, \"attempts\": [\"local-use/environment-use/da8d49f3dcad4ec681c6344db3de344c/1\"]}}}, \"error\": null, \"operationRef\": \"environment-operation/22b81f9f68474141aafcf910918bac76\", ",
+    "== environments.files ls (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"files-ls-1\", \"command\": \"call environments.files --input /tmp/t08-ws2/files-ls.json\", \"status\": \"completed\", \"data\": {\"entries\": [\"t06-control-pre.txt\", \"dsh-home/.anonymous-user-id\", \"dsh-home/profiles/acp/cordis.patch.yml\", \"dsh-home/profiles/acp/cordis.yml\", \"dsh-home/profiles/acp/package.json\", \"dsh-home/profiles/acp/pnpm-workspace.yaml\", \"dsh-home/sessions/--tmp-t08-ws2-work--/07304c81-654d-42ce-9de4-a24258373e67/session.lock\", \"dsh-home/sessions/--tmp-t08-ws2-work--/07304c81-654d-42ce-9de4-a24258373e67/session.v4.jsonl.zstd\", \"dsh-home/storages/session_projcache/sessions/07304c81-654d-42ce-9de4-a24258373e67.json\", \"tmp/node-addon-native-custom-loader-1000/native-cache/node-addon-require-builtin-linux-x64-gnu/0.1.9/linux-x64-gnu/linux-x64-gnu-napi-v9.node\"]}, \"error\": null, \"operationRef\": \"environment-command/685c5cecf41545aab0e84add2d29aaff\", \"evidenceRefs\": []}",
+    "== ls: entries=10 artifactListed=False controlListed=True ==",
+    "== environments.files cat tools-proof.txt (exit 6) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"files-cat-1\", \"command\": \"call environments.files --input /tmp/t08-ws2/files-cat.json\", \"status\": \"unknown\", \"data\": null, \"error\": {\"code\": \"EFFECT_UNKNOWN\", \"message\": \"Capability operation did not complete\", \"retryable\": false}, \"operationRef\": \"environment-command/0ee20fe46bc746cab36111c38d9557a8\", \"evidenceRefs\": []}",
+    "== cat: bytes=None sha256=None exactMatch=False strippedMatch=False content=None ==",
+    "== server exit code: -15",
+    "== residue: processes still running inside the workspace ==",
+    "[]",
+    "== secret scan ==",
+    "{\"filesScanned\": 32, \"secretNamesChecked\": [\"OPEN_CODE_GO_API_KEY\", \"DEEPSEEK_API_KEY\"], \"hits\": []}"
+  ],
+  "budget": {
+    "limit": 1,
+    "counterFile": "/tmp/t08-budget2.txt",
+    "usedAfter": 0
+  }
+}

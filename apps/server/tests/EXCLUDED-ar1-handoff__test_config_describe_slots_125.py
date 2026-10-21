@@ -97,7 +97,7 @@ def _provider(api, name: str, model_id: str):
 
 
 def _profile_with_value(api, value):
-    created = api.ok("profiles.create", {
+    created = api.ok("agents.profiles.create", {
         "requestId": "p125-profile", "displayName": "multi", "harness": "alpha"})["profile"]
     api.ok("profiles.updateConfig", {
         "requestId": "p125-config", "profileId": created["id"],

@@ -36,7 +36,7 @@ without a trusted snapshot/ceiling resolver it refuses configuration writes.
   platform-side refusal.
 
 Boundary: only the published contracts are imported here
-(`server_plugin_api`, the harness public API package) - never the harness
+(`ordessa_server_plugin_api`, the harness public API package) - never the harness
 plugin implementation, never the host. The public seam's constants
 (point id, API version) are mirrored as literals by plugin convention
 (the platform's own external-adapter exemplar does the same); the tests
@@ -47,12 +47,12 @@ from __future__ import annotations
 import re
 from typing import Callable
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapterDescriptor,
     ErrorCode, FieldClaim, FieldPath, IntentSet, IntentSource, SetField,
     ValueSchema, VerificationUnknown, VersionRange,
 )
-from server_plugin_api import Contribution, ContributionBatch
+from ordessa_server_plugin_api import Contribution, ContributionBatch
 
 from .claude_code import ClaudeAdapter
 from .codex import CodexAdapter

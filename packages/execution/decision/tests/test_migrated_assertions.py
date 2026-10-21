@@ -1,7 +1,7 @@
-"""Assertions rescued from the retired decision_runtime suite (same semantics)."""
+"""Assertions rescued from the retired ordessa_decision suite (same semantics)."""
 import pytest
 
-from decision_runtime import (
+from ordessa_decision import (
     DecisionError, DecisionQuestion, DecisionRunner, FilesystemEvidenceStore,
     RulesOutcome, canonical_bytes, decode_json, validate_job)
 
@@ -49,4 +49,4 @@ def test_evidence_never_accepts_prompt_or_raw_response(tmp_path):
 def test_retired_manager_graph_is_not_registered_as_a_fallback():
     import importlib
     with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("decision_runtime.runtime.manager")
+        importlib.import_module("ordessa_decision.runtime.manager")

@@ -19,7 +19,7 @@ from __future__ import annotations
 from contextlib import AbstractContextManager
 from typing import Any, Callable, Protocol, runtime_checkable
 
-from server_plugin_api import HttpRouteDescriptor
+from ordessa_server_plugin_api import HttpRouteDescriptor
 
 
 @runtime_checkable

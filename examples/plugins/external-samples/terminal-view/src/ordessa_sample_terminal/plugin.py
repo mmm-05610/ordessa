@@ -12,7 +12,7 @@ from __future__ import annotations
 import hashlib
 from typing import Any, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ServerMethodDescriptor,
     ServerPluginContext,
     ServerPluginDescriptor,

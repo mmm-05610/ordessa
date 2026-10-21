@@ -7,7 +7,7 @@ Execution's production builder before core methods are published.
 from dataclasses import dataclass
 from copy import deepcopy
 
-from ordessa_execution_agents.profiles import ProfileRevisionRef, ProfileService, encode_revision
+from ordessa_agents.profiles import ProfileRevisionRef, ProfileService, encode_revision
 from ordessa_units.bindings.profile_admission import UnitProfileAdmission
 from ordessa_units.assembly import build_local_unit_owner, UnitRunPermission
 from ordessa_units.public import AgentOwnerUnavailable, unit_services, validate_agent_owner_selection

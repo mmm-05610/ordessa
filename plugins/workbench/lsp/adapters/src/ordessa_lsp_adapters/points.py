@@ -23,13 +23,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, Mapping
 
-from ordessa_execution_agents.harness.definitions.contracts import (
+from ordessa_agents.harness.definitions.contracts import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapterDescriptor,
     VerificationUnknown,
 )
-from ordessa_execution_agents.harness.definitions.errors import ContractError, ErrorCode
-from ordessa_execution_agents.harness.definitions.schema import ValueSchema
-from server_plugin_api import Contribution, ContributionBatch
+from ordessa_agents.harness.definitions.errors import ContractError, ErrorCode
+from ordessa_agents.harness.definitions.schema import ValueSchema
+from ordessa_server_plugin_api import Contribution, ContributionBatch
 
 from .evidence import BRAND_EVIDENCE
 
@@ -155,7 +155,7 @@ def build_configuration_descriptor(
             f"harnesses.toml records no harness {harness_id!r}; the "
             "descriptor stays unbuildable rather than inventing a pin")
     pin = _semver_tuple(resolved[harness_id])
-    from ordessa_execution_agents.harness.definitions.contracts import VersionRange
+    from ordessa_agents.harness.definitions.contracts import VersionRange
     # entries 非空是平台合同（contracts.py 校验）；本域每品牌公开的能力面
     # 只有一个：该品牌的诚实投影决策面——由 HarnessLspConfigurationAdapter
     # 的 assess/compile/verify 与 project.project_selection 实现（决策记录

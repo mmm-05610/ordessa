@@ -3,10 +3,10 @@ import asyncio,json
 from dataclasses import replace
 from types import SimpleNamespace
 import pytest
-from decision_runtime.capability import build_capability
-from decision_runtime.runner import DecisionRunner
-from decision_runtime.evidence import EvidenceScope
-from decision_runtime.definitions.values import digest_hex
+from ordessa_decision.capability import build_capability
+from ordessa_decision.runner import DecisionRunner
+from ordessa_decision.evidence import EvidenceScope
+from ordessa_decision.definitions.values import digest_hex
 from test_capability import settings,job
 from test_scoped_evidence import Authority
 
@@ -124,7 +124,7 @@ def test_orphaned_result_never_creates_replacement_claim_or_runs_again(tmp_path)
 
 
 def test_canonical_result_payload_tamper_fails_original_digest_without_rerun(tmp_path):
-    from decision_runtime.definitions.values import canonical_bytes
+    from ordessa_decision.definitions.values import canonical_bytes
     config,cap,authority,alice,calls=setup(tmp_path)
     first=asyncio.run(cap.handlers['decisions.run']({'job':job()},alice));assert first.status=='completed'
     root=config.evidence.scoped(EvidenceScope('principal','alice')).root

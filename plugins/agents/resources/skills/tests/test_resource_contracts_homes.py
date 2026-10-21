@@ -3,8 +3,8 @@ import ast
 
 import pytest
 from ordessa_skills.resource_contracts import AgentSkillV1
-from ordessa_execution_agents.profiles import AgentBoxProfileV1
-from ordessa_execution_agents.harness.definitions.credentials import CredentialRefV1
+from ordessa_agents.profiles import AgentBoxProfileV1
+from ordessa_agents.harness.definitions.credentials import CredentialRefV1
 from ordessa_units.definitions.material_delivery import PromptFragmentV1
 from ordessa_units.definitions.material_delivery import WorkspaceV1
 
@@ -51,8 +51,8 @@ def test_contract_owners_have_no_retired_core_or_provider_dependency():
     # package's own modules; contract values remain provider-neutral.
     # The contracts live at their actual owners; inspect installed modules.
     import ordessa_skills.resource_contracts as skill_contract
-    import ordessa_execution_agents.profiles as profile_contract
-    import ordessa_execution_agents.harness.definitions.credentials as credential_contract
+    import ordessa_agents.profiles as profile_contract
+    import ordessa_agents.harness.definitions.credentials as credential_contract
     import ordessa_units.definitions.material_delivery as prompt_contract
     import ordessa_units.definitions.material_delivery as workspace_contract
     for module in (skill_contract, profile_contract, credential_contract,

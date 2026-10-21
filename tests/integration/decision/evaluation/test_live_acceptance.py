@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "tooling/checks/dec
 
 import httpx2
 import pytest
-from decision_runtime.definitions import DecisionQuestion, DecisionAnswer, PolicyRef, TaskBrief, digest, plain
+from ordessa_decision.definitions import DecisionQuestion, DecisionAnswer, PolicyRef, TaskBrief, digest, plain
 from assignment_source.task_gate import load_task_gate_policy
 
 SOURCE = Path(__file__).resolve().parents[4] / 'tooling/checks/decision-runtime/evaluation' / 'live_acceptance.py'

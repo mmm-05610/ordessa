@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from ordessa_execution_agents.profiles import ProfileAccessRefused, ProfileRevisionConflict
+from ordessa_agents.profiles import ProfileAccessRefused, ProfileRevisionConflict
 from ordessa_units.public import unit_services
 from ordessa_server.bootstrap.migrations.harness_profile_history import (
     CapturedHarnessProfile, validated_capture,

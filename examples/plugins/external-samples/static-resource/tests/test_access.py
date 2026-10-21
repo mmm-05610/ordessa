@@ -28,7 +28,7 @@ import json
 from pathlib import Path
 
 import pytest
-from server_plugin_api import WireError
+from ordessa_server_plugin_api import WireError
 
 from ordessa_server.composition.runtime import build_runtime
 
@@ -165,7 +165,7 @@ def test_composition_carries_no_session_model_profile_capability(tmp_path):
 
 def test_plugin_imports_only_public_plugin_api_and_stdlib():
     allowed = {"__future__", "hashlib", "json", "pathlib", "typing",
-               "server_plugin_api",
+               "ordessa_server_plugin_api",
                # the package's own intra-package imports (__init__ -> plugin)
                "ordessa_sample_static_resource"}
     forbidden = ("ordessa_server", "ordessa_harness", "ordessa_profile",

@@ -14,7 +14,7 @@ import pytest
 
 from ordessa_server.composition.configuration.contributions import CONFIGURATION_POINT
 from ordessa_server.composition.configuration.contributions import HarnessContributionError
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapterDescriptor,
     ErrorCode, FieldClaim, Installation, ValueSchema, VerificationUnknown,
     VersionRange,
@@ -22,7 +22,7 @@ from ordessa_execution_agents.harness.definitions import (
 from ordessa_server.composition.runtime import build_runtime
 from ordessa_server.composition.configuration.product_selection import create_host_product_composition as create_composition
 from ordessa_sandbox_adapters import HarnessSandboxConfigurationAdapter
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     Contribution, ContributionBatch, ContributionPointUnboundError,
     ServerPluginDescriptor, ServerPluginRegistration,
 )

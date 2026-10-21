@@ -1,6 +1,6 @@
 # Jev Decision provider
 
-The sole Jev adapter is this independent ordessa-decision-jev distribution, imported as ordessa_decision_jev. It depends on the public decision_runtime contracts and pinned official TypeSafe SDK0.7.2. Host assembly injects configuration and a secret resolver; tests use fake transport only. There is no retired decision_runtime.providers.jev alias or fallback.
+The sole Jev adapter is this independent ordessa-decision-jev distribution, imported as ordessa_decision_jev. It depends on the public ordessa_decision contracts and pinned official TypeSafe SDK0.7.2. Host assembly injects configuration and a secret resolver; tests use fake transport only. There is no retired ordessa_decision.providers.jev alias or fallback.
 
 OpenCode Zen is a model provider usable through this adapter; it does not select an OpenCode Harness. The preparation's bounded free HTTP probe does not establish SDK/product wiring or decision quality. Default settings remain explicit historical TypeSafe configuration; Zen requires verified host-selected configuration, no implicit backend/paid switch. No production credential or new persistent access is configured here. Laya remains NOT_ENABLED without an implementation.
 

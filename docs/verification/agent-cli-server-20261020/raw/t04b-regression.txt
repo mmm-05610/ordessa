@@ -1,0 +1,15 @@
+ARTIFACT_sidecar-entry=present apps/server/src/ordessa_server/composition/native_channels/access_entry.mjs
+ARTIFACT_acp-npm-closure=ABSENT NOT_BUILT (ORDESSA_CLAUDE_RUNTIME_ARTIFACT_OUTPUT is unset)
+TOOL_bwrap=present
+TOOL_node=present
+TOOL_npm=present
+TOOL_claude=present
+TOOL_tmux=present
+TOOL_wsl.exe=ABSENT
+SKIPPED_TOTAL=0
+WORKER_ARTIFACT=ABSENT
+VERDICT=GREEN_NO_SKIPS
+96 passed in 7.53s
+--- new providers surface tests ---
+...............................                                          [100%]
+31 passed in 0.19s

@@ -53,7 +53,7 @@ class SelectedBrandC2Plugin:
         self.brand = brand
 
     def descriptor(self):
-        from server_plugin_api import ServerPluginDescriptor
+        from ordessa_server_plugin_api import ServerPluginDescriptor
 
         return ServerPluginDescriptor(
             owner_for_brand(self.brand),
@@ -62,7 +62,7 @@ class SelectedBrandC2Plugin:
         )
 
     def build(self, context):
-        from server_plugin_api import (
+        from ordessa_server_plugin_api import (
             Contribution,
             ContributionBatch,
             ServerPluginRegistration,

@@ -35,7 +35,7 @@ NO_EVIDENCE = "no in-repo evidence"
 
 _CITATION = re.compile(r"[\w./+-]+:\d+")
 
-TOML = "packages/execution/agents/src/ordessa_execution_agents/harness/providers/registry_declarations/harnesses.toml"
+TOML = "packages/execution/agents/src/ordessa_agents/harness/providers/registry_declarations/harnesses.toml"
 HM = "docs/implementation/design/harness-configuration/harnesses.md"
 
 AXES = (

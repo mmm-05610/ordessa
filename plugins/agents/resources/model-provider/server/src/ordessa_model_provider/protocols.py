@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
 
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 
 #: The only four protocol strings the Server recognizes, in canonical order.
 #: Frozen from the legacy shared vocabulary (execution/protocols.py); the

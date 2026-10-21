@@ -1,8 +1,8 @@
 """One Unit prompt, recorded by the original write lease and SQLite owner."""
 from ordessa_units.records import acp_turns
 from ordessa_units.lifecycle.unit_lifecycle import UnitLifecycleRefused
-from ordessa_execution_agents.harness.protocols.acp import AcpRemoteError
-from ordessa_execution_agents.harness.transport import EffectWriteGuard, EffectWriteRefused
+from ordessa_agents.harness.protocols.acp import AcpRemoteError
+from ordessa_agents.harness.transport import EffectWriteGuard, EffectWriteRefused
 
 
 def prompt(unit, unit_ref, lease, *, operation_ref, timeout, params, managed_input=None):

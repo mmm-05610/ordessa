@@ -6,8 +6,8 @@ from ordessa_environments import EnvironmentManager,OwnerScope,SQLiteEnvironment
 from ordessa_environments.capability import EnvironmentCapabilityService
 from ordessa_environments_local import LocalEnvironmentResourceProvider
 from ordessa_interfaces.system_access import RequestContext
-from ordessa_agent_tools.composition.environments import build_environment_domain
-from ordessa_agent_tools.composition.state import LocalState
+from ordessa_cli.composition.environments import build_environment_domain
+from ordessa_cli.composition.state import LocalState
 from ordessa_server.composition.packages_convergence import build_packages_host
 
 

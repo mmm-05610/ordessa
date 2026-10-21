@@ -38,7 +38,7 @@ Skill 版本批准记录当前落在资产根下 `approvals/<assetId>.json` 文�
 若 C0/Z1 判定应入库加列，属共享 schema 变更，本线未擅自加列。
 
 ## 4. 平台接口缺口（符号级）
-1. `server_plugin_api` 无面向插件的类型化拒绝协议：`WireService.dispatch` 只识别
+1. `ordessa_server_plugin_api` 无面向插件的类型化拒绝协议：`WireService.dispatch` 只识别
    `ordessa_server.wire.errors.WireError` / `ordessa_server.errors.ServerError`，而本线纯度门禁禁止导入宿主业务模块，
    现以 `WireError.__cause__.code` 传递本域错误码（`internalCode` 丢失）。请求 C0 在插件 API 提供中立拒绝类型。
 2. `workspace.records.get()` 抛 `ServerError("WORKSPACE_NOT_FOUND")` 而非返回 `None`，

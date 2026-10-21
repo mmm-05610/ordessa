@@ -7,8 +7,8 @@ caller-authored question/input text. Other check kinds remain unavailable.
 from dataclasses import asdict
 import hashlib
 
-from decision_runtime.definitions import DecisionQuestion, PolicyRef
-from decision_runtime.definitions.values import canonical
+from ordessa_decision.definitions import DecisionQuestion, PolicyRef
+from ordessa_decision.definitions.values import canonical
 from ordessa_infrastructure.encoding import canonical_bytes
 from ordessa_engineering.application.contracts.errors import ApplicationError
 from ordessa_engineering.application.orchestration.method_answers import nominal_binding

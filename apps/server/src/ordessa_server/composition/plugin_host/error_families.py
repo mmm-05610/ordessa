@@ -3,7 +3,7 @@
 The published contract vocabulary — the twelve-family `FAMILIES` set, the
 `STATIC_ERROR_FAMILIES` rows the host or no component produces,
 `converge_family`, `family_for` and the `WireError` object itself — lives in
-`server_plugin_api.wire_errors` since T014-S2c, because plugins raise it and
+`ordessa_server_plugin_api.wire_errors` since T014-S2c, because plugins raise it and
 must not import host internals. This module keeps what only a *composition*
 can own: the aggregate of contributed rows and the point handler that
 validates them.
@@ -40,13 +40,13 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     WIRE_ERROR_FAMILIES_API_VERSION,
     WIRE_ERROR_FAMILIES_POINT_ID,
     Contribution,
     ServerContributionHandler,
 )
-from server_plugin_api.wire_errors import (  # re-exported: the host's own use
+from ordessa_server_plugin_api.wire_errors import (  # re-exported: the host's own use
     FAMILIES,
     STATIC_ERROR_FAMILIES,
     WireError,

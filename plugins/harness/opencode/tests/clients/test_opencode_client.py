@@ -12,7 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
-from ordessa_execution_agents.harness.transport.http import (
+from ordessa_agents.harness.transport.http import (
     ChannelClosed,
     LoopbackHttpChannel,
     NonLoopbackRefused,

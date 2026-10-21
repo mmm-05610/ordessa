@@ -14,9 +14,9 @@ from ordessa_engineering.domain.approvals.implementation import WorkPackageAutho
 from ordessa_engineering.domain.packages.models import ImplementationPackage, PreparedPackagePayload
 from ordessa_engineering.domain.common.models.values import Digest
 from ordessa_engineering.domain.common.models.execution_refs import agent_instance_ref_bytes
-from ordessa_execution_agents.public import InteractionService, AgentInstanceRef
-from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref
-from ordessa_execution_agents.sdk.interactions import BindingProvenance
+from ordessa_agents.public import InteractionService, AgentInstanceRef
+from ordessa_agents.profiles import ProfileRevisionRef, encode_revision_ref
+from ordessa_agents.sdk.interactions import BindingProvenance
 
 
 class OriginalAgentDispatchSelection:

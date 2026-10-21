@@ -4,7 +4,7 @@ import pytest
 
 from test_unit_instance import flow
 from ordessa_environments import EnvironmentRefused
-from ordessa_execution_agents.harness.transport import ProcessChannel
+from ordessa_agents.harness.transport import ProcessChannel
 from ordessa_units.lifecycle.unit_lifecycle import UnitLifecycleRefused
 from ordessa_units.sessions.sdk_client import SdkAcpClient
 

@@ -48,8 +48,8 @@ from ordessa_permissions_api import (
     RefusalCode,
     Scope,
 )
-from server_plugin_api import WireError
-from server_plugin_api.wire_shape import bounded
+from ordessa_server_plugin_api import WireError
+from ordessa_server_plugin_api.wire_shape import bounded
 
 from .policies import PolicyRepository
 

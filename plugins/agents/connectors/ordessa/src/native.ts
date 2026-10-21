@@ -121,8 +121,8 @@ export default function createTransport(): NativeTransport {
     }
 
     const executionProfile = async () => {
-      required('profiles.list')
-      const listed = await wire.call<{ items: Record<string, unknown>[] }>('profiles.list', { includeArchived: false })
+      required('agents.profiles.list')
+      const listed = await wire.call<{ items: Record<string, unknown>[] }>('agents.profiles.list', { includeArchived: false })
       return nativeExecutionProfile(hello, listed.items ?? [])
     }
 

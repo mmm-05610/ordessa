@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 from ordessa_model_provider.next_turn import (
     OBSERVED_CONFIRMED, OBSERVED_MISMATCH, OUTCOME_PENDING, SESSION_REF_KEYS,
     NextTurnSelector, TurnFact, session_key_of,
@@ -232,7 +232,7 @@ class ModelChoiceService:
             "choice": dict(choice), "operationKey": operation_key,
         }
         if self._idempotency is not None:
-            from server_plugin_api.record_encoding import canonical, digest
+            from ordessa_server_plugin_api.record_encoding import canonical, digest
 
             request_digest = digest(digest_payload)
             prior = self._idempotency.get(_QUEUE_SCOPE, operation_key, request_digest)
@@ -285,7 +285,7 @@ class ModelChoiceService:
         if intent_reason is not None:
             body["intentReason"] = intent_reason
         if self._idempotency is not None:
-            from server_plugin_api.record_encoding import digest
+            from ordessa_server_plugin_api.record_encoding import digest
 
             self._idempotency.save(
                 _QUEUE_SCOPE, operation_key, digest(digest_payload), 200, body)
@@ -414,7 +414,7 @@ class ModelChoiceService:
         key = _session_key(target)
         digest_payload = {"target": dict(target), "expectedSequence": expected_sequence}
         if self._idempotency is not None:
-            from server_plugin_api.record_encoding import digest
+            from ordessa_server_plugin_api.record_encoding import digest
 
             request_digest = digest(digest_payload)
             prior = self._idempotency.get(_SUBMIT_SCOPE, operation_key, request_digest)
@@ -430,7 +430,7 @@ class ModelChoiceService:
                 "reason": reason, "application": application,
             }
             if self._idempotency is not None:
-                from server_plugin_api.record_encoding import digest
+                from ordessa_server_plugin_api.record_encoding import digest
 
                 self._idempotency.save(_SUBMIT_SCOPE, operation_key,
                                        digest(digest_payload), 200, body)

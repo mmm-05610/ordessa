@@ -36,13 +36,13 @@ def test_independent_attachment_wheel_without_monolith_product_server_or_sdk(tmp
         '--no-deps', '--wheel-dir', str(wheels), *clean_sources], capture_output=True, text=True, timeout=60)
     assert build.returncode == 0, build.stdout + build.stderr
     own = sorted(wheels.glob('*.whl'))
-    assert [p.name.split('-')[0] for p in own] == ['ordessa_environments', 'ordessa_execution_agents', 'ordessa_harness_claude_code', 'ordessa_infrastructure', 'ordessa_units']
+    assert [p.name.split('-')[0] for p in own] == ['ordessa_environments', 'ordessa_agents', 'ordessa_harness_claude_code', 'ordessa_infrastructure', 'ordessa_units']
     artifacts = sorted(wheels.glob('*.whl')); assert len(artifacts) == len(packages)
     claude = list(wheels.glob('ordessa_harness_claude_code-*.whl')); assert len(claude) == 1
     with zipfile.ZipFile(claude[0]) as archive:
         assert 'ordessa_harness_claude_code/acp_attachments.py' in archive.namelist()
         assert 'ordessa_harness_claude_code/acp_model_configuration.py' in archive.namelist()
-        assert not any(name.startswith(('pacthold.harness_kit/', 'ordessa_agent_tools/', 'ordessa_server/')) for name in archive.namelist())
+        assert not any(name.startswith(('pacthold.harness_kit/', 'ordessa_cli/', 'ordessa_server/')) for name in archive.namelist())
     environment = tmp_path / 'isolated'
     created = subprocess.run([sys.executable, '-m', 'venv', str(environment)], capture_output=True, text=True, timeout=60)
     assert created.returncode == 0, created.stderr
@@ -56,11 +56,11 @@ def test_independent_attachment_wheel_without_monolith_product_server_or_sdk(tmp
     program = '''
 import base64, hashlib, importlib.util, json
 assert all(importlib.util.find_spec(name) is None for name in
-    ('ordessa_execution_api', 'pacthold', 'ordessa_harness', 'ordessa_agent_tools', 'ordessa_server', 'claude_agent_sdk', 'server_plugin_api'))
+    ('ordessa_execution_api', 'pacthold', 'ordessa_harness', 'ordessa_cli', 'ordessa_server', 'claude_agent_sdk', 'ordessa_server_plugin_api'))
 assert importlib.util.find_spec('pydantic_graph') is None
 import ordessa_harness_claude_code.server_plugin
 from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
-from ordessa_execution_agents.harness.definitions.model_compilation import AdapterContext, ChoiceRequest, TargetHandle
+from ordessa_agents.harness.definitions.model_compilation import AdapterContext, ChoiceRequest, TargetHandle
 context = AdapterContext(TargetHandle("claude-code", "instance", "fixture"), "0.81.2", {"native_session_id": "fixture-session"})
 choice = ChoiceRequest("fixture-provider", "fixture-model", "https://fixture.test", "anthropic-messages", None, "fixture")
 compiled = ClaudeAdapter().compile(context, {}, choice)

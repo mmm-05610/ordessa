@@ -56,8 +56,8 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_execution_agents.harness.transport import ChannelFailure, WriterLeaseRefused
-from ordessa_execution_agents.harness.transport.channel import _TOKEN_ENV_KEYS
+from ordessa_agents.harness.transport import ChannelFailure, WriterLeaseRefused
+from ordessa_agents.harness.transport.channel import _TOKEN_ENV_KEYS
 from ordessa_harness_claude_code import (
     ClaudeChannelRefused, ClaudeRuntimeRefused, ClaudeStreamChannelFactory,
     ClaudeTerminationCoordinator, ClaudeTerminationEffects, ClaudeTerminationRefused,

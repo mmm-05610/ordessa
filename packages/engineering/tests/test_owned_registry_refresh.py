@@ -262,7 +262,7 @@ def test_refresh_refuses_reviewed_source_or_operation_content_drift(drift, match
 
 
 @pytest.mark.parametrize("fact", (
-    "decision_runtime", "decision_contract_version", "pydantic_graph_version",
+    "ordessa_decision", "decision_contract_version", "pydantic_graph_version",
     "jsonschema_version", "referencing_version"))
 def test_refresh_refuses_a_moved_external_dependency_fact_without_local_drift(fact):
     """Rejection 3: the dependency check precedes the "no change" verdict.

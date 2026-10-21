@@ -7,10 +7,11 @@ import asyncio
 from pathlib import Path
 from types import SimpleNamespace
 
-from ordessa_environments import EnvironmentManager, EnvironmentUseOperations, EnvironmentEndpoints, OwnerScope, SQLiteEnvironmentStore
+from ordessa_environments import (EnvironmentManager, EnvironmentUseOperations, EnvironmentEndpoints,
+    EnvironmentRefused, OwnerScope, ProcessRequest, SQLiteEnvironmentStore)
 from ordessa_environments_local import LocalEnvironmentResourceProvider
-from ordessa_execution_agents.sdk.prepare import BoundPath, LaunchPlan, SessionBootstrap
-from ordessa_agent_tools.composition.endpoints import EnvironmentEndpointResolver
+from ordessa_agents.sdk.prepare import BoundPath, LaunchPlan, SessionBootstrap
+from ordessa_agents.bridges.environment_endpoints import EnvironmentEndpointResolver
 
 
 class LocalEndpointFixture:
@@ -40,7 +41,8 @@ class LocalEndpointFixture:
             request_id='fixture/export',invocation=self.invocation,
             roots={'work':'.','config':'config','home':'home','tmp':'tmp'})
         self._ref = result['endpointRef']
-        self.resolver = EnvironmentEndpointResolver(self._endpoints,invocation_resolver=self._caller)
+        self.resolver = EnvironmentEndpointResolver(self._endpoints,invocation_resolver=self._caller,
+            process_request_factory=ProcessRequest.build,refusal=EnvironmentRefused)
         self._cleaned = False
 
     def _caller(self, invocation):

@@ -10,8 +10,8 @@ import threading
 
 import pytest
 
-from ordessa_execution_agents.instances.contracts import InstanceControl
-from ordessa_execution_agents.sdk.manager import ManagerRefused
+from ordessa_agents.instances.contracts import InstanceControl
+from ordessa_agents.sdk.manager import ManagerRefused
 from test_agent_guarded_bootstrap import setup
 
 

@@ -4,9 +4,9 @@ from dataclasses import replace
 import pytest
 from interaction_fixtures import original_service,INSTANCE
 from test_interactions import Communicate,Resolver,Guard,PARAMS_BYTES
-from ordessa_execution_agents.sdk.endpoint import ProtocolEvent,ProtocolEventPage
-from ordessa_execution_agents.sdk.interactions import turn_query,InteractionsRefused
-from ordessa_execution_agents.sdk.manager import AgentManager,ManagerRefused
+from ordessa_agents.sdk.endpoint import ProtocolEvent,ProtocolEventPage
+from ordessa_agents.sdk.interactions import turn_query,InteractionsRefused
+from ordessa_agents.sdk.manager import AgentManager,ManagerRefused
 
 
 class Protocol(Communicate):
@@ -139,7 +139,7 @@ def test_terminal_page_is_not_accepted_until_declared_following_pages_are_observ
 
 
 def test_two_original_service_objects_share_the_original_session_cut(tmp_path):
-    from ordessa_execution_agents.sdk.interactions import InteractionService
+    from ordessa_agents.sdk.interactions import InteractionService
     async def scenario():
         channel=Protocol('cancel');first,auth,sender,reader=original_service(tmp_path/'records.sqlite',Resolver(channel))
         second=InteractionService(first.records,auth,Resolver(channel))

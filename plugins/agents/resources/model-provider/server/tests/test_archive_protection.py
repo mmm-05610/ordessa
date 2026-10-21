@@ -10,7 +10,7 @@ Two frozen behaviors (spec FR-ARCH-2):
 from __future__ import annotations
 
 import pytest
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 
 from ordessa_model_provider.catalog import ModelCatalogService
 from ordessa_model_provider.records import ProviderModelRecords

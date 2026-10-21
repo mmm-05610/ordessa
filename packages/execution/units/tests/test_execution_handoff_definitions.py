@@ -1,6 +1,6 @@
 from dataclasses import replace
 import pytest
-from ordessa_execution_agents.harness.definitions import NativeContinuationRef, NativeProfileRef, NativeCredentialRef
+from ordessa_agents.harness.definitions import NativeContinuationRef, NativeProfileRef, NativeCredentialRef
 from ordessa_units.bindings.materials import ResourceRef
 from ordessa_units.definitions.execution import (
     ExecutionStartRequest, ResolvedExecutionInput, ExecutionStartReceipt,

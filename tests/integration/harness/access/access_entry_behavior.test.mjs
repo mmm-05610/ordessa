@@ -38,7 +38,7 @@ import {
   Sidecar, alive, controlledHarness, entry, fixtureChildrenIn, harnessPidsIn, pluginRoot, sleep,
   waitAllGone, waitGone, withSidecar,
 } from "./support/sidecar_harness.mjs"
-import { releaseProcessTree } from "../../../../packages/execution/agents/src/ordessa_execution_agents/harness/protocols/acp.mjs"
+import { releaseProcessTree } from "../../../../packages/execution/agents/src/ordessa_agents/harness/protocols/acp.mjs"
 import { FIXTURE_CHILD_MARKER } from "../../../../tests/fixtures/harness/access/fixture_child_marker.mjs"
 
 /**
@@ -329,7 +329,7 @@ test("E8: the execution-mode gate and the provenance check fail closed", async (
   const root = await mkdtemp(path.join(tmpdir(), "agentbox-entry-tamper-"))
   try {
     const stagedEntry = stageAccessEntry(path.join(root, "bundle"))
-    const victim = path.join(root, "bundle", "packages/execution/agents/src/ordessa_execution_agents/harness/transport/vendor/harness_remote/bridge/src/acp-client.js")
+    const victim = path.join(root, "bundle", "packages/execution/agents/src/ordessa_agents/harness/transport/vendor/harness_remote/bridge/src/acp-client.js")
     await writeFile(victim, `${await readFile(victim, "utf8")}\n// tampered\n`)
     const output = await runEntry(["--native"], {}, stagedEntry)
     assert.match(output, /PROVENANCE_MISMATCH: bridge\/src\/acp-client\.js/, "the tamper is named, not swallowed")

@@ -1,0 +1,584 @@
+{
+  "brand": "codex",
+  "turns": [
+    {
+      "label": "A",
+      "promptText": "计算 17*23，只回复数字。",
+      "modelCallNumber": 1,
+      "prompt": {
+        "apiVersion": "agent-tools/1",
+        "requestId": "prompt-a",
+        "command": "call agents.prompt --input /tmp/t05-multiturn-codex/prompt-input-a.json",
+        "status": "completed",
+        "data": {
+          "schemaVersion": "agent-protocol-turn/1",
+          "turnRef": {
+            "schemaVersion": "agent-turn-ref/1",
+            "instanceRef": {
+              "schemaVersion": "agent-instance/1",
+              "namespace": "server",
+              "instanceId": "instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c",
+              "bindingDigest": "sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859"
+            },
+            "turnId": "turn/0dbc619352ef4d32b3939b8c67314ee0"
+          },
+          "sessionId": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+          "agentOperationRef": "agent-operation/ad8ea8d397604966b33076f46d90013d",
+          "endpointRequestId": "sha256:b51c068e74f4c6e4a8515f5c6b6ee4d5351a481d9465e647d3f74f8078030b24",
+          "endpointOperationRef": "environment-operation/225f2922bf7f4ad4a014cb8bce87641e",
+          "engineeringAttemptRef": null,
+          "inputDigest": "sha256:a6a960a606eaf8129117bba117281366a87613eec8dccfd415eca4e95e6bf421",
+          "state": "completed",
+          "revision": 3,
+          "observationBytes": {
+            "answer": "391",
+            "bytesSent": 226,
+            "delivery": "confirmed",
+            "items": 1,
+            "method": "turn/completed",
+            "protocol": "codex-app-server/1",
+            "turnId": "01a15c4c-54be-7fb0-860c-2c0270ab6190",
+            "turnStatus": "completed"
+          },
+          "observationDigest": "sha256:a6769902397eb3ddaf6cab97810b0a4d5a9215b5a20d4556413e2572cf15bdeb"
+        },
+        "error": null,
+        "operationRef": null,
+        "evidenceRefs": []
+      },
+      "status": "COMPLETED",
+      "promptOperationRef": "agent-operation/ad8ea8d397604966b33076f46d90013d",
+      "turnId": "turn/0dbc619352ef4d32b3939b8c67314ee0",
+      "nativeTurnId": "01a15c4c-54be-7fb0-860c-2c0270ab6190",
+      "turnStatus": "completed",
+      "delivery": "confirmed",
+      "bytesSent": 226,
+      "answer": "391",
+      "inputDigest": "sha256:a6a960a606eaf8129117bba117281366a87613eec8dccfd415eca4e95e6bf421",
+      "observationDigest": "sha256:a6769902397eb3ddaf6cab97810b0a4d5a9215b5a20d4556413e2572cf15bdeb",
+      "endpointOperationRef": "environment-operation/225f2922bf7f4ad4a014cb8bce87641e",
+      "revision": 3,
+      "state": "completed",
+      "sessionId": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+      "query": {
+        "apiVersion": "agent-tools/1",
+        "requestId": "query-a",
+        "command": "call agents.query --input /tmp/t05-multiturn-codex/query-input-a.json",
+        "status": "completed",
+        "data": {
+          "schemaVersion": "agent-protocol-turn/1",
+          "turnRef": {
+            "schemaVersion": "agent-turn-ref/1",
+            "instanceRef": {
+              "schemaVersion": "agent-instance/1",
+              "namespace": "server",
+              "instanceId": "instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c",
+              "bindingDigest": "sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859"
+            },
+            "turnId": "turn/0dbc619352ef4d32b3939b8c67314ee0"
+          },
+          "sessionId": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+          "agentOperationRef": "agent-operation/ad8ea8d397604966b33076f46d90013d",
+          "endpointRequestId": "sha256:b51c068e74f4c6e4a8515f5c6b6ee4d5351a481d9465e647d3f74f8078030b24",
+          "endpointOperationRef": "environment-operation/225f2922bf7f4ad4a014cb8bce87641e",
+          "engineeringAttemptRef": null,
+          "inputDigest": "sha256:a6a960a606eaf8129117bba117281366a87613eec8dccfd415eca4e95e6bf421",
+          "state": "completed",
+          "revision": 3,
+          "observationBytes": {
+            "answer": "391",
+            "bytesSent": 226,
+            "delivery": "confirmed",
+            "items": 1,
+            "method": "turn/completed",
+            "protocol": "codex-app-server/1",
+            "turnId": "01a15c4c-54be-7fb0-860c-2c0270ab6190",
+            "turnStatus": "completed"
+          },
+          "observationDigest": "sha256:a6769902397eb3ddaf6cab97810b0a4d5a9215b5a20d4556413e2572cf15bdeb"
+        },
+        "error": null,
+        "operationRef": null,
+        "evidenceRefs": []
+      },
+      "queryOperationRef": "agent-operation/ad8ea8d397604966b33076f46d90013d",
+      "queryTurnId": "turn/0dbc619352ef4d32b3939b8c67314ee0",
+      "queryNativeTurnId": "01a15c4c-54be-7fb0-860c-2c0270ab6190",
+      "queryAnswer": "391",
+      "queryObservationDigest": "sha256:a6769902397eb3ddaf6cab97810b0a4d5a9215b5a20d4556413e2572cf15bdeb",
+      "queryEndpointOperationRef": "environment-operation/225f2922bf7f4ad4a014cb8bce87641e",
+      "queryRevision": 3,
+      "queryState": "completed",
+      "querySessionId": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+      "queryAnswerMatchesPrompt": true,
+      "queryDigestMatchesPrompt": true,
+      "querySameOperation": true,
+      "querySameEndpointOperation": true,
+      "querySameRevision": true,
+      "queryAfterB": {
+        "apiVersion": "agent-tools/1",
+        "requestId": "query-A_reread",
+        "command": "call agents.query --input /tmp/t05-multiturn-codex/query-input-A_reread.json",
+        "status": "completed",
+        "data": {
+          "schemaVersion": "agent-protocol-turn/1",
+          "turnRef": {
+            "schemaVersion": "agent-turn-ref/1",
+            "instanceRef": {
+              "schemaVersion": "agent-instance/1",
+              "namespace": "server",
+              "instanceId": "instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c",
+              "bindingDigest": "sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859"
+            },
+            "turnId": "turn/0dbc619352ef4d32b3939b8c67314ee0"
+          },
+          "sessionId": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+          "agentOperationRef": "agent-operation/ad8ea8d397604966b33076f46d90013d",
+          "endpointRequestId": "sha256:b51c068e74f4c6e4a8515f5c6b6ee4d5351a481d9465e647d3f74f8078030b24",
+          "endpointOperationRef": "environment-operation/225f2922bf7f4ad4a014cb8bce87641e",
+          "engineeringAttemptRef": null,
+          "inputDigest": "sha256:a6a960a606eaf8129117bba117281366a87613eec8dccfd415eca4e95e6bf421",
+          "state": "completed",
+          "revision": 3,
+          "observationBytes": {
+            "answer": "391",
+            "bytesSent": 226,
+            "delivery": "confirmed",
+            "items": 1,
+            "method": "turn/completed",
+            "protocol": "codex-app-server/1",
+            "turnId": "01a15c4c-54be-7fb0-860c-2c0270ab6190",
+            "turnStatus": "completed"
+          },
+          "observationDigest": "sha256:a6769902397eb3ddaf6cab97810b0a4d5a9215b5a20d4556413e2572cf15bdeb"
+        },
+        "error": null,
+        "operationRef": null,
+        "evidenceRefs": []
+      },
+      "queryAfterBAnswer": "391",
+      "queryAfterBObservationDigest": "sha256:a6769902397eb3ddaf6cab97810b0a4d5a9215b5a20d4556413e2572cf15bdeb",
+      "queryAfterBNativeTurnId": "01a15c4c-54be-7fb0-860c-2c0270ab6190",
+      "queryAfterBUnchanged": true
+    },
+    {
+      "label": "B",
+      "promptText": "计算 12*12，只回复数字。",
+      "modelCallNumber": 2,
+      "prompt": {
+        "apiVersion": "agent-tools/1",
+        "requestId": "prompt-b",
+        "command": "call agents.prompt --input /tmp/t05-multiturn-codex/prompt-input-b.json",
+        "status": "completed",
+        "data": {
+          "schemaVersion": "agent-protocol-turn/1",
+          "turnRef": {
+            "schemaVersion": "agent-turn-ref/1",
+            "instanceRef": {
+              "schemaVersion": "agent-instance/1",
+              "namespace": "server",
+              "instanceId": "instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c",
+              "bindingDigest": "sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859"
+            },
+            "turnId": "turn/b314c970118d4d0084f7d1bacb580e59"
+          },
+          "sessionId": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+          "agentOperationRef": "agent-operation/e5840b6831324bf3ae7f5904266d13cf",
+          "endpointRequestId": "sha256:22f5de9f0abdc3f76d788a0ef635904c4996c922b863420666f1456aac899f71",
+          "endpointOperationRef": "environment-operation/e83a92891a8e45a2a2564174132a4258",
+          "engineeringAttemptRef": null,
+          "inputDigest": "sha256:34aadfab9a274d0ab6fef19b6100f4830072c8edbdd6eb023c367cc426fef366",
+          "state": "completed",
+          "revision": 3,
+          "observationBytes": {
+            "answer": "144",
+            "bytesSent": 226,
+            "delivery": "confirmed",
+            "items": 1,
+            "method": "turn/completed",
+            "protocol": "codex-app-server/1",
+            "turnId": "01a15c4c-7e88-7c72-9cbb-301b1eea53b0",
+            "turnStatus": "completed"
+          },
+          "observationDigest": "sha256:1044e14ed8a067f3111b2490e95ee32ed0d83e8fc94ae6426fc9a8d72a61a7e8"
+        },
+        "error": null,
+        "operationRef": null,
+        "evidenceRefs": []
+      },
+      "status": "COMPLETED",
+      "promptOperationRef": "agent-operation/e5840b6831324bf3ae7f5904266d13cf",
+      "turnId": "turn/b314c970118d4d0084f7d1bacb580e59",
+      "nativeTurnId": "01a15c4c-7e88-7c72-9cbb-301b1eea53b0",
+      "turnStatus": "completed",
+      "delivery": "confirmed",
+      "bytesSent": 226,
+      "answer": "144",
+      "inputDigest": "sha256:34aadfab9a274d0ab6fef19b6100f4830072c8edbdd6eb023c367cc426fef366",
+      "observationDigest": "sha256:1044e14ed8a067f3111b2490e95ee32ed0d83e8fc94ae6426fc9a8d72a61a7e8",
+      "endpointOperationRef": "environment-operation/e83a92891a8e45a2a2564174132a4258",
+      "revision": 3,
+      "state": "completed",
+      "sessionId": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+      "query": {
+        "apiVersion": "agent-tools/1",
+        "requestId": "query-b",
+        "command": "call agents.query --input /tmp/t05-multiturn-codex/query-input-b.json",
+        "status": "completed",
+        "data": {
+          "schemaVersion": "agent-protocol-turn/1",
+          "turnRef": {
+            "schemaVersion": "agent-turn-ref/1",
+            "instanceRef": {
+              "schemaVersion": "agent-instance/1",
+              "namespace": "server",
+              "instanceId": "instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c",
+              "bindingDigest": "sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859"
+            },
+            "turnId": "turn/b314c970118d4d0084f7d1bacb580e59"
+          },
+          "sessionId": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+          "agentOperationRef": "agent-operation/e5840b6831324bf3ae7f5904266d13cf",
+          "endpointRequestId": "sha256:22f5de9f0abdc3f76d788a0ef635904c4996c922b863420666f1456aac899f71",
+          "endpointOperationRef": "environment-operation/e83a92891a8e45a2a2564174132a4258",
+          "engineeringAttemptRef": null,
+          "inputDigest": "sha256:34aadfab9a274d0ab6fef19b6100f4830072c8edbdd6eb023c367cc426fef366",
+          "state": "completed",
+          "revision": 3,
+          "observationBytes": {
+            "answer": "144",
+            "bytesSent": 226,
+            "delivery": "confirmed",
+            "items": 1,
+            "method": "turn/completed",
+            "protocol": "codex-app-server/1",
+            "turnId": "01a15c4c-7e88-7c72-9cbb-301b1eea53b0",
+            "turnStatus": "completed"
+          },
+          "observationDigest": "sha256:1044e14ed8a067f3111b2490e95ee32ed0d83e8fc94ae6426fc9a8d72a61a7e8"
+        },
+        "error": null,
+        "operationRef": null,
+        "evidenceRefs": []
+      },
+      "queryOperationRef": "agent-operation/e5840b6831324bf3ae7f5904266d13cf",
+      "queryTurnId": "turn/b314c970118d4d0084f7d1bacb580e59",
+      "queryNativeTurnId": "01a15c4c-7e88-7c72-9cbb-301b1eea53b0",
+      "queryAnswer": "144",
+      "queryObservationDigest": "sha256:1044e14ed8a067f3111b2490e95ee32ed0d83e8fc94ae6426fc9a8d72a61a7e8",
+      "queryEndpointOperationRef": "environment-operation/e83a92891a8e45a2a2564174132a4258",
+      "queryRevision": 3,
+      "queryState": "completed",
+      "querySessionId": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+      "queryAnswerMatchesPrompt": true,
+      "queryDigestMatchesPrompt": true,
+      "querySameOperation": true,
+      "querySameEndpointOperation": true,
+      "querySameRevision": true
+    }
+  ],
+  "steps": {
+    "acquire": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "312f0566fdf34df2b658bccf8500f4c6",
+      "command": "call environments.acquire --input /tmp/t05-multiturn-codex/acquire.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/e572200cb4564cee8e4c93233deae2ad",
+        "useIdentity": "environment-use/ec3feec366b046a5bc87c4cef20a37e3",
+        "status": "completed",
+        "ownerScope": {
+          "kind": "principal",
+          "ref": "instance"
+        },
+        "environmentIdentity": "environment/cc59769049294138b40ad3181ed5cba8"
+      },
+      "error": null,
+      "operationRef": "environment-operation/e572200cb4564cee8e4c93233deae2ad",
+      "evidenceRefs": []
+    },
+    "start": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "start-1",
+      "command": "call agents.start --input /tmp/t05-multiturn-codex/start.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-start-receipt/1",
+        "instanceId": "instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c",
+        "operationRef": "agent-start/70d712168d5446d69a5cb5a75331e5bf",
+        "state": "running",
+        "instanceRef": {
+          "schemaVersion": "agent-instance/1",
+          "namespace": "server",
+          "instanceId": "instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c",
+          "bindingDigest": "sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859"
+        },
+        "processEndpointRef": {
+          "schemaVersion": "agent-endpoint/1",
+          "issuer": "environment-endpoints:5ac19af096278021ae6f293c",
+          "endpointId": "endpoint/f157631800e84e33a6a3f9e68d71890d",
+          "revision": "1",
+          "descriptorDigest": "sha256:04a9b987871710a38a293873924b863dc57dac9300b6463bd325ab002941c074"
+        },
+        "sessionId": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+        "error": null
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "stop": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "stop-1",
+      "command": "call agents.stop --input /tmp/t05-multiturn-codex/stop.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "endpoint-operation/1",
+        "operationRef": "environment-operation/23d84ead07b542ebb786e29133531321",
+        "status": "completed",
+        "processEndpointRef": {
+          "schemaVersion": "agent-endpoint/1",
+          "issuer": "environment-endpoints:5ac19af096278021ae6f293c",
+          "endpointId": "endpoint/f157631800e84e33a6a3f9e68d71890d",
+          "revision": "1",
+          "descriptorDigest": "sha256:04a9b987871710a38a293873924b863dc57dac9300b6463bd325ab002941c074"
+        },
+        "facts": {
+          "action": "terminate",
+          "cancellation": "requested",
+          "processState": "running"
+        },
+        "evidenceRefs": [],
+        "error": null
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "reconcile": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "rec-1",
+      "command": "call agents.reconcile --input /tmp/t05-multiturn-codex/reconcile.json",
+      "status": "completed",
+      "data": {
+        "schemaVersion": "agent-process-observation/1",
+        "state": "exited",
+        "observedAt": "2026-10-21T02:31:22.867714+00:00",
+        "nativeIdentityDigest": "sha256:9cf5a84b4c8fe9be1ca95d655821ac6ad3aa8f3beefec5a02e9725946bb2013e",
+        "exitCode": -9,
+        "evidenceRefs": []
+      },
+      "error": null,
+      "operationRef": null,
+      "evidenceRefs": []
+    },
+    "processRelease": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "prel-1",
+      "command": "call environments.process-release --input /tmp/t05-multiturn-codex/prelease.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/52031a20f4ff439cbc51509291d1d128",
+        "useIdentity": "environment-use/ec3feec366b046a5bc87c4cef20a37e3",
+        "status": "completed",
+        "resourcePreserved": true,
+        "receipt": {
+          "processIdentity": "local-process/2068232",
+          "transportReleased": true,
+          "processState": "exited",
+          "ioState": "closed",
+          "exitCode": "-9"
+        },
+        "exitClaimed": false
+      },
+      "error": null,
+      "operationRef": "environment-operation/52031a20f4ff439cbc51509291d1d128",
+      "evidenceRefs": []
+    },
+    "release": {
+      "apiVersion": "agent-tools/1",
+      "requestId": "rel-1",
+      "command": "call environments.release --input /tmp/t05-multiturn-codex/release.json",
+      "status": "completed",
+      "data": {
+        "operationRef": "environment-operation/b331c1f91bc7413391e9c9340cbab84b",
+        "useIdentity": "environment-use/ec3feec366b046a5bc87c4cef20a37e3",
+        "status": "completed",
+        "resourcePreserved": true,
+        "receipt": {
+          "useIdentity": "environment-use/ec3feec366b046a5bc87c4cef20a37e3",
+          "environmentIdentity": "environment/cc59769049294138b40ad3181ed5cba8",
+          "generation": 0,
+          "resourcePreserved": true,
+          "providerFacts": {
+            "useIdentity": "environment-use/ec3feec366b046a5bc87c4cef20a37e3",
+            "isolation": "none",
+            "root": "/tmp/t05-multiturn-codex/work",
+            "rootPreserved": true,
+            "resourcePreserved": true,
+            "attempts": [
+              "local-use/environment-use/ec3feec366b046a5bc87c4cef20a37e3/1"
+            ]
+          }
+        }
+      },
+      "error": null,
+      "operationRef": "environment-operation/b331c1f91bc7413391e9c9340cbab84b",
+      "evidenceRefs": []
+    }
+  },
+  "prompts": {
+    "A": "计算 17*23，只回复数字。",
+    "B": "计算 12*12，只回复数字。"
+  },
+  "model": "deepseek-v4.1-flash",
+  "codexModel": "gpt-5.6-sol",
+  "maxModelCalls": 2,
+  "origin": "http://127.0.0.1:35421",
+  "instanceRef": {
+    "schemaVersion": "agent-instance/1",
+    "namespace": "server",
+    "instanceId": "instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c",
+    "bindingDigest": "sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859"
+  },
+  "sessionId": "01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+  "processEndpointRef": {
+    "schemaVersion": "agent-endpoint/1",
+    "issuer": "environment-endpoints:5ac19af096278021ae6f293c",
+    "endpointId": "endpoint/f157631800e84e33a6a3f9e68d71890d",
+    "revision": "1",
+    "descriptorDigest": "sha256:04a9b987871710a38a293873924b863dc57dac9300b6463bd325ab002941c074"
+  },
+  "launchEnvironment": {
+    "processes": [
+      {
+        "pid": 2068232,
+        "cmdline": "node /home/maoqh/.local/bin/codex app-server -c model=\"gpt-5.6-sol\""
+      },
+      {
+        "pid": 2068239,
+        "cmdline": "/home/maoqh/.local/lib/node_modules/@openai/codex/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/bin/codex app-server -c model=\"gpt-5.6-sol\""
+      }
+    ],
+    "configuredNames": {}
+  },
+  "codexProcessesBefore": [
+    {
+      "pid": 1892946,
+      "cmdline": "/home/maoqh/.vscode/extensions/openai.chatgpt-26.1007.21434-linux-x64/bin/linux-x86_64/codex -c features.code_mode_host=true app-server --analytics-default-enabled"
+    },
+    {
+      "pid": 2068207,
+      "cmdline": "bash -c cd /home/maoqh/projects/ordessa/worktree/agent-cli-server-20261020 && rm -f /tmp/t05-budget.txt && .venv-w1/bin/python tmp/t05_multiturn.py --brand codex --workspace /tmp/t05-multiturn-codex -"
+    },
+    {
+      "pid": 2068215,
+      "cmdline": ".venv-w1/bin/python tmp/t05_multiturn.py --brand codex --workspace /tmp/t05-multiturn-codex --budget /tmp/t05-budget.txt --receipt docs/verification/agent-cli-server-20261020/raw/t05-multiturn-attempt"
+    },
+    {
+      "pid": 2068216,
+      "cmdline": "/home/maoqh/projects/ordessa/worktree/agent-cli-server-20261020/.venv-w1/bin/python /home/maoqh/projects/ordessa/worktree/agent-cli-server-20261020/.venv-w1/bin/ordessa-server --data-root /tmp/t05-mul"
+    },
+    {
+      "pid": 2068232,
+      "cmdline": "node /home/maoqh/.local/bin/codex app-server -c model=\"gpt-5.6-sol\""
+    },
+    {
+      "pid": 2068239,
+      "cmdline": "/home/maoqh/.local/lib/node_modules/@openai/codex/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/bin/codex app-server -c model=\"gpt-5.6-sol\""
+    }
+  ],
+  "residue": {
+    "workspaceProcesses": [],
+    "codexProcessesAfter": [
+      {
+        "pid": 1892946,
+        "cmdline": "/home/maoqh/.vscode/extensions/openai.chatgpt-26.1007.21434-linux-x64/bin/linux-x86_64/codex -c features.code_mode_host=true app-server --analytics-default-enabled"
+      },
+      {
+        "pid": 2068207,
+        "cmdline": "bash -c cd /home/maoqh/projects/ordessa/worktree/agent-cli-server-20261020 && rm -f /tmp/t05-budget.txt && .venv-w1/bin/python tmp/t05_multiturn.py --brand codex --workspace /tmp/t05-multiturn-codex -"
+      },
+      {
+        "pid": 2068215,
+        "cmdline": ".venv-w1/bin/python tmp/t05_multiturn.py --brand codex --workspace /tmp/t05-multiturn-codex --budget /tmp/t05-budget.txt --receipt docs/verification/agent-cli-server-20261020/raw/t05-multiturn-attempt"
+      },
+      {
+        "pid": 2068216,
+        "cmdline": "/home/maoqh/projects/ordessa/worktree/agent-cli-server-20261020/.venv-w1/bin/python /home/maoqh/projects/ordessa/worktree/agent-cli-server-20261020/.venv-w1/bin/ordessa-server --data-root /tmp/t05-mul"
+      }
+    ]
+  },
+  "secretScan": {
+    "filesScanned": 381,
+    "secretNamesChecked": [
+      "OPEN_CODE_GO_API_KEY",
+      "DEEPSEEK_API_KEY"
+    ],
+    "hits": []
+  },
+  "outcome": "ROUND_COMPLETED",
+  "serverExitCode": -15,
+  "log": [
+    "== service configuration ==",
+    "{\"allowlist\": [\"codex\"], \"providers\": {\"codex\": {\"command\": [\"/home/maoqh/.local/bin/codex\"]}}}",
+    "SERVER> {\"event\":\"listening\",\"origin\":\"http://127.0.0.1:35421\",\"pid\":2068216,\"serverId\":\"ordessa-t05-codex\"}",
+    "== environments create local (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"e4f148edccf5461e9837a17c54071fc9\", \"command\": \"environments create local --root /tmp/t05-multiturn-codex/work --alias demo\", \"status\": \"completed\", \"data\": {\"identity\": \"environment/cc59769049294138b40ad3181ed5cba8\", \"alias\": \"demo\", \"aliases\": [\"demo\"], \"provider\": \"local\", \"backendId\": \"/tmp/t05-multiturn-codex/work\", \"phase\": \"ready\", \"generation\": 0, \"state\": \"running\", \"observationStale\": false, \"observedAt\": \"2026-10-21T02:31:01.590914+00:00\", \"operationStatus\": {\"phase\": \"ready\", \"operation\": null}, \"activeUses\": 0, \"isolation\": \"none\", \"endpointKind\": \"local-directory\", \"health\": \"ready\", \"capabilities\": {\"isolation\": \"none\", \"statuses\": {\"byte-channel\": \"supported\", \"files\": \"supported\", \"process\": \"supported\", \"stderr\": \"supported\", \"terminal\": \"unsupported\"}, \"provides\": [\"byte-channel\", \"files\", \"process\", \"stderr\"], \"values\": {\"provider\": \"local\", \"resourceKind\": \"directory\"}, \"assurance\": {\"isolation\": \"none\", \"isolationIsSecurityBoundary\": false, \"localDevelopmentOnly\": true, \"providerAssurance\": \"provider_self_report\", \"statement\": \"provider-reported isolation; it is not a permission, lease or hold\"}}}, \"error\": null, \"operationRef\": \"environment-command/6d0b58ef3f684abda78537bd8791a1b9\", \"evidenceRefs\": []}",
+    "== environments.acquire (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"312f0566fdf34df2b658bccf8500f4c6\", \"command\": \"call environments.acquire --input /tmp/t05-multiturn-codex/acquire.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/e572200cb4564cee8e4c93233deae2ad\", \"useIdentity\": \"environment-use/ec3feec366b046a5bc87c4cef20a37e3\", \"status\": \"completed\", \"ownerScope\": {\"kind\": \"principal\", \"ref\": \"instance\"}, \"environmentIdentity\": \"environment/cc59769049294138b40ad3181ed5cba8\"}, \"error\": null, \"operationRef\": \"environment-operation/e572200cb4564cee8e4c93233deae2ad\", \"evidenceRefs\": []}",
+    "== environments.export-endpoint (raw wire) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"export-raw\", \"command\": \"environments.export-endpoint\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/d2f0fdcd663d4612ac8dcc6f8857948b\", \"useIdentity\": \"environment-use/ec3feec366b046a5bc87c4cef20a37e3\", \"status\": \"completed\", \"endpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:5ac19af096278021ae6f293c\", \"endpointId\": \"endpoint/bbf8c1c9ca6a4a509cd9971cd64e710a\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:b020cc7f4b097ae1db81403ad5b6df1f634fd55f7a20c8553704e7e615ffca9f\"}, \"descriptor\": {\"schemaVersion\": \"environment-endpoint-descriptor/2\", \"endpointId\": \"endpoint/bbf8c1c9ca6a4a509cd9971cd64e710a\", \"revision\": \"1\", \"capabilities\": [\"communicate\", \"detach\", \"files\", \"launcher\", \"observe\", \"terminate\"], \"rootKeys\": [\"cache\", \"config\", \"data\", \"home\", \"state\", \"tmp\", \"work\"], \"preparedConfigurations\": [], \"reconnect\": \"unsupported\", \"providerId\": \"local\", \"endpointKind\": \"local-directory\"}}, \"error\": null, \"operationRef\": \"environment-operation/d2f0fdcd663d4612ac8dcc6f8857948b\", \"evidenceRefs\": []}",
+    "== agents harness list ==",
+    "[\"codex\"]",
+    "== agents profiles create (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"36831cc1449a4a53bc8e0cb3f79f4d19\", \"command\": \"agents profiles create demo-codex --name codex --manifest /tmp/t05-multiturn-codex/manifest.json\", \"status\": \"completed\", \"data\": {\"profileId\": \"demo-codex\", \"catalogRevision\": 1, \"displayName\": \"codex\", \"archivedAt\": null, \"currentManifestRef\": {\"environmentNamespace\": \"server\", \"profileId\": \"demo-codex\", \"manifestRevision\": 1, \"contentDigest\": \"sha256:7e5151bf0a27b248f1110c24181a8c2c0aab5f4a7ad7cd0b8276e655d1b7088a\"}}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.start (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"start-1\", \"command\": \"call agents.start --input /tmp/t05-multiturn-codex/start.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-start-receipt/1\", \"instanceId\": \"instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c\", \"operationRef\": \"agent-start/70d712168d5446d69a5cb5a75331e5bf\", \"state\": \"running\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c\", \"bindingDigest\": \"sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859\"}, \"processEndpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:5ac19af096278021ae6f293c\", \"endpointId\": \"endpoint/f157631800e84e33a6a3f9e68d71890d\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:04a9b987871710a38a293873924b863dc57dac9300b6463bd325ab002941c074\"}, \"sessionId\": \"01a15c4c-4f2d-74f3-bee0-ff3e094c62fa\", \"error\": null}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== sessionId: 01a15c4c-4f2d-74f3-bee0-ff3e094c62fa",
+    "== launched harness processes ==",
+    "pid=2068232 cmd=node /home/maoqh/.local/bin/codex app-server -c model=\"gpt-5.6-sol\"",
+    "pid=2068239 cmd=/home/maoqh/.local/lib/node_modules/@openai/codex/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/bin/codex app-server -c model=\"gpt-5.6-s",
+    "== configured provider environment names (value lengths) ==",
+    "{}",
+    "== agents.prompt A ==",
+    "== real model call 1/2 (turn A) ==",
+    "== agents.prompt A (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"prompt-a\", \"command\": \"call agents.prompt --input /tmp/t05-multiturn-codex/prompt-input-a.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-protocol-turn/1\", \"turnRef\": {\"schemaVersion\": \"agent-turn-ref/1\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c\", \"bindingDigest\": \"sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859\"}, \"turnId\": \"turn/0dbc619352ef4d32b3939b8c67314ee0\"}, \"sessionId\": \"01a15c4c-4f2d-74f3-bee0-ff3e094c62fa\", \"agentOperationRef\": \"agent-operation/ad8ea8d397604966b33076f46d90013d\", \"endpointRequestId\": \"sha256:b51c068e74f4c6e4a8515f5c6b6ee4d5351a481d9465e647d3f74f8078030b24\", \"endpointOperationRef\": \"environment-operation/225f2922bf7f4ad4a014cb8bce87641e\", \"engineeringAttemptRef\": null, \"inputDigest\": \"sha256:a6a960a606eaf8129117bba117281366a87613eec8dccfd415eca4e95e6bf421\", \"state\": \"completed\", \"revision\": 3, \"observationBytes\": {\"answer\": \"391\", \"bytesSent\": 226, \"delivery\": \"confirmed\", \"items\": 1, \"method\": \"turn/completed\", \"protocol\": \"codex-app-server/1\", \"turnId\": \"01a15c4c-54be-7fb0-860c-2c0270ab6190\", \"turnStatus\": \"completed\"}, \"observationDigest\": \"sha256:a6769902397eb3ddaf6cab97810b0a4d5a9215b5a20d4556413e2572cf15bdeb\"}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== turn A: turnId=turn/0dbc619352ef4d32b3939b8c67314ee0 nativeTurnId=01a15c4c-54be-7fb0-860c-2c0270ab6190 turnStatus=completed delivery=confirmed bytesSent=226 answer='391'",
+    "== agents.query a (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"query-a\", \"command\": \"call agents.query --input /tmp/t05-multiturn-codex/query-input-a.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-protocol-turn/1\", \"turnRef\": {\"schemaVersion\": \"agent-turn-ref/1\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c\", \"bindingDigest\": \"sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859\"}, \"turnId\": \"turn/0dbc619352ef4d32b3939b8c67314ee0\"}, \"sessionId\": \"01a15c4c-4f2d-74f3-bee0-ff3e094c62fa\", \"agentOperationRef\": \"agent-operation/ad8ea8d397604966b33076f46d90013d\", \"endpointRequestId\": \"sha256:b51c068e74f4c6e4a8515f5c6b6ee4d5351a481d9465e647d3f74f8078030b24\", \"endpointOperationRef\": \"environment-operation/225f2922bf7f4ad4a014cb8bce87641e\", \"engineeringAttemptRef\": null, \"inputDigest\": \"sha256:a6a960a606eaf8129117bba117281366a87613eec8dccfd415eca4e95e6bf421\", \"state\": \"completed\", \"revision\": 3, \"observationBytes\": {\"answer\": \"391\", \"bytesSent\": 226, \"delivery\": \"confirmed\", \"items\": 1, \"method\": \"turn/completed\", \"protocol\": \"codex-app-server/1\", \"turnId\": \"01a15c4c-54be-7fb0-860c-2c0270ab6190\", \"turnStatus\": \"completed\"}, \"observationDigest\": \"sha256:a6769902397eb3ddaf6cab97810b0a4d5a9215b5a20d4556413e2572cf15bdeb\"}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== query A: answer='391' observationDigest=sha256:a6769902397eb3ddaf6cab97810b0a4d5a9215b5a20d4556413e2572cf15bdeb sameOperation=True sameEndpointOperation=True",
+    "== agents.prompt B ==",
+    "== real model call 2/2 (turn B) ==",
+    "== agents.prompt B (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"prompt-b\", \"command\": \"call agents.prompt --input /tmp/t05-multiturn-codex/prompt-input-b.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-protocol-turn/1\", \"turnRef\": {\"schemaVersion\": \"agent-turn-ref/1\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c\", \"bindingDigest\": \"sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859\"}, \"turnId\": \"turn/b314c970118d4d0084f7d1bacb580e59\"}, \"sessionId\": \"01a15c4c-4f2d-74f3-bee0-ff3e094c62fa\", \"agentOperationRef\": \"agent-operation/e5840b6831324bf3ae7f5904266d13cf\", \"endpointRequestId\": \"sha256:22f5de9f0abdc3f76d788a0ef635904c4996c922b863420666f1456aac899f71\", \"endpointOperationRef\": \"environment-operation/e83a92891a8e45a2a2564174132a4258\", \"engineeringAttemptRef\": null, \"inputDigest\": \"sha256:34aadfab9a274d0ab6fef19b6100f4830072c8edbdd6eb023c367cc426fef366\", \"state\": \"completed\", \"revision\": 3, \"observationBytes\": {\"answer\": \"144\", \"bytesSent\": 226, \"delivery\": \"confirmed\", \"items\": 1, \"method\": \"turn/completed\", \"protocol\": \"codex-app-server/1\", \"turnId\": \"01a15c4c-7e88-7c72-9cbb-301b1eea53b0\", \"turnStatus\": \"completed\"}, \"observationDigest\": \"sha256:1044e14ed8a067f3111b2490e95ee32ed0d83e8fc94ae6426fc9a8d72a61a7e8\"}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== turn B: turnId=turn/b314c970118d4d0084f7d1bacb580e59 nativeTurnId=01a15c4c-7e88-7c72-9cbb-301b1eea53b0 turnStatus=completed delivery=confirmed bytesSent=226 answer='144'",
+    "== agents.query b (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"query-b\", \"command\": \"call agents.query --input /tmp/t05-multiturn-codex/query-input-b.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-protocol-turn/1\", \"turnRef\": {\"schemaVersion\": \"agent-turn-ref/1\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c\", \"bindingDigest\": \"sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859\"}, \"turnId\": \"turn/b314c970118d4d0084f7d1bacb580e59\"}, \"sessionId\": \"01a15c4c-4f2d-74f3-bee0-ff3e094c62fa\", \"agentOperationRef\": \"agent-operation/e5840b6831324bf3ae7f5904266d13cf\", \"endpointRequestId\": \"sha256:22f5de9f0abdc3f76d788a0ef635904c4996c922b863420666f1456aac899f71\", \"endpointOperationRef\": \"environment-operation/e83a92891a8e45a2a2564174132a4258\", \"engineeringAttemptRef\": null, \"inputDigest\": \"sha256:34aadfab9a274d0ab6fef19b6100f4830072c8edbdd6eb023c367cc426fef366\", \"state\": \"completed\", \"revision\": 3, \"observationBytes\": {\"answer\": \"144\", \"bytesSent\": 226, \"delivery\": \"confirmed\", \"items\": 1, \"method\": \"turn/completed\", \"protocol\": \"codex-app-server/1\", \"turnId\": \"01a15c4c-7e88-7c72-9cbb-301b1eea53b0\", \"turnStatus\": \"completed\"}, \"observationDigest\": \"sha256:1044e14ed8a067f3111b2490e95ee32ed0d83e8fc94ae6426fc9a8d72a61a7e8\"}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== query B: answer='144' observationDigest=sha256:1044e14ed8a067f3111b2490e95ee32ed0d83e8fc94ae6426fc9a8d72a61a7e8 sameOperation=True sameEndpointOperation=True",
+    "== agents.query A (re-read after B) ==",
+    "== agents.query A-reread (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"query-A_reread\", \"command\": \"call agents.query --input /tmp/t05-multiturn-codex/query-input-A_reread.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-protocol-turn/1\", \"turnRef\": {\"schemaVersion\": \"agent-turn-ref/1\", \"instanceRef\": {\"schemaVersion\": \"agent-instance/1\", \"namespace\": \"server\", \"instanceId\": \"instance-e5b971fdc3ef4e4f98c54c2ba4dfc30c\", \"bindingDigest\": \"sha256:c600c9f287ae06a25207f66f05627abbd5f08eaa1a28ef3d5c097db58f870859\"}, \"turnId\": \"turn/0dbc619352ef4d32b3939b8c67314ee0\"}, \"sessionId\": \"01a15c4c-4f2d-74f3-bee0-ff3e094c62fa\", \"agentOperationRef\": \"agent-operation/ad8ea8d397604966b33076f46d90013d\", \"endpointRequestId\": \"sha256:b51c068e74f4c6e4a8515f5c6b6ee4d5351a481d9465e647d3f74f8078030b24\", \"endpointOperationRef\": \"environment-operation/225f2922bf7f4ad4a014cb8bce87641e\", \"engineeringAttemptRef\": null, \"inputDigest\": \"sha256:a6a960a606eaf8129117bba117281366a87613eec8dccfd415eca4e95e6bf421\", \"state\": \"completed\", \"revision\": 3, \"observationBytes\": {\"answer\": \"391\", \"bytesSent\": 226, \"delivery\": \"confirmed\", \"items\": 1, \"method\": \"turn/completed\", \"protocol\": \"codex-app-server/1\", \"turnId\": \"01a15c4c-54be-7fb0-860c-2c0270ab6190\", \"turnStatus\": \"completed\"}, \"observationDigest\": \"sha256:a6769902397eb3ddaf6cab97810b0a4d5a9215b5a20d4556413e2572cf15bdeb\"}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== query A after B: answer='391' unchanged=True",
+    "== agents.stop (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"stop-1\", \"command\": \"call agents.stop --input /tmp/t05-multiturn-codex/stop.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"endpoint-operation/1\", \"operationRef\": \"environment-operation/23d84ead07b542ebb786e29133531321\", \"status\": \"completed\", \"processEndpointRef\": {\"schemaVersion\": \"agent-endpoint/1\", \"issuer\": \"environment-endpoints:5ac19af096278021ae6f293c\", \"endpointId\": \"endpoint/f157631800e84e33a6a3f9e68d71890d\", \"revision\": \"1\", \"descriptorDigest\": \"sha256:04a9b987871710a38a293873924b863dc57dac9300b6463bd325ab002941c074\"}, \"facts\": {\"action\": \"terminate\", \"cancellation\": \"requested\", \"processState\": \"running\"}, \"evidenceRefs\": [], \"error\": null}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== agents.reconcile (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"rec-1\", \"command\": \"call agents.reconcile --input /tmp/t05-multiturn-codex/reconcile.json\", \"status\": \"completed\", \"data\": {\"schemaVersion\": \"agent-process-observation/1\", \"state\": \"exited\", \"observedAt\": \"2026-10-21T02:31:22.867714+00:00\", \"nativeIdentityDigest\": \"sha256:9cf5a84b4c8fe9be1ca95d655821ac6ad3aa8f3beefec5a02e9725946bb2013e\", \"exitCode\": -9, \"evidenceRefs\": []}, \"error\": null, \"operationRef\": null, \"evidenceRefs\": []}",
+    "== environments.process-release (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"prel-1\", \"command\": \"call environments.process-release --input /tmp/t05-multiturn-codex/prelease.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/52031a20f4ff439cbc51509291d1d128\", \"useIdentity\": \"environment-use/ec3feec366b046a5bc87c4cef20a37e3\", \"status\": \"completed\", \"resourcePreserved\": true, \"receipt\": {\"processIdentity\": \"local-process/2068232\", \"transportReleased\": true, \"processState\": \"exited\", \"ioState\": \"closed\", \"exitCode\": \"-9\"}, \"exitClaimed\": false}, \"error\": null, \"operationRef\": \"environment-operation/52031a20f4ff439cbc51509291d1d128\", \"evidenceRefs\": []}",
+    "== environments.release (exit 0) ==",
+    "{\"apiVersion\": \"agent-tools/1\", \"requestId\": \"rel-1\", \"command\": \"call environments.release --input /tmp/t05-multiturn-codex/release.json\", \"status\": \"completed\", \"data\": {\"operationRef\": \"environment-operation/b331c1f91bc7413391e9c9340cbab84b\", \"useIdentity\": \"environment-use/ec3feec366b046a5bc87c4cef20a37e3\", \"status\": \"completed\", \"resourcePreserved\": true, \"receipt\": {\"useIdentity\": \"environment-use/ec3feec366b046a5bc87c4cef20a37e3\", \"environmentIdentity\": \"environment/cc59769049294138b40ad3181ed5cba8\", \"generation\": 0, \"resourcePreserved\": true, \"providerFacts\": {\"useIdentity\": \"environment-use/ec3feec366b046a5bc87c4cef20a37e3\", \"isolation\": \"none\", \"root\": \"/tmp/t05-multiturn-codex/work\", \"rootPreserved\": true, \"resourcePreserved\": true, \"attempts\": [\"local-use/environment-use/ec3feec366b046a5bc87c4cef20a37e3/1\"]}}}, \"error\": null, \"operationRef\": \"environment-operation/b331c1f91bc",
+    "== residue: processes still running inside the workspace ==",
+    "[]",
+    "== secret scan ==",
+    "{\"filesScanned\": 381, \"secretNamesChecked\": [\"OPEN_CODE_GO_API_KEY\", \"DEEPSEEK_API_KEY\"], \"hits\": []}",
+    "== server exit code: -15"
+  ],
+  "budget": {
+    "limit": 2,
+    "counterFile": "/tmp/t05-budget.txt",
+    "usedAfter": 2
+  },
+  "modelCallsUsed": 2
+}

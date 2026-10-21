@@ -20,7 +20,7 @@ python3.12 -m venv .venv
 ```
 
 All four installs exited 0; `import pacthold, ordessa_server, ordessa_harness,
-server_plugin_api` → `imports ok`.
+ordessa_server_plugin_api` → `imports ok`.
 
 ## Baseline "before" (HEAD `96fef2db47f485091ccaadda96f5321400b249f2`)
 

@@ -1,8 +1,8 @@
 """Real entry-point discovery and default-engine behaviour (no new features)."""
 import pytest
 
-from decision_runtime import DecisionError, DecisionRunner, RulesOutcome
-from decision_runtime import rules as rules_module
+from ordessa_decision import DecisionError, DecisionRunner, RulesOutcome
+from ordessa_decision import rules as rules_module
 
 
 class Engine:

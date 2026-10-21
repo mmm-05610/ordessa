@@ -2,7 +2,7 @@
 from dataclasses import replace
 import tomllib
 import pytest
-from ordessa_execution_agents.harness.definitions.model_compilation import (
+from ordessa_agents.harness.definitions.model_compilation import (
     AdapterContext, BindSecret, ChoiceRequest, CompileIntent, MountContent, Refusal, RequestParams, TargetHandle)
 from ordessa_harness_codex.acp_model_configuration import CodexAdapter
 from ordessa_harness_codex.acp_model_facts import render_codex_provider_section

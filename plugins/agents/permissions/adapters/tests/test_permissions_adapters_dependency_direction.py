@@ -2,7 +2,7 @@
 
 `pacthold`/host boundary rules (AGENTS.md): the adapters may import the
 standard library, the consumed domain contract `ordessa_permissions_api`,
-the public plugin surface `server_plugin_api`, the Harness *public contract
+the public plugin surface `ordessa_server_plugin_api`, the Harness *public contract
 package* `ordessa_execution_api.harness` (the same dependency set the platform's own
 external-adapter exemplar declares) and themselves - nothing else. In
 particular no `ordessa_server`, no harness implementation internals
@@ -30,8 +30,8 @@ FORBIDDEN_TEXT = (
 )
 HARNESS_INTERNALS = re.compile(r"pacthold.harness_kit(?!_api)\b")
 STDLIB_OK = set(sys.stdlib_module_names)
-KERNEL_CONTRACT_EDGE = "ordessa_execution_agents.harness.definitions"
-ALLOWED = STDLIB_OK | {"__future__", "ordessa_permissions_api", "server_plugin_api",
+KERNEL_CONTRACT_EDGE = "ordessa_agents.harness.definitions"
+ALLOWED = STDLIB_OK | {"__future__", "ordessa_permissions_api", "ordessa_server_plugin_api",
                        KERNEL_CONTRACT_EDGE, "ordessa_permissions_adapters"}
 
 

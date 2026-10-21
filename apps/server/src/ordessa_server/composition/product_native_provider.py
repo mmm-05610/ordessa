@@ -13,7 +13,7 @@ import math
 from pathlib import Path
 import time
 
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     Profile,
     ProfileRevision,
     ProfileService,
@@ -26,7 +26,7 @@ from ordessa_environments import (
     EnvironmentSnapshot,
     SQLiteEnvironmentStore,
 )
-from ordessa_execution_agents.harness.providers.registry import HarnessDefinitionDeclaration
+from ordessa_agents.harness.providers.registry import HarnessDefinitionDeclaration
 from ordessa_units.definitions.fingerprints import ProtectedFingerprintPort
 from ordessa_interfaces.system_access.access_control import (
     InstanceAccessAuthority,

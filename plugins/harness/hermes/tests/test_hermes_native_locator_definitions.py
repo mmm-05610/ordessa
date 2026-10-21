@@ -1,5 +1,5 @@
 import pytest
-from ordessa_execution_agents.harness.definitions import NativeProfileRef, NativeContinuationRef, NativeCredentialRef
+from ordessa_agents.harness.definitions import NativeProfileRef, NativeContinuationRef, NativeCredentialRef
 from ordessa_harness_hermes.profile import ProfileRef
 from ordessa_harness_hermes.projection import HermesProjection
 

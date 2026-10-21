@@ -4,7 +4,7 @@ import json
 from threading import RLock
 from uuid import uuid4
 
-from ordessa_execution_agents.profiles import encode_revision_ref
+from ordessa_agents.profiles import encode_revision_ref
 from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from ordessa_units.definitions import UnitSpec
 from ordessa_units.management import UnitManager as OriginalManager
@@ -158,7 +158,7 @@ class UnitAssembly:
                 raise UnitApiRefused(str(error)) from error
             response = receipt.get('response') if isinstance(receipt, Mapping) else None
             if isinstance(response, Mapping) and isinstance(response.get('error'), Mapping):
-                from ordessa_execution_agents.harness.protocols.acp import AcpRemoteError
+                from ordessa_agents.harness.protocols.acp import AcpRemoteError
                 raise AcpRemoteError('session/prompt', response.get('id'), response['error'])
             if not isinstance(response, Mapping) or 'result' not in response:
                 raise UnitApiRefused('Original recorded prompt has no confirmed native result')

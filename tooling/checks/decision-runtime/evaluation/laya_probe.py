@@ -21,7 +21,7 @@ def write(path,value): path.write_text(json.dumps(value,ensure_ascii=False,inden
 
 def plans():
     from types import SimpleNamespace
-    from decision_runtime.definitions import TaskBrief,PolicyRef,digest
+    from ordessa_decision.definitions import TaskBrief,PolicyRef,digest
     from assignment_source.task_gate import load_task_gate_policy,compile_task_gate
     samples=json.loads(Path(__file__).with_name('jev-domain-samples.json').read_text())['samples']
     policy=load_task_gate_policy(); ref=PolicyRef(policy['policy_id'],policy['version'],digest('policy',policy))
@@ -46,7 +46,7 @@ def prepare(out):
     for sample,plan in plans():
         questions={q.question_id:{'type':'choice','instructions':q.question_text,'criteria':{k:v['description'] for k,v in q.options.items()}} for q in plan.questions}
         state=plan.questions[0].bounded_state if plan.questions else {'task':sample['task']}
-        from decision_runtime.definitions import plain
+        from ordessa_decision.definitions import plain
         cases.append({'id':'gate-'+sample['id'],'state':plain(state),'questions':questions,'expected':sample['label'],
                       'hard_result':plan.hard_result.status if plan.hard_result else None})
     extras=[('no-unit','只回答已提供资料中的问题，无需外部工作单元。',{'noDelegation':'不需要外部 Agent 工作单元','delegate':'需要外部 Agent 工作单元'},'noDelegation'),
@@ -96,7 +96,7 @@ def infer(out,checkpoint,device):
     write(out/'raw.json',value)
 
 def report(out):
-    from decision_runtime.definitions import DecisionAnswer
+    from ordessa_decision.definitions import DecisionAnswer
     from assignment_source.task_gate import reduce_task_gate
     data=json.loads((out/'inputs.json').read_text());raw=json.loads((out/'raw.json').read_text())
     assert len(raw['rows'])==len(data['cases']),'incomplete inference receipt'

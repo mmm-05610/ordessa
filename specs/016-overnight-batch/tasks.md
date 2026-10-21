@@ -9,7 +9,7 @@
       规则与审批存储，不新建平行存储。
 - [ ] PE1-2 查询面：经 plugins/permissions/api 暴露 authority 查询（按操作/
       会话/用户取生效授权），DTO 字段冻结并写进 report（供 core 对齐）。
-- [ ] PE1-3 接入贡献：authority 来源经现有插件贡献面注册（server_plugin_api
+- [ ] PE1-3 接入贡献：authority 来源经现有插件贡献面注册（ordessa_server_plugin_api
       Contribution 形态），不要求 core 改动即挂上（core 消费归 INT/AR）。
 - [ ] PE1-4 受控测试：授权在场/缺席/过期/被撤销四态 → 查询返回正确 DTO；
       无授权时返回诚实空/None，**不得造默认放行**。

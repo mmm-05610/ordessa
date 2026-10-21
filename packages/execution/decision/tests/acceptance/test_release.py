@@ -21,28 +21,28 @@ def _artifact_root():
 def test_T63_neutral_wheel_has_no_pacthold_dependency_and_runs_two_domains():
     artifacts = _artifact_root()
     dist = artifacts / 'dist'
-    wheel = dist / 'decision_runtime-0.1.0-py3-none-any.whl'
+    wheel = dist / 'ordessa_decision-0.1.0-py3-none-any.whl'
     executable = artifacts / 'runtime-env/bin/python'
     assert wheel.is_file(), f'real neutral runtime wheel is absent: {wheel}'
     assert executable.is_file(), f'clean neutral wheel Python is absent: {executable}'
     with zipfile.ZipFile(wheel) as archive:
         names = archive.namelist()
         assert not any(name.endswith(('.pyc', '.so')) for name in names)
-        assert 'decision_runtime/definitions/request.schema.json' in names
-        assert 'decision_runtime/definitions/result.schema.json' in names
-        assert 'decision_runtime/definitions/vectors.json' in names
-        assert not any(name.startswith('decision_runtime/providers/jev/') for name in names)
-        metadata = archive.read('decision_runtime-0.1.0.dist-info/METADATA').decode()
+        assert 'ordessa_decision/definitions/request.schema.json' in names
+        assert 'ordessa_decision/definitions/result.schema.json' in names
+        assert 'ordessa_decision/definitions/vectors.json' in names
+        assert not any(name.startswith('ordessa_decision/providers/jev/') for name in names)
+        metadata = archive.read('ordessa_decision-0.1.0.dist-info/METADATA').decode()
         assert 'Requires-Dist: pydantic-graph==2.54.0' in metadata
         assert 'Requires-Dist: pacthold' not in metadata
         assert 'Requires-Dist: typesafe-sdk' not in metadata
         assert 'Requires-Dist: httpx2' not in metadata
         assert 'extra == "jev"' not in metadata
     isolation_script = """import importlib.util
-import decision_runtime
-assert 'site-packages' in decision_runtime.__file__
+import ordessa_decision
+assert 'site-packages' in ordessa_decision.__file__
 assert importlib.util.find_spec('ordessa_decision_jev') is None
-assert importlib.util.find_spec('decision_runtime.providers') is None
+assert importlib.util.find_spec('ordessa_decision.providers') is None
 assert importlib.util.find_spec('typesafe_sdk') is None
 """
     isolated = subprocess.run([str(executable), '-I', '-c', isolation_script], cwd=ROOT,

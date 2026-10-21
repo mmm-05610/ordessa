@@ -1,7 +1,7 @@
 """Ordessa Prompts domain plugin — Server methods and the public service.
 
 Owns the `prompts.*` wire family and provides the `prompts.service` port,
-registered through the public `server_plugin_api` vocabulary only: this
+registered through the public `ordessa_server_plugin_api` vocabulary only: this
 module imports no host internals, no Profile implementation and no
 Harness implementation (G01/G08 boundary tests enforce that). When this
 plugin is not composed, the family is honestly absent.
@@ -30,7 +30,7 @@ import base64
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     Contribution,
     ContributionBatch,
     ServerMethodDescriptor,

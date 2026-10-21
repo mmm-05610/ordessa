@@ -52,7 +52,7 @@ def test_terminal_session_ports_are_retired():
 def test_protocols_have_no_foreign_owner_imports_or_new_transport_translation():
     source = inspect.getsource(runtime_ports)
     assert "ordessa_execution_api" not in source
-    assert "ordessa_execution_agents" not in source
+    assert "ordessa_agents" not in source
     assert "ordessa_units" not in source
     def constructed_protocols(text):
         return {node.func.id for node in ast.walk(ast.parse(text))

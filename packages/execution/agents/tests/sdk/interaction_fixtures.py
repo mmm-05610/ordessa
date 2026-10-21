@@ -1,17 +1,17 @@
 """Explicit preparation/authority fixture over ORIGINAL SDK Records, not a copied journal."""
 from types import SimpleNamespace
-from ordessa_execution_agents.sdk.interactions import (
+from ordessa_agents.sdk.interactions import (
     InteractionService,BindingProvenance,_digest_of,InteractionsRefused,
 )
-from ordessa_execution_agents.sdk.manager import Records
-from ordessa_execution_agents.sdk.instances import AgentInstanceRef,EndpointRef
-from ordessa_execution_agents.profiles import ProfileRevisionRef,encode_revision_ref
+from ordessa_agents.sdk.manager import Records
+from ordessa_agents.sdk.instances import AgentInstanceRef,EndpointRef
+from ordessa_agents.profiles import ProfileRevisionRef,encode_revision_ref
 
 DIGEST='sha256:'+'a'*64
 PROFILE=ProfileRevisionRef('env-1','profile-1',1,DIGEST)
 ENDPOINT=EndpointRef('issuer','endpoint','1',DIGEST)
-from ordessa_execution_agents.instances.contracts import InstanceBindingMaterial
-from ordessa_execution_agents.sdk.harness import HarnessDescriptor
+from ordessa_agents.instances.contracts import InstanceBindingMaterial
+from ordessa_agents.sdk.harness import HarnessDescriptor
 MATERIAL=InstanceBindingMaterial(PROFILE,HarnessDescriptor('fixture',
     {'environmentNamespace':'env-1','definitionId':'fixture','revision':'1'},DIGEST,'acp',(),()),
     ENDPOINT,DIGEST,DIGEST,'acp','session-1','original-source')

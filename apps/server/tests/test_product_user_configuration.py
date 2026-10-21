@@ -9,7 +9,7 @@ from ordessa_interfaces.system_access.access_control.authentication import (
     AccessGrant, InstanceAccessAuthority,
 )
 from ordessa_interfaces.system_access.contracts.refs import Scope as WireScope
-from ordessa_execution_agents.profiles import ProfileNotFound
+from ordessa_agents.profiles import ProfileNotFound
 from ordessa_system_access_bindings.engineering import EngineeringCommandAccess
 from ordessa_server.composition.product_user_configuration import (
     ProductUserConfigurationError,

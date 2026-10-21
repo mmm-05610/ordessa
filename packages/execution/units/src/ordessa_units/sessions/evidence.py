@@ -163,7 +163,7 @@ class AcpUnitEvidence:
         result = connection.command(method, sessionId=record.entry.session_id, timeout=self._factory_for_unit(unit).timeout)
         if not isinstance(result, dict) or result.get('sessionId') != record.entry.session_id:
             raise UnitLifecycleRefused('Observed configuration belongs to another session')
-        from ordessa_execution_agents.harness.configuration.compilation.native_digest import configuration_digest
+        from ordessa_agents.harness.configuration.compilation.native_digest import configuration_digest
         options = result.get('configOptions')
         digest = 'sha256:'+configuration_digest(options)
         return {'sessionId':result['sessionId'], 'configOptions':options, 'sourceRevision':digest}

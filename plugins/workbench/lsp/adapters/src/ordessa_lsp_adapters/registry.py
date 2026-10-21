@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ServerPluginContext,
     ServerPluginDescriptor,
     ServerPluginRegistration,

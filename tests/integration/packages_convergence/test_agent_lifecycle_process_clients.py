@@ -11,7 +11,7 @@ import uvicorn
 from ordessa_interfaces.system_access import RequestContext
 from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority,AccessGrant
-from ordessa_execution_agents.capability.instances import build_agent_capability
+from ordessa_agents.capability.instances import build_agent_capability
 from ordessa_server.composition.packages_convergence import build_product_registry_runtime
 from ordessa_interfaces.http.registry import create_registry_app
 from ordessa_server_product.composition import ServerProductComposition

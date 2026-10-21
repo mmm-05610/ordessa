@@ -7,9 +7,9 @@ import time
 
 import httpx2
 import pytest
-from decision_runtime.definitions.models import DecisionQuestion, PolicyRef
-from decision_runtime.definitions.values import DecisionError
-from decision_runtime.ports import CallPermit, ModelCallContext
+from ordessa_decision.definitions.models import DecisionQuestion, PolicyRef
+from ordessa_decision.definitions.values import DecisionError
+from ordessa_decision.ports import CallPermit, ModelCallContext
 from ordessa_decision_jev import JevDecisionProvider, JevProviderSettings, JevProviderError
 
 pytestmark = pytest.mark.asyncio
@@ -349,7 +349,7 @@ async def test_T40_untrusted_diagnostic_text_is_not_retained():
 
 
 async def test_runner_binds_full_provider_settings_before_mock_transport():
-    from decision_runtime import DecisionRunner
+    from ordessa_decision import DecisionRunner
     calls = []
     def handler(request):
         calls.append(json.loads(request.content))

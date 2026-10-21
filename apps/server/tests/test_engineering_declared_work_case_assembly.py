@@ -12,9 +12,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ordessa_execution_agents.profiles import ProfileRevisionRef
-from decision_runtime.definitions.models import PolicyRef
-from decision_runtime.definitions.ports import DecisionServices, ReadContext
+from ordessa_agents.profiles import ProfileRevisionRef
+from ordessa_decision.definitions.models import PolicyRef
+from ordessa_decision.definitions.ports import DecisionServices, ReadContext
 from ordessa_engineering.adapters.decision.source_reviewer import DecisionReviewerSource
 from ordessa_engineering.domain.common.models.identity import ActorRef, Scope as DomainScope
 from ordessa_engineering.adapters.declared_implementation_review import (

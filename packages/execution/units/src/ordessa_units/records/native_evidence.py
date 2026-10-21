@@ -5,8 +5,8 @@ observed facts. This projection creates no ledger, receipts, authority or effect
 """
 from __future__ import annotations
 import json
-from ordessa_execution_agents.harness.definitions import ApplicationTarget
-from ordessa_execution_agents.harness.definitions.native_evidence import (
+from ordessa_agents.harness.definitions import ApplicationTarget
+from ordessa_agents.harness.definitions.native_evidence import (
     LaunchProvenanceFacts, NativeEvidence, NativeOwnerReceiptFacts,
     NativeReadbackVerificationFacts, NativeSessionIdentityFacts,
 )

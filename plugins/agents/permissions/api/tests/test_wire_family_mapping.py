@@ -2,7 +2,7 @@
 
 contracts §C4: "错误须映射至既有 wire family, 不修改核心错误分支" - the mapping
 projects onto the closed family vocabulary the platform published
-(`server_plugin_api.wire_errors`: `FAMILIES`, `STATIC_ERROR_FAMILIES`,
+(`ordessa_server_plugin_api.wire_errors`: `FAMILIES`, `STATIC_ERROR_FAMILIES`,
 `family_for`, `converge_family`, `WireError`); it never invents a family name
 and never touches the core's error branches. Every derivation in
 `wire_family.py` is checked here against the platform's own symbols:
@@ -20,8 +20,8 @@ and never touches the core's error branches. Every derivation in
 from __future__ import annotations
 
 import pytest
-import server_plugin_api
-from server_plugin_api import FAMILIES, STATIC_ERROR_FAMILIES, WireError, family_for
+import ordessa_server_plugin_api
+from ordessa_server_plugin_api import FAMILIES, STATIC_ERROR_FAMILIES, WireError, family_for
 
 from ordessa_permissions_api import (
     PERMISSION_ERROR_FAMILIES,
@@ -63,7 +63,7 @@ def test_the_mapping_covers_exactly_every_emittable_code_once() -> None:
 def test_no_mapped_family_is_an_invented_name(code: str) -> None:
     family = PERMISSION_ERROR_FAMILIES[code]
     assert family in FAMILIES, f"{code} -> {family} is not a wire/1 family"
-    assert family in set(server_plugin_api.FAMILIES)
+    assert family in set(ordessa_server_plugin_api.FAMILIES)
 
 
 def test_no_code_maps_to_two_families_and_the_core_table_is_not_rewritten() -> None:

@@ -42,7 +42,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Mapping
 
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ACP_ADMISSION_PORT,
     ACP_ADMISSION_PORT_VERSION,
     AcpAdmissionResult,
@@ -61,9 +61,9 @@ from server_plugin_api import (
     StreamRouteDescriptor,
 )
 
-from server_plugin_api import ServerError
-from server_plugin_api import WireError
-from server_plugin_api import bounded as _bounded, require as _require
+from ordessa_server_plugin_api import ServerError
+from ordessa_server_plugin_api import WireError
+from ordessa_server_plugin_api import bounded as _bounded, require as _require
 
 PLUGIN_ID = "ordessa.harness.acp"
 

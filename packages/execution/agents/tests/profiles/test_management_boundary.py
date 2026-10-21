@@ -5,17 +5,17 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     ProfileService, Profile, ProfileRevision, ProfileRevisionRef,
     canonical_content, content_digest, decode_content, encode_revision,
 )
-from ordessa_execution_agents.profiles.definitions.codec import (
+from ordessa_agents.profiles.definitions.codec import (
     encode_content, encode_profile, encode_revision_ref,
 )
-from ordessa_execution_agents.profiles.management.sqlite_store import SqliteProfileStore
+from ordessa_agents.profiles.management.sqlite_store import SqliteProfileStore
 from ordessa_infrastructure.database.records import DomainWrite
 from profile_owner_fixtures import Admission, Validator
-from ordessa_execution_agents.profiles.definitions.validation import canonical
+from ordessa_agents.profiles.definitions.validation import canonical
 
 class Policy:
     def __init__(self):
@@ -123,11 +123,11 @@ def boundary_violations(source):
     for node in ast.walk(ast.parse(source)):
         if isinstance(node, ast.ImportFrom):
             module = node.module or ''
-            if module.startswith('ordessa_execution_agents.profiles.'):
+            if module.startswith('ordessa_agents.profiles.'):
                 violations.append(module)
         elif isinstance(node, ast.Import):
             violations.extend(alias.name for alias in node.names
-                if alias.name.startswith('ordessa_execution_agents.profiles.'))
+                if alias.name.startswith('ordessa_agents.profiles.'))
     return violations
 
 
@@ -138,17 +138,17 @@ def test_cross_distribution_consumers_use_explicit_public_entry():
             if any(part in {'build', 'node_modules', '.venv', '__pycache__'} for part in path.parts):
                 continue
             source = path.read_text()
-            if 'ordessa_execution_agents.profiles' not in source:
+            if 'ordessa_agents.profiles' not in source:
                 continue
             assert not boundary_violations(source), str(path)
-    for planted in ['from ordessa_execution_agents.profiles.definitions.models import Profile',
-                    'from ordessa_execution_agents.profiles.management.service import ProfileService',
-                    'import ordessa_execution_agents.profiles.management.environment_store']:
+    for planted in ['from ordessa_agents.profiles.definitions.models import Profile',
+                    'from ordessa_agents.profiles.management.service import ProfileService',
+                    'import ordessa_agents.profiles.management.environment_store']:
         assert boundary_violations(planted)
 
 
 def test_public_entry_has_same_owner_and_no_retired_management_api(owner):
-    import ordessa_execution_agents.profiles as public
+    import ordessa_agents.profiles as public
     env, _, _, service = owner
     assert public.ProfileService is type(service)
     assert service._admission is env
@@ -162,19 +162,19 @@ def test_public_entry_has_same_owner_and_no_retired_management_api(owner):
     # A source-free cache directory may be a namespace parent. Otherwise the
     # exact missing parent raises; neither case supplies the retired service.
     try:
-        retired_service = importlib.util.find_spec('ordessa_execution_agents.profiles.catalog.service')
+        retired_service = importlib.util.find_spec('ordessa_agents.profiles.catalog.service')
     except ModuleNotFoundError as missing:
-        assert missing.name == 'ordessa_execution_agents.profiles.catalog'
+        assert missing.name == 'ordessa_agents.profiles.catalog'
         retired_service = None
     assert retired_service is None
     assert not (directory / 'catalog.py').exists()
     assert not (directory / 'wire_schema.py').exists()
     assert not (directory / 'management' / 'wire_schema.py').exists()
-    assert not importlib.util.find_spec('ordessa_execution_agents.harness.contracts.schemas.wire_schema')
+    assert not importlib.util.find_spec('ordessa_agents.harness.contracts.schemas.wire_schema')
     for path in directory.rglob('*.py'):
         tree = ast.parse(path.read_text())
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 assert not (node.module or '').startswith(('sqlite3', 'ordessa_persistence_sqlite',
                     'ordessa_server', 'ordessa_harness', 'ordessa_units',
-                    'ordessa_execution_agents.harness'))
+                    'ordessa_agents.harness'))

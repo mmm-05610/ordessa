@@ -1,14 +1,14 @@
 """Controlled third-party fixture: only public contract imports, no Harness internals."""
 from __future__ import annotations
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     Assessment, ConfigurationAdapterDescriptor, FieldClaim, FieldPath,
     Installation, IntentSet, IntentSource, LaunchPlan, Match, Mismatch,
     ReconfigurationDecision, ResumeRequest, RuntimeAdapterDescriptor,
     RuntimeConfirmed, RuntimeRefused, RuntimeUnknown, SetField, TargetDescriptor,
     TargetHandle, ValueSchema, VerificationUnknown, VersionRange, ErrorCode,
 )
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     Contribution, ContributionBatch, ServerPluginDescriptor,
     ServerPluginRegistration,
 )

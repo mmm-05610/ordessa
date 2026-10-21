@@ -7,7 +7,7 @@ import {
 } from "../../support/launch_policy.mjs"
 
 import { capturedLaunchText } from "../../support/captured_launch.mjs"
-import { parseLaunchDescriptors } from "../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/transport/launch_descriptor.mjs"
+import { parseLaunchDescriptors } from "../../../../../packages/execution/agents/src/ordessa_agents/harness/transport/launch_descriptor.mjs"
 const source = JSON.parse(capturedLaunchText())
 
 test("canonical source has eight brands; aliases remain launchable, not brands", () => {

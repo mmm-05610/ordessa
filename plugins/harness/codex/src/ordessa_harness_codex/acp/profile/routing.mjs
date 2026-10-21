@@ -1,4 +1,4 @@
-import { safeEndpoint } from "../../../../../../../packages/execution/agents/src/ordessa_execution_agents/harness/configuration/acp/endpoint.mjs"
+import { safeEndpoint } from "../../../../../../../packages/execution/agents/src/ordessa_agents/harness/configuration/acp/endpoint.mjs"
 export function safeNativeRoute(input) {
   if (input?.provider === 'openai' && input.api === 'responses' && input.baseUrl === null && input.authentication === 'managed-account')
     return { provider: 'openai', api: 'responses', baseUrl: null, authentication: 'managed-account' }

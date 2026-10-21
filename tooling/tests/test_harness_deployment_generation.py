@@ -20,7 +20,7 @@ def test_actual_selected_template_generates_original_document(brand, tmp_path):
     from functools import partial
     from importlib import import_module
     from ordessa_server.composition.selected_harness_catalog import capture_selected_harness_catalog
-    from ordessa_execution_agents.harness.providers.declarations.capability_claims import capability_claims
+    from ordessa_agents.harness.providers.declarations.capability_claims import capability_claims
 
     output = tmp_path / "deployment.json"
     digest = "sha256:" + "a" * 64

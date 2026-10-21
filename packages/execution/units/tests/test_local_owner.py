@@ -11,14 +11,14 @@ import pytest
 
 from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore
 from ordessa_environments_local import LocalEnvironmentResourceProvider
-from ordessa_execution_agents.harness.definitions.runtime_providers import RUNTIME_PROVIDER_VERSION
-from ordessa_execution_agents.harness.transport import LaunchSpec
-from ordessa_execution_agents.preparation import (
+from ordessa_agents.harness.definitions.runtime_providers import RUNTIME_PROVIDER_VERSION
+from ordessa_agents.harness.transport import LaunchSpec
+from ordessa_agents.preparation import (
     ConfigurationResources,
     PreparedHarness,
     SessionBootstrap,
 )
-from ordessa_execution_agents.profiles import ProfileRevisionRef, ProfileService
+from ordessa_agents.profiles import ProfileRevisionRef, ProfileService
 from ordessa_units.errors import UnitGuaranteeUnavailable
 from ordessa_units.definitions.admission_identity import AdmissionNamespace
 from ordessa_infrastructure.encoding.immutable_json import safe_json
@@ -41,7 +41,7 @@ from ordessa_units.definitions import UnitSpec
 from ordessa_units.management import UnitManager as OriginalUnitManager
 from ordessa_units.persistence.sqlite.store import SqliteUnitStore
 from ordessa_units.records import OperationJournal, UnitRecords
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.providers.registry import (
     HarnessCatalog,
     HarnessDefinitionDeclaration,
     HarnessDefinitionDescriptor,

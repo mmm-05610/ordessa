@@ -33,8 +33,8 @@ from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import InvocationAuthorityRefused, InvocationIssuer
 from ordessa_units.bindings.publication import NodePublication, NodePublicationEvidence
 from ordessa_units.bindings.preparation_effects import EffectStep, PreparationEffectPlan
-from ordessa_execution_agents.profiles import ProfileService
-from ordessa_execution_agents.harness.providers.registry.contributions import (
+from ordessa_agents.profiles import ProfileService
+from ordessa_agents.harness.providers.registry.contributions import (
     AgentContributionSet, RUNTIME_METHODS, RUNTIME_PROVIDER_VERSION, RuntimeProviderDescriptor,
 )
 from pacthold.public import Environment, InstallationRecord

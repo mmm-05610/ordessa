@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Unit composition, lifecycle and records on the original owners"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["ordessa-execution-agents==0.1.0", "ordessa-environments==0.1.0", "ordessa-infrastructure==0.1.0", "agent-client-protocol==0.12.1"]
+dependencies = ["ordessa-agents==0.1.0", "ordessa-environments==0.1.0", "ordessa-infrastructure==0.1.0", "agent-client-protocol==0.12.1"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

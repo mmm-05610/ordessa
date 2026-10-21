@@ -1,0 +1,4 @@
+ordessa-server: data root /tmp/w1-e2e/root
+ordessa-server: instance token /tmp/w1-e2e/root/secrets/http-token (reused, 0600)
+ordessa-server: capabilities profiles
+ordessa-server: harness admitted kilo, pi, claude, codex, hermes, dsh

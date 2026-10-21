@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 from service_helpers import AllowProbeAuthority, FakeSubmissionGate, Stack
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     InvalidDeclarationError,
     ServerMethodDescriptor,
     ServerPluginRegistration,

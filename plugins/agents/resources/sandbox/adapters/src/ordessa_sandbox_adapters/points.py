@@ -13,11 +13,11 @@ see README).
 
 Third-party shape follows the platform's own controlled contributor
 (`plugins/harness/tests/fixtures/external_adapter`): the C2 vocabulary is
-imported from the public contract dist ``ordessa_execution_agents.harness.definitions`` (the very
+imported from the public contract dist ``ordessa_agents.harness.definitions`` (the very
 classes the point's handler isinstance-checks, module identity asserted in
 tests), and the point id / api version are spelled as the constants below —
 ``tests/test_real_point_binding.py`` pins them equal to the public
-``ordessa_execution_agents.harness.definitions.contribution_points`` identifiers.
+``ordessa_agents.harness.definitions.contribution_points`` identifiers.
 Native versions are supplied explicitly as captured pins or the captured
 Harness registry. This module performs no hidden package discovery, default
 resource reads or independent registry construction.
@@ -31,15 +31,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, Mapping
 
-from ordessa_execution_agents.harness.definitions.contracts import (
+from ordessa_agents.harness.definitions.contracts import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapterDescriptor,
     FieldClaim,
     VersionRange,
     VerificationUnknown,
 )
-from ordessa_execution_agents.harness.definitions.errors import ContractError, ErrorCode
-from ordessa_execution_agents.harness.definitions.schema import ValueSchema
-from server_plugin_api import Contribution, ContributionBatch
+from ordessa_agents.harness.definitions.errors import ContractError, ErrorCode
+from ordessa_agents.harness.definitions.schema import ValueSchema
+from ordessa_server_plugin_api import Contribution, ContributionBatch
 
 __all__ = [
     "SANDBOX_CONFIGURATION_POINT_ID",

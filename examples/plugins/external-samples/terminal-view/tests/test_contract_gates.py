@@ -115,12 +115,12 @@ def test_sample_declares_no_agent_chat_or_profile_dependency():
 # -- AST gates: private imports, prompt word list, Electron/React -------------
 
 def test_ast_gate_every_import_is_stdlib_or_the_public_plugin_api():
-    plugin_api = {"server_plugin_api"}
+    plugin_api = {"ordessa_server_plugin_api"}
     for name, path in _imports_under(PLUGIN_PACKAGE_DIR):
         top = name.split(".")[0]
         assert top in sys.stdlib_module_names or top in plugin_api, (
             f"{path} imports {name!r}: the sample may only use the stdlib and "
-            "the public server_plugin_api contract")
+            "the public ordessa_server_plugin_api contract")
 
 
 def test_ast_gate_private_domain_and_prompt_word_list_is_blocked():

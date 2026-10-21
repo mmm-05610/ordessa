@@ -14,7 +14,7 @@ from pathlib import Path
 from threading import RLock
 import time
 
-from ordessa_execution_agents.profiles import ProfileRevisionRef, encode_revision_ref
+from ordessa_agents.profiles import ProfileRevisionRef, encode_revision_ref
 from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
 from .invocation import InvocationAuthorityRefused, InvocationGrant
 

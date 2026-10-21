@@ -32,7 +32,7 @@
 
 | 目标接缝 | 实际符号与位置 | 状态 |
 | --- | --- | --- |
-| Server typed method 注册 | `server_plugin_api.ServerMethodDescriptor/ServerPluginRegistration/ServerPluginContext/ServerPlugin`（packages/server-plugin-api/src/server_plugin_api/contract.py:57/:187/:163/:216）；host `MethodRegistry`（apps/server .../plugin_host/host.py:95）；`mcp.*` 方法 id 合法（contract.py:15）；不触碰 `wire/handlers.py` | ✅ |
+| Server typed method 注册 | `ordessa_server_plugin_api.ServerMethodDescriptor/ServerPluginRegistration/ServerPluginContext/ServerPlugin`（packages/server-plugin-api/src/ordessa_server_plugin_api/contract.py:57/:187/:163/:216）；host `MethodRegistry`（apps/server .../plugin_host/host.py:95）；`mcp.*` 方法 id 合法（contract.py:15）；不触碰 `wire/handlers.py` | ✅ |
 | 宿主端口 | `bootstrap/runtime.py:491-502`：`database/objects/notifier/idempotency/credentials/secret_store/…`；`asset.mcp` 端口现由 compat 提供（SC/plugin.py:281） | ✅ |
 | 内容寻址存储 | `SC/assets/mcp.py` 模式 + pacthold `<root>/objects/sha256/…`；**无插件自带 DB migration 贡献槽**（`PluginRegistration` 无 tables 项）→ 分配记录走插件数据根文件/插件私有 SQLite，不请求改 pacthold 中心 schema | 🟡 决策：域内自持存储 |
 | 产品装配 | `products/server/src/ordessa_server_product/composition.py:40-55 default_plugins()` —— **C0 所有**，Q4 只提交 integration-request | ❌ G1 |

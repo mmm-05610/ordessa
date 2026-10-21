@@ -9,7 +9,7 @@ description = "Ordessa Workspace domain plugin: workspace records, environment a
 requires-python = ">=3.9"
 license = {text = "MIT"}
 dependencies = [
-    "ordessa-execution-agents==0.1.0",
+    "ordessa-agents==0.1.0",
     "ordessa-interfaces==0.1.0",
     "ordessa-infrastructure==0.1.0",
     "ordessa-server-plugin-api>=0.1.0,<1",

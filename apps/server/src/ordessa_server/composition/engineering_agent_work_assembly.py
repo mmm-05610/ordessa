@@ -7,7 +7,7 @@ Engineering business/permission inputs, without acquiring or launching agents.
 from __future__ import annotations
 from dataclasses import replace
 from ordessa_engineering.application.api import ApplicationError
-from ordessa_execution_agents.profiles import ProfileRevisionRef, decode_revision_ref
+from ordessa_agents.profiles import ProfileRevisionRef, decode_revision_ref
 from ordessa_interfaces.system_access.contracts.refs import Scope as WireScope
 from ordessa_system_access_bindings.engineering import EngineeringCommandAccess
 from ordessa_system_access_bindings.engineering_wire import EngineeringApplicationPorts
@@ -32,7 +32,7 @@ class RootAgentWorkDispatchInputs:
 def _validate_root_agent_work_inputs(owner, inputs):
     from .agent_owner import AssembledAgentOwner
     from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority
-    from ordessa_execution_agents.public import InteractionService
+    from ordessa_agents.public import InteractionService
     if (type(owner) is not AssembledAgentOwner or owner._revoked
             or type(owner.interactions) is not InteractionService
             or owner.manager.records is not owner.records or owner.interactions.records is not owner.records
@@ -69,7 +69,7 @@ def root_agent_work_execution_ports(owner, inputs, *, access, blobs):
     from ordessa_system_access_bindings.engineering import EngineeringCommandAccess
     from ordessa_engineering.adapters.native_records.agent_recorded_dispatch import RecordedDispatchExecution
     from ordessa_engineering.adapters.native_records.agent_selection import OriginalAgentDispatchSelection
-    from ordessa_execution_agents.public import AgentInstanceRef
+    from ordessa_agents.public import AgentInstanceRef
     from ordessa_infrastructure.encoding import canonical_bytes
     from .engineering_dispatch import OriginalAgentDispatchQueries
     _validate_root_agent_work_inputs(owner, inputs)

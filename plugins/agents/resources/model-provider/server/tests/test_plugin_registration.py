@@ -10,7 +10,7 @@ order. G3's counterexample is the unloaded plugin still answering: after
 from __future__ import annotations
 
 import pytest
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ServerMethodDescriptor, ServerPluginDescriptor, ServerPluginRegistration,
 )
 
@@ -194,7 +194,7 @@ def test_handlers_keep_provenance_and_projection_semantics(host, harnesses):
 
 
 def test_update_version_conflict_maps_to_wire_error_with_current(host, harnesses):
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
 
     _activated_host(host, harnesses)
     create = host.methods.lookup("providerModels.create").handler
@@ -216,7 +216,7 @@ def test_update_version_conflict_maps_to_wire_error_with_current(host, harnesses
 
 
 def test_archive_reference_conflict_rides_the_wire_error_details(host, harnesses):
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
 
     class ReferencingPort:
         def references_of(self, provider_config_id):

@@ -5,7 +5,7 @@
 #   errors.py   — PermissionsBackendBusyError, ApprovalRouteClosedError, DualAuthorityError
 #   admission.py — closed-lifecycle gate: ready flips False, authorize_* answer a typed refusal after an accepted stop
 #   facts.py    — busy() docstring records the binding
-# platform surface bound to: ServerPluginRegistration.stop_hooks + disposal (server_plugin_api/contract.py); refusal observed as typed raises AND through the real ordessa_server.plugin_host.ServerPluginHost run_stop_hooks→shutdown sequence; an in-flight decision refuses with the platform's own ContributionOwnerBusyError.
+# platform surface bound to: ServerPluginRegistration.stop_hooks + disposal (ordessa_server_plugin_api/contract.py); refusal observed as typed raises AND through the real ordessa_server.plugin_host.ServerPluginHost run_stop_hooks→shutdown sequence; an in-flight decision refuses with the platform's own ContributionOwnerBusyError.
 
 # per-ID results (9/9):
 plugins/permissions/backend/tests/test_deactivation_binding.py::test_registration_declares_a_stop_hook_and_disposal PASSED [ 11%]

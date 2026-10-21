@@ -3,7 +3,7 @@ the real C2 point (``harness.configuration-adapters``) as typed
 ``ConfigurationAdapter``s (MB-1).
 
 Direction discipline (model-provider form, not its imports): this module may
-import the public ``ordessa_execution_agents.harness.definitions`` contract; the reverse import never
+import the public ``ordessa_agents.harness.definitions`` contract; the reverse import never
 exists.
 
 The honest C2 semantics of this facet, pinned here and in the conformance
@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     AdapterRefusal, Assessment, ConfigurationAdapterDescriptor, ErrorCode,
     IntentSet as HarnessIntentSet, Match, Mismatch, ValueSchema,
     VerificationUnknown, VersionRange,

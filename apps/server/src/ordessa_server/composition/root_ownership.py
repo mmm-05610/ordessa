@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Callable
-from server_plugin_api.root_ownership import OwnedRootBinding, RootOwnershipError
+from ordessa_server_plugin_api.root_ownership import OwnedRootBinding, RootOwnershipError
 
 def _lexical(path: Path | str) -> Path:
     value = Path(path)

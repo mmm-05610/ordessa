@@ -18,7 +18,7 @@ import json
 from ordessa_units.errors import UnitAdmissionRefused, UnitGuaranteeUnavailable, UnitIdentityMismatch
 from ordessa_units.bindings.profile_admission import UnitProfileAdmission
 from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
-from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessAdmission
+from ordessa_agents.harness.providers.registry.definition_admission import HarnessAdmission
 
 from .contracts import (
     ConfigurationDescription, ConfigurationContractError, ConfigurationRevisionConflict,
@@ -180,9 +180,9 @@ class AgentConfigurationOffers:
     def _proposal_source_snapshot(self, source):
         """Recheck the existing public read authority; no secondary registry."""
         if set(source) == {'environmentNamespace','profileId','manifestRevision','contentDigest'}:
-            from ordessa_execution_agents.profiles.definitions.codec import decode_revision_ref, encode_content, encode_revision_ref
-            from ordessa_execution_agents.profiles.definitions.models import ProfileRevisionRef
-            from ordessa_execution_agents.profiles.management.service import ProfileService
+            from ordessa_agents.profiles.definitions.codec import decode_revision_ref, encode_content, encode_revision_ref
+            from ordessa_agents.profiles.definitions.models import ProfileRevisionRef
+            from ordessa_agents.profiles.management.service import ProfileService
             value = ProfileService(UnitProfileAdmission(self._environment)).get_revision(
                 decode_revision_ref(json.loads(safe_json(source))))
             return safe_json({'ref': encode_revision_ref(value.ref), 'content': encode_content(value.content)})

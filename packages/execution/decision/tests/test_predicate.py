@@ -1,7 +1,7 @@
 """Neutral `when` predication; missing facts are refused, never skipped."""
 import pytest
 
-from decision_runtime import DecisionError, evaluate_when
+from ordessa_decision import DecisionError, evaluate_when
 
 FACTS = {"input": {"score": 7, "tags": ["a", "b"], "name": "demo"},
          "prepare": {"values": {"ok": True}}}

@@ -38,11 +38,11 @@ from fastapi.testclient import TestClient
 
 from ordessa_server.composition.runtime import build_runtime
 from ordessa_interfaces.http import create_app
-from server_plugin_api.wire_errors import WireError
+from ordessa_server_plugin_api.wire_errors import WireError
 from ordessa_workspace.local_environment import LocalEnvironmentProvider
 from ordessa_workspace.plugin import WorkspaceServerPlugin
 
-from server_plugin_api.wire_errors import FAMILIES
+from ordessa_server_plugin_api.wire_errors import FAMILIES
 
 HELLO = {"clientVersions": ["wire/1"], "clientPresentationSupports": []}
 LIST_PARAMS = {"includeArchived": False}

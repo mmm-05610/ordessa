@@ -51,5 +51,5 @@ Anti-vacuity mutation probes (control = the green run above, all reverted):
 
 Stdlib-only proof: a subprocess probe imports ordessa_permissions_api +
 ports with a meta_path blocker installed against ordessa_permissions_backend,
-server_plugin_api, pacthold, ordessa_server, ordessa_harness, and first
+ordessa_server_plugin_api, pacthold, ordessa_server, ordessa_harness, and first
 asserts the blocker actually blocks the backend; exit 0 + stdout marker.

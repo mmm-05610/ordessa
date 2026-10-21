@@ -43,7 +43,7 @@ def run(argv=None):
     (inputs / 'roots.json').write_text(json.dumps(
         {'work': '.', 'home': 'home', 'config': 'config', 'data': 'data',
          'state': 'state', 'cache': 'cache', 'tmp': 'tmp'}))
-    prefix = ([sys.executable, '-m', 'ordessa_agent_tools'] if args.module
+    prefix = ([sys.executable, '-m', 'ordessa_cli'] if args.module
               else [str(Path(sys.executable).parent / 'ordessa')])
     command = prefix + ['--state', str(state), 'session']
     isolated = False

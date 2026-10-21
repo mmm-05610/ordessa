@@ -4,12 +4,12 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ActionDescriptor, BindSecret, ContentRef, FieldPath, IntentSet,
     IntentSource, InvokeAction, MountContent, RemoveOwnedContent, ResetField,
     SetField, TargetDescriptor, TargetHandle, ValueSchema,
 )
-from ordessa_execution_agents.harness.configuration.materialization import (
+from ordessa_agents.harness.configuration.materialization import (
     AuthorizedIntents, IntentMergeError, MergeAuthority, OwnedContent, TargetAuthority,
     merge_intents,
 )

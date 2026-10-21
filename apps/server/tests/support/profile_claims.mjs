@@ -1,6 +1,6 @@
 import { capturedCapabilityText } from "./captured_launch.mjs"
 import { selectedLaunchPorts } from "../../src/ordessa_server/composition/native_channels/selected_launch_ports.mjs"
-import { captureProfileClaims, NATIVE_CAPABILITY_TO_CANONICAL, UNMAPPED_NATIVE_CAPABILITIES } from "../../../../packages/execution/agents/src/ordessa_execution_agents/harness/transport/profile_claims.mjs"
+import { captureProfileClaims, NATIVE_CAPABILITY_TO_CANONICAL, UNMAPPED_NATIVE_CAPABILITIES } from "../../../../packages/execution/agents/src/ordessa_agents/harness/transport/profile_claims.mjs"
 import { modelAliases as opencodeModelAliases } from "../../../../plugins/harness/opencode/src/ordessa_harness_opencode/acp/profile_declarations.mjs"
 export { NATIVE_CAPABILITY_TO_CANONICAL, UNMAPPED_NATIVE_CAPABILITIES }
 const declarations=selectedLaunchPorts.map(port=>port())

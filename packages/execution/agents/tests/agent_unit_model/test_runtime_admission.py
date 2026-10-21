@@ -6,12 +6,12 @@ from dataclasses import dataclass
 
 import pytest
 
-from ordessa_execution_agents.harness.providers.registry.errors import CatalogAdmissionRefused, CatalogIdentityConflict, CatalogUnavailable
+from ordessa_agents.harness.providers.registry.errors import CatalogAdmissionRefused, CatalogIdentityConflict, CatalogUnavailable
 from pacthold.public import Environment, InstallationRecord
 from pacthold.core.registration import CoreRegistry
 from pacthold.core.registration import RegistrationConflictError
-from ordessa_execution_agents.harness.definitions.errors import CoreDTOError
-from ordessa_execution_agents.harness.providers.registry.contributions import AgentContributionSet, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS
+from ordessa_agents.harness.definitions.errors import CoreDTOError
+from ordessa_agents.harness.providers.registry.contributions import AgentContributionSet, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS
 
 
 

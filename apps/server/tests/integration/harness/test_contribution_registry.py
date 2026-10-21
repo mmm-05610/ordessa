@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ConfigurationAdapterDescriptor, FieldClaim, RuntimeAdapterDescriptor,
     ValueSchema, VersionRange,
 )
-from server_plugin_api import Contribution, ContributionBatch, stage_contributions
+from ordessa_server_plugin_api import Contribution, ContributionBatch, stage_contributions
 from ordessa_server.composition.configuration.contributions import CONFIGURATION_POINT
 from ordessa_server.composition.configuration.contributions import RUNTIME_POINT
 from ordessa_server.composition.configuration.contributions import HarnessContributionRegistry
@@ -111,9 +111,9 @@ def test_conflicting_second_entry_undoes_first_staged_entry():
 
 def test_actual_host_injects_owner_and_guards_busy_unload():
     # Test-only import of the actual host. Production registry imports only
-    # server_plugin_api and pacthold.harness_contracts.
+    # ordessa_server_plugin_api and pacthold.harness_contracts.
     from ordessa_server.composition.plugin_host import MethodRegistry, ServerPluginHost, StreamRouteRegistry
-    from server_plugin_api import (
+    from ordessa_server_plugin_api import (
         ContributionOwnerBusyError, ServerPluginDescriptor,
         ServerPluginRegistration,
     )
@@ -179,7 +179,7 @@ def test_admission_snapshots_author_descriptor_before_in_place_mutation():
 ))
 def test_default_product_refuses_descriptor_only_payload_before_publication(tmp_path, point, payload):
     from ordessa_server.composition.runtime import build_runtime
-    from server_plugin_api import ServerPluginDescriptor, ServerPluginRegistration
+    from ordessa_server_plugin_api import ServerPluginDescriptor, ServerPluginRegistration
 
     class DescriptorOnly:
         def descriptor(self):
@@ -202,7 +202,7 @@ def test_default_product_refuses_descriptor_only_payload_before_publication(tmp_
 
 def test_default_product_rolls_back_valid_runtime_if_configuration_shape_fails(tmp_path):
     from ordessa_server.composition.runtime import build_runtime
-    from server_plugin_api import ServerPluginDescriptor, ServerPluginRegistration
+    from ordessa_server_plugin_api import ServerPluginDescriptor, ServerPluginRegistration
 
     class MixedBatch:
         def descriptor(self):

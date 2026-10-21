@@ -2,7 +2,7 @@
 
 Contracts §C4 ("错误须映射至既有 wire family，不修改核心错误分支"): every
 stable sandbox code must have a mapping onto one of the twelve families the
-platform already publishes (`server_plugin_api.wire_errors.FAMILIES`), derived
+platform already publishes (`ordessa_server_plugin_api.wire_errors.FAMILIES`), derived
 from the platform's own resolution table — never a new family name, and never
 a change to the core error branches. The mapping itself lives sandbox-side in
 `ordessa_sandbox_api.wire_family` (an additive public export); these tests
@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 from ordessa_sandbox_api import SandboxErrorCode
 from ordessa_sandbox_api.errors import SandboxApiError
-from server_plugin_api.wire_errors import (FAMILIES, STATIC_ERROR_FAMILIES,
+from ordessa_server_plugin_api.wire_errors import (FAMILIES, STATIC_ERROR_FAMILIES,
                                            WireError, converge_family,
                                            family_for)
 

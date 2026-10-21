@@ -157,7 +157,7 @@ class DeclaredAgentWorkReportSource:
                     or provenance.source_revision != execution.source_revision
                     or not captured.report_text):
                 raise ApplicationError('SUBMISSION_REPORT_OUTPUT_UNAVAILABLE')
-            from ordessa_execution_agents.sdk.interactions import TurnReceipt
+            from ordessa_agents.sdk.interactions import TurnReceipt
             receipt = TurnReceipt.decode(decode_json(self.blobs.read_verified(captured.blob_ref)))
             params = decode_json(self.blobs.read_verified(binding.prompt_ref))
             observation = decode_json(receipt.observation_bytes)

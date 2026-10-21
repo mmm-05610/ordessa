@@ -29,9 +29,9 @@ import re
 from dataclasses import dataclass
 from typing import Any, Mapping, Union
 
-from ordessa_execution_agents.harness.definitions.contracts import Assessment, Match, Mismatch, \
+from ordessa_agents.harness.definitions.contracts import Assessment, Match, Mismatch, \
     Verification, VerificationUnknown
-from ordessa_execution_agents.harness.definitions.intents import IntentSet
+from ordessa_agents.harness.definitions.intents import IntentSet
 from ordessa_sandbox_api import SandboxErrorCode
 
 from .seam import CompiledFieldIntent

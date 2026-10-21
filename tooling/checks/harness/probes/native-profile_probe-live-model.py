@@ -41,7 +41,7 @@ def probe(assets, brand, *, restore_provider=False, candidate_entry=None, initia
         from ordessa_harness_claude_code.registration import configuration_adapters
     else:
         raise ValueError('Explicit supported probe provider required')
-    from ordessa_execution_agents.harness.definitions import DesiredFragment, Installation
+    from ordessa_agents.harness.definitions import DesiredFragment, Installation
     from ordessa_server.composition.runtime import build_runtime
     pins = {'codex': ('codex-runtime', 'codex-acp', (1, 1, 14), 'gpt-5.5',
                       'custom-gateway', 'openai', 'responses', 'openai-responses'),

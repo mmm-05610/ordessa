@@ -25,7 +25,7 @@ from _sandbox_adapters_helpers import (
     target_handle,
 )
 
-from ordessa_execution_agents.harness.definitions import Assessment, Match, Mismatch, VerificationUnknown
+from ordessa_agents.harness.definitions import Assessment, Match, Mismatch, VerificationUnknown
 from ordessa_sandbox_api import NetworkMode, SandboxApplyScope, SandboxErrorCode, \
     ToolCategory
 from ordessa_sandbox_adapters import (

@@ -7,9 +7,9 @@ import json
 import pytest
 
 from ordessa_server.composition.configuration.model.bindings import initial_model_factory
-from ordessa_execution_agents.harness.definitions import ApplicationTarget
+from ordessa_agents.harness.definitions import ApplicationTarget
 from ordessa_server.composition.configuration.model.restoration import ProviderRestorationService
-from ordessa_execution_agents.harness.configuration.compilation.native_digest import configuration_digest
+from ordessa_agents.harness.configuration.compilation.native_digest import configuration_digest
 
 
 @pytest.fixture

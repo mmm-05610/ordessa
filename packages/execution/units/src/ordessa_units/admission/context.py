@@ -91,7 +91,7 @@ class UnitAdmissionContext:
         body or the original transaction exit retain their original types.
         Material callers continue to use provider_retirement_guard unchanged.
         """
-        from ordessa_execution_agents.harness.providers.registry.errors import CatalogUnavailable
+        from ordessa_agents.harness.providers.registry.errors import CatalogUnavailable
         with ExitStack() as stack:
             try:
                 stack.enter_context(self.provider_retirement_guard(owner_id, generation))

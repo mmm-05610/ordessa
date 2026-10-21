@@ -7,7 +7,7 @@ aggregate registration; the product selects brands explicitly.
 ## Current convergence slice
 
 `ordessa.harness_providers` publishes `ordessa_harness_gemini_cli:factory`.
-The provider imports only `ordessa_execution_agents.sdk`, validates the exact
+The provider imports only `ordessa_agents.sdk`, validates the exact
 Profile harness pin, and compiles the brand's pure configuration to an immutable
 LaunchPlan with explicit caller-approved command/environment/directory inputs.
 It owns no Unit, environment, process, session journal, credential expansion or

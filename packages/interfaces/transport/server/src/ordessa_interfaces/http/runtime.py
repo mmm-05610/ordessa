@@ -29,7 +29,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette._utils import is_async_callable
 
-from server_plugin_api.internal_errors import ServerError
+from ordessa_server_plugin_api.internal_errors import ServerError
 from ordessa_interfaces.http.ports import AcpAdmissionRefused, HttpHostView
 from ordessa_interfaces.http.serialization import WireError, decode_request, encode_error, encode_result
 from ordessa_interfaces.system_access.contracts.transport import AccessError, WIRE_VERSION
@@ -502,7 +502,7 @@ def create_app(host: HttpHostView, *, on_bound: "Callable[[], None] | None" = No
             takes over a mounted route through the pre-startup window."""
             import inspect
 
-            from server_plugin_api import (
+            from ordessa_server_plugin_api import (
                 DuplicateHttpRouteError, HttpRouteShapeChangedError,
             )
 

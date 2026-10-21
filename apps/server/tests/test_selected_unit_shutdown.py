@@ -13,8 +13,8 @@ import time
 import pytest
 from ordessa_environments import EnvironmentManager, SQLiteEnvironmentStore
 from ordessa_environments_local import LocalEnvironmentResourceProvider
-from ordessa_execution_agents.profiles import ProfileService
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.profiles import ProfileService
+from ordessa_agents.harness.providers.registry import (
     HarnessDefinitionDeclaration, HarnessDefinitionDescriptor,
     HarnessInstallationObservation,
 )
@@ -26,7 +26,7 @@ from ordessa_server.composition.product_runtime import build_product_runtime
 from ordessa_units.admission.fingerprint import ProtectedFingerprintHmac
 from ordessa_units.assembly import UnitRunPermission
 from ordessa_units.public import unit_services
-from server_plugin_api import ServerMethodDescriptor
+from ordessa_server_plugin_api import ServerMethodDescriptor
 
 
 def _build_selected_runtime(tmp_path):

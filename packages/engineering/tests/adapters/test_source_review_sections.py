@@ -5,7 +5,7 @@ from hashlib import sha256
 import json
 
 import pytest
-from decision_runtime.definitions.values import canonical_bytes as decision_canonical_bytes, MAX_JOB_DOCUMENT_BYTES
+from ordessa_decision.definitions.values import canonical_bytes as decision_canonical_bytes, MAX_JOB_DOCUMENT_BYTES
 
 from ordessa_engineering.adapters.decision import source_sections, source_reviewer
 from ordessa_engineering.application.contracts.errors import ApplicationError
@@ -469,8 +469,8 @@ def test_selected_sections_native_eight_check_chain_records_and_reopens_original
     from contextlib import contextmanager
     from pathlib import Path
 
-    from decision_runtime import DecisionAnswer, FilesystemEvidenceStore, PolicyRef, default_host_limits
-    from decision_runtime.evidence import EvidenceScope
+    from ordessa_decision import DecisionAnswer, FilesystemEvidenceStore, PolicyRef, default_host_limits
+    from ordessa_decision.evidence import EvidenceScope
     from ordessa_engineering.adapters.decision.source_job import SourceReviewJobServices
     from ordessa_infrastructure.encoding import decode_json
     from ordessa_engineering.adapters.filesystem.project_sources import ProjectSourceMaterials
@@ -734,8 +734,8 @@ def test_frozen_historical_eight_check_manifest_and_terminal_are_read_by_origina
     import asyncio
     from pathlib import Path
     from types import SimpleNamespace
-    from decision_runtime.historical import FileEvidenceReader, ReadContext
-    from decision_runtime.historical.models import DecisionQuestion, PolicyRef
+    from ordessa_decision.historical import FileEvidenceReader, ReadContext
+    from ordessa_decision.historical.models import DecisionQuestion, PolicyRef
     vector = json.loads((Path(__file__).parent / 'fixtures/source-review-history/historical-vector.json').read_text())
     evidence_root = tmp_path / 'frozen-history'
     evidence_root.mkdir(mode=0o700)
@@ -770,8 +770,8 @@ def test_frozen_historical_eight_check_manifest_and_terminal_are_read_by_origina
 def test_historical_flow_code_digest_is_bound_to_preserved_original_source_bytes():
     from pathlib import Path
     from ordessa_engineering.adapters.decision.source_history import FROZEN_CODE_DIGESTS
-    from decision_runtime.historical.models import PolicyRef
-    from decision_runtime.historical.values import digest
+    from ordessa_decision.historical.models import PolicyRef
+    from ordessa_decision.historical.values import digest
     root = Path(__file__).parent / 'fixtures/source-review-history'
     provenance = json.loads((root / 'provenance.json').read_text())
     for path, expected in provenance['source_sha256'].items():

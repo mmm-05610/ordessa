@@ -111,7 +111,7 @@ def test_request_key_import_is_io_free_and_has_no_business_imports() -> None:
     assert completed.returncode == 0, completed.stderr
 
 
-@pytest.mark.parametrize("module", ["ordessa_execution_api.environment", "ordessa_execution_agents"])
+@pytest.mark.parametrize("module", ["ordessa_execution_api.environment", "ordessa_agents"])
 def test_actual_subprocess_canary_blocks_c1_and_execution_imports(module: str) -> None:
     completed = _run_isolated(_TECHNICAL_ONLY + f"\nimport {module}\n")
 

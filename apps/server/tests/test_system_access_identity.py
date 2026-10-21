@@ -10,10 +10,10 @@ from fastapi.testclient import TestClient
 from ordessa_server.composition.runtime import build_runtime
 from ordessa_interfaces.http import create_app
 from ordessa_system_access_bindings import EngineeringCommandAccess
-from server_plugin_api.wire_errors import WireError
+from ordessa_server_plugin_api.wire_errors import WireError
 from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_interfaces.system_access.access_control.authentication import AccessError, AccessGrant
-from server_plugin_api import ServerMethodDescriptor
+from ordessa_server_plugin_api import ServerMethodDescriptor
 from ordessa_engineering.adapters.persistence.sqlite.engineering_library import EngineeringLibrary
 from ordessa_engineering.adapters.persistence.sqlite.unit_of_work import SQLiteUoWFactory
 from ordessa_engineering.application.usecases.artifacts import ArtifactUseCases

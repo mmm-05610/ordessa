@@ -16,11 +16,11 @@ import ast
 from pathlib import Path
 
 import pytest
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ApplicationTarget, Confirmed, DesiredFragment, NotFound, OperationRecord,
     Plan, Refused, TargetHandle, Unknown,
 )
-from ordessa_execution_agents.harness.definitions.errors import ErrorCode
+from ordessa_agents.harness.definitions.errors import ErrorCode
 
 from ordessa_assets_subagents import apply as apply_mod, errors
 from ordessa_assets_subagents.apply import (

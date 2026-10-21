@@ -100,7 +100,7 @@ def probe(artifact: Path, drift: str = None) -> dict:
                 initialized = request("initialize", {"protocolVersion": 1, "clientCapabilities": {},
                     "clientInfo": {"name": "ordessa-reverse-probe", "version": "1"}})
                 assert initialized["_meta"]["ordessaConfiguration"]["supported"] is True
-                from ordessa_execution_agents.harness.definitions import ApplicationTarget, DesiredFragment, Installation, IntentSource
+                from ordessa_agents.harness.definitions import ApplicationTarget, DesiredFragment, Installation, IntentSource
                 from ordessa_server.composition.native_channels.registry import AcpChannelRegistry
                 from ordessa_server.composition.native_channels.profile_owner import ProfileSessionOwner
                 from ordessa_server.composition.configuration.model.backend import preparation_params
@@ -109,10 +109,10 @@ def probe(artifact: Path, drift: str = None) -> dict:
                 from ordessa_harness_pi.registration import configuration_adapters
                 from ordessa_harness_pi.configuration.runtime import PiLiveModelRuntime
                 from ordessa_server.composition.configuration.model.live_service import native_model_runtime
-                from ordessa_execution_agents.harness.configuration.compilation.native_context import NativeLiveModelContext
+                from ordessa_agents.harness.configuration.compilation.native_context import NativeLiveModelContext
                 from ordessa_server.composition.configuration.application import ConfigurationApplicationService
-                from ordessa_execution_agents.units.records.operation_journal import OperationJournal
-                from ordessa_execution_agents.units.configuration.actions import ActionGrant
+                from ordessa_agents.units.records.operation_journal import OperationJournal
+                from ordessa_agents.units.configuration.actions import ActionGrant
                 from ordessa_server.composition.runtime import build_runtime
 
                 registry = AcpChannelRegistry(session_records=None, profile_records=None,

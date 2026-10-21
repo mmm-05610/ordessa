@@ -213,7 +213,7 @@ def test_begin_turn_application_is_registered_with_the_frozen_shape(host, harnes
 ])
 def test_malformed_submissions_are_typed_refusals_that_never_reach_the_port(
         params, stack, harnesses, credentials):
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
 
     port = RecordingTurnApplication()
     gate = Gate(stack, harnesses, credentials, port=port)
@@ -228,7 +228,7 @@ def test_malformed_submissions_are_typed_refusals_that_never_reach_the_port(
 
 
 def test_a_missing_operation_key_is_a_typed_refusal(gate):
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
 
     gate.choose()
     with pytest.raises(WireError) as excinfo:
@@ -286,7 +286,7 @@ def test_the_same_operation_key_replays_with_zero_new_effects(gate):
 
 def test_the_same_operation_key_with_other_content_is_a_typed_conflict(
         gate, stack, harnesses, credentials):
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
 
     first = Gate(stack, harnesses, credentials, port=RecordingTurnApplication())
     queued = first.choose()
@@ -573,7 +573,7 @@ def test_a_composition_without_any_port_cannot_queue_a_selection(stack, harnesse
     """C03, the plugin half: with neither the eligibility port nor the
     application port, the independent path refuses typed at the queue step -
     there is no fallback that could let a prompt through."""
-    from server_plugin_api.wire_errors import WireError
+    from ordessa_server_plugin_api.wire_errors import WireError
 
     from ordessa_model_provider.plugin import ModelProviderPlugin
 

@@ -19,7 +19,7 @@ from __future__ import annotations
 import re
 
 import pytest
-from server_plugin_api import (
+from ordessa_server_plugin_api import (
     ACP_ADMISSION_PORT,
     ACP_ADMISSION_PORT_VERSION,
     AcpAdmissionResult,

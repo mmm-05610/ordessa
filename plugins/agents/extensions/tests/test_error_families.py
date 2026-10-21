@@ -1,7 +1,7 @@
 """Wire-refusal projection: the error-family table must not lie."""
 from __future__ import annotations
 
-from server_plugin_api import ServerError
+from ordessa_server_plugin_api import ServerError
 
 from ordessa_extensions.approval import ApprovalError
 from ordessa_extensions.definitions import ExtensionDefinitionError
@@ -39,5 +39,5 @@ def test_codeless_refusal_does_not_borrow_a_client_error():
 
 
 def test_every_table_value_is_a_real_family():
-    from server_plugin_api import FAMILIES
+    from ordessa_server_plugin_api import FAMILIES
     assert set(EXTENSIONS_ERROR_FAMILIES.values()) <= set(FAMILIES)

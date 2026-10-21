@@ -2,7 +2,7 @@
 
 The actual leaf now exports `VibeHarnessProvider` and `factory` through
 `ordessa.harness_providers`. Its only Ordessa runtime import is
-`ordessa_execution_agents.sdk`. The former direct `AcpClient` subclass and
+`ordessa_agents.sdk`. The former direct `AcpClient` subclass and
 product staging duplicate are retired, without aliases or a direct spawn fallback.
 
 Profile declarations use `vibe.configuration/1`; validation preserves the

@@ -16,11 +16,11 @@ import time
 
 from pydantic_graph import GraphBuilder
 import httpx2
-from decision_runtime.definitions import (DecisionQuestion,PolicyRef,FlowRef,TaskBrief,RunLimits,DecisionRequest,
+from ordessa_decision.definitions import (DecisionQuestion,PolicyRef,FlowRef,TaskBrief,RunLimits,DecisionRequest,
     BusinessOutcome,DecisionServices,ReadContext,DecisionAnswer,digest,plain)
 from ordessa_decision_jev import JevDecisionProvider,JevProviderSettings
-from decision_runtime.runtime import TrustedFlow,RunContext,run_decision,reviewed_code_digest,flow_digest
-from decision_runtime.evidence import FileEvidenceSink
+from ordessa_decision.runtime import TrustedFlow,RunContext,run_decision,reviewed_code_digest,flow_digest
+from ordessa_decision.evidence import FileEvidenceSink
 from laya_probe import plans
 
 ENDPOINT='https://opencode.ai/zen/v1/systemone'

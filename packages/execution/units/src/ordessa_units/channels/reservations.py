@@ -24,7 +24,7 @@ from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_map
 
 from ordessa_units.bindings.contracts import DirectoryBindingRef
 from ordessa_units.admission.invocation import InvocationAuthorityRefused, InvocationIssuer
-from ordessa_execution_agents.harness.providers.registry.definition_admission import HarnessAdmission
+from ordessa_agents.harness.providers.registry.definition_admission import HarnessAdmission
 
 DRAFT_ATTEMPTS = "agents.draft-attempts"
 FIRST_SESSION_ATTEMPTS = "agents.first-session-attempts"

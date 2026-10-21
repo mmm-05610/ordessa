@@ -2,11 +2,11 @@
 import asyncio
 from pathlib import Path
 
-from decision_runtime.definitions.values import digest_hex
+from ordessa_decision.definitions.values import digest_hex
 
 import pytest
 
-from decision_runtime import (
+from ordessa_decision import (
     DecisionAnswer, DecisionError, DecisionQuestion, DecisionRunner,
     FilesystemEvidenceStore, RulesOutcome, validate_job)
 

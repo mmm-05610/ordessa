@@ -13,12 +13,15 @@ from ordessa_interfaces.http.serialization import decode_request,encode_result,e
 
 
 class RegistryRuntime:
-    def __init__(self,host,authority,*,context_factory,close=None,server_id=None):
+    def __init__(self,host,authority,*,context_factory,close=None,server_id=None,deadline_seconds=30.0):
         if type(host) is not CapabilityHost or type(authority) is not InstanceAccessAuthority or not callable(context_factory):
             raise TypeError('current registry, original authority and trusted context mapping required')
         if server_id is not None and (type(server_id) is not str or not server_id or len(server_id)>512):
             raise ValueError("original Server identity required")
+        if type(deadline_seconds) not in (int,float) or not 1<=deadline_seconds<=1800:
+            raise ValueError("request deadline must be 1..300 seconds")
         self.server_id=server_id
+        self.deadline_seconds=float(deadline_seconds)
         self.host=host;self.authority=authority;self.context_factory=context_factory
         self._close=close;self._closed=False
 
@@ -54,7 +57,7 @@ class RegistryRuntime:
             except ContractError as exc:
                 result=OperationResult('refused',error=CapabilityError(exc.code,'Registry operation unavailable'))
         elif method=='operations.call' and set(params)=={'operationId','input'}:
-            context=self.context_factory(caller,identity,asyncio.get_running_loop().time()+30)
+            context=self.context_factory(caller,identity,asyncio.get_running_loop().time()+self.deadline_seconds)
             if type(context) is not RequestContext or context.request_id!=identity:
                 raise WireError('INVALID_REQUEST','trusted context mapping unavailable')
             self.authority.verify(caller)

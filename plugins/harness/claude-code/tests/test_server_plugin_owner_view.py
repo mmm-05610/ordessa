@@ -11,7 +11,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ordessa_execution_agents.harness.providers.registry import (
+from ordessa_agents.harness.providers.registry import (
     HARNESS_DEFINITION_VERSION,
     HarnessCatalog,
     HarnessDefinitionDeclaration,
@@ -19,7 +19,7 @@ from ordessa_execution_agents.harness.providers.registry import (
     HarnessInstallationObservation,
 )
 from ordessa_execution_api.environment import GuaranteeUnavailableError
-from server_plugin_api import ServerPluginContext
+from ordessa_server_plugin_api import ServerPluginContext
 
 from ordessa_harness_claude_code.provider import ClaudeCodeRuntimeProvider, ClaudeProviderUnavailable
 from ordessa_harness_claude_code.server_plugin import ClaudeCodeServerPlugin

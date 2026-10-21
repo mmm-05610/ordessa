@@ -118,7 +118,7 @@ and ran `pip check` (exit 0). A standalone venv re-run recorded:
 `No broken requirements found.` (exit 0) and
 `GrokBuildRuntimeProvider` constructs with descriptor
 `grok-build / agent-runtime/2` (the isolated program also asserts absence of
-`ordessa_harness`/`ordessa_server`/`server_plugin_api`/sibling provider
+`ordessa_harness`/`ordessa_server`/`ordessa_server_plugin_api`/sibling provider
 imports and the four typed-refused surfaces).
 
 Transport acceptance re-run (no breakage): `packages/backend/harness-transport/tests`

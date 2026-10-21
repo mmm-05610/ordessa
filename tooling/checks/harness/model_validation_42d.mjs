@@ -25,7 +25,7 @@ import { fileURLToPath } from "node:url"
 
 // Pi's adapter is installed into Pi's own packaging npm root; the plugin's
 // `runtime/` carries no dependency closure and never did hold one.
-const bridge = fileURLToPath(new URL("../../../packages/execution/agents/src/ordessa_execution_agents/harness/transport/vendor/harness_remote/bridge/src", import.meta.url))
+const bridge = fileURLToPath(new URL("../../../packages/execution/agents/src/ordessa_agents/harness/transport/vendor/harness_remote/bridge/src", import.meta.url))
 const captured = capturedModelValidationPorts()
 const declarations = new Map(captured.map(port => [port.ownerId,port]))
 const allowed = new Set(declarations.keys())

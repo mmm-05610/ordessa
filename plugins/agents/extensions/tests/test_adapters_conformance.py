@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import pytest
-from ordessa_execution_agents.harness.definitions import (
+from ordessa_agents.harness.definitions import (
     ErrorCode, Installation, IntentSet, Match, Mismatch, MountContent,
     SetField, VerificationUnknown,
 )
@@ -190,7 +190,7 @@ def test_keyed_target_without_the_claimed_part_is_not_ours():
         context_for(CLAUDE_INSTALLATION, restrictive), None, desired_set())
     assert ok.code == ErrorCode.CAPABILITY_UNSUPPORTED  # past target gate
     # a target declaring a DIFFERENT part is equally not ours (round 12)
-    from ordessa_execution_agents.harness.definitions import TargetDescriptor, TargetHandle
+    from ordessa_agents.harness.definitions import TargetDescriptor, TargetHandle
     other_face = TargetDescriptor(
         handle=TargetHandle("settings", 1), kind="file", codec="json",
         scope="instance", allowed_fields=(("other",),))
@@ -223,7 +223,7 @@ def test_compile_refuses_unevidenced_event_before_anything_else():
 
 def test_codex_intents_mount_whole_file_read_only():
     import re
-    from ordessa_execution_agents.harness.definitions import IntentSource
+    from ordessa_agents.harness.definitions import IntentSource
     target = codex_file_target()
     intents = build_codex_intents(
         IntentSource("assets.hooks", "assets.hooks.codex", "1"),
@@ -239,7 +239,7 @@ def test_codex_intents_mount_whole_file_read_only():
 
 
 def test_claude_intents_set_the_hooks_key():
-    from ordessa_execution_agents.harness.definitions import IntentSource
+    from ordessa_agents.harness.definitions import IntentSource
     target = claude_settings_target()
     source = IntentSource("assets.hooks", "assets.hooks.claude", "1")
     claude_payload = desired_set()
@@ -355,7 +355,7 @@ def test_verify_rejects_foreign_identity_and_garbage():
 # -- capability rows ----------------------------------------------------------
 
 def test_capability_rows_grade_from_the_table():
-    from ordessa_execution_agents.harness.definitions import ApplicationTarget
+    from ordessa_agents.harness.definitions import ApplicationTarget
     adapter = hooks_adapters()[0]
     target = ApplicationTarget("srv", "sess", "chan", 7)
     rows = adapter.configuration_capabilities(target)

@@ -11,7 +11,7 @@ from typing import Mapping
 
 from ordessa_units.errors import UnitIdentityMismatch
 from ordessa_infrastructure.encoding.immutable_json import safe_json, sealed_mapping
-from ordessa_execution_agents.profiles.definitions.validation import canonical_content, _safe_tree
+from ordessa_agents.profiles.definitions.validation import canonical_content, _safe_tree
 
 CONFIGURATION_CONTRACT_VERSION = "agent-configuration/1"
 ITEM_OUTCOMES = frozenset({"applied", "deferred", "restartRequired", "rejected", "conflict", "unknown"})

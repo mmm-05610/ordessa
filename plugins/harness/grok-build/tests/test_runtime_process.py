@@ -62,7 +62,7 @@ from ordessa_units.records.operation_journal import OperationJournal
 from ordessa_units.records.unit_records import (
     CanonicalConfigurationScopeRef, UnitRecords, UnitRecordsRefused,
 )
-from ordessa_execution_agents.harness.transport.channel import _TOKEN_ENV_KEYS
+from ordessa_agents.harness.transport.channel import _TOKEN_ENV_KEYS
 
 ENVIRONMENT = "grok-build-p"
 # Test fixture digest only — NOT a real implementation digest.

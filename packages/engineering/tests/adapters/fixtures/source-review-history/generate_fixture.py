@@ -3,10 +3,10 @@ from dataclasses import asdict
 from pathlib import Path
 from hashlib import sha256
 import json
-from decision_runtime.historical.models import (BusinessOutcome, DecisionAnswer, DecisionQuestion,
+from ordessa_decision.historical.models import (BusinessOutcome, DecisionAnswer, DecisionQuestion,
     DecisionRequest, DecisionResult, FlowRef, PolicyRef, RunLimits, RunManifest, TaskBrief)
-from decision_runtime.historical.codec import record, terminal
-from decision_runtime.historical.values import canonical, digest
+from ordessa_decision.historical.codec import record, terminal
+from ordessa_decision.historical.values import canonical, digest
 
 HERE = Path(__file__).parent
 RUN = '12345678-1234-4234-8234-123456789abc'

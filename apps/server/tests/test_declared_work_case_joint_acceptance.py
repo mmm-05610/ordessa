@@ -25,8 +25,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from decision_runtime.definitions.models import PolicyRef
-from decision_runtime.definitions.ports import DecisionServices, ReadContext
+from ordessa_decision.definitions.models import PolicyRef
+from ordessa_decision.definitions.ports import DecisionServices, ReadContext
 from ordessa_engineering.adapters.decision.source_reviewer import DecisionReviewerSource
 from ordessa_engineering.domain.artifacts.method_binding import ExactMethodResourceRef
 from ordessa_engineering.domain.artifacts.models import MethodContent, MethodRef

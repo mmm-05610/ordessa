@@ -5,7 +5,7 @@ registry, filesystem reader or automatic historical fallback.
 """
 from __future__ import annotations
 
-from ordessa_execution_agents.profiles import (
+from ordessa_agents.profiles import (
     HistoricalProfileIdentityMismatch, ProfileAccessRefused, ProfileRevisionRef,
 )
 from ordessa_units.public import composed_profile_service
