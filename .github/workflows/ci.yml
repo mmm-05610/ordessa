@@ -34,6 +34,8 @@ jobs:
         run: python tooling/workspace/python_workspace.py
       # Green gates: the slices this tree actually implements and keeps passing.
       - name: CLI + lower owners (green)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest -q apps/cli/tests \
                    packages/execution/environments/tests \
@@ -41,6 +43,8 @@ jobs:
                    plugins/harness/pi/tests \
                    plugins/decision/rules-cel/tests
       - name: Server composition (green)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest -q tests/integration/packages_convergence/test_server_full_stack.py \
                    tests/integration/packages_convergence/test_server_http_entrypoint.py \
