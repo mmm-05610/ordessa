@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "sanitized-agent-work-evidence/1",
+  "sourceCommit": "90653d2359476251535c2bb939d704b8964ce469",
+  "runtimeSourceCommit": "726cd2c18602513e155ae87de0f7787d58b3ae59",
+  "sameTrackedSourceTree": true,
+  "runs": [
+    {
+      "harness": "codex",
+      "protocol": "codex-app-server/1",
+      "environment": "local",
+      "startedAt": "2026-10-22T14:32:55+0800",
+      "finishedAt": "2026-10-22T14:33:47+0800",
+      "rawReceiptSha256": "7a973a007921ee082de5f6dd69f42e520c095bc31ae303071a6a2246da70d52b",
+      "initialPytestExit": 1,
+      "initialPytestSummary": "19 failed in 0.12s",
+      "submissionSeconds": 0.374,
+      "operationState": "completed",
+      "hostPytestExit": 0,
+      "hostPytestSummary": "19 passed in 0.06s",
+      "sourceChanged": true,
+      "testsUnchanged": true,
+      "beforeHashes": {
+        "src/stats.py": "sha256:086fb89ca0002287d6825d7e7cb98ce1f620bdffff085faf6dd1ef4fc200260f",
+        "tests/test_stats.py": "sha256:114647b687bd9d7fa37d0cffb04b8ffcf1d5f7b6cecd89622b9c7e6f8d3af6fd"
+      },
+      "afterHashes": {
+        "src/stats.py": "sha256:bdc94b99af49e8e01e92b06899812f822bdfbe01f582d6597967fd042b2cfea4",
+        "tests/test_stats.py": "sha256:114647b687bd9d7fa37d0cffb04b8ffcf1d5f7b6cecd89622b9c7e6f8d3af6fd"
+      },
+      "cleanup": {
+        "delete": null,
+        "deletedConfirmed": false,
+        "processRelease": "completed",
+        "release": "completed"
+      }
+    },
+    {
+      "harness": "pi",
+      "protocol": "pi-rpc/1",
+      "environment": "local",
+      "startedAt": "2026-10-22T14:38:22+0800",
+      "finishedAt": "2026-10-22T14:40:07+0800",
+      "rawReceiptSha256": "d63292a6b735e33b2b449209a3cb74311877e257f192ba42009dd18f1e665e6f",
+      "initialPytestExit": 1,
+      "initialPytestSummary": "19 failed in 0.18s",
+      "submissionSeconds": 0.366,
+      "operationState": "completed",
+      "hostPytestExit": 0,
+      "hostPytestSummary": "19 passed in 0.05s",
+      "sourceChanged": true,
+      "testsUnchanged": true,
+      "beforeHashes": {
+        "src/stats.py": "sha256:086fb89ca0002287d6825d7e7cb98ce1f620bdffff085faf6dd1ef4fc200260f",
+        "tests/test_stats.py": "sha256:114647b687bd9d7fa37d0cffb04b8ffcf1d5f7b6cecd89622b9c7e6f8d3af6fd"
+      },
+      "afterHashes": {
+        "src/stats.py": "sha256:984bc61523f71de61d8372adb9c4900b3a9adac08afb5713a955f557dc246a0b",
+        "tests/test_stats.py": "sha256:114647b687bd9d7fa37d0cffb04b8ffcf1d5f7b6cecd89622b9c7e6f8d3af6fd"
+      },
+      "cleanup": {
+        "delete": null,
+        "deletedConfirmed": false,
+        "processRelease": "completed",
+        "release": "completed"
+      }
+    }
+  ]
+}
