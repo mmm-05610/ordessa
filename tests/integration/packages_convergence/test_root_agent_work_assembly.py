@@ -24,7 +24,7 @@ from ordessa_interfaces.system_access.access_control.authentication import Insta
 from ordessa_interfaces.system_access.contracts.refs import Scope
 from ordessa_system_access_bindings.engineering_wire import EngineeringWireBinding,EngineeringApplicationPorts
 from ordessa_server.composition.agent_owner import AgentOwnerInputs
-from ordessa_server.composition.agent_bindings.native_access import OriginalNativeAccess
+from native_case_fixture import DelegatingNativeAccess
 from ordessa_server.composition.agent_bindings.profile_access import OriginalProfileAccess
 from ordessa_agents.capability.profiles import build_profile_capability
 from ordessa_server.composition.engineering_agent_work_assembly import (
@@ -46,7 +46,7 @@ def test_default_root_supplies_same_agent_to_explicit_wire_work_ports_and_missin
                 grants=(AccessGrant(scope,('engineering.executions.dispatch','engineering.implementation.reconcile')),),
                 legacy_principal=None)
             caller=issuer.authenticate('Bearer controlled-root-work-token')
-            native_access=OriginalNativeAccess(case.authority,issuer,
+            native_access=DelegatingNativeAccess(case.authority,issuer,
                 caller_resolver=lambda inv:caller if inv is case.fixture.invocation else None,
                 scope_for_agent=lambda ref:scope,
                 principal_scope_for_caller=lambda selected:'principal:existing-test-caller')

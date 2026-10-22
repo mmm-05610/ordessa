@@ -205,13 +205,14 @@ class _EndpointCapability:
                 GuardedSendObservation, cancel_endpoint_request_id)
             from ordessa_agents.instances.contracts import (LifecycleWriteBinding,NativeFrameBinding,
                 lifecycle_endpoint_request_id,lifecycle_native_request_id)
-            from ordessa_agents.sdk.native_contracts import NativeWriteBinding,native_endpoint_request_id
+            from ordessa_agents.sdk.native_runtime import (NativeDispatchBinding,
+                native_dispatch_request_id)
         except ImportError:
             raise self._refuse('F1.2 interaction contracts unavailable') from None
         if (not is_dataclass(GuardedSendObservation)
                 or {f.name for f in fields(GuardedSendObservation)} != {'operation_ref','status','bytes_sent','error'}):
             raise self._refuse('exact F1.2 guarded observation contract unavailable')
-        if (type(binding) not in (WriteBinding,CancelBinding,LifecycleWriteBinding,NativeWriteBinding,NativeFrameBinding) or type(frame) is not bytes or not frame
+        if (type(binding) not in (WriteBinding,CancelBinding,LifecycleWriteBinding,NativeDispatchBinding,NativeFrameBinding) or type(frame) is not bytes or not frame
                 or len(frame) > 1048576 or not callable(getattr(write_guard, 'guard_write', None))):
             raise self._refuse('exact F1.2 binding, bounded frame and guard required')
         if (binding.endpoint_request_id != request_id
@@ -221,11 +222,10 @@ class _EndpointCapability:
             expected = canonical_digest({'schemaVersion':'agent-endpoint-frame-request/1',
                 'agentOperationRef': binding.agent_operation_ref, 'endpointRef': self._locator,
                 'frameDigest': binding.frame_digest, 'frameOrdinal': 0})
-        elif type(binding) is NativeWriteBinding:
-            NativeWriteBinding.decode(binding.projection())
-            if binding.request.endpoint_ref.projection()!=self._locator:
+        elif type(binding) is NativeDispatchBinding:
+            if binding.endpoint_ref.projection()!=self._locator:
                 raise self._refuse('native endpoint binding differs')
-            expected=native_endpoint_request_id(binding.operation_ref,binding.request.endpoint_ref,binding.frame_digest)
+            expected=native_dispatch_request_id(binding.endpoint_ref,binding.frame_digest)
         elif type(binding) is CancelBinding:
             expected=cancel_endpoint_request_id(binding.agent_operation_ref,
                 EndpointRef.decode(self._locator),binding.frame_digest)
@@ -252,11 +252,12 @@ class _EndpointCapability:
                 'agentOperationRef': binding.agent_operation_ref,
                 'engineeringAttemptRef': binding.engineering_attempt_ref,
                 'inputDigest': binding.input_digest, 'frameDigest': binding.frame_digest}
-        elif type(binding) is NativeWriteBinding:
-            correlation={'schemaVersion':'agent-native-child-correlation/1',
-                'operationRef':binding.operation_ref.projection(),'sessionId':binding.request.session_id,
-                'purpose':binding.request.purpose,'method':binding.request.method,
-                'inputDigest':binding.request.input_digest,'frameDigest':binding.frame_digest}
+        elif type(binding) is NativeDispatchBinding:
+            correlation={'schemaVersion':'agent-native-dispatch-correlation/1',
+                'instanceRef':binding.instance_ref.projection(),'kind':binding.kind,
+                'protocolId':binding.protocol_id,'sessionId':binding.session_id,
+                'inputDigest':binding.input_digest,'frameDigest':binding.frame_digest,
+                'wireId':binding.wire_id}
         elif type(binding) is CancelBinding:
             correlation={'schemaVersion':'agent-cancel-child-correlation/1',
                 'instanceRef':binding.instance_ref.projection(),'sessionId':binding.session_id,

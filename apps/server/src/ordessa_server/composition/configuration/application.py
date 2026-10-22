@@ -6,7 +6,6 @@ Profile intent is not proof that a running native process applied those values.
 from ordessa_agents.public import ProfileService,HarnessCatalog
 from ordessa_agents.profiles import encode_revision
 from .native_evidence import AgentNativeEvidenceReader,NativeEvidenceUnavailable
-from ordessa_agents.sdk.native_contracts import METHODS
 
 
 class AgentConfigurationReadService:
@@ -26,33 +25,4 @@ class AgentConfigurationReadService:
             'harness':provider.descriptor.projection(),'nativeApplied':'unobserved'}
 
 
-class AgentNativeConfigurationService:
-    """Thin application binding to the original recorded native-operation API.
-
-    The original service owns identities, authorization, physical writes and
-    replay. Every invocation and physical guard comes from trusted composition;
-    a Profile intent or an ACP routing label cannot supply either one.
-    """
-
-    def __init__(self, *, source):
-        self.evidence = AgentNativeEvidenceReader(source)
-        self.source = source
-
-    def freeze(self, agent_ref, *, purpose, params_bytes):
-        # The SDK's closed codec checks fixed session, allowed config IDs,
-        # generation, digest and operation identity; never translate protocols.
-        method = METHODS.get(purpose)
-        return self.source.freeze_native_request(
-            agent_ref, purpose=purpose, method=method, params_bytes=params_bytes)
-
-    async def execute(self, request, *, request_id, invocation, write_guard, deadline):
-        return await self.source.native_recorded(
-            request, request_id=request_id, invocation=invocation,
-            write_guard=write_guard, deadline=deadline)
-
-    def read_operation(self, operation_ref, expected_input_digest, *, invocation):
-        return self.source.native_query(
-            operation_ref, expected_input_digest, invocation=invocation)
-
-
-__all__=['AgentConfigurationReadService', 'AgentNativeConfigurationService']
+__all__=['AgentConfigurationReadService']

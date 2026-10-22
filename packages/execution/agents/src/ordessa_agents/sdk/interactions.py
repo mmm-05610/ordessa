@@ -571,7 +571,8 @@ class InteractionService:
     Instance metadata is published by trusted materialization into the SAME
     owner, never inferred from an endpoint/ref/digest supplied by a caller.
     """
-    def __init__(self, records, authority, endpoint_resolver=None, native_prompts=None):
+    def __init__(self, records, authority, endpoint_resolver=None, native_prompts=None,
+                 native_codecs=None):
         from .manager import Records
         if type(records) is not Records:
             raise InteractionsRefused('ORIGINAL_RECORDS_REQUIRED')
@@ -582,9 +583,60 @@ class InteractionService:
         if native_prompts is None:native_prompts={}
         if not isinstance(native_prompts, dict):raise InteractionsRefused('NATIVE_PROMPT_HANDLERS_INVALID')
         self._native_prompts=dict(native_prompts)
+        if native_codecs is None:native_codecs={}
+        if not isinstance(native_codecs, dict):raise InteractionsRefused('NATIVE_CODECS_INVALID')
+        self._native_codecs=dict(native_codecs)
+        self._native=None
+        # One process owns the live receiver for accepted native operations. A
+        # fresh owner must turn any accepted-but-unresolved row into unknown
+        # instead of pretending the previous process still holds it.
+        try:
+            records.expire_unresolved_native_operations()
+        except Exception:
+            pass
         self._fresh={}
         self._fresh_lock=RLock()
         self._receiving=set()
+
+    def native(self):
+        """The one native runtime registry over the SAME records/authority."""
+        if self._native is None:
+            from .native_runtime import NativeRuntimeRegistry
+            self._native=NativeRuntimeRegistry(self)
+        return self._native
+
+    def close(self):
+        """Cancel live receiver tasks; never stop an externally owned endpoint."""
+        native=self._native
+        self._native=None
+        if native is None:return
+        for runtime in list(native._runtimes.values()):
+            runtime._closed=True
+            runtime._stop.set()
+            if runtime._read_task is not None:
+                runtime._read_task.cancel()
+        native._runtimes.clear()
+
+    def expire_instance(self, instance_ref, *, reason='PROCESS_STOPPED'):
+        """The instance's process is gone: its live receiver and accepted native
+        work must become an explicit unknown instead of a fake live handle."""
+        if type(instance_ref) is not AgentInstanceRef:
+            raise InteractionsRefused('VALUE_INVALID', 'instance')
+        from .native_runtime import _runtime_key
+        native=self._native
+        if native is not None:
+            key=_runtime_key(instance_ref)
+            runtime=native._runtimes.pop(key,None)
+            if runtime is not None:
+                runtime._closed=True
+                runtime._stop.set()
+                if runtime._read_task is not None:
+                    runtime._read_task.cancel()
+        try:
+            self.records.expire_native_operations_for_instance(
+                instance_ref.instance_id, reason=reason)
+        except Exception:
+            pass
 
     async def cancel_session(self, instance_ref, *, request_id, invocation, write_guard, deadline):
         """Send one original ACP ``session/cancel`` notification.
@@ -612,7 +664,11 @@ class InteractionService:
         if binding_row is None:
             raise InteractionsRefused('INSTANCE_BINDING_UNAVAILABLE')
         protocol = binding_row.payload.get('protocolId')
-        operation = 'agent-operation/' + uuid4().hex
+        # Deterministic per (scope, instance, requestId): a replay must rebuild
+        # the SAME frame, otherwise a native cancel (whose frame carries the
+        # operation id) would conflict with its own stored receipt.
+        key = self._key(instance_ref, request_id, scope)
+        operation = 'agent-operation/' + key.split(':', 1)[1]
         if protocol == 'acp':
             frame = (_canonical({'jsonrpc': '2.0', 'method': 'session/cancel',
                                  'params': {'sessionId': session}}) + '\n').encode()
@@ -626,7 +682,6 @@ class InteractionService:
         child = cancel_endpoint_request_id(operation, provenance.endpoint_ref, frame_digest)
         binding = CancelBinding(instance_ref, session, operation, child, frame_digest)
         _check(self.authority, 'check_cancel', invocation, binding)
-        key = self._key(instance_ref, request_id, scope)
         target = _canonical({'instanceRef': instance_ref.projection(),
                              'endpointRef': provenance.endpoint_ref.projection(),
                              'sessionId': session, 'action': 'cancel'})
@@ -680,19 +735,6 @@ class InteractionService:
         if receipt.state != record.status or receipt.agent_operation_ref != record.operation_ref:
             raise InteractionsRefused('RECORD_CORRUPT')
         return receipt
-
-    def freeze_native_request(self,instance_ref,*,purpose,method,params_bytes):
-        from .native_operations import freeze_native_request
-        return freeze_native_request(self,instance_ref,purpose=purpose,method=method,params_bytes=params_bytes)
-
-    async def native_recorded(self,request,*,request_id,invocation,write_guard,deadline):
-        from .native_operations import native_recorded
-        return await native_recorded(self,request,request_id=request_id,invocation=invocation,
-            write_guard=write_guard,deadline=deadline)
-
-    def native_query(self,operation_ref,expected_input_digest,*,invocation):
-        from .native_operations import native_query
-        return native_query(self,operation_ref,expected_input_digest,invocation=invocation)
 
     def _prune_fresh(self):
         now=time.monotonic()
@@ -866,6 +908,10 @@ class InteractionService:
         scope=self._scope(invocation)
         if type(instance_ref) is not AgentInstanceRef or type(prompt) is not FrozenPrompt:
             raise InteractionsRefused('VALUE_INVALID','instance/prompt')
+        if self._native is not None and self._native.has_live(instance_ref):
+            # ONE reader per instance: while an accepted native operation owns the
+            # receive loop, a synchronous prompt must not start a second reader.
+            raise InteractionsRefused('SESSION_BUSY','native runtime owns the receive loop')
         key=self._key(instance_ref,request_id,scope)
         record=self.records.operation(key,'turn')
         provenance,session=self._instance(instance_ref,scope)

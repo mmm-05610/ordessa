@@ -6,7 +6,6 @@ from unittest.mock import Mock
 import pytest
 
 from ordessa_server.composition.configuration.model.backend import NativeModelLaunchRefused
-from ordessa_server.composition.configuration.model.backend import NativeModelServices
 from ordessa_server.composition.configuration.model.backend import installation_routes
 from ordessa_server.composition.configuration.model.backend import launch_options
 from ordessa_server.composition.configuration.model.backend import preparation_params
@@ -55,30 +54,3 @@ def test_managed_account_options_are_owned_here_and_api_selection_never_reads_lo
     with pytest.raises(ValueError):
         launch_options('claude-code', desired, managed_account_factory=factory)
     factory.assert_not_called()
-
-
-def test_service_dispatch_uses_only_the_observed_channel_and_verified_installation(monkeypatch):
-    from ordessa_server.composition.configuration.model import live_service
-    verify, create = Mock(return_value=object()), Mock(return_value=('service', 'runtime'))
-    monkeypatch.setattr(live_service, 'verified_installation', verify)
-    monkeypatch.setattr(live_service, 'create_model_service', create)
-    owner = SimpleNamespace(connection_id='owned')
-    channel = SimpleNamespace(harness_id='codex')
-    channels = Mock()
-    channels.get.return_value = channel
-    owners = SimpleNamespace(readback=lambda target: SimpleNamespace(owner=owner))
-    services = NativeModelServices(descriptor_admission=Mock(), roots={'codex': '/trusted'}, channels=channels,
-        owners=owners, carrier=object(), journal_path='/private/journal')
-    binding = object()
-    assert services.create_service('target', credential_binding=binding) == ('service', 'runtime')
-    assert services.create_service('target', credential_binding=binding) == ('service', 'runtime')
-    verify.assert_called_once_with('codex', '/trusted')
-    assert create.call_args.kwargs['installation'] is verify.return_value
-    assert create.call_args.kwargs['credential_binding'] is binding
-    assert create.call_args.kwargs['target'] == 'target'
-    channel.harness_id = 'claude-code'
-    with pytest.raises(ValueError, match='installation route'):
-        services.create_service('target', credential_binding=binding)
-    assert create.call_count == 2
-    with pytest.raises(NativeModelLaunchRefused):
-        services.managed_account('claude-code')

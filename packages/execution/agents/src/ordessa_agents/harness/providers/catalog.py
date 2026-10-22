@@ -47,5 +47,23 @@ class HarnessCatalog:
             handlers[protocol]=handler
         return handlers
 
+    def native_codecs(self):
+        """Protocol-id -> provider-owned native codec (strictly validated)."""
+        from ...sdk.native_codec import validate_codec
+        codecs = {}
+        for provider in self._providers.values():
+            factory = getattr(provider, 'native_codec', None)
+            if not callable(factory):
+                continue
+            try:
+                codec = validate_codec(factory())
+            except Exception:
+                raise HarnessError('NATIVE_CODEC_INVALID') from None
+            protocol = codec.protocol_id
+            if protocol in codecs:
+                raise HarnessError('NATIVE_CODEC_INVALID')
+            codecs[protocol] = codec
+        return codecs
+
     def descriptors(self):
         return tuple(self.resolve(provider.descriptor.definition_ref).descriptor for provider in self._providers.values())

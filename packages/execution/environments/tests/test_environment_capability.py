@@ -9,7 +9,9 @@ from ordessa_interfaces_contracts import validate_capability
 from ordessa_interfaces.system_access import (
     CapabilityHost, RequestContext, build_registry,
 )
-from ordessa_environments import EnvironmentManager, OwnerScope, SQLiteEnvironmentStore
+from ordessa_environments import (
+    EnvironmentManager, EnvironmentOperationUnknown, OwnerScope, SQLiteEnvironmentStore,
+)
 from ordessa_environments.capability import EnvironmentCapabilityService, factory
 from ordessa_environments_local import LocalEnvironmentResourceProvider
 
@@ -32,6 +34,7 @@ class EnvironmentCapabilityTests(unittest.TestCase):
             aliases_path=self.root/'aliases.json')
         capability = factory.build({'services': self.services,
                                     'invocation_resolver': lambda context: self.invocation})
+        self.capability = capability
         validate_capability(capability)
         self.host = CapabilityHost(build_registry([capability]), ('environments',))
         self.count = 0
@@ -119,6 +122,37 @@ class EnvironmentCapabilityTests(unittest.TestCase):
         self.assertEqual(self.call('create', request, 'uncertain-create'), unknown)
         self.assertEqual(len(self.manager.list()), 2)
 
+    def test_reconcile_is_published_and_never_creates_a_second_resource(self):
+        published = {operation.id for operation in self.capability.descriptor.operations}
+        self.assertIn('environments.reconcile', published)
+        # An uncertain creation becomes a fact to verify, never a second create.
+        provider = self.manager.providers['local']
+        original = provider.create
+        calls = []
+        def uncertain(reference, **kwargs):
+            calls.append(reference)
+            raise EnvironmentOperationUnknown('controlled uncertain creation', identity='controlled')
+        provider.create = uncertain
+        unknown = self.call('create', {'provider': 'local', 'root': str(self.root/'work'),
+                                       'alias': 'work'}, 'uncertain-create')
+        self.assertEqual(unknown.status, 'unknown')
+        identity = unknown.data['identity']
+        provider.create = original
+        reconciled = self.call('reconcile', {'reference': identity}, 'uncertain-reconcile')
+        # The local provider owns no creation-correlation authority: it refuses
+        # instead of guessing, and no second resource is created either way.
+        self.assertEqual(reconciled.status, 'refused')
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(self.manager.list()), 1)
+        self.assertEqual(self.manager.list()[0].phase, 'unknown')
+        # A settled resource has nothing to reconcile.
+        settled_create = self.call('create', {'provider': 'local', 'root': str(self.root/'other'),
+                                              'alias': 'other'}, 'settled-create')
+        self.assertEqual(settled_create.status, 'completed')
+        settled = self.call('reconcile', {'reference': 'other'}, 'settled-reconcile')
+        self.assertEqual(settled.status, 'refused')
+        self.assertEqual(settled.error.code, 'INVALID_INPUT')
+
     def test_timeout_is_unknown_without_retry_and_releases_own_process(self):
         self.create()
         result = self.call('exec', {'reference': 'work', 'argv': ['/bin/sleep', '3'], 'timeout': 0.05}, 'timeout')
@@ -181,6 +215,39 @@ class EnvironmentCapabilityTests(unittest.TestCase):
         self.assertEqual(self.manager.list()[0].active_uses, 1)
         self.services.uses.release = original_release
         self.assertEqual(original_release(calls[0], self.scope, request_id='explicit-cleanup', invocation=self.invocation)['status'], 'completed')
+
+
+    def test_native_entry_is_published_and_names_every_provider(self):
+        published = {operation.id for operation in self.capability.descriptor.operations}
+        for identifier in ('environments.native.describe', 'environments.native.request',
+                           'environments.native.query', 'environments.native.events'):
+            self.assertIn(identifier, published)
+        described = self.call('native.describe')
+        self.assertEqual(described.status, 'completed', described)
+        entries = {entry['id']: entry for entry in described.data['providers']}
+        self.assertEqual(set(entries), {'local', 'openshell'})
+        # The local provider owns no native management port: it is named, and
+        # the fact that it has no such port is stated rather than invented.
+        self.assertIsNone(entries['local']['management'])
+        self.assertFalse(entries['openshell']['available'])
+
+    def test_native_request_to_a_provider_without_the_port_is_refused(self):
+        for provider in ('local', 'openshell'):
+            result = self.call('native.request', {'provider': provider, 'action': 'list',
+                                                  'requestId': 'native-' + provider})
+            self.assertEqual(result.status, 'refused', result)
+            self.assertEqual(result.error.code, 'CAPABILITY_UNSUPPORTED')
+
+    def test_native_query_of_an_unknown_request_is_refused(self):
+        result = self.call('native.query', {'requestId': 'native-absent'})
+        self.assertEqual(result.status, 'refused', result)
+        self.assertEqual(result.error.code, 'INVALID_INPUT')
+
+    def test_native_events_of_an_empty_owner_is_a_complete_empty_page(self):
+        page = self.call('native.events')
+        self.assertEqual(page.status, 'completed', page)
+        self.assertEqual(page.data['events'], [])
+        self.assertTrue(page.data['complete'])
 
 
 if __name__ == '__main__':

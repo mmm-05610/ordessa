@@ -49,10 +49,16 @@ class CodexHarnessProvider:
             options.update(values)
         try:compiled=compile_config(options)
         except (ConfigRefusal,ValueError,TypeError):raise HarnessError('CONFIGURATION_UNSUPPORTED') from None
-        # ``model`` is the one thread parameter this provider can apply now: it
-        # rides the app-server's own ``-c model=…`` override. Everything else is
-        # still an explicit refusal instead of a guessed wire key.
-        unsupported=set(compiled['thread_params'])-{'model'}
+        # ``model`` rides the app-server's own ``-c model=…`` override;
+        # ``sandbox`` is protocol-pinned on ``thread/start`` and is accepted so a
+        # sandboxed Environment (where Codex's inner bwrap has no user
+        # namespaces) can choose ``danger-full-access`` — the outer environment
+        # boundary stays the isolation. Everything else is still an explicit
+        # refusal instead of a guessed wire key.
+        unsupported=set(compiled['thread_params'])-{'model','sandbox'}
+        sandbox=compiled['thread_params'].get('sandbox')
+        if sandbox is not None and sandbox not in ('read-only','workspace-write','danger-full-access'):
+            raise HarnessError('CONFIGURATION_INVALID')
         if unsupported or compiled['deferred']:raise HarnessError('SESSION_CONFIGURATION_UNAVAILABLE')
         return compiled
 
@@ -60,6 +66,7 @@ class CodexHarnessProvider:
 
     def prepare(self,content,context):
         compiled=self._options(content)
+        sandbox=compiled['thread_params'].get('sandbox')
         if type(context) is not PrepareContext:raise HarnessError('PREPARE_CONTEXT_REQUIRED')
         if not set(self.descriptor.required_roots)<=set(context.private_dirs):raise HarnessError('APPROVED_ROOTS_UNAVAILABLE')
         if not {'launcher','communicate'}<=set(context.endpoint_facts.get('members',())):raise HarnessError('ENDPOINT_CAPABILITY_UNAVAILABLE')
@@ -72,6 +79,9 @@ class CodexHarnessProvider:
         if any(not environment.get(key) for key in required):raise HarnessError('EXPLICIT_LAUNCH_ENVIRONMENT_REQUIRED')
         if any(any(marker in key.upper() for marker in ('TOKEN','SECRET','PASSWORD','APIKEY','API_KEY','CREDENTIAL')) for key in environment):raise HarnessError('CREDENTIAL_REFERENCE_REQUIRED')
         environment.update({'LANG':'C.UTF-8','LC_ALL':'C.UTF-8','TERM':'dumb','NO_COLOR':'1'})
+        if sandbox is not None:
+            # A non-secret launch marker for this provider's own bootstrap step.
+            environment['ORDESSA_CODEX_SANDBOX']=sandbox
         model=compiled['thread_params'].get('model')
         argv=context.command_prefix+('app-server',)
         if model is not None:
@@ -83,6 +93,9 @@ class CodexHarnessProvider:
 
     def prompt_handler(self):
         return CodexPromptHandler()
+
+    def native_codec(self):
+        return CodexNativeCodec()
 
     async def open_session(self,process,context):
         if type(context) is not PrepareContext:raise HarnessError('PREPARE_CONTEXT_REQUIRED')
@@ -102,8 +115,13 @@ class CodexHarnessProvider:
         reply=await channel.exchange('initialize',
             lambda rid:encode_request(rid,'initialize',{'clientInfo':{'name':'ordessa-cli','version':'1'}}))
         if type(reply) is not dict or 'result' not in reply:raise HarnessError('NATIVE_BOOTSTRAP_INVALID')
+        sandbox='workspace-write'
+        if plan is not None:
+            configured=getattr(plan,'environment_values',{}).get('ORDESSA_CODEX_SANDBOX')
+            if configured in ('read-only','workspace-write','danger-full-access'):
+                sandbox=configured
         reply=await channel.exchange('thread/start',
-            lambda rid:encode_request(rid,'thread/start',{'approvalPolicy':'never','sandbox':'workspace-write'}))
+            lambda rid:encode_request(rid,'thread/start',{'approvalPolicy':'never','sandbox':sandbox}))
         if type(reply) is not dict or type(reply.get('result')) is not dict:
             raise HarnessError('NATIVE_BOOTSTRAP_INVALID')
         thread=reply['result'].get('thread')
@@ -167,6 +185,12 @@ class CodexPromptHandler:
             return params.get('threadId') in (None, session_id)
         if method == 'error':
             params = value.get('params') or {}
+            error = params.get('error') if type(params.get('error')) is dict else {}
+            # Codex reports retryable failures as an ``error`` notification
+            # with ``willRetry`` set (``Reconnecting... 2/5``); the turn is not
+            # terminal yet. Only a non-retryable error ends the operation.
+            if error.get('willRetry') is True:
+                return False
             return params.get('threadId') in (None, session_id)
         return False
 
@@ -197,3 +221,127 @@ class CodexPromptHandler:
 
 def prompt_handler():
     return CodexPromptHandler()
+
+
+class CodexNativeCodec:
+    """codex-app-server/1 dialect: JSON-RPC requests, notifications, replies."""
+
+    protocol_id = 'codex-app-server/1'
+    protocol_version = 1
+    capabilities = frozenset({'request', 'notify', 'events', 'reverse_requests'})
+
+    def _params(self, message):
+        from ordessa_agents.sdk.native_codec import _object
+        value = _object(message, 'native message')
+        if 'method' not in value:
+            raise ValueError('codex native message needs method')
+        params = value.get('params', {})
+        if type(params) is not dict:
+            raise ValueError('codex params must be an object')
+        return value['method'], params, value
+
+    def encode_request(self, correlation_id, message):
+        from ordessa_agents.sdk.native_codec import encode_frame
+        method, params, original = self._params(message)
+        value = {'jsonrpc': '2.0', 'id': str(correlation_id),
+                 'method': method, 'params': params}
+        for key, item in original.items():
+            if key not in ('method', 'params', 'id', 'jsonrpc'):
+                value[key] = item
+        return encode_frame(value)
+
+    def encode_notify(self, message):
+        from ordessa_agents.sdk.native_codec import encode_frame
+        method, params, original = self._params(message)
+        value = {'jsonrpc': '2.0', 'method': method, 'params': params}
+        for key, item in original.items():
+            if key not in ('method', 'params', 'id', 'jsonrpc'):
+                value[key] = item
+        return encode_frame(value)
+
+    def classify(self, value):
+        """Classify one app-server frame.
+
+        The pinned codex app-server (0.157.1) omits ``jsonrpc`` on some responses,
+        so classification is structural (method/id/result/error), not by a
+        version field. Unknown shapes raise instead of being misread.
+        """
+        from ordessa_agents.sdk.native_codec import NativeCodecError, _object
+        value = _object(value, 'native frame')
+        has_method = 'method' in value
+        has_id = 'id' in value
+        has_result = 'result' in value
+        has_error = 'error' in value
+        if has_method and has_id:
+            return 'reverse_request', str(value['id']), str(value['method'])
+        if has_method:
+            return 'notification', None, str(value['method'])
+        if has_id and has_result != has_error:
+            return 'response', str(value['id']), None
+        raise NativeCodecError('codex frame is not a request, notification or response')
+
+    def terminal_state(self, value):
+        if 'error' in value:
+            return 'failed'
+        if 'result' not in value:
+            raise ValueError('codex response has neither result nor error')
+        return 'completed'
+
+    #: Requests whose protocol response only acknowledges acceptance; the turn's
+    #: terminal fact is a later notification (``turn/completed`` etc.).
+    PENDING_REQUESTS = frozenset({'turn/start'})
+
+    def response_state(self, method, value):
+        """Protocol-level meaning of one response frame for its request method."""
+        if method in self.PENDING_REQUESTS and 'error' not in value:
+            return 'pending'
+        return self.terminal_state(value)
+
+    def notification_state(self, value, *, session_id=None, request=None, response=None):
+        """A notification that ends an accepted operation, or None."""
+        method = value.get('method') if type(value) is dict else None
+        params = value.get('params') if type(value) is dict else None
+        if type(params) is not dict:
+            params = {}
+        if request is not None:
+            request_params = request.get('params', {})
+            session_id = request_params.get('threadId', session_id)
+        if session_id is not None and params.get('threadId') not in (None, session_id):
+            return None
+        if response is not None:
+            accepted_turn = response.get('result', {}).get('turn', {}).get('id')
+            observed_turn = params.get('turn', {}).get('id') or params.get('turnId')
+            if accepted_turn is not None and observed_turn != accepted_turn:
+                return None
+        if method == 'error':
+            error = params.get('error') if type(params.get('error')) is dict else {}
+            # A retryable transport error is informational: codex reconnects by
+            # itself. Treating it as terminal would fail long turns that are
+            # still alive.
+            if error.get('willRetry') is True:
+                return None
+            return 'failed'
+        if method == 'turn/aborted':
+            return 'failed'
+        if method == 'turn/completed':
+            turn = params.get('turn') if type(params.get('turn')) is dict else {}
+            status = turn.get('status')
+            if status in (None, 'completed'):
+                return 'completed'
+            if status in ('failed', 'interrupted', 'aborted'):
+                return 'failed'
+            return 'failed'
+        return None
+
+    def encode_reply(self, correlation_id, reply):
+        from ordessa_agents.sdk.native_codec import NativeCodecError, encode_frame, _object
+        reply = _object(reply, 'reply')
+        has_result = 'result' in reply
+        has_error = 'error' in reply
+        if has_result == has_error:
+            raise NativeCodecError('reply must carry exactly one of result/error')
+        return encode_frame({'jsonrpc': '2.0', 'id': str(correlation_id), **reply})
+
+
+def native_codec():
+    return CodexNativeCodec()

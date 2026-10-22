@@ -15,6 +15,13 @@ from ordessa_interfaces_contracts import (
 )
 from .definitions.contracts import ProcessRequest
 from .definitions.errors import EnvironmentOperationUnknown, EnvironmentRefused, ProcessWaitTimeout
+from .definitions.native import (
+    NATIVE_ACTIONS, NATIVE_DESCRIPTION_VERSION, NATIVE_EVENTS_VERSION,
+    NATIVE_MANAGEMENT_VERSION, NATIVE_OBSERVATION_VERSION, NATIVE_QUERY_VERSION,
+    NativeEvent, NativeObservation, description_projection, events_projection,
+    format_cursor, validate_action, validate_cursor, validate_page_limit,
+    validate_request_id,
+)
 from .management.ownership import EnvironmentUseOperations, OwnerScope, _json
 from .management.endpoints import EnvironmentEndpoints
 
@@ -205,6 +212,143 @@ class EnvironmentCapabilityService:
                                   'providerAssurance': report.assurance,
                                   'statement': 'provider-reported isolation; it is not a permission, lease or hold'}}}
 
+    # -- the thin native management entry ------------------------------------
+    #
+    # A native request is a bounded, read-only question about the provider's own
+    # control plane. It shares this service, this manager, this store and this
+    # authority with the normal lifecycle: an inspected resource is the same
+    # ``environment_resources`` row with the same immutable backend id, and the
+    # recorded outcome is the same command-request row every other command
+    # uses. There is no second state store and no second authority.
+
+    def _native_provider(self, provider_id):
+        provider = self.manager.providers.get(provider_id)
+        if provider is None:
+            raise EnvironmentProviderUnavailable('provider unavailable')
+        return provider
+
+    def _native_describe(self, request):
+        """Availability plus the provider's own gateway/binding facts."""
+        selected = request.get('provider')
+        entries = []
+        for catalog in self.provider_catalog:
+            if selected is not None and catalog['id'] != selected:
+                continue
+            entry = {'id': catalog['id'], 'available': bool(catalog.get('available')),
+                     'reason': catalog.get('reason'), 'management': None}
+            provider = self.manager.providers.get(catalog['id'])
+            describe = getattr(provider, 'native_describe', None)
+            if callable(describe):
+                try:
+                    entry['management'] = describe()
+                except EnvironmentRefused as error:
+                    entry['management'] = {
+                        'schemaVersion': NATIVE_MANAGEMENT_VERSION,
+                        'provider': catalog['id'], 'available': False,
+                        'reason': error.detail, 'actions': []}
+            entries.append(entry)
+        if not entries:
+            raise InvalidEnvironmentInput('unknown provider')
+        return description_projection(entries)
+
+    def _native_command_row(self, scope, request_id):
+        with self.manager.store.transaction() as db:
+            row = db.execute('SELECT * FROM environment_command_requests '
+                             'WHERE owner_scope=? AND request_id=? AND action=?',
+                             (scope.storage_key, request_id, 'native.request')).fetchone()
+        return None if row is None else dict(row)
+
+    def _native_query(self, scope, request):
+        """Read the stored fact of one native request; never dispatch again."""
+        request_id = request['requestId']
+        try:
+            validate_request_id(request_id)
+        except EnvironmentRefused as error:
+            raise InvalidEnvironmentInput(error.detail) from None
+        row = self._native_command_row(scope, request_id)
+        if row is None:
+            raise InvalidEnvironmentInput('native request is unknown')
+        replayed = self._replay(row)
+        data = {'schemaVersion': NATIVE_QUERY_VERSION, 'requestId': request_id,
+                'status': replayed.status, 'operationRef': replayed.operation_ref,
+                'observation': replayed.data,
+                'error': None if replayed.error is None else
+                    {'code': replayed.error.code, 'message': replayed.error.message}}
+        return OperationResult(replayed.status, data, replayed.error, replayed.operation_ref)
+
+    def _native_events(self, scope, request):
+        """One page of the owner's native events, with the page's completeness."""
+        try:
+            start = validate_cursor(request.get('cursor'))
+            limit = validate_page_limit(request.get('limit'))
+        except EnvironmentRefused as error:
+            raise InvalidEnvironmentInput(error.detail) from None
+        with self.manager.store.transaction() as db:
+            rows = db.execute('SELECT rowid AS seq,* FROM environment_command_requests '
+                              'WHERE owner_scope=? AND action=? AND rowid>? ORDER BY rowid LIMIT ?',
+                              (scope.storage_key, 'native.request', start, limit + 1)).fetchall()
+        events = []
+        for row in rows[:limit]:
+            stored = json.loads(row['result']) if row['result'] else None
+            facts = (stored or {}).get('data') or {}
+            events.append(NativeEvent(
+                sequence=row['seq'], request_id=row['request_id'], state=row['state'],
+                operation_ref=row['operation_id'], provider=facts.get('provider'),
+                action=facts.get('action'), backend_id=facts.get('backendId'),
+                status=(stored or {}).get('status')))
+        complete = len(rows) <= limit
+        next_cursor = format_cursor(rows[limit - 1]['seq']) if (not complete and events) else None
+        return events_projection(events, cursor=request.get('cursor'), next_cursor=next_cursor,
+                                 complete=complete, limit=limit)
+
+    def _native_unknown(self, request, error):
+        """The stored fact of an uncertain native request."""
+        correlation = error.identity
+        if type(correlation) is not str or not correlation:
+            correlation = request['requestId']
+        observation = NativeObservation(
+            request_id=request['requestId'], provider=request['provider'], action=request['action'],
+            state='unknown', correlation_id=correlation, backend_id=error.backend_id)
+        return observation.projection()
+
+    async def _native_effect(self, request, scope, invocation, row):
+        """Dispatch one bounded native read and record it in the same store."""
+        provider_id = request['provider']
+        provider = self._native_provider(provider_id)
+        native = getattr(provider, 'native_request', None)
+        if not callable(native):
+            raise EnvironmentRefused('provider exposes no native management port')
+        action = request['action']
+        target = None
+        identity = None
+        backend_id = None
+        if action == 'inspect':
+            reference = request.get('reference')
+            if reference is None:
+                raise InvalidEnvironmentInput('native inspect requires an environment reference')
+            identity = self._identity(reference)
+            snapshot = self.manager.get(identity).snapshot
+            if snapshot.provider_id != provider_id:
+                raise InvalidEnvironmentInput('environment is not owned by the selected provider')
+            if not snapshot.backend_id:
+                raise InvalidEnvironmentInput('environment has no immutable backend identity')
+            target = backend_id = snapshot.backend_id
+        request_id = request['requestId']
+        try:
+            facts = native(action, target=target, request_id=request_id)
+        except (EnvironmentRefused, EnvironmentOperationUnknown):
+            raise
+        except Exception as error:
+            # An uncertain outcome keeps its correlation id and is stored as
+            # ``unknown``; it is never dispatched a second time.
+            raise EnvironmentOperationUnknown('native request outcome is unknown',
+                                              identity=request_id, backend_id=backend_id) from error
+        observation = NativeObservation(
+            request_id=request_id, provider=provider_id, action=action, state='completed',
+            correlation_id=request_id, backend_id=backend_id,
+            environment_identity=identity, result=facts)
+        return observation.projection()
+
     def _reserve(self, scope, request_id, action, request):
         if type(request_id) is not str or not 0 < len(request_id) <= 512:
             raise EnvironmentRefused('bounded request id required')
@@ -267,6 +411,12 @@ class EnvironmentCapabilityService:
         self.uses._authorize(scope, action, target, invocation)
         if action == 'providers':
             return OperationResult('completed', {'providers': list(self.provider_catalog)})
+        if action == 'native.describe':
+            return OperationResult('completed', self._native_describe(request))
+        if action == 'native.query':
+            return self._native_query(scope, request)
+        if action == 'native.events':
+            return OperationResult('completed', self._native_events(scope, request))
         if action == 'list':
             return OperationResult('completed', {'resources': [self._project(s) for s in self.manager.list()], 'orphanAliases': []})
         if action == 'inspect':
@@ -300,7 +450,20 @@ class EnvironmentCapabilityService:
                 data = self.uses.launch(request['useIdentity'], scope, process_request,
                     request_id=request_id, invocation=invocation)
             return _owned_result(data)
-        row, first = self._reserve(scope, request_id, action, request)
+        if action == 'native.request':
+            # The native request id is the idempotency key: the same id with the
+            # same canonical input replays the stored result, a different input
+            # conflicts, and an uncertain outcome is stored once and never
+            # dispatched again.
+            try:
+                validate_request_id(request['requestId'])
+                validate_action(request['action'])
+            except EnvironmentRefused as error:
+                raise InvalidEnvironmentInput(error.detail) from None
+            reserve_key = request['requestId']
+        else:
+            reserve_key = request_id
+        row, first = self._reserve(scope, reserve_key, action, request)
         if not first:
             return self._replay(row)
         try:
@@ -317,6 +480,15 @@ class EnvironmentCapabilityService:
             result = OperationResult('refused', None, CapabilityError('CONFLICT', 'Environment resource or alias already exists'), row['operation_id'])
         except EnvironmentRefused:
             result = OperationResult('refused', None, CapabilityError('CAPABILITY_UNSUPPORTED', 'Environment command refused before its effect'), row['operation_id'])
+        except EnvironmentOperationUnknown as error:
+            if action == 'native.request':
+                # An uncertain native outcome is a stored fact: it keeps its
+                # correlation id and is never dispatched a second time.
+                result = OperationResult('unknown', self._native_unknown(request, error),
+                    CapabilityError('EFFECT_UNKNOWN', 'Environment native request outcome is unknown; not re-dispatched'),
+                    row['operation_id'])
+            else:
+                result = OperationResult('unknown', {'identity': row['identity']} if action in ('create', 'register') else None, CapabilityError('EFFECT_UNKNOWN', 'Environment command requires explicit inspection'), row['operation_id'])
         except ProcessWaitTimeout:
             result = OperationResult('unknown', None, CapabilityError('OBSERVATION_TIMEOUT', 'Process observation timed out'), row['operation_id'])
         except Exception:
@@ -324,6 +496,8 @@ class EnvironmentCapabilityService:
         return self._finish(row, result)
 
     async def _effect(self, action, request, scope, invocation, row):
+        if action == 'native.request':
+            return await self._native_effect(request, scope, invocation, row)
         if action in ('create', 'register'):
             provider = request['provider']
             if provider not in self.manager.providers:
@@ -382,6 +556,15 @@ class EnvironmentCapabilityService:
         if action not in ('delete',) and instance.snapshot.phase in ('deleted', 'failed'):
             raise InvalidEnvironmentInput('environment resource is ' + instance.snapshot.phase)
         self.uses._authorize(scope, action, identity, invocation)
+        if action == 'reconcile':
+            # An uncertain creation is *verified*, never repeated. The provider's
+            # recovery is a read-only correlation lookup over the persisted
+            # operation identity; this command never creates a second resource.
+            snapshot = instance.snapshot
+            if snapshot.operation != 'create' or snapshot.phase not in ('creating', 'unknown'):
+                raise InvalidEnvironmentInput('environment has no uncertain creation to reconcile')
+            self.manager.reconcile_creation(identity, backend_id=None)
+            return self._project(instance.snapshot)
         if action in ('stop', 'delete'):
             provider = self.manager._provider(instance.snapshot.provider_id)
             if action not in provider.operations:
@@ -520,6 +703,9 @@ SPECS = {
                 'reference': {'type': 'object', 'valueKind': 'structured'}}, ('provider',)),
     'register': ({'provider': STR, 'backend': STR, 'alias': STR}, ('provider', 'backend')),
     'stop': ({'reference': STR}, ('reference',)), 'delete': ({'reference': STR}, ('reference',)),
+    # An uncertain creation becomes a verifiable fact through this command. It
+    # binds the evidence of an existing creation; it never creates a new one.
+    'reconcile': ({'reference': STR}, ('reference',)),
     'exec': ({'reference': STR, 'argv': ARGV, 'env': ENV, 'stdin': {'type': 'string', 'maxLength': 262144},
               'timeout': {'type': 'number', 'exclusiveMinimum': 0, 'maximum': 300}}, ('reference', 'argv')),
     'files': ({'reference': STR, 'verb': {'enum': ['ls', 'cat', 'write']}, 'path': STR,
@@ -537,6 +723,16 @@ SPECS = {
     'endpoint-inspect': ({'endpointRef': {'type': 'object'}}, ('endpointRef',)),
     'use-inspect': ({'useIdentity': STR}, ('useIdentity',)),
     'launch': ({'useIdentity': STR, 'argv': ARGV, 'cwd': STR, 'env': ENV}, ('useIdentity', 'argv', 'cwd')),
+    # The thin native management entry. It is a bounded, read-only view over
+    # the provider's own control plane: the same store, the same authority and
+    # the same immutable backend identity as the normal lifecycle.
+    'native.describe': ({'provider': STR}, ()),
+    'native.request': ({'provider': STR, 'action': {'enum': list(NATIVE_ACTIONS)},
+                        'reference': STR, 'requestId': STR},
+                       ('provider', 'action', 'requestId')),
+    'native.query': ({'requestId': STR}, ('requestId',)),
+    'native.events': ({'cursor': {'type': ['string', 'null'], 'maxLength': 32},
+                       'limit': {'type': ['integer', 'null'], 'minimum': 1, 'maximum': 256}}, ()),
 }
 
 
@@ -587,15 +783,37 @@ def _cli_arguments(action, properties, required):
     return args
 
 
+#: The native management entry has its own command path, so the thin native
+#: surface never collides with the ordinary ``environments <action>`` grammar.
+_NATIVE_CLI = {
+    'native.describe': ('describe', (('provider', '--provider', 'string'),)),
+    'native.request': ('request', (('provider', '--provider', 'string'),
+                                   ('action', '--action', 'string'),
+                                   ('reference', '--reference', 'string'),
+                                   ('requestId', '--request-id-value', 'string'))),
+    'native.query': ('query', (('requestId', '--request-id-value', 'string'),)),
+    'native.events': ('events', (('cursor', '--cursor', 'string'),
+                                 ('limit', '--limit', 'integer'))),
+}
+
+
 def descriptor():
     """Static command/metadata surface; constructing it opens no store."""
     descriptors = []
     for action, (properties, required) in SPECS.items():
-        cli = {'command': 'environments', 'operation': action,
-               'args': _cli_arguments(action, properties, required),
-               'render': {'kind': 'process', 'paths': ['exitCode', 'stdout', 'stderr']} if action == 'exec' else {'kind': 'json'}}
+        if action in _NATIVE_CLI:
+            operation, arguments = _NATIVE_CLI[action]
+            cli = {'command': 'environments native', 'operation': operation,
+                   'args': [{'name': name, 'flags': (flag,), 'type': kind}
+                            for name, flag, kind in arguments],
+                   'render': {'kind': 'json'}}
+        else:
+            cli = {'command': 'environments', 'operation': action,
+                   'args': _cli_arguments(action, properties, required),
+                   'render': {'kind': 'process', 'paths': ['exitCode', 'stdout', 'stderr']} if action == 'exec' else {'kind': 'json'}}
         descriptors.append(OperationDescriptor('environments.'+action, _schema(properties, required), {'type': 'object'},
-            ('environments.'+action,), cli, {'tool': 'environments_'+action.replace('-', '_')}))
+            ('environments.'+action,), cli,
+            {'tool': 'environments_' + action.replace('-', '_').replace('.', '_')}))
     base = CapabilityDescriptor('environments', '1', tuple(descriptors), '')
     return CapabilityDescriptor('environments', '1', tuple(descriptors),
                                 compute_descriptor_digest(base))

@@ -44,6 +44,11 @@ class _Use:
 
 class OpenShellEnvironmentProvider:
     operations = frozenset({'start','stop','delete'})
+    #: The bounded native management actions. Every one of them is a read over
+    #: the gateway's own control plane: this port never creates or deletes a
+    #: sandbox and never proxies an arbitrary remote interface.
+    native_actions = frozenset({'list','inspect','health'})
+
     def __init__(self, configuration: OpenShellConfiguration, *, client: SandboxClient, rpc):
         self.configuration, self._client, self._rpc = configuration, client, rpc
         self.identity = configuration.provider_id
@@ -194,3 +199,93 @@ class OpenShellEnvironmentProvider:
             if time.monotonic() >= deadline:
                 raise EnvironmentOperationUnknown('deletion absence was not confirmed within the bound',identity=backend_id,backend_id=backend_id)
             time.sleep(0.2)
+
+    # -- the thin native management port -------------------------------------
+    #
+    # These are the provider's own official SDK calls behind a closed action
+    # set. The neutral layer never names a gateway, an RPC or a protobuf
+    # message; the mapping stays here, in the plugin that owns the SDK.
+
+    def native_describe(self):
+        """Availability plus this gateway/workspace binding's own facts."""
+        facts = {'schemaVersion': 'environment-native-management/1',
+                 'provider': self.identity, 'available': False, 'reason': None,
+                 'gateway': self.configuration.gateway_reference,
+                 'workspace': self.configuration.workspace,
+                 'endpointKind': 'openshell-sandbox',
+                 'binding': self.binding_id,
+                 'gatewayVersion': None,
+                 'actions': sorted(self.native_actions)}
+        try:
+            health = self._client.health()
+        except Exception:
+            facts['reason'] = 'OpenShell gateway health cannot be verified'
+            return facts
+        version = health.version.removeprefix('v')
+        facts['gatewayVersion'] = version
+        if version != '0.1.3':
+            facts['reason'] = 'OpenShell gateway version differs from verified SDK release'
+            return facts
+        if health.status != pb.SERVICE_STATUS_HEALTHY:
+            facts['reason'] = 'OpenShell gateway did not report healthy'
+            return facts
+        facts['available'] = True
+        return facts
+
+    def native_request(self, action, *, target=None, request_id=None):
+        """One bounded read over the gateway's own control plane.
+
+        The action set is closed. An action outside it is refused, and no
+        sandbox is ever created or deleted from this port.
+        """
+        if action not in self.native_actions:
+            raise EnvironmentRefused('OpenShell native management action is not supported')
+        if action == 'list':
+            return {'action': 'list',
+                    'items': [self._neutral_sandbox(ref) for ref in self._native_list(request_id)]}
+        if action == 'inspect':
+            if not isinstance(target, str) or not target:
+                raise EnvironmentRefused('OpenShell native inspect requires an immutable sandbox ID')
+            try:
+                sandbox = self._lookup(target)
+            except BackendNotFound:
+                # An absent sandbox is a fact about the gateway, not a failure
+                # of this port.
+                return {'action': 'inspect', 'present': False, 'backendId': target}
+            return {'action': 'inspect', 'present': True, **self._neutral_sandbox(sandbox)}
+        return {'action': 'health', **self._native_health(request_id)}
+
+    def _native_list(self, request_id):
+        try:
+            return self._client.list_all(workspace=self.configuration.workspace)
+        except grpc.RpcError as error:
+            status = error.code()
+            category = status.name if isinstance(status, grpc.StatusCode) else 'UNKNOWN'
+            raise EnvironmentOperationUnknown(
+                'OpenShell sandbox listing outcome is unavailable (' + category + '); do not retry',
+                identity=request_id) from None
+        except Exception:
+            raise EnvironmentOperationUnknown(
+                'OpenShell sandbox listing outcome is unavailable (UNKNOWN); do not retry',
+                identity=request_id) from None
+
+    def _native_health(self, request_id):
+        try:
+            health = self._client.health()
+        except grpc.RpcError as error:
+            status = error.code()
+            category = status.name if isinstance(status, grpc.StatusCode) else 'UNKNOWN'
+            raise EnvironmentOperationUnknown(
+                'OpenShell gateway health outcome is unavailable (' + category + '); do not retry',
+                identity=request_id) from None
+        except Exception:
+            raise EnvironmentOperationUnknown(
+                'OpenShell gateway health outcome is unavailable (UNKNOWN); do not retry',
+                identity=request_id) from None
+        return {'gatewayVersion': health.version.removeprefix('v'),
+                'status': 'healthy' if health.status == pb.SERVICE_STATUS_HEALTHY else 'not-healthy'}
+
+    def _neutral_sandbox(self, sandbox):
+        """The neutral fact of one sandbox: identity, name, workspace and state."""
+        return {'backendId': sandbox.id, 'name': sandbox.name, 'workspace': sandbox.workspace,
+                'state': observation(sandbox).state}

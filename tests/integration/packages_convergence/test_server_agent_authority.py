@@ -118,21 +118,53 @@ def test_preparation_uses_the_same_grant_as_the_lifecycle():
         ServerAgentAuthority(without).allow('agents.start', _invocation(without))
 
 
+def _native_binding(kind='request'):
+    """A real closed dispatch binding; the authority inspects its kind."""
+    from ordessa_agents.sdk.instances import AgentInstanceRef, EndpointRef
+    from ordessa_agents.sdk.native_runtime import (NativeDispatchBinding,
+                                                   native_dispatch_request_id)
+    instance_ref = AgentInstanceRef('server', 'instance-1', 'sha256:' + 'a' * 64)
+    endpoint = EndpointRef('issuer', 'endpoint', '1', 'sha256:' + 'd' * 64)
+    frame = 'sha256:' + 'c' * 64
+    return NativeDispatchBinding(
+        instance_ref, endpoint, kind, 'sha256:' + 'e' * 64, 'codex-app-server/1',
+        'session-1', 'sha256:' + 'b' * 64, frame,
+        native_dispatch_request_id(endpoint, frame), 'native/' + 'f' * 32)
+
+
 def test_native_policy_names_the_exact_native_operation():
-    authority = _authority(('agents.native.recorded', 'agents.native.query'))
+    request = _native_binding('request')
+    authority = _authority(('agents.native.request', 'agents.native.query'))
     interactions = ServerInteractionAuthority(authority)
     invocation = _invocation(authority)
-    interactions.check_native_dispatch(invocation, _Stub())
+    interactions.check_native_dispatch(invocation, request)
     interactions.check_read_native_operation(invocation, _Stub(), 'sha256:' + '0' * 64)
-    # The dispatch guard is the freeze grant: a native write may only be made
-    # by a caller that was allowed to freeze the request at all.
+    # A notify frame is a different write and needs its own grant.
     with pytest.raises(Exception):
-        with interactions.guard_native_dispatch(invocation, _Stub()):
-            pass
-    frozen = _authority(('agents.native.freeze',))
-    with ServerInteractionAuthority(frozen).guard_native_dispatch(
-            _invocation(frozen), _Stub()):
+        interactions.check_native_dispatch(invocation, _native_binding('notify'))
+    with pytest.raises(Exception):
+        interactions.check_read_native_events(invocation, _Stub())
+    notify = _authority(('agents.native.notify',))
+    ServerInteractionAuthority(notify).check_native_dispatch(
+        _invocation(notify), _native_binding('notify'))
+    # The guarded cut repeats the same exact grant check.
+    with interactions.guard_native_dispatch(invocation, request):
         pass
+    with pytest.raises(Exception):
+        with interactions.guard_native_dispatch(invocation, _native_binding('notify')):
+            pass
+
+
+def test_native_reads_and_reply_have_their_own_grants():
+    authority = _authority(('agents.native.describe', 'agents.native.events'))
+    interactions = ServerInteractionAuthority(authority)
+    invocation = _invocation(authority)
+    interactions.check_native_describe(invocation, _Stub())
+    interactions.check_read_native_events(invocation, _Stub())
+    with pytest.raises(Exception):
+        interactions.check_native_respond(invocation, _Stub())
+    reply = _authority(('agents.native.respond',))
+    ServerInteractionAuthority(reply).check_native_respond(_invocation(reply), _Stub())
 
 
 def test_the_write_guard_admits_only_the_granted_physical_write():
@@ -148,6 +180,14 @@ def test_the_write_guard_admits_only_the_granted_physical_write():
     invocation = _invocation(authority)
     with guard.guard_write(prompt, invocation):
         pass  # the granted prompt write is admitted through the cut
+    # A native request frame needs the native request grant, not the prompt one.
+    with pytest.raises(Exception):
+        with guard.guard_write(_native_binding('request'), invocation):
+            pass
+    native = _authority(('agents.native.request',))
+    with ServerPromptWriteGuard(native).guard_write(_native_binding('request'),
+                                                    _invocation(native)):
+        pass
 
 
 def test_the_write_guard_refuses_an_ungranted_or_unknown_binding():

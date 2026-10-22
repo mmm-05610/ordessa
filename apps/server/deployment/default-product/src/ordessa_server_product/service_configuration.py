@@ -46,8 +46,13 @@ PROFILE_OPERATIONS: "tuple[str, ...]" = (
 ENVIRONMENT_OPERATIONS: "tuple[str, ...]" = tuple(
     "environments." + action for action in (
         "providers", "list", "inspect", "create", "register", "stop", "delete",
+        # Binds the evidence of an uncertain creation; it never creates again.
+        "reconcile",
         "exec", "files", "acquire", "release", "process-release",
         "export-endpoint", "endpoint-inspect", "use-inspect",
+        # The thin native management entry: a bounded, read-only view over the
+        # provider's own control plane.
+        "native.describe", "native.request", "native.query", "native.events",
         # Permission rights the exec/endpoint paths also authorize.
         "launch", "observe", "communicate", "terminate", "detach", "export", "resolve"))
 
@@ -64,7 +69,8 @@ AGENT_INSTANCE_OPERATIONS: "tuple[str, ...]" = (
 
 #: Native operation ids the native capability descriptor publishes.
 AGENT_NATIVE_OPERATIONS: "tuple[str, ...]" = (
-    "agents.native.freeze", "agents.native.recorded", "agents.native.query")
+    "agents.native.describe", "agents.native.request", "agents.native.notify",
+    "agents.native.query", "agents.native.events", "agents.native.respond")
 
 #: Every Agent operation (instance + native) this product can serve.
 AGENT_OPERATIONS: "tuple[str, ...]" = AGENT_INSTANCE_OPERATIONS + AGENT_NATIVE_OPERATIONS
@@ -136,6 +142,9 @@ class ServiceConfiguration:
     #: preparation port consumes it without changing it.
     harness_providers: "Mapping[str, Mapping[str, object]]" = field(
         default_factory=dict, hash=False)
+    #: Optional explicit Decision model provider configuration (symbolic secret
+    #: reference only: an environment variable NAME, never a literal credential).
+    decision: "Mapping[str, object] | None" = None
 
     @property
     def principal_scope(self) -> str:
@@ -259,12 +268,63 @@ def _harness_providers(value: object) -> "Mapping[str, Mapping[str, object]]":
     return MappingProxyType(providers)
 
 
+_DECISION_KEYS = {"provider", "model", "baseUrl", "secretEnv"}
+_DECISION_OPTIONAL = {"sessionHeader", "acceptedModels"}
+
+
+def _decision_provider(section: object) -> "Mapping[str, object]":
+    """Validate the explicit Decision model provider section.
+
+    Only a symbolic credential reference (environment variable NAME) is accepted;
+    a literal key can never be written into this file. The provider id is closed
+    to the one implemented adapter ('jev'); CEL needs no provider.
+    """
+    if (type(section) is not dict or not _DECISION_KEYS <= set(section)
+            or set(section) - _DECISION_KEYS - _DECISION_OPTIONAL):
+        raise ServiceConfigurationError(
+            "decision section needs provider/model/baseUrl/secretEnv and optional"
+            " sessionHeader/acceptedModels")
+    provider_id = section["provider"]
+    if provider_id != "jev":
+        raise ServiceConfigurationError("decision.provider must be 'jev'")
+    model = _identifier(section["model"], "decision.model", pattern_ok=_token_name)
+    base_url = section["baseUrl"]
+    from urllib.parse import urlsplit
+    url = urlsplit(base_url) if type(base_url) is str else None
+    if (url is None or url.scheme != "https" or not url.hostname or url.username
+            or url.password or url.query or url.fragment):
+        raise ServiceConfigurationError("decision.baseUrl must be a plain https URL")
+    secret_env = section["secretEnv"]
+    if type(secret_env) is not str or _ENVIRONMENT_NAME.fullmatch(secret_env) is None:
+        raise ServiceConfigurationError("decision.secretEnv must name an environment variable")
+    if secret_env.upper() in ("",):
+        raise ServiceConfigurationError("decision.secretEnv is invalid")
+    result = {"provider": "jev", "model": model,
+              "baseUrl": base_url, "secretEnv": secret_env}
+    session_header = section.get("sessionHeader")
+    if session_header is not None:
+        if (type(session_header) is not str or _ENVIRONMENT_NAME.fullmatch(
+                session_header.lower().replace('-', '_')) is None):
+            raise ServiceConfigurationError("decision.sessionHeader is invalid")
+        result["sessionHeader"] = session_header
+    accepted = section.get("acceptedModels")
+    if accepted is not None:
+        if (type(accepted) is not list or not accepted or len(accepted) > 8
+                or any(type(item) is not str or _token_name(item) is not True
+                       for item in accepted)
+                or len(set(accepted)) != len(accepted)):
+            raise ServiceConfigurationError("decision.acceptedModels is invalid")
+        result["acceptedModels"] = tuple(accepted)
+    return MappingProxyType(result)
+
+
 def configuration_from_document(document: dict, *, harness_default: "tuple[str, ...]") -> ServiceConfiguration:
     """Validate one complete document; every section is required."""
     required = {"version", "server", "access", "profiles", "harness", "capabilities"}
-    if set(document) != required:
+    if not required <= set(document) or set(document) - required - {"decision"}:
         raise ServiceConfigurationError(
-            "service configuration needs exactly version/server/access/profiles/harness/capabilities")
+            "service configuration needs exactly version/server/access/profiles/harness/capabilities"
+            " and an optional decision")
     if document["version"] != 1 or type(document["version"]) is not int:
         raise ServiceConfigurationError("unsupported service configuration version")
 
@@ -325,6 +385,10 @@ def configuration_from_document(document: dict, *, harness_default: "tuple[str, 
     if unsupported:
         raise ServiceConfigurationError("unsupported capability: " + ", ".join(sorted(unsupported)))
 
+    decision = None
+    if "decision" in document:
+        decision = _decision_provider(document["decision"])
+
     return ServiceConfiguration(
         server_id=server_id,
         access=ServiceAccess(token_file=token_path, principal_id=principal_id, realm=realm,
@@ -334,6 +398,7 @@ def configuration_from_document(document: dict, *, harness_default: "tuple[str, 
         harness_allowlist=tuple(allowlist),
         capabilities=tuple(capabilities),
         harness_providers=providers,
+        decision=decision,
     )
 
 

@@ -366,7 +366,8 @@ def build_agent_domain(state: LocalState, *, session: bool = False,
             endpoints=environment.endpoints, authority=authority,
             roots=_session_roots(state), harness_config=harness_config['providers'])
         interactions = InteractionService(records, authority, resolver,
-            native_prompts=catalog.prompt_handlers())
+            native_prompts=catalog.prompt_handlers(),
+            native_codecs=catalog.native_codecs())
         manager = AgentManager(
             resolver, records, profile_service=profile_owner.service,
             harness_resolver=catalog, preparation_resolver=preparation,

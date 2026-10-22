@@ -29,7 +29,31 @@ from .errors import (
     ProcessStartFailed,
 )
 from .models import BackendObservation, EnvironmentSnapshot, EnvironmentOperationReceipt, ProviderFacts, ProcessObservation, ProcessCancellation
-from .ports import BackendUse, EnvironmentResourceProvider
+from .native import (
+    DEFAULT_PAGE_EVENTS,
+    MAX_NATIVE_REQUEST_ID,
+    MAX_PAGE_EVENTS,
+    NATIVE_ACTIONS,
+    NATIVE_DESCRIPTION_VERSION,
+    NATIVE_ENVELOPE_VERSION,
+    NATIVE_EVENTS_VERSION,
+    NATIVE_EVENT_VERSION,
+    NATIVE_MANAGEMENT_VERSION,
+    NATIVE_OBSERVATION_VERSION,
+    NATIVE_QUERY_VERSION,
+    NATIVE_STATES,
+    NativeEvent,
+    NativeObservation,
+    NativeRequest,
+    description_projection,
+    events_projection,
+    format_cursor,
+    validate_action,
+    validate_cursor,
+    validate_page_limit,
+    validate_request_id,
+)
+from .ports import BackendUse, EnvironmentNativeManagement, EnvironmentResourceProvider
 from .composition_values import (
     CONTRACT_ID,
     CompositionAttemptRecord,
@@ -71,7 +95,13 @@ __all__ = [
     "BackendNotFound", "EnvironmentOperationUnknown", "ProcessWaitTimeout",
     "ProcessObservation", "ProcessCancellation",
     "BackendObservation", "EnvironmentSnapshot", "EnvironmentOperationReceipt",
-    "ProviderFacts", "BackendUse", "EnvironmentResourceProvider",
+    "ProviderFacts", "BackendUse", "EnvironmentNativeManagement", "EnvironmentResourceProvider",
+    "DEFAULT_PAGE_EVENTS", "MAX_NATIVE_REQUEST_ID", "MAX_PAGE_EVENTS", "NATIVE_ACTIONS",
+    "NATIVE_DESCRIPTION_VERSION", "NATIVE_ENVELOPE_VERSION", "NATIVE_EVENTS_VERSION",
+    "NATIVE_EVENT_VERSION", "NATIVE_MANAGEMENT_VERSION", "NATIVE_OBSERVATION_VERSION",
+    "NATIVE_QUERY_VERSION", "NATIVE_STATES", "NativeEvent", "NativeObservation",
+    "NativeRequest", "description_projection", "events_projection", "format_cursor",
+    "validate_action", "validate_cursor", "validate_page_limit", "validate_request_id",
     "CONTRACT_ID",
     "CompositionAttemptRecord",
     "CompositionError",

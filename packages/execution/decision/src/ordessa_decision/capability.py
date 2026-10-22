@@ -63,6 +63,10 @@ class DecisionsCapability:
         self.settings = settings
         self.invocation_resolver=invocation_resolver
         self.evidence_scope_resolver=evidence_scope_resolver
+        # Owner-held background work for async model runs (F11). These tasks are
+        # not a second executor or a wire queue: each is one already-claimed run.
+        self._background=set()
+        self._running=set()
 
     def _store(self,context,operation):
         if (not callable(self.invocation_resolver) or not callable(self.evidence_scope_resolver)
@@ -106,9 +110,14 @@ class DecisionsCapability:
         dry_run = request.get("dry_run", False)
         if type(dry_run) is not bool:
             return _failed("INVALID_INPUT", "dry_run must be a boolean")
-        if dry_run and any(step["type"] == "ask" for step in job.steps):
+        has_model_step = any(step["type"] == "ask" for step in job.steps)
+        if dry_run and has_model_step:
             return _failed("CAPABILITY_UNSUPPORTED",
                            "dry-run jobs may not call a model")
+        if has_model_step and not dry_run and self.settings.provider is None:
+            # Refused before the claim: an unconfigured provider is not a run.
+            return _failed('provider_unavailable',
+                           'decision model provider is not configured')
         request_digest=digest_hex({'job':job.raw,'dryRun':dry_run}, maximum=job_document_bound(self.settings.job_document_max_bytes))
         try:
             _,read_scope=self._store(context,'decisions.get')
@@ -125,10 +134,21 @@ class DecisionsCapability:
                 if read_scope!=scope:raise DecisionError('permission_denied')
             except DecisionError:return _failed('permission_denied','original decision request read refused')
             if recorded is None:
+                if (scope, context.request_id) in self._running:
+                    return OperationResult('accepted',data={'state':'pending'},operation_ref=operation)
                 return OperationResult('unknown',error=CapabilityError('EFFECT_UNKNOWN','original decision run is unresolved; no retry',False),operation_ref=operation)
             try:return _decode_recorded(recorded,operation)
             except Exception:
                 return OperationResult('unknown',error=CapabilityError('EFFECT_UNKNOWN','original decision result unavailable',False),operation_ref=operation)
+        if has_model_step and not dry_run:
+            # F11: a model-bearing run leaves the HTTP wait; the owner keeps the
+            # claim and publishes the terminal fact for a later query.
+            task=asyncio.get_running_loop().create_task(self._run_background(
+                job,store,scope,context,operation,request_digest))
+            self._background.add(task);self._running.add((scope, context.request_id))
+            task.add_done_callback(lambda done,_rid=(scope, context.request_id):
+                (self._background.discard(done),self._running.discard(_rid)))
+            return OperationResult('accepted',data={'state':'pending'},operation_ref=operation)
         result=await self._execute_once(job,dry_run,store,scope,context,operation)
         # A revoked scope left the original claim unresolved. Never persist under
         # a different subject or retry to reconstruct this possibly executed run.
@@ -177,13 +197,56 @@ class DecisionsCapability:
                                operation_ref=operation,
                                evidence_refs=("sha256:" + ref.digest,))
 
+    async def _run_background(self,job,store,scope,context,operation,request_digest):
+        """One already-claimed model run; publish only under current authority.
+
+        Authorization is rechecked at the actual dispatch after acceptance; a
+        revoked scope refuses before any provider call. If publication is no
+        longer authorized, the durable claim remains unresolved and query reports
+        unknown once the in-process task is no longer running.
+        """
+        result=None
+        try:
+            try:
+                _,current=self._store(context,'decisions.run')
+                if current!=scope:raise DecisionError('permission_denied')
+            except DecisionError:
+                result=_failed('permission_denied','decision dispatch refused after acceptance')
+            if result is None:
+                result=await self._execute_once(job,False,store,scope,context,operation)
+        except asyncio.CancelledError:
+            result=OperationResult('unknown',error=CapabilityError(
+                'EFFECT_UNKNOWN','decision background run was cancelled',False),
+                operation_ref=operation)
+            raise
+        except Exception:
+            result=OperationResult('unknown',error=CapabilityError(
+                'EFFECT_UNKNOWN','decision background outcome unknown',False),
+                operation_ref=operation)
+        try:
+            current_store,current_scope=self._store(context,'decisions.run')
+            if current_scope!=scope:raise DecisionError('permission_denied')
+            current_store.complete_run(context.request_id,request_digest,_encode_recorded(result))
+        except Exception:
+            # Unpublished result stays an unconfirmed claim (readable unknown);
+            # it is never retried or rebound to another subject.
+            return
+        finally:
+            self._running.discard((scope, context.request_id))
+
+    async def wait_background(self):
+        """Await every owner-held run (tests and orderly shutdown)."""
+        if self._background:
+            await asyncio.gather(*tuple(self._background),return_exceptions=True)
+
     async def query(self, request: Mapping, context) -> OperationResult:
         """Read one ORIGINAL run by request id and input digest; never claims.
 
         The digest is recomputed exactly as ``run`` did. A missing claim, a
         foreign scope or a different input is refused without creating a claim,
         calling a provider or resending the job. A claim without a result is a
-        readable pending state, not a new execution right.
+        pending only while this owner still runs it; otherwise it is unknown,
+        never a new execution right.
         """
         original = request.get("originalRequestId")
         if (type(original) is not str or not original or len(original) > 512
@@ -215,8 +278,12 @@ class DecisionsCapability:
                 return _failed("run_request_conflict", "original decision request has different input")
             return _failed("INVALID_INPUT", "original decision run record is invalid")
         if recorded is None:
-            return OperationResult("accepted", data={"state": "pending"},
-                                   operation_ref=operation)
+            if (_scope, original) in self._running:
+                return OperationResult("accepted", data={"state": "pending"},
+                                       operation_ref=operation)
+            return OperationResult("unknown", error=CapabilityError(
+                "EFFECT_UNKNOWN", "original decision run is unresolved; no retry", False),
+                operation_ref=operation)
         try:
             return _decode_recorded(recorded, operation)
         except Exception:
@@ -292,6 +359,12 @@ def build_capability(settings: DecisionsSettings, *, invocation_resolver=None, e
         f"{CAPABILITY_ID}.query": service.query,
     })
     validate_capability(capability)
+    # Internal owner handle (not a public operation): orderly shutdown/tests need
+    # to await the same owner-held background runs; it issues no capability.
+    try:
+        object.__setattr__(capability, '_decision_service', service)
+    except (AttributeError, TypeError):
+        pass
     return capability
 
 

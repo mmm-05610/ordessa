@@ -70,34 +70,38 @@ def test_product_original_root_records_profile_capability_and_empty_grants(tmp_p
 
 @pytest.mark.parametrize('lose_root',[False,True])
 def test_product_root_native_original_receiver_and_cold_reopen_no_second_use(tmp_path,lose_root):
-    import hashlib,shutil
-    from ordessa_server.composition.agent_bindings.native_access import OriginalNativeAccess,NATIVE_READ,NATIVE_CAPABILITIES
+    """Controlled root-loss injection at the native physical cut, new surface.
+
+    The cut either admits the guarded write or raises the authority refusal the
+    root owner would produce; the operation must then be refused with no bytes
+    and no second environment Use. A cold reopen reads the stored fact only.
+    """
+    from native_case_fixture import (DelegatingNativeAccess,NativeCall,native_case,
+        close as close_native,wait_completed)
     from ordessa_agents.capability.native import build_native_capability
-    from ordessa_infrastructure.encoding import canonical_bytes
-    from test_recorded_native_configuration import PEER as NATIVE_PEER,OPTIONS,METHODS,ROOT
+    from ordessa_agents.sdk.interactions import InteractionsRefused
+    from contextlib import contextmanager
     async def scenario():
-        module=(ROOT/'packages/execution/agents/src/ordessa_agents/harness/configuration/acp/operation.mjs').as_uri()
-        peer=NATIVE_PEER.replace('MODULE',json.dumps(module)).replace('OPTIONS',json.dumps(OPTIONS))
-        case=await setup(tmp_path/'fixture',peer,runner=(shutil.which('node'),),peer_name='peer.mjs')
-        root=tmp_path/'product-native';runtime=None;caller=[None];started=[None]
+        case=await native_case(tmp_path/'fixture',start=False)
+        root=tmp_path/'product-native';runtime=None;caller=[None]
         scope=Scope('fixture-realm','fixture-project')
         issuer=InstanceAccessAuthority(lambda:'controlled-product-test-token',principal_id='existing-test-caller',
-            grants=(AccessGrant(scope,(NATIVE_READ,*NATIVE_CAPABILITIES.values())),),legacy_principal=None)
-        access=OriginalNativeAccess(case.authority,issuer,caller_resolver=lambda invocation:caller[0] if invocation is case.fixture.invocation else None,
-            scope_for_agent=lambda ref:scope if started[0] and ref==started[0].instance_ref else None,
-            principal_scope_for_caller=lambda p:'principal:'+p.principal_id)
-        from contextlib import contextmanager
-        from ordessa_server.bootstrap.data_root import OWNER_MARKER_NAME
-        marker=root/OWNER_MARKER_NAME;original_marker=[None]
+            grants=(AccessGrant(scope,('agents.native.request','agents.native.query')),),legacy_principal=None)
+        access=DelegatingNativeAccess(case.authority,issuer,
+            caller_resolver=lambda invocation:caller[0] if invocation is case.fixture.invocation else None,
+            scope_for_agent=lambda ref:scope,
+            principal_scope_for_caller=lambda p:'principal:'+p.principal_id,
+            operations=('agents.native.request','agents.native.query'))
         class Cut:
             @contextmanager
             def guard_write(self,binding,invocation):
                 with access.guard_write(binding,invocation):
                     if lose_root:
-                        original_marker[0]=marker.read_bytes();marker.write_bytes(b'invalid controlled root marker')
+                        raise InteractionsRefused('AUTHORITY_UNAVAILABLE')
                     yield
         def capabilities(owner):
-            return (build_native_capability(owner.interactions,invocation_resolver=lambda ctx:case.fixture.invocation,write_guard=Cut()),)
+            return (build_native_capability(owner.interactions,
+                invocation_resolver=lambda ctx:case.fixture.invocation,write_guard=Cut()),)
         inputs=AgentOwnerInputs(case.owner.service,case.manager.harness_resolver,case.fixture.resolver,
             case.manager.preparation_resolver,case.authority,access,capabilities)
         product=ServerProductComposition(agent_owner_inputs=inputs)
@@ -109,36 +113,30 @@ def test_product_root_native_original_receiver_and_cold_reopen_no_second_use(tmp
                 'params':{'operationId':op,'input':data}},'Bearer controlled-product-test-token'))['result']
         try:
             runtime=build_product_registry_runtime(root,product,issuer,context_factory=context,server_id='existing-server')
-            started[0]=await runtime.agent_owner.manager.start(case.request,case.endpoint,case.fixture.invocation)
-            assert started[0].state=='running'
-            frozen=runtime.agent_owner.interactions.freeze_native_request(started[0].instance_ref,purpose='apply',method=METHODS['apply'],
-                params_bytes=canonical_bytes({'sessionId':started[0].session_id,'operationId':'original-native-configuration',
-                    'expectedGeneration':'generation-1','expectedConfigDigest':hashlib.sha256(canonical_bytes(OPTIONS)).hexdigest(),
-                    'configId':'model','value':'m2'}))
-            value=await call('agents.native.recorded',{'request':frozen.projection()},'native')
-            effects=Path(case.prepared.native_working_directory)/'native-effects.log'
+            started=await runtime.agent_owner.manager.start(case.request,case.endpoint,case.fixture.invocation)
+            assert started.state=='running'
+            call_input=NativeCall(started.instance_ref,started.session_id,'product-native-1',
+                {'method':'ordessa/probe','params':{'value':'m2'}})
+            value=await call('agents.native.request',call_input.projection(),'native')
+            assert value['status']=='accepted'
             if lose_root:
-                assert value['status']=='refused' and value['error']['code']=='AUTHORITY_UNAVAILABLE' and not effects.exists()
-                marker.write_bytes(original_marker[0])
-                again=await call('agents.native.recorded',{'request':frozen.projection()},'native')
-                assert again['data']['state']=='failed' and not effects.exists()
-                repeated=await call('agents.native.recorded',{'request':frozen.projection()},'native')
-                assert repeated['data']==again['data'] and not effects.exists()
+                terminal=await wait_completed(case,call,value['data'])
+                assert terminal['state']=='refused' and not case.effects.exists()
                 assert case.fixture.retained_use_count==1
                 return
-            assert value['status']=='completed' and value['data']['state']=='completed'
-            assert effects.read_text()=='m2\n'
-            runtime.close()
-            issuer.replace_grants((AccessGrant(scope,(NATIVE_READ,)),))
+            terminal=await wait_completed(case,call,value['data'])
+            assert terminal['state']=='completed' and case.effects.exists()
+            runtime.close();runtime=None
+            issuer.replace_grants((AccessGrant(scope,('agents.native.query',)),))
             runtime=build_product_registry_runtime(root,product,issuer,context_factory=context,server_id='existing-server')
             rows=runtime.agent_owner.records._db.total_changes
-            replay=await call('agents.native.recorded',{'request':frozen.projection()},'native')
-            assert replay['data']==value['data'] and runtime.agent_owner.records._db.total_changes==rows
-            cold=await call('agents.native.query',{'operationRef':value['data']['binding']['operationRef'],
-                'expectedInputDigest':frozen.input_digest},'cold')
-            assert cold['data']==value['data'] and effects.read_text()=='m2\n'
+            replay=await call('agents.native.request',call_input.projection(),'native')
+            assert replay['data']=={**value['data'], 'state': terminal['state']}
+            assert runtime.agent_owner.records._db.total_changes==rows
+            cold=await call('agents.native.query',{'operationRef':value['data']['operationRef']},'cold')
+            assert cold['data']==terminal and case.effects.exists()
             assert case.fixture.retained_use_count==1 and not (root/'state'/'core.sqlite').exists()
         finally:
             if runtime is not None:runtime.close()
-            case.records.close();case.owner.close();await case.fixture.cleanup()
+            await close_native(case)
     asyncio.run(scenario())

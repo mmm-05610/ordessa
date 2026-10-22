@@ -28,3 +28,29 @@ class EnvironmentResourceProvider(Protocol):
         """Return only after confirmed removal of this immutable backend ID."""
         ...
     def open_use(self, backend_id: str, *, use_id: str, generation: int) -> BackendUse: ...
+
+
+class EnvironmentNativeManagement(Protocol):
+    """The optional thin management port a provider may expose.
+
+    A provider maps the closed native action set onto *its own* official calls
+    and answers in neutral facts; it never proxies an arbitrary remote
+    interface and never creates or deletes a resource from this port. A target
+    is the immutable backend identity of an already registered resource, so the
+    native entry and the normal lifecycle address the same backend.
+    """
+
+    native_actions: frozenset[str]
+
+    def native_describe(self) -> Mapping[str, Any]:
+        """Availability plus this provider's own gateway/binding facts."""
+        ...
+
+    def native_request(self, action: str, *, target: str | None,
+                       request_id: str) -> Mapping[str, Any]:
+        """Run one bounded read.
+
+        An uncertain outcome raises ``EnvironmentOperationUnknown`` and keeps
+        the correlation id; it is never dispatched a second time.
+        """
+        ...

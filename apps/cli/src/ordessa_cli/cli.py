@@ -61,7 +61,7 @@ def _metadata(*, remote=False):
     from ordessa_agents.capability.profiles import descriptor as profiles
     from ordessa_decision.capability import descriptor as decisions
     from .composition.environments import SESSION_ONLY
-    operations = [*environments().operations, *instances(include_native=True, include_cancel=True).operations,
+    operations = [*environments().operations, *instances(include_native=remote, include_cancel=True).operations,
                   *profiles().operations, *harness().operations, *decisions().operations]
     return [operation for operation in operations if remote or operation.id not in SESSION_ONLY]
 

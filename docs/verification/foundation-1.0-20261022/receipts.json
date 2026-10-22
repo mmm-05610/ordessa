@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "foundation-evidence-summary/1",
+  "note": "Sanitized summaries of implementation-time local receipts, before integration-review fixes. Raw receipts remain private and ignored. Hashes bind those files, not the final reviewed source.",
+  "receipts": {
+    "codex-local": {
+      "localEvidencePath": "a0/real/run-real4/receipt.json",
+      "receiptSha256": "0375f6bb352079f3b084a9ce06fbef52aba84b3b926e43eac92dad44d93362e7",
+      "sourceChanged": true,
+      "testsUnchanged": true,
+      "pytestExit": 0
+    },
+    "pi-local": {
+      "localEvidencePath": "a0/real/run-real-pi3/receipt.json",
+      "receiptSha256": "a946acc682d88aeac8be8802f5c0c8510fc9f1bdf98774f1f9b1d2a6e78a4bc8",
+      "sourceChanged": true,
+      "testsUnchanged": true,
+      "pytestExit": 0
+    },
+    "codex-openshell": {
+      "localEvidencePath": "x0/real/run-20261022T132805/receipt.json",
+      "receiptSha256": "00081bddb9cd71c03a69dd3d1290e16e2db4b42662f42bbaf7c6fdb92b0eaafe",
+      "sourceChanged": true,
+      "testsUnchanged": true,
+      "pytestExit": 0
+    },
+    "pi-openshell": {
+      "localEvidencePath": "x0/real/run-20261022T133556/receipt.json",
+      "receiptSha256": "f3c93f0cd8d735f87c12002f50441fa4ecba865c7a6a804c032b68d485ed61a4",
+      "sourceChanged": true,
+      "testsUnchanged": true,
+      "pytestExit": 0
+    },
+    "jev": {
+      "localEvidencePath": "d0/real/run-jev-paid/receipt.json",
+      "receiptSha256": "9290f6619167d821d71267fb96f804be31169ca05b82f6c43e7325b12426ff15",
+      "acceptSeconds": 0.34,
+      "result": {
+        "decision": "nine-larger"
+      },
+      "attempts": 1
+    },
+    "installed": {
+      "localEvidencePath": "q0/real/run-20261022T134718/receipt.json",
+      "receiptSha256": "bfda2ff698b0a7fdffeec8fe0707a65bb0d86dcb3183940c0c20b5a709e3b67d",
+      "importsOutsideWorktree": true
+    }
+  }
+}

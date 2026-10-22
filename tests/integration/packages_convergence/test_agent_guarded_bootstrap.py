@@ -81,6 +81,8 @@ async def setup(tmp_path,peer=PEER,*,brand="gemini",runner=None,peer_name="peer.
         from ordessa_harness_goose import factory as provider_factory
     elif brand == 'vibe':
         from ordessa_harness_vibe import factory as provider_factory
+    elif brand == 'codex':
+        from ordessa_harness_codex import factory as provider_factory
     else:
         raise KeyError(brand)
     pin={**PIN,"definitionId":brand}
@@ -88,7 +90,7 @@ async def setup(tmp_path,peer=PEER,*,brand="gemini",runner=None,peer_name="peer.
     from importlib.metadata import EntryPoint
     from ordessa_server.composition.packages_convergence import build_harness_catalog
     module=provider_factory.__class__.__module__.rsplit('.',1)[0]
-    name={'gemini':'gemini-cli','goose':'goose','vibe':'vibe'}[brand]
+    name={'gemini':'gemini-cli','goose':'goose','vibe':'vibe','codex':'codex'}[brand]
     bindings={'definition_ref':pin,'implementation_digest':'sha256:'+hashlib.sha256(Path(sys.modules[provider_factory.__class__.__module__].__file__).read_bytes()).hexdigest()}
     catalog=build_harness_catalog(allowlist=(name,),bindings_by_provider={name:bindings},entry_points=(EntryPoint(name=name,value=module+':factory',group='ordessa.harness_providers'),))
     provider=catalog.resolve(pin)
@@ -109,6 +111,9 @@ async def setup(tmp_path,peer=PEER,*,brand="gemini",runner=None,peer_name="peer.
         environment={'HOME':str(work/'home'),'PATH':str(Path(sys.executable).parent),'TMPDIR':str(work/'tmp'),
             **{'XDG_'+name.upper()+'_HOME':str(work/name) for name in ('config','data','state','cache')}}
         environment['VIBE_HOME']=str(work/'home')
+        if brand=='codex':
+            codex_home=work/'home'/'.codex';codex_home.mkdir(parents=True,exist_ok=True)
+            environment['CODEX_HOME']=str(codex_home)
         context=PrepareContext({'members':['launcher','communicate','files'],'harnessPin':pin},roots,tuple(runner or (sys.executable,'-u'))+(str(work/peer_name),),environment,(),(),(),SessionBootstrap('fresh',artifact.digest))
         prepared=PreparedAgentContext(context,artifact.digest,directory_digest,datetime.now(timezone.utc).isoformat(),str(work))
         request=AgentStartRequest('start',profile.current_revision,endpoint.ref,limits={'timeoutSeconds':2})

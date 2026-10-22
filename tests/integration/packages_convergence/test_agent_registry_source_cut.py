@@ -10,7 +10,7 @@ from ordessa_interfaces.system_access.operations import RequestContext
 from ordessa_agents.public import ProfileService
 from ordessa_agents.sdk.contract_catalog import contract_catalog,contract_catalog_digest
 from ordessa_agents.capability.native import build_native_capability
-from test_recorded_native_configuration import native_case,request,close
+from native_case_fixture import native_case,request,close,wait_completed
 from test_agent_guarded_bootstrap import setup,PEER
 
 ROOT=Path(__file__).parents[3]
@@ -24,21 +24,25 @@ def test_registry_native_actual_original_receiver_and_empty_grants(tmp_path):
                 capability=build_native_capability(case.native,invocation_resolver=lambda ctx:case.fixture.invocation,
                     write_guard=case.native_access)
                 host=CapabilityHost(build_registry([capability]),('agents',))
-                frozen=request(case)
-                context=RequestContext({'kind':'controlled-original-caller'},'registry-native',asyncio.get_running_loop().time()+2)
-                result=await host.call('agents.native.recorded',{'request':frozen.projection()},context)
+                call=request(case)
+                context=RequestContext({'kind':'controlled-original-caller'},'registry-native',asyncio.get_running_loop().time()+5)
+                result=await host.call('agents.native.request',call.projection(),context)
                 if allowed:
-                    assert result.status=='completed' and result.data['state']=='completed'
-                    assert case.effects.read_text()=='m2\n'
+                    assert result.status=='accepted' and result.data['state']=='accepted'
+                    completed=await wait_completed(case,
+                        lambda op,data,identity: host.call(op,data,context),result.data)
+                    assert completed['state']=='completed'
+                    assert case.effects.exists() and 'ordessa/probe' in case.effects.read_text()
                     before=case.records._db.total_changes
-                    cold=await host.call('agents.native.query',{'operationRef':result.data['binding']['operationRef'],
-                        'expectedInputDigest':frozen.input_digest},context)
-                    assert cold==result and before==case.records._db.total_changes
-                    bad=await host.call('agents.native.recorded',{'request':{**frozen.projection(),'purpose':'arbitrary-rpc'}},context)
-                    assert bad.status=='refused' and case.effects.read_text()=='m2\n'
+                    cold=await host.call('agents.native.query',{'operationRef':result.data['operationRef']},context)
+                    assert cold.status=='completed' and cold.data==completed
+                    assert before==case.records._db.total_changes
+                    bad=await host.call('agents.native.request',{**call.projection(),'requestId':'bad-1',
+                        'nativeMessage':{'params':{}}},context)
+                    assert bad.status=='refused'
                 else:
                     assert result.status=='refused' and not case.effects.exists()
-                    assert case.records._db.execute("SELECT count(*) FROM operations WHERE operation='native-operation'").fetchone()==(0,)
+                    assert case.records._db.execute("SELECT count(*) FROM operations WHERE operation='native-request'").fetchone()==(0,)
             finally:await close(case)
     asyncio.run(scenario())
 
@@ -47,7 +51,9 @@ def test_current_schema_catalog_is_data_only_detached_and_not_runtime_v3():
     value=contract_catalog()
     assert value['schemaVersion']=='agent-sdk-contract-catalog/1'
     assert value['profileFormat']['profileRef']['properties']['manifestRevision']['minimum']==1
-    assert set(value['native'])=={'FrozenNativeRequest','NativeOperationRef','NativeWriteBinding','NativeOperationReceipt'}
+    from ordessa_agents.sdk.native_schemas import KINDS
+    assert set(value['native'])==set(KINDS)
+    assert 'agent-native-operation-ref/2' in json.dumps(value)
     assert 'RuntimeProvider' not in json.dumps(value) and 'agent-assembly/3' not in json.dumps(value)
     digest=contract_catalog_digest()
     value['profileFormat']['profileRef']['properties'].clear()

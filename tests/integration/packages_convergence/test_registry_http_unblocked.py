@@ -8,7 +8,7 @@ from ordessa_server.composition.registry_runtime import RegistryRuntime
 from ordessa_server.composition.packages_convergence import build_agent_registry_host
 from ordessa_server.composition.agent_bindings.profile_access import OriginalProfileAccess
 from ordessa_interfaces.http.registry import create_registry_app
-from test_recorded_native_configuration import native_case,request,close
+from native_case_fixture import native_case,request,close,wait_completed
 
 
 def test_http_original_authority_zero_write_native_allow_and_cold_query(tmp_path):
@@ -27,7 +27,7 @@ def test_http_original_authority_zero_write_native_allow_and_cold_query(tmp_path
             app=create_registry_app(runtime)
             frozen=request(case)
             body={'jsonrpc':'2.0','id':'http-native','method':'operations.call',
-                'params':{'operationId':'agents.native.recorded','input':{'request':frozen.projection()}}}
+                'params':{'operationId':'agents.native.request','input':frozen.projection()}}
             async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://127.0.0.1') as client:
                 changes=case.records._db.total_changes
                 denied=await client.post('/wire/v1/operations.call',json=body)
@@ -37,13 +37,22 @@ def test_http_original_authority_zero_write_native_allow_and_cold_query(tmp_path
                 headers={'Authorization':'Bearer synthetic-native-token'}
                 applied=await client.post('/wire/v1/operations.call',json=body,headers=headers)
                 assert applied.status_code==200
-                value=applied.json()['result'];assert value['status']=='completed' and value['data']['state']=='completed'
-                assert case.effects.read_text()=='m2\n'
-                case.issuer.replace_grants((AccessGrant(case.scope,('agents.operations.read',)),))
+                value=applied.json()['result'];assert value['status']=='accepted' and value['data']['state']=='accepted'
+                operation_ref=value['data']['operationRef']
+
+                async def invoke(op,data,identity):
+                    envelope={'jsonrpc':'2.0','id':identity,'method':'operations.call',
+                              'params':{'operationId':op,'input':data}}
+                    response=await client.post('/wire/v1/operations.call',json=envelope,headers=headers)
+                    return response.json()['result']
+
+                completed=await wait_completed(case,invoke,value['data'])
+                assert completed['state']=='completed' and completed['response']['result']['ok'] is True
+                case.issuer.replace_grants((AccessGrant(case.scope,('agents.operations.read','agents.native.query')),))
                 query={'jsonrpc':'2.0','id':'cold','method':'operations.call','params':{'operationId':'agents.native.query',
-                    'input':{'operationRef':value['data']['binding']['operationRef'],'expectedInputDigest':frozen.input_digest}}}
+                    'input':{'operationRef':operation_ref}}}
                 cold=await client.post('/wire/v1/operations.call',json=query,headers=headers)
-                assert cold.json()['result']['data']==value['data'] and case.effects.read_text()=='m2\n'
+                assert cold.json()['result']['data']==completed
                 forbidden={**body,'id':'new-refused'};changes=case.records._db.total_changes
                 no_write=await client.post('/wire/v1/operations.call',json=forbidden,headers=headers)
                 assert no_write.json()['result']['status']=='refused' and case.records._db.total_changes==changes

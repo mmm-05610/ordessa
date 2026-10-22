@@ -140,6 +140,12 @@ def build_agent_capability(manager,source,*,invocation_resolver,write_guard,nati
                 elif _operation=='agents.get':result=manager.get(value,invocation)
                 elif _operation=='agents.stop':
                     result=await manager.stop(context.request_id,value,invocation,force=request.get('force',False),deadline=context.deadline)
+                    # A stopped process cannot keep an "accepted" native turn
+                    # alive: record its real state (unknown), never a fake handle.
+                    try:
+                        source.expire_instance(value)
+                    except Exception:
+                        pass
                 elif _operation=='agents.detach':result=await manager.detach(context.request_id,value,invocation,deadline=context.deadline)
                 elif _operation=='agents.query':result=source.query_turn(value,invocation=invocation)
                 elif _operation=='agents.cancel':

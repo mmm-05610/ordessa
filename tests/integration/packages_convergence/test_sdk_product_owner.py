@@ -146,49 +146,6 @@ def test_product_restart_rejects_foreign_or_unowned_records_before_writes(tmp_pa
     assert {p.name:p.read_bytes() for p in path.parent.iterdir() if p.is_file()}==before
 
 
-def test_product_native_configuration_adapter_uses_original_recorded_owner(tmp_path):
-    import json
-    from ordessa_infrastructure.encoding import canonical_bytes
-    from ordessa_server.composition.configuration.model.live_service import create_model_service
-    from ordessa_server.composition.configuration.model.backend import NativeModelServices
-    from test_recorded_native_configuration import native_case, request, close
-
-    async def scenario():
-        case = await native_case(tmp_path)
-        try:
-            service = create_model_service(source=case.native)
-            expected = request(case)
-            frozen = service.freeze(case.started.instance_ref, purpose='apply',
-                                    params_bytes=expected.params_bytes)
-            assert frozen == expected and service.source.records is case.manager.records
-            result = await service.execute(frozen, request_id='product-native-apply',
-                invocation=case.fixture.invocation, write_guard=case.native_access,
-                deadline=asyncio.get_running_loop().time()+2)
-            assert result.state == 'completed'
-            assert case.effects.read_text() == 'm2\n'
-            assert service.read_operation(result.binding.operation_ref, frozen.input_digest,
-                                          invocation=case.fixture.invocation) == result
-            assert await service.execute(frozen, request_id='product-native-apply',
-                invocation=case.fixture.invocation, write_guard=case.native_access,
-                deadline=asyncio.get_running_loop().time()+1) == result
-            assert case.effects.read_text() == 'm2\n'
-            assert case.native.records._db.execute(
-                "SELECT count(*) FROM operations WHERE operation='native-operation'").fetchone() == (1,)
-            services = NativeModelServices(roots={}, source=case.native)
-            assert services.create_service() is services.create_service()
-            assert services.create_service().source is case.native
-            assert not hasattr(services, 'restoration')
-            with pytest.raises(InteractionsRefused):
-                service.read_operation(result.binding.operation_ref, frozen.input_digest,
-                                       invocation=object())
-            with pytest.raises(InteractionsRefused):
-                service.freeze(case.started.instance_ref, purpose='apply', params_bytes=canonical_bytes({
-                    **json.loads(frozen.params_bytes), 'sessionId':'foreign'}))
-        finally:
-            await close(case)
-    asyncio.run(scenario())
-
-
 def test_current_agent_tools_deployment_owns_one_sdk_records_and_releases_root(tmp_path):
     from ordessa_server.composition.agent_tools import AgentToolsDeployment, AgentServiceConfiguration
 

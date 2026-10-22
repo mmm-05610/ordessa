@@ -26,6 +26,11 @@ from .state import LocalState
 
 ENVIRONMENT_ACTIONS = frozenset({
     'providers', 'list', 'inspect', 'create', 'register', 'exec', 'files', 'stop', 'delete',
+    # Binds the evidence of an uncertain creation; it never creates again.
+    'reconcile',
+    # The thin native management entry: a bounded, read-only view over the
+    # provider's own control plane.
+    'native.describe', 'native.request', 'native.query', 'native.events',
     'acquire', 'release', 'launch', 'use-inspect', 'observe', 'communicate', 'terminate',
     'detach', 'export', 'resolve', 'export-endpoint', 'endpoint-inspect', 'process-release',
 })
@@ -71,6 +76,27 @@ def _filter(capability, unavailable):
     return Capability(declared, handlers)
 
 
+def _unavailable_openshell(reason):
+    """One explicit catalog entry for an OpenShell this instance cannot use."""
+    return {'id': 'openshell', 'available': False, 'status': 'UNAVAILABLE',
+            'reason': reason, 'capabilities': []}
+
+
+def _openshell_missing_reason(error):
+    """Tell a missing SDK extra apart from a missing plugin distribution.
+
+    The provider plugin and the official OpenShell SDK are two separate
+    installations. Reporting "the plugin is not installed" when only the
+    declared ``openshell`` extra is absent would state something false about
+    this instance.
+    """
+    missing = getattr(error, 'name', None) or ''
+    if missing == 'ordessa_environments_openshell' or missing.startswith('ordessa_environments_openshell.'):
+        return 'OpenShell plugin is not installed'
+    return ('OpenShell SDK is not installed (declared openshell extra missing: '
+            + (missing or 'openshell') + ')')
+
+
 def _openshell_entry(state: LocalState):
     """Build the OpenShell binding, or return its explicit unavailability entry.
 
@@ -82,23 +108,19 @@ def _openshell_entry(state: LocalState):
 
     try:
         from ordessa_environments_openshell import build_binding, read_configuration
-    except ModuleNotFoundError:
-        return None, {'id': 'openshell', 'available': False, 'status': 'UNAVAILABLE',
-                      'reason': 'OpenShell plugin is not installed', 'capabilities': []}
+    except ModuleNotFoundError as error:
+        return None, _unavailable_openshell(_openshell_missing_reason(error))
     try:
         config = read_configuration(state.openshell_config)
     except EnvironmentRefused as error:
-        return None, {'id': 'openshell', 'available': False, 'status': 'UNAVAILABLE',
-                      'reason': str(error), 'capabilities': []}
+        return None, _unavailable_openshell(str(error))
     if not config:
-        return None, {'id': 'openshell', 'available': False, 'status': 'UNAVAILABLE',
-                      'reason': 'no OpenShell configuration in this state directory',
-                      'capabilities': []}
+        return None, _unavailable_openshell(
+            'no OpenShell configuration in this state directory')
     try:
         binding = build_binding(config)
     except EnvironmentRefused as error:
-        return None, {'id': 'openshell', 'available': False, 'status': 'UNAVAILABLE',
-                      'reason': str(error), 'capabilities': []}
+        return None, _unavailable_openshell(str(error))
     return binding, binding.catalog
 
 

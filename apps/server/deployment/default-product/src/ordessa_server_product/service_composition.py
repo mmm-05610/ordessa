@@ -253,6 +253,39 @@ class ServerPreparationResolver:
             raise ManagerRefused(error.code, str(error)) from None
 
 
+def _build_decision_provider(section):
+    """Construct the configured Decision model provider (symbolic secret ref).
+
+    Never invents a provider when unconfigured: CEL keeps working without one and
+    model-bearing jobs refuse ``provider_unavailable``. A configured-but-missing
+    secret is reported as provider_error instead of silently disabling the claim.
+    """
+    if section is None:
+        return None, None
+    try:
+        from ordessa_decision_jev.provider import JevDecisionProvider, JevProviderSettings
+    except Exception:
+        return None, 'PROVIDER_UNAVAILABLE'
+    secret = os.environ.get(section['secretEnv'])
+    if type(secret) is not str or not secret:
+        return None, 'PROVIDER_UNAVAILABLE'
+    try:
+        import uuid
+        headers = ()
+        if section.get('sessionHeader'):
+            headers = ((section['sessionHeader'], uuid.uuid4().hex),)
+        accepted = tuple(section.get('acceptedModels') or ())
+        settings = JevProviderSettings(base_url=section['baseUrl'],
+                                       model=section['model'],
+                                       accepted_response_models=accepted,
+                                       extra_headers=headers)
+        provider = JevDecisionProvider(settings,
+                                       secret_resolver=lambda _ref, _key=secret: _key)
+    except Exception:
+        return None, 'PROVIDER_UNAVAILABLE'
+    return provider, None
+
+
 def build_agent_ports(environment_owner, *, catalog: HarnessCatalog,
                       profile_service, lifecycle_authority, roots, providers=None):
     """The agents-owned ports over the environment owner's real endpoints.
@@ -331,7 +364,13 @@ def build_owner_inputs(
             elif capability_id == "decisions":
                 if decision_owner is None:
                     raise AgentOwnerUnavailable('decisions capability declared but not assembled')
-                built.append(decision_owner.capability)
+                from ordessa_server.composition.decision_bindings.access import ServerDecisionAccess
+                from ordessa_server.composition.decision_bindings.authorization import protect_decisions
+                built.append(protect_decisions(decision_owner.capability, {
+                    'invocation_resolver': invocation_resolver,
+                    'decision_access': ServerDecisionAccess(authority),
+                    'services': {'decisions': decision_owner.settings},
+                }))
             else:  # guarded by the configuration loader; never silently skipped
                 raise AgentOwnerUnavailable('capability is declared but not assembled: ' + capability_id)
         return tuple(built)
@@ -396,7 +435,10 @@ def build_root_inputs(
         decision_owner = None
         if "decisions" in configuration.capabilities:
             from ordessa_server.composition.decision_owner import build_decision_owner
-            decision_owner = build_decision_owner(data_root, invocation_resolver=invocation_resolver)
+            provider, provider_error = _build_decision_provider(configuration.decision)
+            decision_owner = build_decision_owner(
+                data_root, invocation_resolver=invocation_resolver, authority=authority,
+                provider=provider, provider_error=provider_error)
         # The Agent domain needs the environment owner's real endpoints; without
         # that owner the instance operations are not assembled at all.
         if environment_owner is None:
