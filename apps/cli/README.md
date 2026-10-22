@@ -20,8 +20,11 @@ There are two explicit modes and no implicit fallback:
 
 - local: `--state ABSOLUTE_DIR` (or `ORDESSA_STATE`) opens only the owner files
   below that private directory;
-- remote: `--config FILE --service ALIAS` reuses the bounded, non-retrying
-  `ordessa_system_access_client` over `wire/1`.
+- remote: `--data-root ABSOLUTE_DIR` connects to the default local Server
+  endpoint and reads its token from that data root; `--config FILE --service ALIAS`
+  selects an explicit endpoint. Both use the bounded, non-retrying
+  `ordessa_system_access_client` over `wire/1`. With no selector, the default
+  remote target is used unless `ORDESSA_STATE` explicitly selects local mode.
 
 Global options are `--json`, `--request-id ID`, `--timeout SECONDS`,
 `--save-result FILE` and `--help`. A leading `--timeout` bounds the operation
@@ -36,32 +39,38 @@ Exit codes: `0` completed, `2` refused, `3` accepted, `4` unsupported,
 the child's exit code when the command completed; the JSON envelope still
 reports the execution status separately.
 
-## Install (offline, non-editable)
+## Install from this checkout
 
-Build the selected closure from this checkout and install it into a fresh
-Python 3.12 environment. No `--no-deps`, `PYTHONPATH` or source-tree import is
-used for the acceptance run:
+Use Python 3.12 and the [repository source-install instructions](../../README.md#快速开始).
+The workspace installer owns the same-source distribution selection. Harness
+packages are shipped by `ordessa-agents`; do not build the retired standalone
+Harness distributions. JavaScript workspaces use the root npm lockfile.
+
+The default Server/CLI installation and independent wheel-closure verification
+are described in the [Foundation 1.0 report](../../docs/verification/foundation-1.0-20261022/README.md).
+
+## First run: Server
+
+Start a Server with its own data root, then use a second terminal:
 
 ```sh
-uv build --wheel --no-build-isolation --out-dir /new/wheels \
-  packages/infrastructure packages/interfaces/contracts \
-  packages/interfaces/transport/server/plugin-api packages/interfaces \
-  packages/execution/agents packages/execution/environments \
-  plugins/environments/local packages/execution/decision \
-  plugins/decision/rules-cel plugins/harness/kilo \
-  packages/interfaces/transport/client/python apps/cli
-
-uv venv --python 3.12 /new/ordessa-venv
-uv pip install --find-links /new/wheels --offline \
-  "agent-client-protocol==0.12.1" "cel-python==0.5.0" "referencing==0.36.2" \
-  "jsonschema>=4.20,<5" "fastapi>=0.115,<1" "PyYAML==6.0.3" "tomli-w==1.2.0"
-uv pip install --find-links /new/wheels --offline /new/wheels/*.whl
-/new/ordessa-venv/bin/ordessa --help
+ordessa-server --data-root /tmp/ordessa-demo/root --port 48765
 ```
 
-The real brand is the explicit `harness-kilo` extra in the distribution; the
-same wheel is included above. The rules engine (`cel-python`) is a hard
-dependency because every Decision rules run uses it.
+```sh
+ordessa --data-root /tmp/ordessa-demo/root list --json
+ordessa --data-root /tmp/ordessa-demo/root agents harness list --json
+ordessa --data-root /tmp/ordessa-demo/root describe agents.start --json
+```
+
+For long-running native tasks, the Server owns the runtime after the client
+exits. Use the published `agents.native.describe/request/query/events/respond`
+operations through `ordessa call`; `nativeMessage` retains the provider's native
+shape. Request returns an accepted operation; query reads it without redispatch.
+An unknown result must not be treated as permission to resend.
+
+The following local examples use `--state` explicitly; their process lifetime
+is different from the Server-owned native path.
 
 ## Ownership and dependencies
 
