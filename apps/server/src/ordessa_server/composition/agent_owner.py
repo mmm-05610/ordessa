@@ -148,7 +148,13 @@ def _validate_existing_records(path):
             expected=('request_id','operation','principal','target','request_digest','endpoint_json',
                 'status','operation_ref','payload','turn_id')
             columns=tuple(row[1] for row in db.execute('PRAGMA table_info(operations)'))
-            if tables!={'operations'} or columns!=expected:
+            # The original operations table must be exactly the SDK shape. The
+            # native-interaction journal is an ADDITIVE part of the same owner
+            # (agent-native/1); a database created before it has only the base
+            # table and is still valid history. Unknown tables are refused.
+            known={'operations','protocol_events','protocol_journal','native_pending',
+                   'sqlite_sequence'}
+            if 'operations' not in tables or not tables<=known or columns!=expected:
                 raise AgentOwnerUnavailable('existing records are not the original Agent SDK schema')
     except sqlite3.Error as exc:
         raise AgentOwnerUnavailable('existing Agent records are unreadable') from exc
@@ -285,7 +291,8 @@ def assemble_agent_owner(environment, inputs: AgentOwnerInputs,
             harness_resolver=inputs.harness_catalog,preparation_resolver=inputs.preparation_resolver,
             lifecycle_authority=lifecycle)
         source=InteractionService(records,interaction,inputs.endpoint_resolver,
-            native_prompts=inputs.harness_catalog.prompt_handlers())
+            native_prompts=inputs.harness_catalog.prompt_handlers(),
+            native_codecs=inputs.harness_catalog.native_codecs())
         return AssembledAgentOwner(manager,source,records,inputs.profile_service,
             inputs.harness_catalog,inputs.method_factory,inputs.close)
     except BaseException:

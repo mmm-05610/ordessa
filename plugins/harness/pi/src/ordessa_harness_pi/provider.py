@@ -83,6 +83,9 @@ class PiHarnessProvider:
     def prompt_handler(self):
         return PiPromptHandler()
 
+    def native_codec(self):
+        return PiNativeCodec()
+
     async def open_session(self,process,context):
         if type(context) is not PrepareContext:raise HarnessError('PREPARE_CONTEXT_REQUIRED')
         # pi-rpc/1 is not ACP; never reuse its managed bootstrap with alien frames.
@@ -187,3 +190,59 @@ class PiProviderFactory:
 
 
 factory=PiProviderFactory()
+
+
+class PiNativeCodec:
+    """pi-rpc/1 dialect: type-tagged request frames and event streams."""
+
+    protocol_id = 'pi-rpc/1'
+    protocol_version = 1
+    capabilities = frozenset({'request', 'events'})
+
+    def encode_request(self, correlation_id, message):
+        from ordessa_agents.sdk.native_codec import encode_frame, _object
+        value = _object(message, 'native message')
+        command = value.get('type')
+        if type(command) is not str or not command:
+            raise ValueError('pi native message needs type')
+        params = {key: item for key, item in value.items() if key != 'type'}
+        if 'id' in params:
+            raise ValueError('pi native message must not carry its own id')
+        return encode_frame({'id': str(correlation_id), 'type': command, **params})
+
+    def classify(self, value):
+        from ordessa_agents.sdk.native_codec import NativeCodecError, _object
+        value = _object(value, 'native frame')
+        kind = value.get('type')
+        if type(kind) is not str or not kind:
+            raise NativeCodecError('pi frame has no type')
+        if kind == 'response':
+            return 'response', str(value.get('id')), value.get('command')
+        return 'notification', None, kind
+
+    def terminal_state(self, value):
+        if value.get('type') != 'response':
+            raise ValueError('pi terminal classification expects a response frame')
+        if value.get('success') is False:
+            return 'failed'
+        return 'completed'
+
+    #: ``prompt`` returns a command ack; the turn terminal is ``agent_settled``.
+    PENDING_REQUESTS = frozenset({'prompt'})
+
+    def response_state(self, method, value):
+        if method in self.PENDING_REQUESTS and value.get('success') is not False:
+            return 'pending'
+        return self.terminal_state(value)
+
+    def notification_state(self, value, *, session_id=None, request=None, response=None):
+        kind = value.get('type') if type(value) is dict else None
+        if kind == 'agent_settled':
+            return 'completed'
+        if kind == 'error':
+            return 'failed'
+        return None
+
+
+def native_codec():
+    return PiNativeCodec()

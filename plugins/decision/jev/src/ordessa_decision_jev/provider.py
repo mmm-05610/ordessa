@@ -72,6 +72,10 @@ class JevProviderSettings:
     #: permit minted for the disabled identity cannot be spent by an enabled one
     #: (the settings digest changes).
     long_context: bool = False
+    #: Opt-in transport headers for a documented official route (for example the
+    #: ``x-opencode-session`` routing header). Names/values are bounded plain
+    #: strings; they are not secrets and are part of the settings digest.
+    extra_headers: tuple = ()
 
     def __post_init__(self):
         name(self.binding_ref); name(self.secret_ref); name(self.model)
@@ -91,6 +95,18 @@ class JevProviderSettings:
                 or not math.isfinite(self.timeout_seconds) or self.timeout_seconds <= 0
                 or type(self.long_context) is not bool):
             raise JevProviderError('settings_invalid')
+        headers = tuple(self.extra_headers)
+        if len(headers) > 8:
+            raise JevProviderError('settings_invalid')
+        for item in headers:
+            if (type(item) is not tuple or len(item) != 2
+                    or any(type(part) is not str or not part or len(part) > 256
+                           or any(ord(char) < 32 or ord(char) == 127 for char in part)
+                           for part in item)):
+                raise JevProviderError('settings_invalid')
+        if len({name.lower() for name, _ in headers}) != len(headers):
+            raise JevProviderError('settings_invalid')
+        object.__setattr__(self, 'extra_headers', headers)
 
     @property
     def settings_digest(self):
@@ -103,6 +119,8 @@ class JevProviderSettings:
         # otherwise every existing permit would be invalidated by this change.
         if self.long_context:
             value['long_context'] = True
+        if self.extra_headers:
+            value['extra_headers'] = [list(item) for item in self.extra_headers]
         return 'sha256:'+digest_hex({'domain':'descriptor','value':value})
 
 
@@ -149,13 +167,13 @@ class JevDecisionProvider:
             key = secret_resolver(settings.secret_ref)
             if not isinstance(key, str) or not key.strip():
                 raise ValueError()
+            headers = dict(settings.extra_headers)
+            if settings.long_context:
+                headers['TypeSafe-Danger-Zone-Long-Context'] = 'true'
             self._client = AsyncTypeSafeClient(
                 api_key=key, model=settings.model, base_url=settings.base_url,
                 retry=RetryPolicy(max_retries=0), timeout=settings.timeout_seconds,
-                # The official SDK exposes the opt-in long-context header; the
-                # request body and response rules are unchanged by it.
-                headers=({'TypeSafe-Danger-Zone-Long-Context': 'true'}
-                         if settings.long_context else None),
+                headers=headers or None,
                 transport=transport,
             )
         except Exception:

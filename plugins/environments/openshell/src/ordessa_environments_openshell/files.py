@@ -32,7 +32,9 @@ elif op=='write_atomic':
  temporary=target.with_name(target.name+'.tmp-'+os.urandom(8).hex())
  try:
   temporary.write_text(v['content'],encoding='utf-8')
+  os.chmod(temporary,v['mode'])
   os.replace(temporary,target)
+  os.chmod(target,v['mode'])
  finally:
   temporary.unlink(missing_ok=True)
  result=None
@@ -65,7 +67,7 @@ class OpenShellFileArea:
             raise EnvironmentRefused('backend file path escapes configured root')
         return target
 
-    def _call(self, operation, relative='.', content=None):
+    def _call(self, operation, relative='.', content=None, mode=None):
         if self._validate is not None:
             self._validate()
         self.path(relative)
@@ -77,6 +79,8 @@ class OpenShellFileArea:
             if not isinstance(content,str) or len(content.encode('utf-8')) > _LIMIT:
                 raise EnvironmentRefused('file content exceeds bounded UTF-8 limit')
             args['content'] = content
+        if mode is not None:
+            args['mode'] = mode
         request_id = str(uuid.uuid4())
         request = pb.ExecSandboxRequest(
             workspace_scope=datamodel_pb2.WorkspaceSelector(workspace=self._configuration.workspace),
@@ -127,13 +131,19 @@ class OpenShellFileArea:
     def write_text(self, relative, content):
         self._call('write',relative,content)
 
-    def write_text_atomic(self, relative, content):
+    def write_text_atomic(self, relative, content, *, mode=384):
         """Write through a sandbox-local temp file and replace the target.
 
         The export/capability layer requires an atomic write for a file area: a
         reader either sees the old bytes or the new ones, never a partial file.
+        The requested mode is part of that contract: a prepared credential file
+        must land as 0600 instead of whatever the sandbox umask happens to be.
+        An unsupported mode is refused before anything is dispatched.
         """
-        self._call('write_atomic',relative,content)
+        if (type(content) is not str or len(content.encode('utf-8')) > 262144
+                or type(mode) is not int or mode not in (384, 420)):
+            raise EnvironmentRefused('invalid bounded atomic configuration write')
+        self._call('write_atomic', relative, content, mode=mode)
 
     def list(self):
         result = self._call('list')

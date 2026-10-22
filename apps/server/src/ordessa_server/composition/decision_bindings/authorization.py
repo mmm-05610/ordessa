@@ -65,6 +65,11 @@ def protect_decisions(capability, bindings):
                 elif _operation == 'decisions.run':
                     if authority.authorize_evidence_store(invocation, store, 'write') is not True:
                         return _refused('PERMISSION_DENIED', 'Decision evidence write scope refused')
+                elif _operation == 'decisions.query':
+                    # Reading a stored run/claim is a pure read of the same
+                    # evidence scope; it never dispatches or spends budget.
+                    if authority.authorize_evidence_store(invocation, store, 'read') is not True:
+                        return _refused('PERMISSION_DENIED', 'Decision evidence read scope refused')
                 elif _operation != 'decisions.validate':
                     return _refused('CAPABILITY_UNSUPPORTED', 'Decision operation has no admitted policy')
             except Exception:

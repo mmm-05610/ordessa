@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from contextlib import contextmanager
+import hashlib
 import json
 import sqlite3
 import threading
@@ -95,6 +96,37 @@ class Records:
                     self._db.execute('CREATE UNIQUE INDEX IF NOT EXISTS operations_turn_id ON operations(turn_id) WHERE turn_id IS NOT NULL')
                     self._db.execute('PRAGMA journal_mode=WAL')
                     self._db.execute('PRAGMA synchronous=FULL')
+                    # Additive native-interaction journal in the SAME owner/database.
+                    # No existing row, column or identifier is rewritten; a cold
+                    # open creates the two tables only when they are absent.
+                    self._db.execute(
+                        'CREATE TABLE IF NOT EXISTS protocol_events ('
+                        'seq INTEGER PRIMARY KEY AUTOINCREMENT,'
+                        'namespace TEXT NOT NULL, instance_id TEXT NOT NULL,'
+                        'kind TEXT NOT NULL, operation_ref TEXT,'
+                        'payload TEXT NOT NULL, payload_digest TEXT NOT NULL,'
+                        'payload_bytes INTEGER NOT NULL,'
+                        'connection_generation INTEGER NOT NULL, observed_at TEXT NOT NULL)')
+                    self._db.execute(
+                        'CREATE INDEX IF NOT EXISTS protocol_events_stream'
+                        ' ON protocol_events(namespace, instance_id, seq)')
+                    self._db.execute(
+                        'CREATE TABLE IF NOT EXISTS protocol_journal ('
+                        'namespace TEXT NOT NULL, instance_id TEXT NOT NULL,'
+                        'first_seq INTEGER NOT NULL DEFAULT 0,'
+                        'dropped_events INTEGER NOT NULL DEFAULT 0,'
+                        'dropped_bytes INTEGER NOT NULL DEFAULT 0,'
+                        'PRIMARY KEY(namespace, instance_id))')
+                    self._db.execute(
+                        'CREATE TABLE IF NOT EXISTS native_pending ('
+                        'namespace TEXT NOT NULL, instance_id TEXT NOT NULL,'
+                        'connection_generation INTEGER NOT NULL,'
+                        'native_request_id TEXT NOT NULL,'
+                        'protocol_id TEXT NOT NULL, method TEXT,'
+                        'payload TEXT NOT NULL, payload_digest TEXT NOT NULL,'
+                        'state TEXT NOT NULL, operation_ref TEXT,'
+                        'observed_at TEXT NOT NULL, updated_at TEXT NOT NULL,'
+                        'PRIMARY KEY(namespace, instance_id, native_request_id))')
                     return
                 except sqlite3.Error as error:
                     last = error
@@ -185,8 +217,10 @@ class Records:
         if type(provenance) is not BindingProvenance:raise ManagerRefused('PROVENANCE_REQUIRED')
         BindingProvenance.decode(provenance.projection())
         _text(principal_scope,'original principal scope')
-        if protocol_id=='acp':_text(session_id,'fixed session')
-        elif protocol_id is not None or session_id is not None:raise ManagerRefused('PROTOCOL_UNSUPPORTED')
+        # Any bounded protocol id carrying an observed native session is a
+        # recordable fact; the bound Harness provider decides the dialect later.
+        if protocol_id is not None:_text(protocol_id,'observed protocol id');_text(session_id,'fixed session')
+        elif session_id is not None:raise ManagerRefused('PROTOCOL_UNSUPPORTED')
         instance=provenance.instance_ref
         key=_digest_of({'namespace':instance.namespace,'instanceId':instance.instance_id})
         payload={'provenance':provenance.projection(),'sessionId':session_id,'protocolId':protocol_id}
@@ -311,6 +345,289 @@ class Records:
             if cursor.rowcount!=1:raise ManagerRefused('RECORD_CHANGED')
             return self.operation(record.request_id,record.operation)
         except sqlite3.Error:raise ManagerRefused('RECORDS_UNAVAILABLE') from None
+
+    # -- agent-native/1 journal (same owner and database, additive) -----------
+
+    _NATIVE_V2_TRANSITIONS = {
+        'reserved': frozenset({'accepted', 'failed', 'unknown'}),
+        'accepted': frozenset({'accepted', 'sent', 'completed', 'failed', 'cancelled',
+                               'refused', 'unknown'}),
+    }
+    _NATIVE_V2_OPERATIONS = frozenset({'native-request', 'native-notify', 'native-reply'})
+
+    def advance_native_v2(self, record, *, status, payload):
+        """CAS from the accepted reservation to a later observation.
+
+        The async native surface claims first (``reserved``), marks the durable
+        acceptance (``accepted``) before any write, and only then records what
+        was observed. A terminal row is never rewritten.
+        """
+        if (record.operation not in self._NATIVE_V2_OPERATIONS
+                or status not in self._NATIVE_V2_TRANSITIONS.get(record.status, frozenset())):
+            raise ManagerRefused('NATIVE_TRANSITION_INVALID')
+        try:
+            cursor = self._db.execute(
+                'UPDATE operations SET status=?, payload=? WHERE request_id=? AND operation=?'
+                ' AND status=? AND operation_ref IS ? AND payload=?',
+                (status, json.dumps(payload, sort_keys=True), record.request_id,
+                 record.operation, record.status, record.operation_ref,
+                 json.dumps(record.payload, sort_keys=True)))
+            if cursor.rowcount != 1:
+                raise ManagerRefused('RECORD_CHANGED')
+            return self.operation(record.request_id, record.operation)
+        except sqlite3.Error:
+            raise ManagerRefused('RECORDS_UNAVAILABLE') from None
+
+    def expire_native_operations_for_instance(self, instance_id, *, reason='PROCESS_STOPPED'):
+        """After that instance's process is gone, its accepted work is unknown.
+
+        Only the operations positively bound to this instance id are touched; a
+        completed/failed/refused row is never rewritten, and no frame is resent.
+        """
+        if type(instance_id) is not str or not instance_id:
+            raise ManagerRefused('VALUE_INVALID', 'instance')
+        try:
+            rows = self._db.execute(
+                "SELECT request_id, operation, status, payload FROM operations"
+                " WHERE operation IN ('native-request','native-notify')"
+                " AND status IN ('reserved','accepted')").fetchall()
+            expired = 0
+            for request_id, operation, status, payload_text in rows:
+                try:
+                    payload = json.loads(payload_text) if payload_text else {}
+                except ValueError:
+                    continue
+                ref = payload.get('instanceRef') if isinstance(payload, dict) else None
+                if not isinstance(ref, dict) or ref.get('instanceId') != instance_id:
+                    continue
+                payload = dict(payload)
+                payload['state'] = 'unknown'
+                payload['error'] = {'code': reason}
+                payload['updatedAt'] = __import__('datetime').datetime.now(
+                    __import__('datetime').timezone.utc).isoformat()
+                changed = self._db.execute(
+                    'UPDATE operations SET status=?, payload=? WHERE request_id=?'
+                    ' AND operation=? AND status=?',
+                    ('unknown', json.dumps(payload, sort_keys=True), request_id,
+                     operation, status))
+                expired += changed.rowcount
+            return expired
+        except sqlite3.Error as error:
+            raise ManagerRefused('RECORDS_UNAVAILABLE', str(error)) from None
+
+    def expire_unresolved_native_operations(self, *, reason='RESTART_UNCONFIRMED'):
+        """A new process cannot resurrect an accepted native operation.
+
+        Called once when the interaction owner starts. Rows still in ``accepted``
+        (or the pre-accept ``reserved`` state) have no live receiver in THIS
+        process; they become an explicit ``unknown`` fact with a stable reason.
+        A completed/failed row is never rewritten.
+        """
+        try:
+            rows = self._db.execute(
+                "SELECT request_id, operation, status, operation_ref, payload"
+                " FROM operations WHERE operation IN ('native-request','native-notify')"
+                " AND status IN ('reserved','accepted')").fetchall()
+            expired = 0
+            for request_id, operation, status, operation_ref, payload_text in rows:
+                try:
+                    payload = json.loads(payload_text) if payload_text else {}
+                except ValueError:
+                    payload = {}
+                payload = dict(payload)
+                payload['state'] = 'unknown'
+                payload['error'] = {'code': reason}
+                payload['updatedAt'] = __import__('datetime').datetime.now(
+                    __import__('datetime').timezone.utc).isoformat()
+                changed = self._db.execute(
+                    'UPDATE operations SET status=?, payload=? WHERE request_id=?'
+                    ' AND operation=? AND status=?',
+                    ('unknown', json.dumps(payload, sort_keys=True), request_id,
+                     operation, status))
+                expired += changed.rowcount
+            return expired
+        except sqlite3.Error as error:
+            raise ManagerRefused('RECORDS_UNAVAILABLE', str(error)) from None
+
+    def journal_state(self, instance_ref):
+        try:
+            row = self._db.execute(
+                'SELECT first_seq, dropped_events, dropped_bytes FROM protocol_journal'
+                ' WHERE namespace=? AND instance_id=?',
+                (instance_ref.namespace, instance_ref.instance_id)).fetchone()
+        except sqlite3.Error as error:
+            raise ManagerRefused('RECORDS_UNAVAILABLE', str(error)) from None
+        return (0, 0, 0) if row is None else (row[0], row[1], row[2])
+
+    def append_event(self, instance_ref, *, kind, operation_ref, payload,
+                     connection_generation, observed_at, max_events=4096,
+                     max_bytes=8 * 1024 * 1024):
+        """Append one inbound frame to the instance journal and return its seq.
+
+        The payload is stored canonical and digested; oversized payloads are the
+        caller's explicit decision (a separate ``oversize`` event), never a
+        silent truncation here. Eviction is explicit: the journal records the
+        first retained seq and cumulative dropped counts.
+        """
+        try:
+            text = json.dumps(payload, sort_keys=True, separators=(',', ':'),
+                              ensure_ascii=False, allow_nan=False)
+            raw = text.encode('utf-8')
+            digest = 'sha256:' + hashlib.sha256(raw).hexdigest()
+            self._db.execute('BEGIN IMMEDIATE')
+            self._db.execute(
+                'INSERT INTO protocol_events (namespace, instance_id, kind, operation_ref,'
+                ' payload, payload_digest, payload_bytes, connection_generation, observed_at)'
+                ' VALUES (?,?,?,?,?,?,?,?,?)',
+                (instance_ref.namespace, instance_ref.instance_id, kind, operation_ref,
+                 text, digest, len(raw), connection_generation, observed_at))
+            seq = self._db.execute('SELECT last_insert_rowid()').fetchone()[0]
+            self._db.execute(
+                'INSERT OR IGNORE INTO protocol_journal'
+                ' (namespace, instance_id, first_seq, dropped_events, dropped_bytes)'
+                ' VALUES (?,?,?,?,?)', (instance_ref.namespace, instance_ref.instance_id, 0, 0, 0))
+            rows = self._db.execute(
+                'SELECT seq, payload_bytes FROM protocol_events'
+                ' WHERE namespace=? AND instance_id=? ORDER BY seq',
+                (instance_ref.namespace, instance_ref.instance_id)).fetchall()
+            total = sum(row[1] for row in rows)
+            excess = max(0, len(rows) - max_events)
+            drop = []
+            dropped_bytes = 0
+            for index, row in enumerate(rows):
+                if index < excess or total > max_bytes:
+                    drop.append(row[0])
+                    dropped_bytes += row[1]
+                    total -= row[1]
+                else:
+                    break
+            if drop:
+                marks = ','.join('?' * len(drop))
+                self._db.execute('DELETE FROM protocol_events WHERE seq IN (' + marks + ')', drop)
+                first_retained = rows[len(drop)][0] if len(rows) > len(drop) else seq + 1
+                self._db.execute(
+                    'UPDATE protocol_journal SET first_seq=?, dropped_events=dropped_events+?,'
+                    ' dropped_bytes=dropped_bytes+? WHERE namespace=? AND instance_id=?',
+                    (first_retained, len(drop), dropped_bytes,
+                     instance_ref.namespace, instance_ref.instance_id))
+            self._db.execute('COMMIT')
+            return seq
+        except sqlite3.Error as error:
+            try:
+                self._db.execute('ROLLBACK')
+            except sqlite3.Error:
+                pass
+            raise ManagerRefused('RECORDS_UNAVAILABLE', str(error)) from None
+
+    def event_page(self, instance_ref, *, after_seq, limit):
+        """Read the journal strictly after a seq; pure read, no state advance."""
+        try:
+            rows = self._db.execute(
+                'SELECT seq, kind, operation_ref, payload, payload_digest, payload_bytes,'
+                ' connection_generation, observed_at FROM protocol_events'
+                ' WHERE namespace=? AND instance_id=? AND seq>? ORDER BY seq LIMIT ?',
+                (instance_ref.namespace, instance_ref.instance_id, after_seq,
+                 limit + 1)).fetchall()
+        except sqlite3.Error as error:
+            raise ManagerRefused('RECORDS_UNAVAILABLE', str(error)) from None
+        return rows
+
+    def journal_bounds(self, instance_ref):
+        """(first_retained_seq, max_seq, dropped_events, dropped_bytes)."""
+        try:
+            row = self._db.execute(
+                'SELECT MIN(seq), MAX(seq) FROM protocol_events'
+                ' WHERE namespace=? AND instance_id=?',
+                (instance_ref.namespace, instance_ref.instance_id)).fetchone()
+        except sqlite3.Error as error:
+            raise ManagerRefused('RECORDS_UNAVAILABLE', str(error)) from None
+        first, last = (0, 0) if row is None else (row[0] or 0, row[1] or 0)
+        _, dropped_events, dropped_bytes = self.journal_state(instance_ref)
+        return first, last, dropped_events, dropped_bytes
+
+    # -- observed reverse requests (pending replies) -------------------------
+
+    def record_pending(self, instance_ref, *, connection_generation, native_request_id,
+                       protocol_id, method, payload, operation_ref, observed_at):
+        """Persist one observed reverse request; one row per native request id."""
+        try:
+            text = json.dumps(payload, sort_keys=True, separators=(',', ':'),
+                              ensure_ascii=False, allow_nan=False)
+            digest = 'sha256:' + hashlib.sha256(text.encode('utf-8')).hexdigest()
+            self._db.execute(
+                'INSERT OR IGNORE INTO native_pending (namespace, instance_id,'
+                ' connection_generation, native_request_id, protocol_id, method, payload,'
+                ' payload_digest, state, operation_ref, observed_at, updated_at)'
+                ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                (instance_ref.namespace, instance_ref.instance_id, connection_generation,
+                 native_request_id, protocol_id, method, text, digest, 'pending',
+                 operation_ref, observed_at, observed_at))
+            row = self._db.execute(
+                'SELECT namespace, instance_id, connection_generation, native_request_id,'
+                ' protocol_id, method, payload, payload_digest, state, operation_ref,'
+                ' observed_at, updated_at FROM native_pending'
+                ' WHERE namespace=? AND instance_id=? AND native_request_id=?',
+                (instance_ref.namespace, instance_ref.instance_id,
+                 native_request_id)).fetchone()
+            return dict(zip(('namespace', 'instanceId', 'connectionGeneration',
+                             'nativeRequestId', 'protocolId', 'method', 'payload',
+                             'payloadDigest', 'state', 'operationRef', 'observedAt',
+                             'updatedAt'), row))
+        except sqlite3.Error as error:
+            raise ManagerRefused('RECORDS_UNAVAILABLE', str(error)) from None
+
+    def pending_request(self, instance_ref, native_request_id):
+        try:
+            row = self._db.execute(
+                'SELECT namespace, instance_id, connection_generation, native_request_id,'
+                ' protocol_id, method, payload, payload_digest, state, operation_ref,'
+                ' observed_at, updated_at FROM native_pending'
+                ' WHERE namespace=? AND instance_id=? AND native_request_id=?',
+                (instance_ref.namespace, instance_ref.instance_id,
+                 native_request_id)).fetchone()
+        except sqlite3.Error as error:
+            raise ManagerRefused('RECORDS_UNAVAILABLE', str(error)) from None
+        if row is None:
+            return None
+        return dict(zip(('namespace', 'instanceId', 'connectionGeneration',
+                         'nativeRequestId', 'protocolId', 'method', 'payload',
+                         'payloadDigest', 'state', 'operationRef', 'observedAt',
+                         'updatedAt'), row))
+
+    def mark_pending(self, instance_ref, native_request_id, *, state, updated_at,
+                     expected_state='pending'):
+        try:
+            changed = self._db.execute(
+                'UPDATE native_pending SET state=?, updated_at=?'
+                ' WHERE namespace=? AND instance_id=? AND native_request_id=?'
+                ' AND state=?',
+                (state, updated_at, instance_ref.namespace, instance_ref.instance_id,
+                 native_request_id, expected_state))
+            return changed.rowcount == 1
+        except sqlite3.Error as error:
+            raise ManagerRefused('RECORDS_UNAVAILABLE', str(error)) from None
+
+    def expire_pending(self, instance_ref, *, updated_at):
+        """A process restart cannot answer a live request; keep the fact, mark it."""
+        try:
+            self._db.execute(
+                'UPDATE native_pending SET state=?, updated_at=?'
+                ' WHERE namespace=? AND instance_id=? AND state=?',
+                ('expired', updated_at, instance_ref.namespace, instance_ref.instance_id,
+                 'pending'))
+        except sqlite3.Error as error:
+            raise ManagerRefused('RECORDS_UNAVAILABLE', str(error)) from None
+
+    def pending_requests(self, instance_ref, *, state='pending', limit=64):
+        try:
+            rows = self._db.execute(
+                'SELECT native_request_id FROM native_pending'
+                ' WHERE namespace=? AND instance_id=? AND state=? ORDER BY observed_at LIMIT ?',
+                (instance_ref.namespace, instance_ref.instance_id, state, limit)).fetchall()
+        except sqlite3.Error as error:
+            raise ManagerRefused('RECORDS_UNAVAILABLE', str(error)) from None
+        return [row[0] for row in rows]
+
 
     def enter_protocol_session(self, key, *, principal, target, turn):
         """Original session's durable single-reader cut, shared by all processes.

@@ -21,7 +21,8 @@ INSTANCE_OPERATIONS = frozenset({
     'agents.reconcile', 'agents.prompt', 'agents.query', 'agents.cancel',
 })
 NATIVE_OPERATIONS = frozenset({
-    'agents.native.freeze', 'agents.native.recorded', 'agents.native.query',
+    'agents.native.describe', 'agents.native.request', 'agents.native.notify',
+    'agents.native.query', 'agents.native.events', 'agents.native.respond',
 })
 
 

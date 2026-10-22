@@ -30,6 +30,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r tooling/workspace/nightly-python-requirements.txt
           python tooling/workspace/python_workspace.py --install
+          pip install --no-build-isolation './packages/execution/environments[openshell]'
       - name: Workspace metadata validation
         run: python tooling/workspace/python_workspace.py
       # Green gates: the slices this tree actually implements and keeps passing.
@@ -42,6 +43,21 @@ jobs:
                    plugins/environments/local/tests \
                    plugins/harness/pi/tests \
                    plugins/decision/rules-cel/tests
+      # The native interaction runtime is a real gate: controlled endpoint/codec,
+      # no model. Real Codex/Pi runs stay separate and are recorded as evidence.
+      - name: Native interaction runtime (controlled)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          pytest -q tests/integration/agents_native \
+                    tests/integration/decision_async \
+                    plugins/environments/openshell/tests \
+                    plugins/harness/codex/tests/test_codex_native_terminals.py \
+                    apps/server/tests/test_environment_owner_openshell.py \
+                    packages/execution/agents/tests/profiles/test_public_contract_surface.py \
+                    packages/execution/agents/tests/sdk/test_instance_writer_epoch.py \
+                    tests/integration/packages_convergence/test_agent_registry_source_cut.py \
+                    tests/integration/packages_convergence/test_product_registry_root_cut.py
       - name: Server composition (green)
         env:
           PYTHONPATH: ${{ github.workspace }}

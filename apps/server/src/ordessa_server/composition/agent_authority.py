@@ -30,12 +30,13 @@ READ_OPERATIONS: "frozenset[str]" = frozenset({
     "agents.reconcile", "agents.cancel",
 })
 
-#: The exact native operation ids the native capability publishes. A native
-#: dispatch needs the freeze grant (the request may be frozen at all) and the
-#: recorded grant (the dispatch itself); a native observation needs the query
-#: grant. No wildcard and no "everything native".
+#: The exact native operation ids the native capability publishes. Each public
+#: operation has its own grant: a dispatch (request/notify) is a write, an
+#: observation (describe/query/events) is a read, and answering a reverse request
+#: is a separate write. No wildcard and no "everything native".
 NATIVE_OPERATIONS: "frozenset[str]" = frozenset({
-    "agents.native.freeze", "agents.native.recorded", "agents.native.query",
+    "agents.native.describe", "agents.native.request", "agents.native.notify",
+    "agents.native.query", "agents.native.events", "agents.native.respond",
 })
 
 
@@ -150,25 +151,49 @@ class ServerInteractionAuthority:
     def check_cancel(self, invocation, binding) -> None:
         self._verified(invocation, 'agents.cancel')
 
+    def check_native_describe(self, invocation, instance_ref) -> None:
+        self._verified(invocation, 'agents.native.describe')
+
     def check_native_dispatch(self, invocation, binding) -> None:
-        """A native dispatch is a send: it needs the recorded-operation grant."""
-        self._verified(invocation, 'agents.native.recorded')
+        """A native dispatch is a write: the grant follows the frame's kind."""
+        self._verified(invocation, _native_write_operation(binding))
 
     def check_read_native_operation(self, invocation, operation_ref, input_digest) -> None:
-        """A native observation is a read: it needs the query-operation grant."""
+        """A native observation is a read: it needs the query grant."""
         self._verified(invocation, 'agents.native.query')
+
+    def check_read_native_events(self, invocation, instance_ref) -> None:
+        self._verified(invocation, 'agents.native.events')
+
+    def check_native_respond(self, invocation, pending_ref) -> None:
+        self._verified(invocation, 'agents.native.respond')
 
     @contextmanager
     def guard_native_dispatch(self, invocation, binding):
-        """The guarded native cut: only a caller allowed to freeze may write."""
-        self._verified(invocation, 'agents.native.freeze')
+        """The guarded native cut re-verifies the exact write grant."""
+        self._verified(invocation, _native_write_operation(binding))
         yield
+
+
+def _native_write_operation(binding) -> str:
+    from ordessa_agents.public import NativeDispatchBinding
+    if type(binding) is not NativeDispatchBinding:
+        from ordessa_agents.sdk.interactions import InteractionsRefused
+        raise InteractionsRefused('WRITE_BINDING_UNSUPPORTED')
+    if binding.kind == 'request':
+        return 'agents.native.request'
+    if binding.kind == 'notify':
+        return 'agents.native.notify'
+    if binding.kind == 'reply':
+        return 'agents.native.respond'
+    from ordessa_agents.sdk.interactions import InteractionsRefused
+    raise InteractionsRefused('WRITE_BINDING_UNSUPPORTED')
 
 
 def _refusal_code(operation: str) -> str:
     """One stable refusal code per operation family."""
-    if operation in ('agents.prompt', 'agents.cancel', 'agents.native.recorded',
-                     'agents.native.freeze'):
+    if operation in ('agents.prompt', 'agents.cancel', 'agents.native.request',
+                     'agents.native.notify', 'agents.native.respond'):
         return 'SEND_NOT_AUTHORIZED'
     return 'READ_NOT_AUTHORIZED'
 
@@ -183,12 +208,11 @@ class ServerPromptWriteGuard:
 
     * a prompt binding needs ``agents.prompt``;
     * a cancel binding needs ``agents.cancel``;
-    * a native write binding needs ``agents.native.freeze``.
+    * a native request/notify/reply binding needs its own exact grant.
 
-    A native dispatch additionally needs ``agents.native.recorded``; that is
-    the interaction authority's ``check_native_dispatch`` decision, so a native
-    write requires BOTH native grants. Any other binding is refused: an unknown
-    physical effect is never admitted by default.
+    The interaction authority's ``check_native_dispatch`` repeats the same check;
+    both cuts must pass. Any other binding is refused: an unknown physical effect
+    is never admitted by default.
     """
 
     def __init__(self, authority: InstanceAccessAuthority) -> None:
@@ -198,13 +222,13 @@ class ServerPromptWriteGuard:
 
     def _operation_for(self, binding) -> str:
         from ordessa_agents.sdk.interactions import CancelBinding, WriteBinding
-        from ordessa_agents.public import NativeWriteBinding
+        from ordessa_agents.public import NativeDispatchBinding
         if type(binding) is WriteBinding:
             return 'agents.prompt'
         if type(binding) is CancelBinding:
             return 'agents.cancel'
-        if type(binding) is NativeWriteBinding:
-            return 'agents.native.freeze'
+        if type(binding) is NativeDispatchBinding:
+            return _native_write_operation(binding)
         raise _write_refused('WRITE_BINDING_UNSUPPORTED')
 
     @contextmanager

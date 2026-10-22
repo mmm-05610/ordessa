@@ -30,11 +30,11 @@ def test_public_surface_is_import_only_and_exports_the_frozen_names():
         'ProfileRevisionConflict', 'ProfileValidationError',
         'AgentManager', 'Records', 'ManagerRefused', 'AgentInstanceRef', 'EndpointRef',
         'InteractionService', 'AgentStartRequest', 'AgentStartReceipt', 'PreparedAgentContext', 'HarnessCatalog',
-        'FrozenNativeRequest', 'NativeOperationRef', 'NativeOperationReceipt', 'NativeWriteBinding']
-    # DESIGN §15 adds these exact native values; they retain their sole owner.
-    from ordessa_agents.sdk import native_contracts
-    for name in ('FrozenNativeRequest','NativeOperationRef','NativeOperationReceipt','NativeWriteBinding'):
-        assert getattr(public,name) is getattr(native_contracts,name)
+        'NativeOperationRef', 'NativePendingRequestRef', 'NativeDispatchBinding']
+    # The agent-native/1 envelope values retain their sole owner.
+    from ordessa_agents.sdk import native_envelope
+    assert public.NativeOperationRef is native_envelope.OperationRef
+    assert public.NativePendingRequestRef is native_envelope.PendingRequestRef
     assert isinstance(public.AGENT_CONTRACT_VERSION, str) and public.AGENT_CONTRACT_VERSION
     assert public.ProfileService is ProfileService
     assert public.Profile is Profile

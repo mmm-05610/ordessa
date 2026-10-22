@@ -55,7 +55,7 @@ Agents、Environments 和 Decision 可以独立使用，也可以由上层组合
 | 真实模型单轮回合 | Kilo（`deepseek-v4.1-flash`）与 Claude 各自返回真实答案 `391`；Codex 同链路同样通过 | [kilo 记录](docs/verification/agent-cli-server-20261020/t08-kilo.md)、[claude/pi 记录](docs/verification/agent-cli-server-20261020/t08-claude-pi-3rdparty.md) |
 | 多轮同一原生会话 | 同一个 session 连发两问，回答 `391`、`144`；同 sessionId、不同 turnId；查询不重放 | [多轮记录](docs/verification/agent-cli-server-20261020/t05-multiturn.md) |
 | 工具写入与成果取回 | 模型在环境里写文件；Server 侧通过 `environments.files` 独立读回并核对 sha256 | [工具与取回记录](docs/verification/agent-cli-server-20261020/t06-tools-and-retrieval.md) |
-| 实例生命周期 | `agents.start` / `get` / `reconcile` / `native.freeze` / `stop` 在 Local 环境上完成；四个品牌启动成功 | [实例接入记录](docs/verification/agent-cli-server-20261020/t04b-agent-instances.md) |
+| 实例生命周期 | `agents.start` / `get` / `reconcile` / `stop` 在 Local 环境上完成；四个品牌启动成功；原生交互面为 `agents.native.describe/request/notify/query/events/respond` | [实例接入记录](docs/verification/agent-cli-server-20261020/t04b-agent-instances.md)（历史记录中的 `native.freeze` 入口已退役） |
 | 默认 Server 安装范围 | 独立安装环境启动 Server、调用 Profile，并验证不依赖旧上层装配 | [安装验证记录](docs/verification/agent-cli-server-20261020/s09-installed-closure.md) |
 | 本机沙箱创建 | Server 通过本机 OpenShell 网关创建真实沙箱环境（create 完成，后续 exec/files 见下方边界） | [OpenShell 记录](docs/verification/agent-cli-server-20261020/t09-openshell-wiring.md) |
 
@@ -156,16 +156,40 @@ pytest -q apps/cli/tests packages/execution/environments/tests plugins/environme
          plugins/harness/pi/tests plugins/decision/rules-cel/tests
 ```
 
+本轮验收与真实证据边界见 [Foundation 1.0 验收报告](docs/verification/foundation-1.0-20261022/README.md)。
+
+### 原生交互面（正式 CLI 示例）
+
+以已启动的实例和已导出环境端点为例，异步提交后由独立进程查询/读游标，不阻塞 CLI：
+
+```sh
+ordessa call agents.native.describe --input describe.json --json      # 实例→原生协议与能力
+ordessa call agents.native.request  --input request.json  --json      # 持久受理，返回 operationRef
+ordessa call agents.native.query    --input query.json    --json      # 独立进程读取事实
+ordessa call agents.native.events   --input events.json   --json      # cursor 分页读取协议事件
+ordessa call agents.native.respond  --input respond.json  --json      # 反向请求只接受一次有效回复
+```
+
+`agents.native.request` 的 `nativeMessage` 是提供方原生消息（如 Codex 的 `turn/start`），
+平台不再为每个细碎命令增加专用包装；`query` 的 `state` 为 `accepted/completed/failed/refused/unknown`，
+进程消失或重启后未决操作只会读成 `unknown`，不会被当成仍存活。
+
 ## 当前边界（明确未完成）
 
 以下缺口都有登记与负责人，不用演示替代结论（详见[已知问题](docs/reference/known-issues.md)）：
 
-- **长任务的异步提交与轮询**：`agents.prompt` 仍是同步等待，回合时长受请求 deadline 限制；正式方案是把提交与轮询拆开。
-- **工具权限回传**：品牌自身的工具循环可用（Codex 在 workspace-write 沙箱内自主改代码），但审批请求通道尚未接。
-- **沙箱内 exec/files**：OpenShell 目前只有创建/观察/停止/删除生命周期，沙箱内的进程与文件能力尚未实现，
-  因此"沙箱里开发并取回"暂以 Local 环境验证。
-- **品牌覆盖**：Codex／Kilo／Claude 有真实模型回合；Pi 认证与回合已通但回答文本提取未完成；
-  Hermes 需要 reviewed 配置与 runtime 投放；尚有品牌未跑真实任务。
+- **长任务的异步提交与轮询**：`agents.native.request` 已按"持久受理 + 独立进程查询/游标事件"实现，
+  CLI 断开后工作仍由 Server owner 持有；真实 Codex 回合已测到 103 秒、提交 0.36 秒返回、93 条事件可游标读回，
+  同一 thread 的第二回合不重放；`agents.prompt` 便利入口仍是同步等待（有活动原生运行时时明确拒绝，避免第二个 reader）。
+  运行中取消与强制停止已实测：cancel 通知≠停止，进程停止后未决回合显式记为 `unknown`。
+- **工具权限回传**：原生反向请求会被记录、可查询并只接受一次有效回复（受控测试通过）；
+  真实品牌回合中尚未触发审批请求通道，因此真实分支未验证。
+- **沙箱内 exec/files**：OpenShell 沙箱已通过正式 Server/CLI 完成真实 create/exec/files/策略允许与拒绝/按身份清理；
+  沙箱内 Codex、Pi 的**真实修复任务**也已完成（`codex-app-server/1`、`pi-rpc/1`：改源码→跑测试→宿主 6 passed）。
+  注意：沙箱网络策略必须包含二进制白名单（如 `binaries: [{path: /usr/local/bin/node}]`），
+  否则 gateway 会拒绝所有出站连接；Codex 在沙箱内需 `sandbox: danger-full-access`（外层为共享宿主内核的容器；best-effort 策略的有效隔离能力以验收报告为准）。
+- **品牌覆盖**：Codex 与 Pi 已在 Local 环境通过正式 Server/CLI 完成同一冻结修复任务并由宿主独立验证；
+  Kilo／Claude 有历史真实回合记录；Hermes 需要 reviewed 配置与 runtime 投放；其他品牌未跑真实任务。
 - **Units 退役**：`packages/execution/units` 及旧上层装配仍在源码中，默认安装不依赖，但全仓退役未完成。
 
 ## 继续阅读

@@ -1,5 +1,52 @@
 # Known issues and untested scope
 
+## 2026-10-22 Foundation 1.0 integration review
+
+The Foundation 1.0 candidate replaces the narrow native Agent operations with
+`describe/request/notify/query/events/respond`, using the original Records owner.
+The sanitized [review and evidence report](../verification/foundation-1.0-20261022/README.md)
+separates prior real runs from post-review controlled verification.
+
+Current limits:
+
+- Codex and Pi each have prior real code-repair evidence on Local and OpenShell.
+  The integration review re-ran the returned artifacts' unchanged tests without
+  additional model calls. Changes made during review have controlled regression
+  evidence; the real-model matrix was not repeated after those changes.
+- Real reverse permission callbacks remain unverified; controlled tests exercise
+  callback identity, once-only reply, concurrent replies and lost receipts.
+- OpenShell evidence uses a container sharing its host kernel, with a best-effort
+  Landlock policy. Active Landlock enforcement was not established by the receipt;
+  no VM-grade isolation claim follows. Local supplies no security isolation.
+- The OpenShell SDK is an optional environment extra. CI installs the declared
+  extra for its controlled gRPC tests. An unconfigured/unavailable provider is
+  explicit, with no Local fallback. Native management exposes list/inspect/health;
+  mutations use the same ordinary environment lifecycle and resource owner.
+- Pi session-level terminal notifications cannot identify one of several concurrent
+  pending prompts. Ambiguous operations become `unknown/NATIVE_TERMINAL_AMBIGUOUS`;
+  callers should serialize Pi prompts. Codex terminals match acknowledged turn ids.
+- `agents.prompt` is still synchronous; use `agents.native.request` for long work.
+  A cancel notification is not proof of process termination. Stop/restart leaves
+  unconfirmed work unknown, without automatic redispatch.
+- Decision limits bound steps/model calls/time/values; USD cost reservation is not
+  implemented. Provider usage may be unknown. Selection, unit admission and
+  automatic resource construction belong to the proposed next stage.
+- Existing broad ledger suites remain non-gating, including retired upper runtime
+  and `pacthold` imports. Focused review additionally observes three unchanged
+  historical proof-hash failures in `test_root_agent_work_assembly.py`, and the
+  old `profiles` capability-id expectation in `test_sdk_product_owner.py` (current
+  group is `agents`). These are registered residuals, not evidence of full-suite
+  success. The added legacy skip was removed; original expectations remain visible.
+- Full-workspace `pip check` retains the registered `ordessa-mcp-server` → `mcp`
+  gap. The selected default Server wheel closure has its own passing pip check.
+- Engineering/Units revival, full desktop release, remote sandbox deployment and
+  migration of real user databases are outside this milestone.
+
+No user gateway restart or reconfiguration is authorized by this review. Existing
+service and data restrictions below continue to apply.
+
+## Historical checkpoints
+
 2026-10-17 13:28 UTC current: B3 remains integration/in_progress/blocked, B4 planned.
 Third-dispatch preparation is complete and paused for the main conversation. The closed human
 renderer binds both old UNKNOWNs, exact unchanged package/paths/Profile and new action budgets1/1,

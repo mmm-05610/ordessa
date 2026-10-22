@@ -35,6 +35,7 @@ and the provider keep their own refusal types.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
 import os
 import pathlib
 import shutil
@@ -124,7 +125,7 @@ class PreparationResolver:
                                      + executable)
         return (os.path.abspath(resolved),)
 
-    def _materialize_credentials(self, descriptor, bound, content, directories):
+    def _materialize_credentials(self, descriptor, bound, content, directories, invocation):
         """Copy Profile-declared credential files into the private roots.
 
         The Profile carries only the binding (source path + target root/path);
@@ -153,8 +154,6 @@ class PreparationResolver:
             parts = pathlib.PurePosixPath(relative).parts
             if pathlib.PurePosixPath(relative).is_absolute() or not parts or '..' in parts:
                 raise PreparationRefused('credential binding path escapes its root')
-            if bound.descriptor.get('endpointKind') == 'remote-gateway':
-                raise PreparationRefused('credential bindings for a remote endpoint are not materialized yet')
             source_path = pathlib.Path(source)
             if not source_path.is_absolute():
                 raise PreparationRefused('credential binding source must be absolute')
@@ -164,12 +163,40 @@ class PreparationResolver:
                 raise PreparationRefused('credential binding source is unavailable') from None
             if not stat.S_ISREG(info.st_mode) or info.st_size <= 0 or info.st_size > 262144:
                 raise PreparationRefused('credential binding source must be a small regular file')
+            data = source_path.read_bytes()
+            if bound.descriptor.get('endpointKind') == 'remote-gateway':
+                # A remote endpoint's private roots live in its backend file
+                # area, not on the host: materialize through the environment's
+                # own files port (digest-pinned, 0600) and never via a host path.
+                try:
+                    text = data.decode('utf-8')
+                except UnicodeDecodeError:
+                    raise PreparationRefused(
+                        'credential binding source is not UTF-8 text') from None
+                digest = 'sha256:' + hashlib.sha256(data).hexdigest()
+                artifact = {'schemaVersion': 'configuration-artifact/1',
+                            'target': BoundPath(root_key, relative).projection(),
+                            'mediaType': 'application/json', 'textUtf8': text,
+                            'digest': digest, 'mode': 0o600}
+                try:
+                    materialized = self._endpoints.materialize(
+                        bound.ref.projection(), invocation.owner_scope, artifact,
+                        request_id='credential-materialize/' + digest.split(':', 1)[1][:32],
+                        invocation=invocation)
+                except Exception:
+                    raise PreparationRefused(
+                        'remote credential materialization was refused') from None
+                if (type(materialized) is not dict
+                        or materialized.get('status') != 'completed'
+                        or materialized.get('digest') != digest):
+                    raise PreparationRefused(
+                        'remote credential materialization did not complete')
+                continue
             root_path = pathlib.Path(directories[root_key]).resolve()
             target = (root_path / relative).resolve()
             if root_path != target and root_path not in target.parents:
                 raise PreparationRefused('credential binding path escapes its root')
             target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-            data = source_path.read_bytes()
             fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
             try:
                 os.write(fd, data)
@@ -249,7 +276,7 @@ class PreparationResolver:
             if type(value) is not str or not value:
                 raise PreparationRefused('credential environment source is unavailable: ' + source)
             environment[target] = value
-        self._materialize_credentials(descriptor, bound, revision.content, directories)
+        self._materialize_credentials(descriptor, bound, revision.content, directories, invocation)
         command = self._command(descriptor.provider_id, bound)
         prepared = request.prepared_configuration_refs
         context = PrepareContext(

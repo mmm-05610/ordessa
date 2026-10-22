@@ -8,7 +8,7 @@ from ordessa_interfaces.system_access.access_control.authentication import Acces
 from ordessa_server.composition.registry_runtime import RegistryRuntime
 from ordessa_server.composition.packages_convergence import build_agent_registry_host,build_agent_registry_runtime
 from ordessa_server.composition.agent_bindings.profile_access import OriginalProfileAccess
-from test_recorded_native_configuration import native_case,request,close
+from native_case_fixture import native_case,request,close,wait_completed
 
 ROOT=Path(__file__).parents[3]
 
@@ -57,19 +57,23 @@ def test_default_registry_original_profile_native_and_cold_query_after_revoke(tm
             assert changed['status']=='completed' and case.owner.service.get('peer').name=='Registry rename'
             assert changed==await invoke('agents.profiles.rename',{'profileId':'peer','displayName':'Registry rename','expectedCatalogRevision':1},'rename')
             apply=request(case)
-            applied=await invoke('agents.native.recorded',{'request':apply.projection()},'native-registry')
-            assert applied['status']=='completed' and applied['data']['state']=='completed'
-            assert case.effects.read_text()=='m2\n'
-            case.issuer.replace_grants((AccessGrant(case.scope,('agents.operations.read','agents.profiles.list','agents.profiles.read')),))
+            accepted=await invoke('agents.native.request',apply.projection(),'native-registry')
+            assert accepted['status']=='accepted' and accepted['data']['state']=='accepted'
+            assert accepted['data']['operationRef']['requestKey'].startswith('sha256:')
+            completed=await wait_completed(case,invoke,accepted['data'])
+            assert completed['state']=='completed' and completed['response']['result']['ok'] is True
+            assert json.loads(case.effects.read_text().splitlines()[0])['method']=='ordessa/probe'
+            case.issuer.replace_grants((AccessGrant(case.scope,('agents.operations.read','agents.native.query','agents.profiles.list','agents.profiles.read')),))
             case.caller[0]=case.issuer.authenticate('Bearer synthetic-native-token')
             db=case.owner.service._profile_store._conn
             before=db.total_changes
             denied=await invoke('agents.profiles.rename',{'profileId':'peer','displayName':'Forbidden','expectedCatalogRevision':2},'revoked')
             assert denied['status']=='refused' and db.total_changes==before
-            cold=await invoke('agents.native.query',{'operationRef':applied['data']['binding']['operationRef'],'expectedInputDigest':apply.input_digest},'cold')
-            assert cold['data']==applied['data'] and case.effects.read_text()=='m2\n'
+            cold=await invoke('agents.native.query',{'operationRef':accepted['data']['operationRef']},'cold')
+            assert cold['data']==completed
             before=case.records._db.total_changes
-            denied=await invoke('agents.native.recorded',{'request':request(case,purpose='query').projection()},'forbidden-upstream')
+            denied=await invoke('agents.native.request',
+                request(case,native_id='forbidden-upstream').projection(),'forbidden-upstream')
             assert denied['status']=='refused' and case.records._db.total_changes==before
             with pytest.raises(Exception):await runtime.wire({'jsonrpc':'2.0','id':'bad','method':'capabilities.list','params':{}},'Bearer wrong-test-token')
         finally:await close(case)
@@ -91,7 +95,8 @@ def test_installed_console_and_cli_module_share_registry_without_kernel(tmp_path
         ids={op['id'] for op in value['data']['operations']}
         assert 'environments.list' in ids and 'environments.acquire' not in ids
         # One-shot metadata lists the Agent/Decision surfaces but not the
-        # session-only retained-handle operations.
+        # session-only retained-handle operations. Native operations are owned by
+        # the long-lived Server (it holds the runtime), not a one-shot local CLI.
         assert 'agents.start' in ids and 'decisions.query' in ids
         assert 'environments.process-release' not in ids
         imports=json.loads(receipt.read_text())

@@ -32,13 +32,16 @@ class ServerDecisionOwner:
     evidence_root: Path
     capability: object
     engine_error: str | None = None
+    settings: object | None = None
+    provider_error: str | None = None
 
     def close(self) -> None:
         # The filesystem evidence store holds no open handle; nothing to close.
         return
 
 
-def build_decision_owner(root: Path, *, invocation_resolver) -> ServerDecisionOwner:
+def build_decision_owner(root: Path, *, invocation_resolver, authority, provider=None,
+                         provider_error: str | None = None) -> ServerDecisionOwner:
     if not isinstance(root, Path) or not root.is_absolute():
         raise AgentOwnerUnavailable('explicit absolute product root required')
     evidence_root = root / 'state' / 'decisions'
@@ -55,20 +58,26 @@ def build_decision_owner(root: Path, *, invocation_resolver) -> ServerDecisionOw
         evidence=evidence,
         default_engine=engine,
         engines={'cel': engine} if engine is not None else {},
-        provider=None,
+        provider=provider,
     )
+    from ordessa_server.composition.decision_bindings.access import ServerDecisionAccess
+    access = ServerDecisionAccess(authority)
 
     def scope(invocation, operation):
         if operation not in DECISION_OPERATIONS:
             raise DecisionError('permission_denied')
         if type(invocation) is not ServerInvocation:
             raise DecisionError('permission_denied')
+        # This resolver also runs after async acceptance, immediately before
+        # dispatch and publication. A captured principal is not fresh authority.
+        access.authorize_operation(invocation, operation, {})
         return EvidenceScope('principal', invocation.owner_scope.ref)
 
     capability = build_capability(settings, invocation_resolver=invocation_resolver,
                                   evidence_scope_resolver=scope)
     return ServerDecisionOwner(evidence_root=evidence_root, capability=capability,
-                               engine_error=engine_error)
+                               engine_error=engine_error, settings=settings,
+                               provider_error=provider_error)
 
 
 __all__ = ["DECISION_OPERATIONS", "ServerDecisionOwner", "build_decision_owner"]

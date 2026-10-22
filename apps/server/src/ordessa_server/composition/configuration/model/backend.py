@@ -40,35 +40,3 @@ def preparation_params(harness_id, payload, operation_id, *, credential=None, mo
 
 def launch_options(harness_id, payload, *, managed_account_factory=None):
     return model_port(harness_id).launch(payload, managed_account_factory=managed_account_factory)
-
-
-class NativeModelServices:
-    def __init__(self, *, roots, source):
-        # Validate the ORIGINAL interaction source before touching installations.
-        from .live_service import create_model_service
-        self._service = create_model_service(source=source)
-        self.roots = installation_routes(artifact_roots=roots)
-        self._accounts = {}
-
-    def model_descriptor(self, harness_id):
-        return model_descriptor(harness_id)
-
-    def verify(self, harness_id):
-        from .live_service import verified_installation
-        if harness_id not in self.roots:
-            raise ValueError('Trusted native installation route unavailable')
-        # Re-read the actual pinned artifacts. A cached installation result
-        # cannot establish that the installation is still unchanged.
-        installation = verified_installation(harness_id, self.roots[harness_id])
-        return installation
-
-    def create_service(self):
-        """Return the same SDK adapter, never a second live runtime/journal."""
-        return self._service
-
-    def managed_account(self, harness_id):
-        if harness_id not in self.roots or not model_port(harness_id).managed_account_supported:
-            raise NativeModelLaunchRefused('APPLICATION_PORT_ABSENT', 'Managed account Harness unavailable')
-        if harness_id not in self._accounts:
-            self._accounts[harness_id] = model_port(harness_id).create_managed_account(self.roots[harness_id])
-        return self._accounts[harness_id]

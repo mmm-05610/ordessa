@@ -17,6 +17,11 @@ from ordessa_environments import (
     EnvironmentManager, SQLiteEnvironmentStore, EnvironmentRefused,
     EnvironmentOperationUnknown, ProcessRequest, BackendNotFound, FILE_AREA_CAPABILITY,
     PROCESS_CAPABILITY, TERMINAL_CAPABILITY, CapabilityReport, CapabilityStatus,
+    OwnerScope,
+)
+from ordessa_environments.capability import (
+    EnvironmentCapabilityService, InvalidEnvironmentInput, factory,
+    descriptor as environment_descriptor,
 )
 from ordessa_environments_openshell import OpenShellConfiguration, OpenShellEnvironmentProvider
 from ordessa_environments_openshell.configuration import create_spec
@@ -35,9 +40,12 @@ class Peer(services.OpenShellServicer):
         self.starts=[]
         self.deleted=[]
         self.files={}
+        self.file_modes={}
+        self.helper_calls=[]
         self.main_commands=[]
         self.request_ids=set()
         self.list_fail=False
+        self.list_deadline=False
         self.version='0.1.3'
         self.create_lose_receipt=False
         self.helper_lose_receipt=False
@@ -64,6 +72,7 @@ class Peer(services.OpenShellServicer):
         return pb.SandboxResponse(sandbox=sandbox)
 
     def ListSandboxes(self, request, context):
+        if self.list_deadline:context.abort(grpc.StatusCode.DEADLINE_EXCEEDED,'controlled deadline')
         if self.list_fail:context.abort(grpc.StatusCode.UNAVAILABLE,'controlled list failure')
         return pb.ListSandboxesResponse(sandboxes=list(self.sandboxes.values()))
 
@@ -90,9 +99,13 @@ class Peer(services.OpenShellServicer):
         args=json.loads(request.command[-1]);op=args['op']
         if self.helper_lose_receipt:context.abort(grpc.StatusCode.UNAVAILABLE,'helper outcome unknown')
         self.request_ids.add(request.request_id)
+        self.helper_calls.append((op,args))
         if op == 'probe':result=True
         elif op == 'write':self.files[args['relative']]=args['content'];result=None
-        elif op == 'write_atomic':self.files[args['relative']]=args['content'];result=None
+        elif op == 'write_atomic':
+            self.files[args['relative']]=args['content']
+            self.file_modes[args['relative']]=args.get('mode')
+            result=None
         elif op == 'read':result=self.files[args['relative']]
         elif op == 'exists':result=args['relative'] in self.files
         elif op == 'list':result=sorted(self.files)
@@ -292,6 +305,75 @@ def test_create_lost_receipt_reconciles_by_persisted_operation_without_replay(ba
     assert instance.delete().confirmed
 
 
+def _capability_services(manager,tmp_path):
+    """The public capability over the same controlled manager and store."""
+    scope=OwnerScope('principal','controlled-reconcile')
+    invocation=SimpleNamespace(owner_scope=scope)
+    services=EnvironmentCapabilityService(manager,
+        authorize=lambda scope,action,target,invocation: True,
+        provider_catalog=[{'id':'openshell','available':True},
+                          {'id':'local','available':False,'status':'UNAVAILABLE',
+                           'reason':'not configured in this state directory'}],
+        aliases_path=tmp_path/'aliases.json')
+    return services,invocation
+
+
+def test_public_reconcile_binds_the_same_sandbox_without_a_second_create(backend,tmp_path):
+    peer,provider,manager=backend;peer.create_lose_receipt=True
+    services,invocation=_capability_services(manager,tmp_path)
+    assert 'environments.reconcile' in {operation.id for operation in environment_descriptor().operations}
+    created=asyncio.run(services.invoke('create',
+        {'provider':'openshell','reference':REFERENCE},invocation,'controlled-create'))
+    assert created.status=='unknown', created
+    identity=created.data['identity']
+    assert len(peer.create_requests)==1 and len(peer.main_commands)==1
+    reconciled=asyncio.run(services.invoke('reconcile',
+        {'reference':identity},invocation,'controlled-reconcile'))
+    assert reconciled.status=='completed', reconciled
+    # The reconciled resource is the sandbox the lost receipt created: no
+    # second create was dispatched and no other sandbox appeared.
+    assert len(peer.create_requests)==1 and len(peer.main_commands)==1
+    assert list(peer.sandboxes)==[reconciled.data['backendId']]
+    assert reconciled.data['phase']=='ready'
+    assert reconciled.data['backendId'] not in (None,'')
+
+
+def test_public_reconcile_refuses_a_resource_without_an_uncertain_creation(backend,tmp_path):
+    peer,provider,manager=backend
+    services,invocation=_capability_services(manager,tmp_path)
+    instance=manager.create('openshell',REFERENCE)
+    refused=asyncio.run(services.invoke('reconcile',
+        {'reference':instance.identity},invocation,'controlled-no-uncertainty'))
+    assert refused.status=='refused', refused
+    assert refused.error.code=='INVALID_INPUT'
+    assert len(peer.create_requests)==1
+
+
+def test_atomic_configuration_write_forwards_the_requested_mode(backend):
+    peer,provider,manager=backend
+    instance=manager.create('openshell',REFERENCE)
+    use=instance.acquire('unit',sharing=False)
+    use.files.write_text_atomic('config/credential.json','{}',mode=0o600)
+    assert peer.file_modes['config/credential.json']==0o600
+    use.files.write_text_atomic('config/public.json','{}',mode=0o644)
+    assert peer.file_modes['config/public.json']==0o644
+    # The default is the private mode a prepared credential needs.
+    use.files.write_text_atomic('config/default.json','{}')
+    assert peer.file_modes['config/default.json']==0o600
+    assert peer.files['config/credential.json']=='{}'
+    use.release()
+
+
+@pytest.mark.parametrize('mode',[0o777,0o640,0o000,511,'384',None,True,384.0])
+def test_invalid_atomic_mode_is_refused_before_any_helper_dispatch(backend,mode):
+    peer,provider,manager=backend
+    instance=manager.create('openshell',REFERENCE)
+    use=instance.acquire('unit',sharing=False)
+    with pytest.raises(EnvironmentRefused):use.files.write_text_atomic('config/credential.json','{}',mode=mode)
+    assert not [call for call in peer.helper_calls if call[0]=='write_atomic']
+    use.release()
+
+
 def test_creation_name_is_bounded_deterministic_and_full_id_correlated(backend):
     peer,provider,manager=backend
     operation='0123456789abcdef0123456789abcdef'
@@ -450,3 +532,216 @@ def test_stdin_admission_cancellation_has_no_future_dispatch():
             assert process.release()['transportReleased']
             assert not process._reader.is_alive()
     asyncio.run(exercise())
+
+
+# -- the thin native management entry ----------------------------------------
+#
+# These cases run against the same controlled peer: no real gateway and no
+# sandbox but the ones made here. The native entry is a bounded, read-only
+# view over the provider's own control plane; it shares the manager, the store
+# and the authority with the normal lifecycle.
+
+NATIVE_IDS = frozenset({'environments.native.describe', 'environments.native.request',
+                        'environments.native.query', 'environments.native.events'})
+
+
+def _counted(provider):
+    """Count the provider's native dispatches without changing its behaviour."""
+    calls = []
+    original = provider.native_request
+    def counted(action, *, target=None, request_id=None):
+        calls.append({'action': action, 'target': target, 'requestId': request_id})
+        return original(action, target=target, request_id=request_id)
+    provider.native_request = counted
+    return calls
+
+
+def _public_call(services, invocation, operation_id, request, request_id):
+    """One call through the public capability, as a client sees it."""
+    from ordessa_interfaces.system_access import CapabilityHost, RequestContext, build_registry
+    capability = factory.build({'services': services,
+                                'invocation_resolver': lambda context: invocation})
+    host = CapabilityHost(build_registry([capability]), ('environments',))
+    context = RequestContext({'id': 'controlled-reconcile'}, request_id)
+    return asyncio.run(host.call(operation_id, request, context))
+
+
+def test_the_native_operations_are_published_with_their_own_command_path():
+    published = {operation.id: operation for operation in environment_descriptor().operations}
+    assert NATIVE_IDS <= set(published)
+    for identifier in NATIVE_IDS:
+        assert published[identifier].cli['command'] == 'environments native'
+
+
+def test_native_describe_reports_availability_and_binding_facts(backend, tmp_path):
+    peer, provider, manager = backend
+    services, invocation = _capability_services(manager, tmp_path)
+    described = asyncio.run(services.invoke('native.describe', {}, invocation, 'native-describe'))
+    assert described.status == 'completed', described
+    entries = {entry['id']: entry for entry in described.data['providers']}
+    assert set(entries) == {'openshell', 'local'}
+    management = entries['openshell']['management']
+    assert management['available'] is True
+    assert management['gateway'] == 'controlled-gateway'
+    assert management['workspace'] == 'workspace-test'
+    assert management['binding'] == provider.binding_id
+    assert management['actions'] == ['health', 'inspect', 'list']
+    # A provider this instance cannot use is named with its reason, not hidden.
+    assert entries['local']['available'] is False
+    assert entries['local']['management'] is None
+    assert entries['local']['reason'] == 'not configured in this state directory'
+
+
+def test_native_list_and_inspect_address_the_same_backend_identity(backend, tmp_path):
+    peer, provider, manager = backend
+    instance = manager.create('openshell', REFERENCE)
+    services, invocation = _capability_services(manager, tmp_path)
+    calls = _counted(provider)
+    listed = asyncio.run(services.invoke('native.request',
+        {'provider': 'openshell', 'action': 'list', 'requestId': 'native-list'},
+        invocation, 'transport-list'))
+    assert listed.status == 'completed', listed
+    assert listed.data['state'] == 'completed'
+    assert listed.data['correlationId'] == 'native-list'
+    items = listed.data['result']['items']
+    assert [item['backendId'] for item in items] == [instance.snapshot.backend_id]
+    assert items[0]['state'] == 'running'
+    inspected = asyncio.run(services.invoke('native.request',
+        {'provider': 'openshell', 'action': 'inspect', 'reference': instance.identity,
+         'requestId': 'native-inspect'}, invocation, 'transport-inspect'))
+    assert inspected.status == 'completed', inspected
+    assert inspected.data['result']['backendId'] == instance.snapshot.backend_id
+    assert inspected.data['result']['present'] is True
+    assert inspected.data['environmentIdentity'] == instance.identity
+    # The inspected resource is the same registry row with the same immutable
+    # backend id: the native entry adds no second resource and no mirror state.
+    assert len(manager.list()) == 1
+    assert manager.get(instance.identity).snapshot.backend_id == instance.snapshot.backend_id
+    assert [call['action'] for call in calls] == ['list', 'inspect']
+    assert calls[1]['target'] == instance.snapshot.backend_id
+
+
+def test_native_health_reports_the_gateway_facts(backend, tmp_path):
+    peer, provider, manager = backend
+    services, invocation = _capability_services(manager, tmp_path)
+    healthy = asyncio.run(services.invoke('native.request',
+        {'provider': 'openshell', 'action': 'health', 'requestId': 'native-health'},
+        invocation, 'transport-health'))
+    assert healthy.status == 'completed', healthy
+    assert healthy.data['result'] == {'action': 'health', 'gatewayVersion': '0.1.3',
+                                      'status': 'healthy'}
+
+
+def test_native_request_is_idempotent_by_request_id_and_conflicts_on_a_different_input(backend, tmp_path):
+    peer, provider, manager = backend
+    services, invocation = _capability_services(manager, tmp_path)
+    calls = _counted(provider)
+    request = {'provider': 'openshell', 'action': 'list', 'requestId': 'native-replay'}
+    first = asyncio.run(services.invoke('native.request', request, invocation, 'transport-one'))
+    replay = asyncio.run(services.invoke('native.request', request, invocation, 'transport-two'))
+    assert first.status == 'completed', first
+    assert replay.status == 'completed', replay
+    assert replay.data == first.data
+    assert replay.operation_ref == first.operation_ref
+    # The second call replayed the stored fact; the provider was called once.
+    assert len(calls) == 1
+    # The same request id with a different canonical input conflicts. The
+    # conflict is a refusal of the public capability, not an exception.
+    conflict = _public_call(services, invocation, 'environments.native.request',
+                            {'provider': 'openshell', 'action': 'health',
+                             'requestId': 'native-replay'}, 'transport-three')
+    assert conflict.status == 'refused', conflict
+    assert conflict.error.code == 'CONFLICT'
+    assert len(calls) == 1
+
+
+def test_native_timeout_is_stored_as_unknown_and_never_dispatched_again(backend, tmp_path):
+    peer, provider, manager = backend
+    services, invocation = _capability_services(manager, tmp_path)
+    calls = _counted(provider)
+    peer.list_deadline = True
+    unknown = asyncio.run(services.invoke('native.request',
+        {'provider': 'openshell', 'action': 'list', 'requestId': 'native-timeout'},
+        invocation, 'transport-timeout'))
+    assert unknown.status == 'unknown', unknown
+    assert unknown.error.code == 'EFFECT_UNKNOWN'
+    assert unknown.data['state'] == 'unknown'
+    assert unknown.data['correlationId'] == 'native-timeout'
+    # The uncertain outcome is stored once; a replay never dispatches again.
+    peer.list_deadline = False
+    replay = asyncio.run(services.invoke('native.request',
+        {'provider': 'openshell', 'action': 'list', 'requestId': 'native-timeout'},
+        invocation, 'transport-timeout-replay'))
+    assert replay.status == 'unknown', replay
+    assert replay.data['correlationId'] == 'native-timeout'
+    assert len(calls) == 1
+    # The stored fact is readable through the query entry.
+    queried = asyncio.run(services.invoke('native.query', {'requestId': 'native-timeout'},
+                                          invocation, 'transport-query'))
+    assert queried.status == 'unknown', queried
+    assert queried.data['observation']['state'] == 'unknown'
+    assert queried.data['observation']['correlationId'] == 'native-timeout'
+
+
+def test_native_events_page_states_its_completeness(backend, tmp_path):
+    peer, provider, manager = backend
+    services, invocation = _capability_services(manager, tmp_path)
+    empty = asyncio.run(services.invoke('native.events', {}, invocation, 'transport-events-empty'))
+    assert empty.status == 'completed', empty
+    assert empty.data['events'] == []
+    assert empty.data['complete'] is True
+    for index in range(2):
+        asyncio.run(services.invoke('native.request',
+            {'provider': 'openshell', 'action': 'list', 'requestId': 'native-event-%d' % index},
+            invocation, 'transport-event-%d' % index))
+    page = asyncio.run(services.invoke('native.events', {'limit': 1}, invocation, 'transport-events'))
+    assert page.status == 'completed', page
+    assert len(page.data['events']) == 1
+    assert page.data['complete'] is False
+    assert page.data['nextCursor'] is not None
+    rest = asyncio.run(services.invoke('native.events', {'cursor': page.data['nextCursor']},
+                                       invocation, 'transport-events-rest'))
+    assert len(rest.data['events']) == 1
+    assert rest.data['complete'] is True
+
+
+def test_the_native_entry_never_creates_or_deletes_a_sandbox(backend, tmp_path):
+    peer, provider, manager = backend
+    instance = manager.create('openshell', REFERENCE)
+    services, invocation = _capability_services(manager, tmp_path)
+    for action, extra in (('list', {}), ('health', {}), ('inspect', {'reference': instance.identity})):
+        request = {'provider': 'openshell', 'action': action,
+                   'requestId': 'native-read-' + action, **extra}
+        result = asyncio.run(services.invoke('native.request', request, invocation,
+                                             'transport-' + action))
+        assert result.status == 'completed', result
+    described = asyncio.run(services.invoke('native.describe', {}, invocation, 'transport-describe'))
+    assert described.status == 'completed', described
+    # Exactly the one sandbox that existed before the native reads.
+    assert len(peer.create_requests) == 1
+    assert list(peer.sandboxes) == [instance.snapshot.backend_id]
+    assert peer.deleted == []
+
+
+def test_an_action_outside_the_closed_set_is_refused(backend, tmp_path):
+    peer, provider, manager = backend
+    services, invocation = _capability_services(manager, tmp_path)
+    with pytest.raises(EnvironmentRefused):
+        provider.native_request('create', target=None, request_id='closed-set')
+    with pytest.raises(EnvironmentRefused):
+        provider.native_request('delete', target='backend-any', request_id='closed-set')
+    with pytest.raises(InvalidEnvironmentInput):
+        asyncio.run(services.invoke('native.request',
+            {'provider': 'openshell', 'action': 'create', 'requestId': 'native-create'},
+            invocation, 'transport-create'))
+    assert not peer.create_requests and not peer.deleted
+
+
+def test_an_unknown_provider_is_refused_without_a_dispatch(backend, tmp_path):
+    peer, provider, manager = backend
+    services, invocation = _capability_services(manager, tmp_path)
+    refused = asyncio.run(services.invoke('native.request',
+        {'provider': 'absent', 'action': 'list', 'requestId': 'native-absent'},
+        invocation, 'transport-absent'))
+    assert refused.status == 'refused', refused
+    assert refused.error.code == 'CAPABILITY_UNSUPPORTED'

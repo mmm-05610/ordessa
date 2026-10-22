@@ -11,7 +11,6 @@ from test_interactions import Resolver,Guard,PARAMS_BYTES
 from test_acp_recorded_response import Protocol
 from ordessa_agents.sdk.interactions import InteractionsRefused,GuardedSendObservation
 from ordessa_agents.sdk.manager import Records,ManagerRefused
-from ordessa_agents.sdk.native_contracts import METHODS
 
 
 def lifecycle_claim(records,request='stop'):
@@ -106,17 +105,27 @@ def test_native_operation_private_epoch_is_mandatory_and_fences_physical_dispatc
         def admitted(token,binding):
             authority.check_send(token,binding);yield
         authority.guard_native_dispatch=admitted
+        from ordessa_harness_codex.provider import CodexNativeCodec
+        source._native_codecs = {'acp': CodexNativeCodec()}
         try:
-            request=source.freeze_native_request(INSTANCE,purpose='query',method=METHODS['query'],
-                params_bytes=b'{"operationId":"native-query","sessionId":"session-1"}')
             peer.before=lambda:lifecycle_claim(other)
-            result=await source.native_recorded(request,request_id='native',invocation=sender,
-                write_guard=Guard(),deadline=asyncio.get_running_loop().time()+2)
-            assert result.state=='unknown' and peer.frames==[]
-            row=source.records.operation(result.binding.operation_ref.request_key,'native-operation')
+            message={'method':'thread/read','params':{'threadId':'session-1'}}
+            accepted=await source.native().submit(INSTANCE,kind='request',message=message,
+                request_id='native',invocation=sender,write_guard=Guard(),
+                deadline=asyncio.get_running_loop().time()+2)
+            for _ in range(100):
+                result=source.native().query(accepted['operationRef'],invocation=reader)
+                if result['state']!='accepted':break
+                await asyncio.sleep(0.01)
+            assert result['state']=='unknown' and peer.frames==[]
+            row=source.records.operation(accepted['operationRef']['requestKey'],'native-request')
             assert row.payload['controlEpoch']==0
-            replay=await source.native_recorded(request,request_id='native',invocation=reader,write_guard=None,deadline=None)
-            assert replay==result and peer.frames==[]
+            replay=await source.native().submit(INSTANCE,kind='request',message=message,
+                request_id='native',invocation=sender,write_guard=Guard(),
+                deadline=asyncio.get_running_loop().time()+2)
+            assert replay=={**accepted,'state':'unknown'} and peer.frames==[]
             assert other.instance_control(INSTANCE)[0].writer_epoch==1
-        finally:other.close();source.records.close()
+        finally:
+            await source.native().close_all()
+            other.close();source.records.close()
     asyncio.run(scenario())
